@@ -165,6 +165,12 @@
   border-radius: 8px;
 }
 
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .chat-area {
   flex: 1;
   display: flex;
