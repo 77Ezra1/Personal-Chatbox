@@ -5,6 +5,22 @@ import { Toaster, toast } from 'sonner'
 import { generateAIResponse } from '@/lib/aiClient.js'
 import './App.css'
 
+const sanitizeMessages = (messages = []) => {
+  return (Array.isArray(messages) ? messages : [])
+    .filter(msg => !msg?.sensitive && !msg?.isSensitive && msg?.persist !== false)
+}
+
+const sanitizeConversations = (rawConversations = []) => {
+  return (Array.isArray(rawConversations) ? rawConversations : [])
+    .filter(Boolean)
+    .map(conv => ({
+      id: conv?.id ?? Date.now(),
+      title: conv?.title ?? '未命名会话',
+      messages: sanitizeMessages(conv?.messages ?? [])
+    }))
+    .filter(conv => Array.isArray(conv.messages))
+}
+
 function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
@@ -33,6 +49,18 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  useEffect(() => {
+    const storedConfig = localStorage.getItem('modelConfig')
+    if (!storedConfig) return
+
+    try {
+      const parsedConfig = JSON.parse(storedConfig)
+      setModelConfig(prev => ({ ...prev, ...parsedConfig }))
+    } catch (error) {
+      console.error('无法解析已保存的模型配置:', error)
+    }
+  }, [])
 
   const currentConv = conversations.find(c => c.id === currentConvId)
 
@@ -165,14 +193,25 @@ function App() {
         </div>
 
         <div className="sidebar-footer">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setDarkMode(!darkMode)}
-            className="theme-toggle"
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
+          <div className="sidebar-actions">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearConversations}
+              className="theme-toggle"
+              title="清空对话"
+            >
+              <Trash className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDarkMode(!darkMode)}
+              className="theme-toggle"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
       </aside>
 
@@ -207,7 +246,13 @@ function App() {
                   {msg.role === 'user' ? '👤' : '🤖'}
                 </div>
                 <div className="message-content">
-                  <p>{msg.content}</p>
+                  <ReactMarkdown
+                    className="markdown-body"
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))
@@ -336,8 +381,21 @@ function App() {
 
             <Button
               onClick={() => {
-                localStorage.setItem('modelConfig', JSON.stringify(modelConfig))
-                alert('配置已保存')
+                if (!modelConfig.apiKey?.trim()) {
+                  alert('请填写API密钥后再保存')
+                  return
+                }
+
+                const configToSave = { ...modelConfig }
+
+                try {
+                  localStorage.setItem('modelConfig', JSON.stringify(configToSave))
+                  setModelConfig(configToSave)
+                  alert('配置已保存，部分设置刷新后生效。')
+                } catch (error) {
+                  console.error('保存模型配置失败:', error)
+                  alert('保存配置时出现错误，请稍后再试')
+                }
               }}
               className="w-full mt-4"
             >
