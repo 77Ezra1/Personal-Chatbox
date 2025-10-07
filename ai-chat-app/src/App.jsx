@@ -51,41 +51,16 @@ function App() {
   }, [darkMode])
 
   useEffect(() => {
+    const storedConfig = localStorage.getItem('modelConfig')
+    if (!storedConfig) return
+
     try {
-      const stored = typeof window !== 'undefined' ? localStorage.getItem('conversations') : null
-      if (!stored) return
-
-      const parsed = JSON.parse(stored)
-      if (!Array.isArray(parsed)) return
-
-      const sanitized = sanitizeConversations(parsed)
-      if (sanitized.length === 0) return
-
-      setConversations(sanitized)
-      setCurrentConvId(sanitized[0].id)
+      const parsedConfig = JSON.parse(storedConfig)
+      setModelConfig(prev => ({ ...prev, ...parsedConfig }))
     } catch (error) {
-      console.error('Failed to restore conversations from localStorage', error)
+      console.error('无法解析已保存的模型配置:', error)
     }
   }, [])
-
-  useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return
-      const sanitized = sanitizeConversations(conversations)
-      localStorage.setItem('conversations', JSON.stringify(sanitized))
-    } catch (error) {
-      console.error('Failed to persist conversations to localStorage', error)
-    }
-  }, [conversations])
-
-  const handleClearConversations = () => {
-    const resetConv = { id: Date.now(), title: '新对话', messages: [] }
-    setConversations([resetConv])
-    setCurrentConvId(resetConv.id)
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('conversations')
-    }
-  }
 
   const currentConv = conversations.find(c => c.id === currentConvId)
 
@@ -353,8 +328,21 @@ function App() {
 
             <Button
               onClick={() => {
-                localStorage.setItem('modelConfig', JSON.stringify(modelConfig))
-                alert('配置已保存')
+                if (!modelConfig.apiKey?.trim()) {
+                  alert('请填写API密钥后再保存')
+                  return
+                }
+
+                const configToSave = { ...modelConfig }
+
+                try {
+                  localStorage.setItem('modelConfig', JSON.stringify(configToSave))
+                  setModelConfig(configToSave)
+                  alert('配置已保存，部分设置刷新后生效。')
+                } catch (error) {
+                  console.error('保存模型配置失败:', error)
+                  alert('保存配置时出现错误，请稍后再试')
+                }
               }}
               className="w-full mt-4"
             >
