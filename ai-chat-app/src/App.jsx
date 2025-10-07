@@ -1,7 +1,23 @@
 import { useState, useEffect } from 'react'
-import { MessageSquare, Settings, Plus, Moon, Sun, Send, Sparkles } from 'lucide-react'
+import { MessageSquare, Settings, Plus, Moon, Sun, Send, Sparkles, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import './App.css'
+
+const sanitizeMessages = (messages = []) => {
+  return (Array.isArray(messages) ? messages : [])
+    .filter(msg => !msg?.sensitive && !msg?.isSensitive && msg?.persist !== false)
+}
+
+const sanitizeConversations = (rawConversations = []) => {
+  return (Array.isArray(rawConversations) ? rawConversations : [])
+    .filter(Boolean)
+    .map(conv => ({
+      id: conv?.id ?? Date.now(),
+      title: conv?.title ?? '未命名会话',
+      messages: sanitizeMessages(conv?.messages ?? [])
+    }))
+    .filter(conv => Array.isArray(conv.messages))
+}
 
 function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -29,6 +45,43 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  useEffect(() => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('conversations') : null
+      if (!stored) return
+
+      const parsed = JSON.parse(stored)
+      if (!Array.isArray(parsed)) return
+
+      const sanitized = sanitizeConversations(parsed)
+      if (sanitized.length === 0) return
+
+      setConversations(sanitized)
+      setCurrentConvId(sanitized[0].id)
+    } catch (error) {
+      console.error('Failed to restore conversations from localStorage', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return
+      const sanitized = sanitizeConversations(conversations)
+      localStorage.setItem('conversations', JSON.stringify(sanitized))
+    } catch (error) {
+      console.error('Failed to persist conversations to localStorage', error)
+    }
+  }, [conversations])
+
+  const handleClearConversations = () => {
+    const resetConv = { id: Date.now(), title: '新对话', messages: [] }
+    setConversations([resetConv])
+    setCurrentConvId(resetConv.id)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('conversations')
+    }
+  }
 
   const currentConv = conversations.find(c => c.id === currentConvId)
 
@@ -108,14 +161,25 @@ function App() {
         </div>
 
         <div className="sidebar-footer">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setDarkMode(!darkMode)}
-            className="theme-toggle"
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
+          <div className="sidebar-actions">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearConversations}
+              className="theme-toggle"
+              title="清空对话"
+            >
+              <Trash className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDarkMode(!darkMode)}
+              className="theme-toggle"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
       </aside>
 
