@@ -1,7 +1,27 @@
 import { useState, useEffect } from 'react'
-import { MessageSquare, Settings, Plus, Moon, Sun, Send, Sparkles } from 'lucide-react'
+import { MessageSquare, Settings, Plus, Moon, Sun, Send, Sparkles, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { ScrollArea } from '@/components/ui/scroll-area.jsx'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip.jsx'
 import './App.css'
+
+const sanitizeMessages = (messages = []) => {
+  return (Array.isArray(messages) ? messages : [])
+    .filter(msg => !msg?.sensitive && !msg?.isSensitive && msg?.persist !== false)
+}
+
+const sanitizeConversations = (rawConversations = []) => {
+  return (Array.isArray(rawConversations) ? rawConversations : [])
+    .filter(Boolean)
+    .map(conv => ({
+      id: conv?.id ?? Date.now(),
+      title: conv?.title ?? '未命名会话',
+      messages: sanitizeMessages(conv?.messages ?? [])
+    }))
+    .filter(conv => Array.isArray(conv.messages))
+}
 
 function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -120,14 +140,25 @@ function App() {
         </div>
 
         <div className="sidebar-footer">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setDarkMode(!darkMode)}
-            className="theme-toggle"
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
+          <div className="sidebar-actions">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearConversations}
+              className="theme-toggle"
+              title="清空对话"
+            >
+              <Trash className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDarkMode(!darkMode)}
+              className="theme-toggle"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
       </aside>
 
@@ -162,7 +193,13 @@ function App() {
                   {msg.role === 'user' ? '👤' : '🤖'}
                 </div>
                 <div className="message-content">
-                  <p>{msg.content}</p>
+                  <ReactMarkdown
+                    className="markdown-body"
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))
