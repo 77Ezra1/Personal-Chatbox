@@ -30,6 +30,18 @@ function App() {
     }
   }, [darkMode])
 
+  useEffect(() => {
+    const storedConfig = localStorage.getItem('modelConfig')
+    if (!storedConfig) return
+
+    try {
+      const parsedConfig = JSON.parse(storedConfig)
+      setModelConfig(prev => ({ ...prev, ...parsedConfig }))
+    } catch (error) {
+      console.error('无法解析已保存的模型配置:', error)
+    }
+  }, [])
+
   const currentConv = conversations.find(c => c.id === currentConvId)
 
   const handleSendMessage = async () => {
@@ -279,8 +291,21 @@ function App() {
 
             <Button
               onClick={() => {
-                localStorage.setItem('modelConfig', JSON.stringify(modelConfig))
-                alert('配置已保存')
+                if (!modelConfig.apiKey?.trim()) {
+                  alert('请填写API密钥后再保存')
+                  return
+                }
+
+                const configToSave = { ...modelConfig }
+
+                try {
+                  localStorage.setItem('modelConfig', JSON.stringify(configToSave))
+                  setModelConfig(configToSave)
+                  alert('配置已保存，部分设置刷新后生效。')
+                } catch (error) {
+                  console.error('保存模型配置失败:', error)
+                  alert('保存配置时出现错误，请稍后再试')
+                }
               }}
               className="w-full mt-4"
             >
