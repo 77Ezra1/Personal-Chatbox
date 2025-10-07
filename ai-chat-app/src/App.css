@@ -247,6 +247,227 @@
   line-height: 1.6;
 }
 
+.message-content .markdown-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: inherit;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.markdown-heading-1,
+.markdown-heading-2,
+.markdown-heading-3,
+.markdown-heading-4 {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
+  color: inherit;
+  margin: 0;
+}
+
+.markdown-heading-1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin-top: 8px;
+}
+
+.markdown-heading-2 {
+  font-size: 24px;
+  line-height: 1.25;
+  margin-top: 8px;
+}
+
+.markdown-heading-3 {
+  font-size: 20px;
+  line-height: 1.3;
+  margin-top: 4px;
+}
+
+.markdown-heading-4 {
+  font-size: 18px;
+  line-height: 1.35;
+  margin-top: 4px;
+}
+
+.markdown-heading-1 + *,
+.markdown-heading-2 + *,
+.markdown-heading-3 + *,
+.markdown-heading-4 + * {
+  margin-top: 8px;
+}
+
+.markdown-paragraph {
+  margin: 0;
+  color: inherit;
+}
+
+.markdown-list {
+  margin: 0;
+  padding-left: 24px;
+  color: inherit;
+}
+
+.markdown-list.ordered {
+  list-style: decimal;
+}
+
+.markdown-list:not(.ordered) {
+  list-style: disc;
+}
+
+.markdown-list-item {
+  margin-bottom: 6px;
+}
+
+.markdown-blockquote {
+  margin: 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  border-radius: 10px;
+  color: inherit;
+  font-style: italic;
+}
+
+.markdown-code-inline {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  color: inherit;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.92em;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark .markdown-code-inline {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.markdown-code-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--foreground) 4%, var(--card));
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.message-user .markdown-code-block {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+.markdown-code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.markdown-code-language {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
+.message-user .markdown-code-language {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.markdown-code-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.markdown-code-copy:hover {
+  color: var(--foreground);
+  border-color: color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.message-user .markdown-code-copy {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.message-user .markdown-code-copy:hover {
+  color: rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.markdown-code-scroll {
+  max-height: 320px;
+  background: transparent;
+}
+
+.markdown-code-scroll [data-slot="scroll-area-viewport"] {
+  padding: 16px;
+}
+
+.markdown-code-scroll pre {
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  line-height: 1.5;
+  color: inherit;
+  min-width: 100%;
+}
+
+.markdown-code-scroll code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+.message-content a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.message-content a:hover {
+  text-decoration: underline;
+}
+
+.message-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: inherit;
+}
+
+.message-content th,
+.message-content td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+}
+
+.message-content th {
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  text-align: left;
+}
+
 .message-user .message-content {
   background: var(--primary);
   color: var(--primary-foreground);
