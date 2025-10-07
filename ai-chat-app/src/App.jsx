@@ -1,7 +1,91 @@
 import { useState, useEffect } from 'react'
-import { MessageSquare, Settings, Plus, Moon, Sun, Send, Sparkles } from 'lucide-react'
+import {
+  MessageSquare,
+  Settings,
+  Plus,
+  Moon,
+  Sun,
+  Send,
+  Sparkles,
+  Copy,
+  Check
+} from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { ScrollArea } from '@/components/ui/scroll-area.jsx'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip.jsx'
 import './App.css'
+
+function MarkdownCodeBlock({ className = '', children, ...props }) {
+  const [isCopied, setIsCopied] = useState(false)
+  const code = String(children).replace(/\n$/, '')
+  const language = className?.replace('language-', '') || ''
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy code block', error)
+    }
+  }
+
+  return (
+    <div className="markdown-code-block">
+      <div className="markdown-code-toolbar">
+        {language && <span className="markdown-code-language">{language.toUpperCase()}</span>}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="markdown-code-copy"
+              onClick={handleCopy}
+              aria-label={isCopied ? '代码已复制' : '复制代码'}
+            >
+              {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent sideOffset={6}>
+            {isCopied ? '已复制' : '复制代码'}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+      <ScrollArea className="markdown-code-scroll">
+        <pre className={className} {...props}>
+          <code>{code}</code>
+        </pre>
+      </ScrollArea>
+    </div>
+  )
+}
+
+const markdownComponents = {
+  h1: ({ node, ...props }) => <h1 className="markdown-heading-1" {...props} />,
+  h2: ({ node, ...props }) => <h2 className="markdown-heading-2" {...props} />,
+  h3: ({ node, ...props }) => <h3 className="markdown-heading-3" {...props} />,
+  h4: ({ node, ...props }) => <h4 className="markdown-heading-4" {...props} />,
+  p: ({ node, ...props }) => <p className="markdown-paragraph" {...props} />,
+  ul: ({ node, ...props }) => <ul className="markdown-list" {...props} />,
+  ol: ({ node, ...props }) => <ol className="markdown-list ordered" {...props} />,
+  li: ({ node, ...props }) => <li className="markdown-list-item" {...props} />,
+  blockquote: ({ node, ...props }) => <blockquote className="markdown-blockquote" {...props} />,
+  code({ node, inline, className, children, ...props }) {
+    if (inline) {
+      return (
+        <code className="markdown-code-inline" {...props}>
+          {children}
+        </code>
+      )
+    }
+    return (
+      <MarkdownCodeBlock className={className} {...props}>
+        {children}
+      </MarkdownCodeBlock>
+    )
+  }
+}
 
 function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -150,7 +234,13 @@ function App() {
                   {msg.role === 'user' ? '👤' : '🤖'}
                 </div>
                 <div className="message-content">
-                  <p>{msg.content}</p>
+                  <ReactMarkdown
+                    className="markdown-body"
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))
