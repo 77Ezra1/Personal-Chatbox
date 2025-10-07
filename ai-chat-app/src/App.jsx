@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { MessageSquare, Settings, Plus, Moon, Sun, Send, Sparkles, Trash } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { ScrollArea } from '@/components/ui/scroll-area.jsx'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip.jsx'
 import './App.css'
 
 const sanitizeMessages = (messages = []) => {
@@ -214,7 +218,13 @@ function App() {
                   {msg.role === 'user' ? '👤' : '🤖'}
                 </div>
                 <div className="message-content">
-                  <p>{msg.content}</p>
+                  <ReactMarkdown
+                    className="markdown-body"
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))
