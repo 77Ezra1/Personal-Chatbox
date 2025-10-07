@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MessageSquare, Settings, Plus, Moon, Sun, Send, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import { Toaster, toast } from 'sonner'
+import { generateAIResponse } from '@/lib/aiClient.js'
 import './App.css'
 
 function App() {
@@ -12,6 +14,8 @@ function App() {
   const [currentConvId, setCurrentConvId] = useState(1)
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const requestControllerRef = useRef(null)
+  const requestIdRef = useRef(0)
   
   // 模型配置
   const [modelConfig, setModelConfig] = useState({
@@ -33,41 +37,93 @@ function App() {
   const currentConv = conversations.find(c => c.id === currentConvId)
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return
+    const messageContent = inputMessage.trim()
+    if (!messageContent) return
+    if (!currentConv) return
 
+    const conversationId = currentConvId
+    const existingMessages = currentConv?.messages ?? []
     const userMessage = {
       id: Date.now(),
       role: 'user',
-      content: inputMessage,
+      content: messageContent,
       timestamp: new Date()
     }
 
-    // 更新对话
-    setConversations(prev => prev.map(conv => 
-      conv.id === currentConvId 
+    setConversations(prev => prev.map(conv =>
+      conv.id === conversationId
         ? { ...conv, messages: [...conv.messages, userMessage] }
         : conv
     ))
 
     setInputMessage('')
+
+    const requestId = Date.now()
+    requestIdRef.current = requestId
     setIsTyping(true)
 
-    // 模拟AI回复
-    setTimeout(() => {
-      const aiMessage = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: '这是一个演示回复。在实际应用中，这里会调用配置的AI模型API来生成回复。您可以在右侧配置面板中设置API密钥和模型参数。',
-        timestamp: new Date()
-      }
+    requestControllerRef.current?.abort()
+    const controller = new AbortController()
+    requestControllerRef.current = controller
 
-      setConversations(prev => prev.map(conv => 
-        conv.id === currentConvId 
-          ? { ...conv, messages: [...conv.messages, aiMessage] }
-          : conv
-      ))
-      setIsTyping(false)
-    }, 1500)
+    const assistantMessageId = Date.now() + 1
+    let hasAssistantMessage = false
+
+    const updateAssistantMessage = (content, options = {}) => {
+      setConversations(prev => prev.map(conv => {
+        if (conv.id !== conversationId) return conv
+
+        if (!hasAssistantMessage) {
+          hasAssistantMessage = true
+          const newMessage = {
+            id: assistantMessageId,
+            role: 'assistant',
+            content,
+            timestamp: options.timestamp ?? new Date()
+          }
+          return { ...conv, messages: [...conv.messages, newMessage] }
+        }
+
+        return {
+          ...conv,
+          messages: conv.messages.map(msg =>
+            msg.id === assistantMessageId
+              ? { ...msg, content, ...(options.timestamp ? { timestamp: options.timestamp } : {}) }
+              : msg
+          )
+        }
+      }))
+    }
+
+    let latestContent = ''
+
+    try {
+      const response = await generateAIResponse({
+        messages: [...existingMessages, userMessage],
+        modelConfig,
+        signal: controller.signal,
+        onToken: (_, fullText) => {
+          latestContent = fullText
+          updateAssistantMessage(fullText)
+        }
+      })
+
+      latestContent = response?.content ?? latestContent
+      updateAssistantMessage(latestContent, { timestamp: new Date() })
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        return
+      }
+      console.error('AI 请求失败', error)
+      const message = error?.message || '生成回复失败，请稍后重试'
+      toast.error(message)
+      updateAssistantMessage(`请求失败：${message}`)
+    } finally {
+      if (requestIdRef.current === requestId) {
+        setIsTyping(false)
+        requestControllerRef.current = null
+      }
+    }
   }
 
   const createNewConversation = () => {
@@ -82,6 +138,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <Toaster position="top-right" richColors />
       {/* 左侧边栏 */}
       <aside className="sidebar">
         <div className="sidebar-header">
