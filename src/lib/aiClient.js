@@ -242,29 +242,32 @@ function sanitizeMessages(messages) {
     .filter(msg => msg && typeof msg.role === 'string')
     .map(msg => {
       const baseContent = typeof msg.content === 'string' ? msg.content : String(msg.content ?? '')
-      const attachments = Array.isArray(msg?.metadata?.attachments)
-        ? msg.metadata.attachments
-            .map(attachment => {
-              if (!attachment || typeof attachment !== 'object') return null
-              const type = typeof attachment.type === 'string' ? attachment.type : ''
-              const dataUrl = typeof attachment.dataUrl === 'string' ? attachment.dataUrl : ''
-              const category = typeof attachment.category === 'string'
-                ? attachment.category
-                : type.startsWith('image/')
-                  ? 'image'
-                  : 'file'
-              return {
-                id: attachment.id ?? undefined,
-                name: attachment.name ?? '',
-                type,
-                size: Number(attachment.size) || 0,
-                dataUrl,
-                lastModified: attachment.lastModified ?? undefined,
-                category
-              }
-            })
-            .filter(Boolean)
-        : []
+      const rawAttachments = Array.isArray(msg.attachments)
+        ? msg.attachments
+        : Array.isArray(msg?.metadata?.attachments)
+          ? msg.metadata.attachments
+          : []
+      const attachments = rawAttachments
+        .map(attachment => {
+          if (!attachment || typeof attachment !== 'object') return null
+          const type = typeof attachment.type === 'string' ? attachment.type : ''
+          const dataUrl = typeof attachment.dataUrl === 'string' ? attachment.dataUrl : ''
+          const category = typeof attachment.category === 'string'
+            ? attachment.category
+            : type.startsWith('image/')
+              ? 'image'
+              : 'file'
+          return {
+            id: attachment.id ?? undefined,
+            name: attachment.name ?? '',
+            type,
+            size: Number(attachment.size) || 0,
+            dataUrl,
+            lastModified: attachment.lastModified ?? undefined,
+            category
+          }
+        })
+        .filter(Boolean)
       return {
         role: msg.role,
         content: baseContent,
