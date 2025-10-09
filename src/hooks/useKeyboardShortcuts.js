@@ -13,7 +13,7 @@ export function useKeyboardShortcuts(shortcuts) {
                      event.target.isContentEditable
 
       for (const shortcut of shortcuts) {
-        const { key, ctrl, alt, shift, meta, handler, allowInInput = false } = shortcut
+        const { key, ctrl, alt, shift, handler, allowInInput = false } = shortcut
 
         // 如果在输入框中且不允许,跳过
         if (isInput && !allowInInput) {
@@ -24,7 +24,6 @@ export function useKeyboardShortcuts(shortcuts) {
         const ctrlMatch = ctrl ? (event.ctrlKey || event.metaKey) : !event.ctrlKey && !event.metaKey
         const altMatch = alt ? event.altKey : !event.altKey
         const shiftMatch = shift ? event.shiftKey : !event.shiftKey
-        const metaMatch = meta ? event.metaKey : !event.metaKey
 
         // 检查按键
         const keyMatch = event.key.toLowerCase() === key.toLowerCase()

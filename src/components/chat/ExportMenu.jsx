@@ -1,23 +1,23 @@
 import { Download, Copy, FileText, FileJson } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { exportConversation, copyConversation } from '@/lib/export'
 
 /**
  * 导出菜单组件
  * 提供多种导出格式选项
  */
-export function ExportMenu({ conversation, onClose }) {
+export function ExportMenu({ conversation, translate, onClose }) {
   const [copying, setCopying] = useState(false)
 
   const handleExport = (format) => {
     try {
       exportConversation(conversation, format)
-      // 可以添加 toast 提示
-      console.log(`Exported as ${format}`)
+      toast.success(translate?.('toasts.exportSuccess', 'Conversation exported successfully.'))
       if (onClose) onClose()
     } catch (error) {
       console.error('Export failed:', error)
-      alert('导出失败,请重试')
+      toast.error(translate?.('toasts.exportFailed', 'Failed to export conversation.'))
     }
   }
 
@@ -26,15 +26,13 @@ export function ExportMenu({ conversation, onClose }) {
     try {
       const success = await copyConversation(conversation, format)
       if (success) {
-        console.log('Copied to clipboard')
-        // 可以添加 toast 提示
-        alert('已复制到剪贴板')
+        toast.success(translate?.('toasts.messageCopied', 'Message copied to clipboard.'))
       } else {
-        alert('复制失败,请重试')
+        toast.error(translate?.('toasts.failedToCopy', 'Failed to copy message.'))
       }
     } catch (error) {
       console.error('Copy failed:', error)
-      alert('复制失败,请重试')
+      toast.error(translate?.('toasts.failedToCopy', 'Failed to copy message.'))
     } finally {
       setCopying(false)
       if (onClose) onClose()

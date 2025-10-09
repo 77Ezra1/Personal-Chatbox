@@ -119,6 +119,10 @@ export const TRANSLATIONS = {
       reasoning: 'Reasoning',
       systemPrompt: 'System prompt'
     },
+    confirms: {
+      deleteMessage: 'Are you sure you want to delete this message?',
+      clearAllConversations: 'Are you sure you want to clear all conversations?'
+    },
     toasts: {
       generationCancelled: 'Generation cancelled.',
       generationStopped: 'Generation stopped',
@@ -130,7 +134,12 @@ export const TRANSLATIONS = {
       systemPromptSaved: 'System prompt updated.',
       messageCopied: 'Message copied to clipboard.',
       failedToCopy: 'Failed to copy message.',
-      deepThinkingUnsupported: 'This model does not support deep thinking mode.'
+      messageEdited: 'Message edited successfully.',
+      messageDeleted: 'Message deleted successfully.',
+      messageRegenerating: 'Regenerating response...',
+      deepThinkingUnsupported: 'This model does not support deep thinking mode.',
+      exportSuccess: 'Conversation exported successfully.',
+      exportFailed: 'Failed to export conversation.'
     },
     tooltips: {
       stopGenerating: 'Stop generating',
@@ -142,7 +151,17 @@ export const TRANSLATIONS = {
       addImage: 'Insert image',
       toggleDeepThinking: 'Toggle deep thinking mode',
       removeAttachment: 'Remove attachment',
-      copyMessage: 'Copy message'
+      copyMessage: 'Copy message',
+      editMessage: 'Edit message',
+      deleteMessage: 'Delete message',
+      regenerate: 'Regenerate response',
+      save: 'Save',
+      cancel: 'Cancel'
+    },
+    actions: {
+      save: 'Save',
+      cancel: 'Cancel',
+      export: 'Export'
     },
     toggles: {
       languageShortEnglish: 'EN',
@@ -202,6 +221,10 @@ export const TRANSLATIONS = {
       reasoning: '思考过程',
       systemPrompt: '系统提示词'
     },
+    confirms: {
+      deleteMessage: '确定要删除这条消息吗？',
+      clearAllConversations: '确定要清除所有对话吗？'
+    },
     toasts: {
       generationCancelled: '生成已取消。',
       generationStopped: '生成已停止。',
@@ -213,7 +236,12 @@ export const TRANSLATIONS = {
       systemPromptSaved: '系统提示已更新。',
       messageCopied: '消息已复制到剪贴板。',
       failedToCopy: '消息复制失败。',
-      deepThinkingUnsupported: '该模型不支持深度思考模式。'
+      messageEdited: '消息编辑成功。',
+      messageDeleted: '消息删除成功。',
+      messageRegenerating: '正在重新生成响应...',
+      deepThinkingUnsupported: '该模型不支持深度思考模式。',
+      exportSuccess: '对话导出成功。',
+      exportFailed: '对话导出失败。'
     },
     tooltips: {
       stopGenerating: '停止生成',
@@ -225,7 +253,17 @@ export const TRANSLATIONS = {
       addImage: '插入图片',
       toggleDeepThinking: '切换深度思考模式',
       removeAttachment: '移除附件',
-      copyMessage: '复制消息'
+      copyMessage: '复制消息',
+      editMessage: '编辑消息',
+      deleteMessage: '删除消息',
+      regenerate: '重新生成响应',
+      save: '保存',
+      cancel: '取消'
+    },
+    actions: {
+      save: '保存',
+      cancel: '取消',
+      export: '导出'
     },
     toggles: {
       languageShortEnglish: 'EN',

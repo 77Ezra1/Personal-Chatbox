@@ -6,7 +6,7 @@ import { MessageItem } from './MessageItem'
  * 消息列表组件
  * 显示所有消息并自动滚动到底部
  */
-export function MessageList({ messages, translate }) {
+export function MessageList({ messages, translate, onEdit, onDelete, onRegenerate }) {
   const listRef = useRef(null)
 
   // 自动滚动到底部
@@ -18,6 +18,20 @@ export function MessageList({ messages, translate }) {
 
   const handleCopy = () => {
     toast.success(translate('toasts.messageCopied', 'Message copied to clipboard.'))
+  }
+
+  const handleEdit = (messageId, newContent) => {
+    onEdit?.(messageId, newContent)
+    toast.success(translate('toasts.messageEdited', 'Message edited successfully.'))
+  }
+
+  const handleDelete = (messageId) => {
+    onDelete?.(messageId)
+    toast.success(translate('toasts.messageDeleted', 'Message deleted successfully.'))
+  }
+
+  const handleRegenerate = (messageId) => {
+    onRegenerate?.(messageId)
   }
 
   return (
@@ -33,6 +47,9 @@ export function MessageList({ messages, translate }) {
             message={message}
             translate={translate}
             onCopy={handleCopy}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onRegenerate={handleRegenerate}
           />
         ))
       )}

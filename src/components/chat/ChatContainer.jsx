@@ -24,6 +24,9 @@ export function ChatContainer({
   onToggleTheme,
   onOpenSettings,
   onClearConversation,
+  onEditMessage,
+  onDeleteMessage,
+  onRegenerateMessage,
   translate
 }) {
   return (
@@ -45,6 +48,9 @@ export function ChatContainer({
       <MessageList
         messages={messages}
         translate={translate}
+        onEdit={onEditMessage}
+        onDelete={onDeleteMessage}
+        onRegenerate={onRegenerateMessage}
       />
 
       {/* 输入区域 */}

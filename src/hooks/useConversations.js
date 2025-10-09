@@ -258,6 +258,27 @@ export function useConversations() {
     )))
   }
 
+  const deleteMessage = (conversationId, messageId) => {
+    if (!conversationId || !messageId) return
+    setConversations(prev => prev.map(conv => {
+      if (conv.id !== conversationId) return conv
+      return {
+        ...conv,
+        messages: conv.messages.filter(msg => msg.id !== messageId)
+      }
+    }))
+  }
+
+  const editMessage = (conversationId, messageId, newContent) => {
+    if (!conversationId || !messageId) return
+    updateMessage(conversationId, messageId, (prev) => ({
+      ...prev,
+      content: newContent,
+      edited: true,
+      editedAt: new Date().toISOString()
+    }))
+  }
+
   return {
     conversations,
     currentConversation,
@@ -269,7 +290,9 @@ export function useConversations() {
     clearAllConversations,
     appendMessage,
     updateMessage,
-    replaceConversationMessages
+    replaceConversationMessages,
+    deleteMessage,
+    editMessage
   }
 }
 

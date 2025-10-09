@@ -36,7 +36,9 @@ function App() {
     updateMessage,
     renameConversation,
     removeConversation,
-    replaceConversationMessages
+    replaceConversationMessages,
+    deleteMessage,
+    editMessage
   } = useConversations()
 
   // 国际化
@@ -86,7 +88,7 @@ function App() {
         category: file.type.startsWith('image/') ? 'image' : 'file'
       }
       setPendingAttachments(prev => [...prev, attachment])
-    } catch (error) {
+    } catch {
       toast.error(translate('toasts.attachmentReadFailed'))
     }
   }, [translate])
@@ -196,6 +198,43 @@ function App() {
     }
   }, [])
 
+  const handleEditMessage = useCallback((messageId, newContent) => {
+    if (!currentConversationId) return
+    editMessage(currentConversationId, messageId, newContent)
+  }, [currentConversationId, editMessage])
+
+  const handleDeleteMessage = useCallback((messageId) => {
+    if (!currentConversationId) return
+    deleteMessage(currentConversationId, messageId)
+  }, [currentConversationId, deleteMessage])
+
+  const handleRegenerateMessage = useCallback(async (messageId) => {
+    if (!currentConversationId || !currentConversation) return
+    
+    // 找到要重新生成的消息
+    const messageIndex = currentConversation.messages.findIndex(m => m.id === messageId)
+    if (messageIndex === -1) return
+    
+    // 找到对应的用户消息
+    let userMessageIndex = messageIndex - 1
+    while (userMessageIndex >= 0 && currentConversation.messages[userMessageIndex].role !== 'user') {
+      userMessageIndex--
+    }
+    
+    if (userMessageIndex < 0) return
+    
+    const userMessage = currentConversation.messages[userMessageIndex]
+    
+    // 删除旧的助手回复
+    deleteMessage(currentConversationId, messageId)
+    
+    // 显示提示
+    toast.info(translate('toasts.messageRegenerating', 'Regenerating response...'))
+    
+    // 重新发送消息
+    await handleSendMessage(userMessage.content, userMessage.attachments || [])
+  }, [currentConversationId, currentConversation, deleteMessage, handleSendMessage, translate])
+
   // ==================== 对话操作 ====================
   
   const handleNewConversation = useCallback(() => {
@@ -278,6 +317,9 @@ function App() {
         onToggleTheme={toggleTheme}
         onOpenSettings={() => setShowConfig(true)}
         onClearConversation={handleClearConversation}
+        onEditMessage={handleEditMessage}
+        onDeleteMessage={handleDeleteMessage}
+        onRegenerateMessage={handleRegenerateMessage}
         translate={translate}
       />
 

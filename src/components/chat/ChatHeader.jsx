@@ -21,7 +21,7 @@ export function ChatHeader({
   const [showExportMenu, setShowExportMenu] = useState(false)
 
   const handleClear = () => {
-    if (confirm('确定要清空当前对话吗?')) {
+    if (confirm(translate('confirms.clearAllConversations', 'Are you sure you want to clear all conversations?'))) {
       onClear()
     }
   }
@@ -49,6 +49,7 @@ export function ChatHeader({
             <div className="export-menu-wrapper">
               <ExportMenu
                 conversation={conversation}
+                translate={translate}
                 onClose={() => setShowExportMenu(false)}
               />
             </div>

@@ -18,7 +18,7 @@ export function exportToMarkdown(conversation) {
   markdown += `**创建时间**: ${date}\n\n`
   markdown += `---\n\n`
 
-  messages.forEach((message, index) => {
+  messages.forEach((message) => {
     const role = message.role === 'user' ? '👤 用户' : '🤖 AI'
     markdown += `## ${role}\n\n`
     
