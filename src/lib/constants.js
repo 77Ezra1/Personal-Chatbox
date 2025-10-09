@@ -126,6 +126,7 @@ export const TRANSLATIONS = {
     },
     confirms: {
       deleteMessage: 'Are you sure you want to delete this message?',
+      deleteConversation: 'Are you sure you want to delete the conversation "{title}"?',
       clearAllConversations: 'Are you sure you want to clear all conversations?'
     },
     toasts: {
@@ -228,6 +229,7 @@ export const TRANSLATIONS = {
     },
     confirms: {
       deleteMessage: '确定要删除这条消息吗？',
+      deleteConversation: '确定要删除对话「{title}」吗？',
       clearAllConversations: '确定要清除所有对话吗？'
     },
     toasts: {
