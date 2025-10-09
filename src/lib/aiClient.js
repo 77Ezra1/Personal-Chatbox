@@ -339,15 +339,20 @@ export function extractReasoningSegments(content) {
     .map(match => match?.[1]?.trim())
     .filter(Boolean)
 
+  // 移除所有 reasoning 和 answer 标签及其内容
   const stripped = content
     .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
     .replace(/<answer>[\s\S]*?<\/answer>/gi, '')
+    .replace(/<\/?reasoning>/gi, '')  // 移除未闭合的标签
+    .replace(/<\/?answer>/gi, '')     // 移除未闭合的标签
     .trim()
 
   const reasoning = reasoningMatches.join('\n\n')
+  
+  // 如果有 answer 标签,使用标签内容;否则使用移除标签后的内容
   const answer = answerMatches.length > 0
     ? answerMatches.join('\n\n').trim()
-    : stripped || content
+    : (stripped || content)
 
   return {
     reasoning,

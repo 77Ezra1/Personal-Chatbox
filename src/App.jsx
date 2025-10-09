@@ -102,7 +102,7 @@ const TRANSLATIONS = {
     },
     toggles: {
       languageShortEnglish: 'EN',
-      languageShortChinese: '涓枃',
+      languageShortChinese: '中文',
       light: 'Light',
       dark: 'Dark',
       deepThinkingOn: 'Deep thinking: On',
@@ -143,12 +143,16 @@ const TRANSLATIONS = {
       apiKey: 'API 密钥',
       temperature: '温度',
       maxTokens: '最大 Token 数',
+      supportsDeepThinking: '支持深度思考',
       user: '你',
       assistant: '助手'
     },
     placeholders: {
       messageInput: '请输入消息...',
       customModel: '添加自定义模型'
+    },
+    hints: {
+      supportsDeepThinking: '如果模型支持深度思考模式请启用此选项（例如 o1、o3-mini）'
     },
     sections: {
       reasoning: '思考过程',
@@ -1241,11 +1245,22 @@ function App() {
           : undefined
       })
 
-      const finalContent = (response?.content ?? latestContent ?? '').trim()
+      let finalContent = (response?.content ?? latestContent ?? '').trim()
+      let finalReasoning = null
+      
+      // 如果是深度思考模式,确保从最终内容中提取并移除标签
+      if (isDeepThinking && finalContent) {
+        const segments = extractReasoningSegments(finalContent)
+        if (segments) {
+          finalContent = segments.answer
+          finalReasoning = segments.reasoning || latestReasoning || response?.reasoning || null
+        } else {
+          finalReasoning = response?.reasoning ?? (latestReasoning || null)
+        }
+      }
+      
       if (finalContent) {
-        const reasoningText = isDeepThinking
-          ? response?.reasoning ?? (latestReasoning || null)
-          : null
+        const reasoningText = isDeepThinking ? finalReasoning : null
         const metadata = { raw: response?.raw }
         if (isDeepThinking) {
           metadata.deepThinking = true
