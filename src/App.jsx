@@ -25,6 +25,7 @@ import { MarkdownRenderer } from '@/components/markdown-renderer.jsx'
 import { Toaster, toast } from 'sonner'
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient.js'
 import { useConversations, conversationUtils } from '@/hooks/useConversations.js'
+import { isDeepThinkingSupported } from '@/utils/ai-env.js'
 import './App.css'
 
 const CUSTOM_MODELS_KEY = 'custom-models.v1'
@@ -768,13 +769,13 @@ function App() {
   }, [isDeepThinking])
 
   useEffect(() => {
-    if (!isDeepThinkingSupported && isDeepThinking) {
+    if (!isDeepThinkingAvailable && isDeepThinking) {
       setIsDeepThinking(false)
       toast.info(
         translate('toasts.deepThinkingUnsupported', 'This model does not support deep thinking mode.')
       )
     }
-  }, [isDeepThinkingSupported, isDeepThinking, translate])
+  }, [isDeepThinkingAvailable, isDeepThinking, translate])
 
   const handleScrollToBottom = useCallback(() => {
     const container = messagesContainerRef.current
@@ -863,8 +864,10 @@ function App() {
     return modelConfig.model ? [modelConfig.model, ...configuredModelOptions] : configuredModelOptions
   }, [configuredModelOptions, modelConfig.model])
 
-  const isDeepThinkingSupported = useMemo(
-    () => DEEP_THINKING_SUPPORTED_PROVIDERS.has(modelConfig.provider),
+  const isDeepThinkingAvailable = useMemo(
+    () =>
+      isDeepThinkingSupported() &&
+      DEEP_THINKING_SUPPORTED_PROVIDERS.has(modelConfig.provider),
     [modelConfig.provider]
   )
 
@@ -877,14 +880,14 @@ function App() {
   }
 
   const handleToggleDeepThinking = useCallback(() => {
-    if (!isDeepThinkingSupported) {
+    if (!isDeepThinkingAvailable) {
       toast.info(
         translate('toasts.deepThinkingUnsupported', 'This model does not support deep thinking mode.')
       )
       return
     }
     setIsDeepThinking(prev => !prev)
-  }, [isDeepThinkingSupported, translate])
+  }, [isDeepThinkingAvailable, translate])
 
   const handleAttachmentSelection = useCallback(
     async (filesInput, categoryOverride) => {
@@ -1522,27 +1525,27 @@ function App() {
               type="button"
               variant="ghost"
               className={`toolbar-button ${
-                isDeepThinking && isDeepThinkingSupported ? 'toolbar-button-active' : ''
+                isDeepThinking && isDeepThinkingAvailable ? 'toolbar-button-active' : ''
               }`}
               onClick={handleToggleDeepThinking}
               title={translate(
-                isDeepThinkingSupported
+                isDeepThinkingAvailable
                   ? 'tooltips.toggleDeepThinking'
                   : 'toasts.deepThinkingUnsupported',
-                isDeepThinkingSupported
+                isDeepThinkingAvailable
                   ? 'Toggle deep thinking mode'
                   : 'This model does not support deep thinking mode.'
               )}
               aria-label={translate(
-                isDeepThinkingSupported
+                isDeepThinkingAvailable
                   ? 'tooltips.toggleDeepThinking'
                   : 'toasts.deepThinkingUnsupported',
-                isDeepThinkingSupported
+                isDeepThinkingAvailable
                   ? 'Toggle deep thinking mode'
                   : 'This model does not support deep thinking mode.'
               )}
               aria-pressed={isDeepThinking}
-              disabled={!isDeepThinkingSupported}
+              disabled={!isDeepThinkingAvailable}
             >
               <BrainCircuit className="w-4 h-4" />
               <span>{translate(isDeepThinking ? 'toggles.deepThinkingOn' : 'toggles.deepThinkingOff')}</span>
