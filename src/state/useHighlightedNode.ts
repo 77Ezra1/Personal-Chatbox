@@ -17,15 +17,19 @@ export type HighlightState = {
   selectedGroupId?: string | null
 }
 
-export const selectedHighlightGroupId = (
+export function selectedHighlightGroupId(
   state: HighlightState
-): string | null => state.selectedGroupId ?? null
+): string | null {
+  return state.selectedGroupId ?? null
+}
 
-export const selectHighlightGroups = (state: HighlightState) => state.groups
+export function selectHighlightGroups(state: HighlightState) {
+  return state.groups
+}
 
-export const selectedHighlightGroup = (
+export function selectedHighlightGroup(
   state: HighlightState
-): HighlightGroup | undefined => {
+): HighlightGroup | undefined {
   const groupId = selectedHighlightGroupId(state)
   if (!groupId) {
     return undefined
@@ -34,16 +38,16 @@ export const selectedHighlightGroup = (
   return selectHighlightGroups(state)[groupId]
 }
 
-export const selectedHighlightNodeId = (
+export function selectedHighlightNodeId(
   state: HighlightState
-): string | null => {
+): string | null {
   const group = selectedHighlightGroup(state)
   return group?.highlightedNodeId ?? null
 }
 
-export const selectHighlightedNode = (
+export function selectHighlightedNode(
   state: HighlightState
-): HighlightNode | undefined => {
+): HighlightNode | undefined {
   const group = selectedHighlightGroup(state)
   const nodeId = selectedHighlightNodeId(state)
 
@@ -54,9 +58,9 @@ export const selectHighlightedNode = (
   return group.nodes.find((node) => node.id === nodeId)
 }
 
-export const selectHighlightSummary = (
+export function selectHighlightSummary(
   state: HighlightState
-): { groupId: string | null; nodeId: string | null } => {
+): { groupId: string | null; nodeId: string | null } {
   const groupId = selectedHighlightGroupId(state)
   const nodeId = selectedHighlightNodeId(state)
 
