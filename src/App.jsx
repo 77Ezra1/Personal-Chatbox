@@ -134,13 +134,16 @@ function App() {
 
       let accumulatedContent = ''
 
-      await generateAIResponse({
+      const response = await generateAIResponse({
         messages,
-        config: modelConfig,
-        isDeepThinking,
+        modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
         signal: abortControllerRef.current.signal,
-        onChunk: (chunk) => {
-          accumulatedContent += chunk
+        onToken: (token, fullText) => {
+          if (typeof fullText === 'string') {
+            accumulatedContent = fullText
+          } else if (typeof token === 'string') {
+            accumulatedContent += token
+          }
           updateMessage(currentConversationId, placeholderMessage.id, () => ({
             content: accumulatedContent,
             status: 'loading'
@@ -149,14 +152,19 @@ function App() {
       })
 
       // 提取思考过程和答案
-      let finalContent = accumulatedContent
-      let finalReasoning = null
+      let finalContent = typeof response?.content === 'string'
+        ? response.content
+        : accumulatedContent
+      let finalReasoning = response?.reasoning ?? null
 
-      if (isDeepThinking && accumulatedContent) {
-        const segments = extractReasoningSegments(accumulatedContent)
-        if (segments) {
-          finalContent = segments.answer
-          finalReasoning = segments.reasoning
+      if (isDeepThinking) {
+        const contentForExtraction = finalContent || accumulatedContent
+        if (!finalReasoning && contentForExtraction) {
+          const segments = extractReasoningSegments(contentForExtraction)
+          if (segments) {
+            finalContent = segments.answer
+            finalReasoning = segments.reasoning
+          }
         }
       }
 
@@ -164,7 +172,10 @@ function App() {
       updateMessage(currentConversationId, placeholderMessage.id, () => ({
         content: finalContent,
         status: 'done',
-        metadata: finalReasoning ? { reasoning: finalReasoning, deepThinking: isDeepThinking } : {}
+        metadata: {
+          ...(isDeepThinking ? { deepThinking: true } : {}),
+          ...(finalReasoning ? { reasoning: finalReasoning } : {})
+        }
       }))
 
     } catch (error) {
