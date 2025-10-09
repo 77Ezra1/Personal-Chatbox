@@ -68,4 +68,35 @@ describe('useModelConfig custom model persistence', () => {
 
     unmountReload()
   })
+
+  it('exposes updated mistral defaults and stores selection', async () => {
+    const hookRef = createRef()
+    render(<HookHarness ref={hookRef} />)
+
+    await waitFor(() => {
+      expect(hookRef.current).toBeTruthy()
+    })
+
+    await act(async () => {
+      hookRef.current.setProvider('mistral')
+    })
+
+    await waitFor(() => {
+      expect(hookRef.current.currentProvider).toBe('mistral')
+    })
+
+    const mistralDefaults = hookRef.current.getProviderModels('mistral')
+    expect(mistralDefaults).toContain('mistral-medium-latest')
+
+    await act(async () => {
+      hookRef.current.setModel('mistral-medium-latest')
+    })
+
+    await waitFor(() => {
+      expect(hookRef.current.currentModel).toBe('mistral-medium-latest')
+    })
+
+    const storedConfig = JSON.parse(window.localStorage.getItem(MODEL_CONFIG_KEY))
+    expect(storedConfig?.providers?.mistral?.activeModel).toBe('mistral-medium-latest')
+  })
 })
