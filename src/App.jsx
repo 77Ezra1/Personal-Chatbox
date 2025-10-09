@@ -942,20 +942,28 @@ function App() {
 
   const handleAttachmentInputChange = useCallback(
     async (event) => {
-      if (event.target.files?.length) {
-        await handleAttachmentSelection(event.target.files, 'file')
+      const input = event.currentTarget ?? event.target
+      const files = input?.files
+      if (files?.length) {
+        await handleAttachmentSelection(files, 'file')
       }
-      event.target.value = ''
+      if (input) {
+        input.value = ''
+      }
     },
     [handleAttachmentSelection]
   )
 
   const handleImageInputChange = useCallback(
     async (event) => {
-      if (event.target.files?.length) {
-        await handleAttachmentSelection(event.target.files, 'image')
+      const input = event.currentTarget ?? event.target
+      const files = input?.files
+      if (files?.length) {
+        await handleAttachmentSelection(files, 'image')
       }
-      event.target.value = ''
+      if (input) {
+        input.value = ''
+      }
     },
     [handleAttachmentSelection]
   )
