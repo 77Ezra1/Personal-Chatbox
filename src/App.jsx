@@ -25,8 +25,12 @@ import { MarkdownRenderer } from '@/components/markdown-renderer.jsx'
 import { Toaster, toast } from 'sonner'
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient.js'
 import { useConversations, conversationUtils } from '@/hooks/useConversations.js'
-import { isDeepThinkingSupported } from '@/utils/ai-env.js'
 import './App.css'
+
+function isDeepThinkingSupported() {
+  if (typeof window === 'undefined') return false
+  return !!window.ai
+}
 
 const CUSTOM_MODELS_KEY = 'custom-models.v1'
 const MODEL_CONFIG_KEY = 'model-config.v1'
