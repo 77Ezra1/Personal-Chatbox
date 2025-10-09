@@ -285,57 +285,62 @@ function App() {
   const conversationList = Object.values(conversations || {})
 
   return (
-    <div className={`app ${theme}`}>
-      {/* 侧边栏 */}
-      <Sidebar
-        conversations={conversationList}
-        currentConversationId={currentConversationId}
-        onSelectConversation={selectConversation}
-        onNewConversation={handleNewConversation}
-        onRenameConversation={renameConversation}
-        onDeleteConversation={removeConversation}
-        onClearAll={clearAllConversations}
-        translate={translate}
-      />
+    <>
+      {/* Toast 通知 */}
+      <Toaster position="top-center" />
 
-      {/* 聊天区域 */}
-      <ChatContainer
-        conversation={currentConversation}
-        messages={currentConversation?.messages || []}
-        isGenerating={isGenerating}
-        pendingAttachments={pendingAttachments}
-        isDeepThinking={isDeepThinking}
-        isDeepThinkingAvailable={isDeepThinkingAvailable}
-        language={language}
-        theme={theme}
-        onSendMessage={handleSendMessage}
-        onStopGeneration={handleStopGeneration}
-        onAddAttachment={handleAddAttachment}
-        onRemoveAttachment={handleRemoveAttachment}
-        onToggleDeepThinking={toggleDeepThinking}
-        onToggleLanguage={toggleLanguage}
-        onToggleTheme={toggleTheme}
-        onOpenSettings={() => setShowConfig(true)}
-        onClearConversation={handleClearConversation}
-        onEditMessage={handleEditMessage}
-        onDeleteMessage={handleDeleteMessage}
-        onRegenerateMessage={handleRegenerateMessage}
-        translate={translate}
-      />
+      <div className={`app-container ${theme}`}>
+        {/* 侧边栏 */}
+        <Sidebar
+          conversations={conversationList}
+          currentConversationId={currentConversationId}
+          onSelectConversation={selectConversation}
+          onNewConversation={handleNewConversation}
+          onRenameConversation={renameConversation}
+          onDeleteConversation={removeConversation}
+          onClearAll={clearAllConversations}
+          translate={translate}
+        />
 
-      {/* 配置面板 */}
-      <ConfigPanel
-        modelConfig={modelConfig}
-        currentProvider={currentProvider}
-        currentModel={currentModel}
-        providerModels={currentProviderModels}
-        onProviderChange={setProvider}
-        onModelChange={setModel}
-        onSaveConfig={handleSaveConfig}
-        onClose={() => setShowConfig(false)}
-        isOpen={showConfig}
-        translate={translate}
-      />
+        {/* 聊天区域 */}
+        <ChatContainer
+          conversation={currentConversation}
+          messages={currentConversation?.messages || []}
+          isGenerating={isGenerating}
+          pendingAttachments={pendingAttachments}
+          isDeepThinking={isDeepThinking}
+          isDeepThinkingAvailable={isDeepThinkingAvailable}
+          language={language}
+          theme={theme}
+          onSendMessage={handleSendMessage}
+          onStopGeneration={handleStopGeneration}
+          onAddAttachment={handleAddAttachment}
+          onRemoveAttachment={handleRemoveAttachment}
+          onToggleDeepThinking={toggleDeepThinking}
+          onToggleLanguage={toggleLanguage}
+          onToggleTheme={toggleTheme}
+          onOpenSettings={() => setShowConfig(true)}
+          onClearConversation={handleClearConversation}
+          onEditMessage={handleEditMessage}
+          onDeleteMessage={handleDeleteMessage}
+          onRegenerateMessage={handleRegenerateMessage}
+          translate={translate}
+        />
+
+        {/* 配置面板 */}
+        <ConfigPanel
+          modelConfig={modelConfig}
+          currentProvider={currentProvider}
+          currentModel={currentModel}
+          providerModels={currentProviderModels}
+          onProviderChange={setProvider}
+          onModelChange={setModel}
+          onSaveConfig={handleSaveConfig}
+          onClose={() => setShowConfig(false)}
+          isOpen={showConfig}
+          translate={translate}
+        />
+      </div>
 
       {/* 快捷键帮助 */}
       {showShortcuts && (
@@ -345,10 +350,7 @@ function App() {
           translate={translate}
         />
       )}
-
-      {/* Toast 通知 */}
-      <Toaster position="top-center" />
-    </div>
+    </>
   )
 }
 
