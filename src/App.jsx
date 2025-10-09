@@ -310,6 +310,13 @@ function App() {
           onRenameConversation={renameConversation}
           onDeleteConversation={removeConversation}
           onClearAll={clearAllConversations}
+          onClearConversation={handleClearConversation}
+          language={language}
+          theme={theme}
+          currentConversation={currentConversation}
+          onToggleLanguage={toggleLanguage}
+          onToggleTheme={toggleTheme}
+          onOpenSettings={() => setShowConfig(true)}
           translate={translate}
         />
 
@@ -321,17 +328,11 @@ function App() {
           pendingAttachments={pendingAttachments}
           isDeepThinking={isDeepThinking}
           isDeepThinkingAvailable={isDeepThinkingAvailable}
-          language={language}
-          theme={theme}
           onSendMessage={handleSendMessage}
           onStopGeneration={handleStopGeneration}
           onAddAttachment={handleAddAttachment}
           onRemoveAttachment={handleRemoveAttachment}
           onToggleDeepThinking={toggleDeepThinking}
-          onToggleLanguage={toggleLanguage}
-          onToggleTheme={toggleTheme}
-          onOpenSettings={() => setShowConfig(true)}
-          onClearConversation={handleClearConversation}
           onEditMessage={handleEditMessage}
           onDeleteMessage={handleDeleteMessage}
           onRegenerateMessage={handleRegenerateMessage}

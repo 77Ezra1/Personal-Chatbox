@@ -13,17 +13,11 @@ export function ChatContainer({
   pendingAttachments,
   isDeepThinking,
   isDeepThinkingAvailable,
-  language,
-  theme,
   onSendMessage,
   onStopGeneration,
   onAddAttachment,
   onRemoveAttachment,
   onToggleDeepThinking,
-  onToggleLanguage,
-  onToggleTheme,
-  onOpenSettings,
-  onClearConversation,
   onEditMessage,
   onDeleteMessage,
   onRegenerateMessage,
@@ -34,14 +28,6 @@ export function ChatContainer({
       {/* 头部 */}
       <ChatHeader
         title={conversation?.title || translate('buttons.newConversation', 'New conversation')}
-        language={language}
-        theme={theme}
-        conversation={conversation}
-        onClear={onClearConversation}
-        onToggleLanguage={onToggleLanguage}
-        onToggleTheme={onToggleTheme}
-        onOpenSettings={onOpenSettings}
-        translate={translate}
       />
 
       {/* 消息列表 */}
