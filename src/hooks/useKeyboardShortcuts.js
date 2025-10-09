@@ -54,7 +54,10 @@ export function formatShortcut(shortcut) {
   const parts = []
 
   // 检测操作系统
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const hasNavigator = typeof navigator !== 'undefined' && navigator?.platform
+  const isMac = hasNavigator
+    ? navigator.platform.toUpperCase().indexOf('MAC') >= 0
+    : false
 
   if (ctrl || meta) {
     parts.push(isMac ? '⌘' : 'Ctrl')
