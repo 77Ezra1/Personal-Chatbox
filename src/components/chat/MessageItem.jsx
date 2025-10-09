@@ -64,17 +64,9 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
   }
 
   return (
-    <div className={`message-item ${role}`}>
-      {/* 消息头像 */}
-      <div className="message-avatar">
-        {role === 'user' 
-          ? translate('labels.user', 'You')
-          : translate('labels.assistant', 'Assistant')
-        }
-      </div>
-
+    <div className={`message message-${role}`}>
       {/* 消息内容 */}
-      <div className="message-content">
+      <div className={`message-content message-content-${role}`}>
         {/* 附件列表 */}
         {attachments && attachments.length > 0 && (
           <div className="message-attachments">

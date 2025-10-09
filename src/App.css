@@ -1783,7 +1783,7 @@ button:hover:not(:disabled),
   transition: opacity 0.2s;
 }
 
-.message-item:hover .message-actions {
+.message:hover .message-actions {
   opacity: 1;
 }
 

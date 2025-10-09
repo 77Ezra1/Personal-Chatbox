@@ -35,9 +35,9 @@ export function MessageList({ messages, translate, onEdit, onDelete, onRegenerat
   }
 
   return (
-    <div ref={listRef} className="message-list">
+    <div ref={listRef} className="messages-container">
       {messages.length === 0 ? (
-        <div className="message-list-empty">
+        <div className="empty-state">
           <p>{translate('placeholders.messageInput', 'Type a message...')}</p>
         </div>
       ) : (
