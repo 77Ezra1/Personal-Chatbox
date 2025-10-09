@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { Check, Copy } from 'lucide-react'
 
@@ -108,7 +109,7 @@ export function MarkdownRenderer({ content, className, isStreaming = false }) {
 
   return (
     <div className={cn('markdown-body', className, isStreaming && 'streaming')}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MARKDOWN_COMPONENTS}>
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MARKDOWN_COMPONENTS}>
         {text}
       </ReactMarkdown>
     </div>
