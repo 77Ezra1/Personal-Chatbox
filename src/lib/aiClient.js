@@ -477,7 +477,7 @@ async function callOpenAICompatible({
 
   if (response.body && shouldStream) {
     let fullText = ''
-    const reasoningChunks = []
+    let reasoningText = ''
     await processEventStream(response.body, (event) => {
       const deltaText = extractOpenAIText(event?.choices?.[0]?.delta?.content)
       if (deltaText) {
@@ -486,10 +486,10 @@ async function callOpenAICompatible({
       }
       const deltaReasoning = extractOpenAIText(event?.choices?.[0]?.delta?.reasoning)
       if (deltaReasoning) {
-        reasoningChunks.push(deltaReasoning)
+        reasoningText += deltaReasoning
       }
     })
-    const reasoning = normalizeReasoningContent(reasoningChunks)
+    const reasoning = normalizeReasoningContent(reasoningText)
     return { role: 'assistant', content: fullText, raw: null, reasoning }
   }
 
@@ -703,8 +703,7 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
 
   if (response.body && onToken) {
     let fullText = ''
-    const reasoningChunks = []
-    const seenReasoning = new Set()
+    let reasoningText = ''
 
     await processEventStream(response.body, (event) => {
       const text = extractVolcengineText(event)
@@ -714,14 +713,12 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
       }
 
       const reasoningDelta = extractVolcengineReasoning(event)
-      const normalizedReasoning = normalizeReasoningContent(reasoningDelta)
-      if (normalizedReasoning && !seenReasoning.has(normalizedReasoning)) {
-        seenReasoning.add(normalizedReasoning)
-        reasoningChunks.push(normalizedReasoning)
+      if (reasoningDelta) {
+        reasoningText = reasoningDelta
       }
     }, { treatNonSSEAsJSON: true })
 
-    const reasoning = normalizeReasoningContent(reasoningChunks)
+    const reasoning = normalizeReasoningContent(reasoningText)
     return { role: 'assistant', content: fullText, raw: null, reasoning, streaming: true }
   }
 
