@@ -690,6 +690,15 @@ function App() {
   })
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true)
 
+  const translate = useCallback(
+    (key, fallback) =>
+      getTranslationValue(language, key) ??
+      fallback ??
+      getTranslationValue('en', key) ??
+      key,
+    [language]
+  )
+
   const hasUnsavedChanges = useMemo(() => {
     const savedSnapshot = JSON.stringify(savedProviderConfigs)
     if (savedSnapshot !== draftFingerprint) return true
@@ -787,15 +796,6 @@ function App() {
     handleScroll()
     return () => container.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const translate = useCallback(
-    (key, fallback) =>
-      getTranslationValue(language, key) ??
-      fallback ??
-      getTranslationValue('en', key) ??
-      key,
-    [language]
-  )
 
   const handleCopyMessage = useCallback(
     async (content) => {
