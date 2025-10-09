@@ -9,7 +9,7 @@ const OPENAI_COMPATIBLE_PROVIDER_CONFIG = {
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   },
   deepseek: {
-    endpoint: 'https://api.deepseek.com/v1/chat/completions',
+    endpoint: 'https://api.deepseek.com/chat/completions',
     defaultModel: 'deepseek-chat',
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   },
@@ -374,6 +374,15 @@ function finalizeDeepThinkingResponse(result, deepThinkingEnabled) {
 
   const extracted = extractReasoningSegments(result.content)
   if (!extracted) {
+    const cleanedContent = typeof result.content === 'string'
+      ? result.content.replace(/<\/?(reasoning|answer)>/gi, '').trim()
+      : result.content
+    if (cleanedContent !== result.content) {
+      return {
+        ...result,
+        content: cleanedContent
+      }
+    }
     return result
   }
 

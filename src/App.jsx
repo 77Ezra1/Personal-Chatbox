@@ -17,7 +17,8 @@ import {
   ArrowDown,
   PencilLine,
   Check,
-  X as CloseIcon
+  X as CloseIcon,
+  Copy
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import { MarkdownRenderer } from '@/components/markdown-renderer.jsx'
@@ -48,6 +49,7 @@ const TRANSLATIONS = {
       addImage: 'Add image',
       deepThinking: 'Deep thinking',
       download: 'Download',
+      copyMessage: 'Copy message',
       scrollToLatest: 'Scroll to latest'
     },
     labels: {
@@ -76,7 +78,10 @@ const TRANSLATIONS = {
       configSaved: 'Configuration saved.',
       configSaveFailed: 'Failed to save configuration.',
       attachmentReadFailed: 'Failed to read attachment. Please try again.',
-      systemPromptSaved: 'System prompt updated.'
+      systemPromptSaved: 'System prompt updated.',
+      messageCopied: 'Message copied to clipboard.',
+      failedToCopy: 'Failed to copy message.',
+      deepThinkingUnsupported: 'This model does not support deep thinking mode.'
     },
     tooltips: {
       stopGenerating: 'Stop generating',
@@ -87,7 +92,8 @@ const TRANSLATIONS = {
       uploadAttachment: 'Upload attachment',
       addImage: 'Insert image',
       toggleDeepThinking: 'Toggle deep thinking mode',
-      removeAttachment: 'Remove attachment'
+      removeAttachment: 'Remove attachment',
+      copyMessage: 'Copy message'
     },
     toggles: {
       languageShortEnglish: 'EN',
@@ -122,7 +128,8 @@ const TRANSLATIONS = {
       addImage: '添加图片',
       deepThinking: '深度思考',
       download: '下载',
-      scrollToLatest: '回到底部'
+      copyMessage: '复制消息',
+      scrollToLatest: '滚动到底部'
     },
     labels: {
       provider: '服务商',
@@ -131,12 +138,12 @@ const TRANSLATIONS = {
       apiKey: 'API 密钥',
       temperature: '温度',
       maxTokens: '最大 Token 数',
-      user: '我',
+      user: '你',
       assistant: '助手'
     },
     placeholders: {
-      messageInput: '输入消息...',
-      customModel: '输入自定义模型'
+      messageInput: '请输入消息...',
+      customModel: '添加自定义模型'
     },
     sections: {
       reasoning: '思考过程',
@@ -144,24 +151,28 @@ const TRANSLATIONS = {
     },
     toasts: {
       generationCancelled: '生成已取消。',
-      generationStopped: '已停止生成。',
-      noContent: '未返回内容，请重试。',
+      generationStopped: '生成已停止。',
+      noContent: '没有返回内容，请重试。',
       failedToGenerate: '生成响应失败。',
       configSaved: '配置已保存。',
       configSaveFailed: '配置保存失败。',
       attachmentReadFailed: '附件读取失败，请重试。',
-      systemPromptSaved: '系统提示词已更新。'
+      systemPromptSaved: '系统提示已更新。',
+      messageCopied: '消息已复制到剪贴板。',
+      failedToCopy: '消息复制失败。',
+      deepThinkingUnsupported: '该模型不支持深度思考模式。'
     },
     tooltips: {
       stopGenerating: '停止生成',
-      clearConversations: '清空所有对话',
+      clearConversations: '清除所有对话',
       toggleLanguage: '切换语言',
       toggleTheme: '切换主题',
       openSettings: '打开设置',
       uploadAttachment: '上传附件',
       addImage: '插入图片',
       toggleDeepThinking: '切换深度思考模式',
-      removeAttachment: '移除附件'
+      removeAttachment: '移除附件',
+      copyMessage: '复制消息'
     },
     toggles: {
       languageShortEnglish: 'EN',
@@ -268,9 +279,9 @@ const PROVIDERS = {
   }
 }
 
+// DeepSeek 当前仅提供非流式接口，stream 参数会报错，因此不加入该集合
 const STREAMING_CAPABLE_PROVIDERS = new Set([
   'openai',
-  'deepseek',
   'moonshot',
   'groq',
   'mistral',
@@ -279,6 +290,8 @@ const STREAMING_CAPABLE_PROVIDERS = new Set([
   'google',
   'volcengine'
 ])
+
+const DEEP_THINKING_SUPPORTED_PROVIDERS = new Set(['openai'])
 
 const getDefaultModel = (provider, customModels = {}) => {
   const defaults = PROVIDERS[provider]?.models ?? []
@@ -745,6 +758,15 @@ function App() {
     window.localStorage.setItem(DEEP_THINKING_KEY, isDeepThinking ? 'true' : 'false')
   }, [isDeepThinking])
 
+  useEffect(() => {
+    if (!isDeepThinkingSupported && isDeepThinking) {
+      setIsDeepThinking(false)
+      toast.info(
+        translate('toasts.deepThinkingUnsupported', 'This model does not support deep thinking mode.')
+      )
+    }
+  }, [isDeepThinkingSupported, isDeepThinking, translate])
+
   const handleScrollToBottom = useCallback(() => {
     const container = messagesContainerRef.current
     if (!container) return
@@ -773,6 +795,32 @@ function App() {
       getTranslationValue('en', key) ??
       key,
     [language]
+  )
+
+  const handleCopyMessage = useCallback(
+    async (content) => {
+      if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+        toast.error(translate('toasts.failedToCopy', 'Failed to copy message.'))
+        return
+      }
+      if (typeof content !== 'string' || content.trim().length === 0) {
+        toast.error(translate('toasts.failedToCopy', 'Failed to copy message.'))
+        return
+      }
+      const clipboard = navigator.clipboard
+      if (!clipboard || typeof clipboard.writeText !== 'function') {
+        toast.error(translate('toasts.failedToCopy', 'Failed to copy message.'))
+        return
+      }
+      try {
+        await clipboard.writeText(content)
+        toast.success(translate('toasts.messageCopied', 'Message copied to clipboard.'))
+      } catch (error) {
+        console.error('Failed to copy message', error)
+        toast.error(translate('toasts.failedToCopy', 'Failed to copy message.'))
+      }
+    },
+    [translate]
   )
 
   const messageCount = currentConversation?.messages?.length ?? 0
@@ -815,6 +863,11 @@ function App() {
     return modelConfig.model ? [modelConfig.model, ...configuredModelOptions] : configuredModelOptions
   }, [configuredModelOptions, modelConfig.model])
 
+  const isDeepThinkingSupported = useMemo(
+    () => DEEP_THINKING_SUPPORTED_PROVIDERS.has(modelConfig.provider),
+    [modelConfig.provider]
+  )
+
   const toggleLanguage = () => {
     setLanguage(prev => (prev === 'en' ? 'zh' : 'en'))
   }
@@ -824,8 +877,14 @@ function App() {
   }
 
   const handleToggleDeepThinking = useCallback(() => {
+    if (!isDeepThinkingSupported) {
+      toast.info(
+        translate('toasts.deepThinkingUnsupported', 'This model does not support deep thinking mode.')
+      )
+      return
+    }
     setIsDeepThinking(prev => !prev)
-  }, [])
+  }, [isDeepThinkingSupported, translate])
 
   const handleAttachmentSelection = useCallback(
     async (filesInput, categoryOverride) => {
@@ -1298,6 +1357,9 @@ function App() {
           >
             {(currentConversation?.messages ?? []).map((message) => {
               const isUser = message.role === 'user'
+              const canCopyMessage =
+                typeof message.content === 'string' && message.content.trim().length > 0
+              const copyLabel = translate('tooltips.copyMessage', 'Copy message')
               return (
                 <div
                   key={message.id}
@@ -1306,8 +1368,21 @@ function App() {
                   <div
                     className={`message-content ${
                       isUser ? 'message-content-user' : 'message-content-ai'
-                    } ${message.status === 'error' ? 'message-error' : ''}`}
+                    } ${message.status === 'error' ? 'message-error' : ''} ${
+                      canCopyMessage ? 'has-copy-button' : ''
+                    }`}
                   >
+                    {canCopyMessage ? (
+                      <button
+                        type="button"
+                        className="message-copy-button"
+                        onClick={() => handleCopyMessage(message.content)}
+                        aria-label={copyLabel}
+                        title={copyLabel}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    ) : null}
                     <MarkdownRenderer
                       content={message.content || (message.status === 'loading' ? '...' : '')}
                       isStreaming={message.status === 'loading'}
@@ -1364,7 +1439,7 @@ function App() {
                                   rel="noreferrer"
                                   title={translate('buttons.download')}
                                 >
-                                  <Download className="w-4 h-4" />
+                                  <Download className="w-4 h-4" stroke="#1F2430" color="#1F2430" />
                                 </a>
                               ) : null}
                             </div>
@@ -1438,11 +1513,28 @@ function App() {
             <Button
               type="button"
               variant="ghost"
-              className={`toolbar-button ${isDeepThinking ? 'toolbar-button-active' : ''}`}
+              className={`toolbar-button ${
+                isDeepThinking && isDeepThinkingSupported ? 'toolbar-button-active' : ''
+              }`}
               onClick={handleToggleDeepThinking}
-              title={translate('tooltips.toggleDeepThinking')}
-              aria-label={translate('tooltips.toggleDeepThinking')}
+              title={translate(
+                isDeepThinkingSupported
+                  ? 'tooltips.toggleDeepThinking'
+                  : 'toasts.deepThinkingUnsupported',
+                isDeepThinkingSupported
+                  ? 'Toggle deep thinking mode'
+                  : 'This model does not support deep thinking mode.'
+              )}
+              aria-label={translate(
+                isDeepThinkingSupported
+                  ? 'tooltips.toggleDeepThinking'
+                  : 'toasts.deepThinkingUnsupported',
+                isDeepThinkingSupported
+                  ? 'Toggle deep thinking mode'
+                  : 'This model does not support deep thinking mode.'
+              )}
               aria-pressed={isDeepThinking}
+              disabled={!isDeepThinkingSupported}
             >
               <BrainCircuit className="w-4 h-4" />
               <span>{translate(isDeepThinking ? 'toggles.deepThinkingOn' : 'toggles.deepThinkingOff')}</span>
@@ -1757,3 +1849,4 @@ function App() {
 }
 
 export default App
+

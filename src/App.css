@@ -458,6 +458,56 @@ button:hover:not(:disabled),
   max-width: min(720px, 88%);
 }
 
+.message-content.has-copy-button {
+  padding-right: 52px;
+}
+
+.message-content-user.has-copy-button {
+  padding-top: 28px;
+}
+
+.message-content-ai.has-copy-button {
+  padding-top: 36px;
+}
+
+.message-copy-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.message-content-ai .message-copy-button {
+  background: rgba(245, 247, 255, 0.9);
+}
+
+.dark .message-content-ai .message-copy-button {
+  background: rgba(35, 39, 52, 0.85);
+}
+
+.message-copy-button:hover {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--foreground);
+  transform: translateY(-1px);
+}
+
+.message-copy-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
 .message-content-user {
   padding: 16px 22px;
   border-radius: 22px;
@@ -857,6 +907,16 @@ button:hover:not(:disabled),
   transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
+.toolbar-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f5f7fb;
+  border-color: color-mix(in srgb, var(--border) 85%, transparent);
+  color: color-mix(in srgb, var(--muted-foreground) 70%, var(--border));
+  box-shadow: none;
+  transform: none;
+}
+
 .toolbar-button-active {
   border-color: rgba(31, 36, 48, 0.32);
   color: var(--foreground);
@@ -1085,7 +1145,7 @@ button:hover:not(:disabled),
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  color: var(--primary);
+  color: #1F2430;
   background: none;
   transition: background 0.2s ease, transform 0.2s ease;
 }
