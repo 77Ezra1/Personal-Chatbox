@@ -125,13 +125,13 @@ function App() {
     setIsGenerating(true)
     abortControllerRef.current = new AbortController()
 
+    let accumulatedContent = ''
+
     try {
       const messages = [
         ...(currentConversation?.messages || []),
         userMessage
       ]
-
-      let accumulatedContent = ''
 
       const response = await generateAIResponse({
         messages,
@@ -184,6 +184,14 @@ function App() {
           status: 'error'
         }))
       } else {
+        updateMessage(currentConversationId, placeholderMessage.id, (prev) => ({
+          content: accumulatedContent || prev.content || translate('messages.generationStopped', 'Generation stopped.'),
+          status: 'done',
+          metadata: {
+            ...(prev?.metadata || {}),
+            cancelReason: 'aborted'
+          }
+        }))
         toast.info(translate('toasts.generationStopped'))
       }
     } finally {
