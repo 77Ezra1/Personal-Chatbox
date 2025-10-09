@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Download, Languages, Moon, Plus, Settings, Sun, Trash, Trash2 } from 'lucide-react'
+import { Languages, Moon, Plus, Settings, Sun, Trash, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
-import { ExportMenu } from '../chat/ExportMenu'
 
 /**
  * 侧边栏组件
@@ -25,8 +23,6 @@ export function Sidebar({
   onOpenSettings,
   translate
 }) {
-  const [showExportMenu, setShowExportMenu] = useState(false)
-
   const handleDelete = (id, title) => {
     if (confirm(`确定要删除对话"${title}"吗?`)) {
       onDeleteConversation(id)
@@ -36,7 +32,6 @@ export function Sidebar({
   const handleClearAll = () => {
     if (confirm(translate('confirms.clearAllConversations', 'Are you sure you want to clear all conversations?'))) {
       onClearAll()
-      setShowExportMenu(false)
     }
   }
 
@@ -44,18 +39,8 @@ export function Sidebar({
     if (!currentConversation) return
     if (confirm(translate('confirms.clearConversation', 'Are you sure you want to clear this conversation?'))) {
       onClearConversation?.()
-      setShowExportMenu(false)
     }
   }
-
-  const toggleExportMenu = () => {
-    if (!currentConversation) return
-    setShowExportMenu((prev) => !prev)
-  }
-
-  useEffect(() => {
-    setShowExportMenu(false)
-  }, [currentConversation?.id])
 
   return (
     <aside className="sidebar">
@@ -86,7 +71,6 @@ export function Sidebar({
           variant="secondary"
           size="lg"
           onClick={() => {
-            setShowExportMenu(false)
             onNewConversation()
           }}
         >
@@ -119,7 +103,6 @@ export function Sidebar({
             size="sm"
             className="sidebar-language-button"
             onClick={() => {
-              setShowExportMenu(false)
               onToggleLanguage?.()
             }}
             title={translate('tooltips.toggleLanguage', 'Toggle language')}
@@ -136,7 +119,6 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={() => {
-              setShowExportMenu(false)
               onToggleTheme?.()
             }}
             title={translate('tooltips.toggleTheme', 'Toggle theme')}
@@ -148,32 +130,10 @@ export function Sidebar({
             )}
           </Button>
 
-          <div className="export-menu-container">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleExportMenu}
-              title={translate('tooltips.exportConversation', 'Export conversation')}
-              disabled={!currentConversation}
-            >
-              <Download className="w-4 h-4" />
-            </Button>
-            {showExportMenu && (
-              <div className="sidebar-export-menu">
-                <ExportMenu
-                  conversation={currentConversation}
-                  translate={translate}
-                  onClose={() => setShowExportMenu(false)}
-                />
-              </div>
-            )}
-          </div>
-
           <Button
             variant="ghost"
             size="icon"
             onClick={() => {
-              setShowExportMenu(false)
               onOpenSettings?.()
             }}
             title={translate('tooltips.openSettings', 'Open settings')}
