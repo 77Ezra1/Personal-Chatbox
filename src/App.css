@@ -456,7 +456,16 @@ button:hover:not(:disabled),
   gap: 12px;
   line-height: 1.7;
   word-break: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  hyphens: auto;
   max-width: min(720px, 88%);
+}
+
+.message-content p {
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
 }
 
 .message-content.has-copy-button {
@@ -749,6 +758,8 @@ button:hover:not(:disabled),
   line-height: 1.5;
   color: inherit;
   min-width: 100%;
+  white-space: pre;
+  overflow-x: auto;
 }
 
 .markdown-code-scroll code {
