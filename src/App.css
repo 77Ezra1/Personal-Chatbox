@@ -102,6 +102,7 @@
 }
 
 .sidebar {
+  flex: 0 0 260px;
   width: 260px;
   background: var(--sidebar);
   backdrop-filter: blur(0);
@@ -1168,6 +1169,7 @@ button:hover:not(:disabled),
 }
 
 .config-panel {
+  flex: 0 0 320px;
   width: 320px;
   background: #ffffff;
   backdrop-filter: none;
