@@ -155,12 +155,28 @@
 
 .sidebar-footer-actions {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sidebar-footer-tools {
+  display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
 }
 
-.sidebar-footer-actions > * {
-  flex: 0 0 auto;
+.sidebar-clear-all-button {
+  justify-content: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding-inline: 12px;
+}
+
+.sidebar-clear-all-button span {
+  white-space: nowrap;
 }
 
 .sidebar-language-button {
