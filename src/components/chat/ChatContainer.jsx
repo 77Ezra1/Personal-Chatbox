@@ -30,7 +30,7 @@ export function ChatContainer({
   translate
 }) {
   return (
-    <main className="chat-container">
+    <main className="chat-area">
       {/* 头部 */}
       <ChatHeader
         title={conversation?.title || translate('buttons.newConversation', 'New conversation')}
