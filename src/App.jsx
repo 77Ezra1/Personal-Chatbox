@@ -36,7 +36,6 @@ function App() {
     updateMessage,
     renameConversation,
     removeConversation,
-    replaceConversationMessages,
     deleteMessage,
     editMessage
   } = useConversations()
@@ -252,12 +251,8 @@ function App() {
     addConversation(translate('buttons.newConversation'))
   }, [addConversation, translate])
 
-  const handleClearConversation = useCallback(() => {
-    replaceConversationMessages(currentConversationId, [])
-  }, [currentConversationId, replaceConversationMessages])
-
   // ==================== 配置操作 ====================
-  
+
   const handleSaveConfig = useCallback((config) => {
     updateConfig(config)
   }, [updateConfig])
@@ -310,7 +305,6 @@ function App() {
           onRenameConversation={renameConversation}
           onDeleteConversation={removeConversation}
           onClearAll={clearAllConversations}
-          onClearConversation={handleClearConversation}
           language={language}
           theme={theme}
           currentConversation={currentConversation}

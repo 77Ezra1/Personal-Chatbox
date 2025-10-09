@@ -10,6 +10,7 @@ import {
   loadStoredModelState,
   buildModelConfigFromState,
   applyModelSettings,
+  ensureProviderEntry,
   ensureModelEntry
 } from '../lib/modelConfig'
 import { cloneState } from '../lib/utils'
@@ -109,11 +110,12 @@ export function useModelConfig() {
 
   // 切换模型
   const setModel = useCallback((model) => {
-    const provider = modelState.currentProvider
     const trimmedModel = typeof model === 'string' ? model.trim() : ''
 
     setModelState(prev => {
       const nextProviders = cloneState(prev.providers)
+      const provider = prev.currentProvider
+      ensureProviderEntry(nextProviders, provider, customModels)
       const targetModel =
         trimmedModel || prev.currentModel || getDefaultModel(provider, customModels)
 
@@ -129,7 +131,7 @@ export function useModelConfig() {
     })
 
     if (trimmedModel) {
-      addCustomModel(provider, trimmedModel)
+      addCustomModel(modelState.currentProvider, trimmedModel)
     }
   }, [addCustomModel, customModels, modelState.currentProvider])
 
@@ -138,6 +140,7 @@ export function useModelConfig() {
     setModelState(prev => {
       const nextProviders = cloneState(prev.providers)
       const provider = prev.currentProvider
+      ensureProviderEntry(nextProviders, provider, customModels)
       const requestedModel =
         typeof updates === 'object' && updates !== null && typeof updates.model === 'string'
           ? updates.model.trim()

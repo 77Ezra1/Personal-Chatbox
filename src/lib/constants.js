@@ -78,6 +78,7 @@ export const THIRD_PARTY_PROVIDERS = new Set([
 
 // Model Settings
 export const DEFAULT_MODEL_SETTINGS = {
+  apiKey: '',
   temperature: 0.7,
   maxTokens: 1024,
   supportsDeepThinking: false

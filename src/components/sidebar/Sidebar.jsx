@@ -14,7 +14,6 @@ export function Sidebar({
   onRenameConversation,
   onDeleteConversation,
   onClearAll,
-  onClearConversation,
   language,
   theme,
   currentConversation,
@@ -81,21 +80,13 @@ export function Sidebar({
         <div className="sidebar-footer-actions">
           <Button
             variant="ghost"
-            size="icon"
-            onClick={handleClearConversation}
-            title={translate('tooltips.clearConversations', 'Clear conversation')}
-            disabled={!currentConversation}
-          >
-            <Trash className="w-4 h-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
+            size="sm"
+            className="sidebar-clear-all-button"
             onClick={handleClearAll}
             title={translate('tooltips.clearAllConversations', 'Clear all conversations')}
           >
             <Trash2 className="w-4 h-4" />
+            <span>{translate('tooltips.clearAllConversations', 'Clear all conversations')}</span>
           </Button>
 
           <Button
