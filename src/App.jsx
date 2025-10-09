@@ -693,6 +693,7 @@ function App() {
     if (typeof window === 'undefined') return false
     return window.localStorage.getItem(DEEP_THINKING_KEY) === 'true'
   })
+  const [supportsDeepThinking, setSupportsDeepThinking] = useState(false)
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true)
 
   const translate = useCallback(
@@ -766,6 +767,10 @@ function App() {
       root.classList.remove('dark')
     }
   }, [theme])
+
+  useEffect(() => {
+    setSupportsDeepThinking(isDeepThinkingSupported())
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -870,9 +875,9 @@ function App() {
 
   const isDeepThinkingAvailable = useMemo(
     () =>
-      isDeepThinkingSupported() &&
+      supportsDeepThinking &&
       DEEP_THINKING_SUPPORTED_PROVIDERS.has(modelConfig.provider),
-    [modelConfig.provider]
+    [supportsDeepThinking, modelConfig.provider]
   )
 
   const toggleLanguage = () => {
