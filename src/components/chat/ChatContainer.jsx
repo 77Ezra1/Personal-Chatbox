@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { ChatHeader } from './ChatHeader'
 import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
@@ -23,11 +24,31 @@ export function ChatContainer({
   onRegenerateMessage,
   translate
 }) {
+  const [showExportMenu, setShowExportMenu] = useState(false)
+
+  const toggleExportMenu = () => {
+    if (!conversation) return
+    setShowExportMenu((prev) => !prev)
+  }
+
+  const closeExportMenu = () => {
+    setShowExportMenu(false)
+  }
+
+  useEffect(() => {
+    setShowExportMenu(false)
+  }, [conversation?.id])
+
   return (
     <main className="chat-area">
       {/* 头部 */}
       <ChatHeader
         title={conversation?.title || translate('buttons.newConversation', 'New conversation')}
+        conversation={conversation}
+        translate={translate}
+        showExportMenu={showExportMenu}
+        onToggleExportMenu={toggleExportMenu}
+        onCloseExportMenu={closeExportMenu}
       />
 
       {/* 消息列表 */}
