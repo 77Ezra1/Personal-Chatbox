@@ -17,16 +17,20 @@ export type HighlightState = {
   selectedGroupId?: string | null
 }
 
-export const selectedHighlightGroupId = (
+export function selectedHighlightGroupId(
   state: HighlightState
-): string | null => state.selectedGroupId ?? null
+): string | null {
+  return state.selectedGroupId ?? null
+}
 
-export const selectHighlightGroups = (state: HighlightState) => state.groups
+export function selectHighlightGroups(state: HighlightState) {
+  return state.groups
+}
 
-export const selectedHighlightGroup = (
+export function selectedHighlightGroup(
   state: HighlightState
-): HighlightGroup | undefined => {
-  const groupId = selectedHighlightGroupId(state)
+): HighlightGroup | undefined {
+  const groupId = state.selectedGroupId ?? null
   if (!groupId) {
     return undefined
   }
@@ -34,31 +38,51 @@ export const selectedHighlightGroup = (
   return selectHighlightGroups(state)[groupId]
 }
 
-export const selectedHighlightNodeId = (
+export function selectedHighlightNodeId(
   state: HighlightState
-): string | null => {
-  const group = selectedHighlightGroup(state)
+): string | null {
+  const groupId = state.selectedGroupId ?? null
+  if (!groupId) {
+    return null
+  }
+
+  const group = selectHighlightGroups(state)[groupId]
   return group?.highlightedNodeId ?? null
 }
 
-export const selectHighlightedNode = (
+export function selectHighlightedNode(
   state: HighlightState
-): HighlightNode | undefined => {
-  const group = selectedHighlightGroup(state)
-  const nodeId = selectedHighlightNodeId(state)
+): HighlightNode | undefined {
+  const groupId = state.selectedGroupId ?? null
+  if (!groupId) {
+    return undefined
+  }
 
-  if (!group || !nodeId) {
+  const group = selectHighlightGroups(state)[groupId]
+  if (!group) {
+    return undefined
+  }
+
+  const nodeId = group.highlightedNodeId ?? null
+  if (!nodeId) {
     return undefined
   }
 
   return group.nodes.find((node) => node.id === nodeId)
 }
 
-export const selectHighlightSummary = (
+export function selectHighlightSummary(
   state: HighlightState
-): { groupId: string | null; nodeId: string | null } => {
-  const groupId = selectedHighlightGroupId(state)
-  const nodeId = selectedHighlightNodeId(state)
+): { groupId: string | null; nodeId: string | null } {
+  const groupId = state.selectedGroupId ?? null
+  const nodeId = (() => {
+    if (!groupId) {
+      return null
+    }
+
+    const group = selectHighlightGroups(state)[groupId]
+    return group?.highlightedNodeId ?? null
+  })()
 
   return { groupId, nodeId }
 }
