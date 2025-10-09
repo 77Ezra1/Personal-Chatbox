@@ -777,6 +777,13 @@ function App() {
     window.localStorage.setItem(DEEP_THINKING_KEY, isDeepThinking ? 'true' : 'false')
   }, [isDeepThinking])
 
+  const isDeepThinkingAvailable = useMemo(
+    () =>
+      supportsDeepThinking &&
+      DEEP_THINKING_SUPPORTED_PROVIDERS.has(modelConfig.provider),
+    [supportsDeepThinking, modelConfig.provider]
+  )
+
   useEffect(() => {
     if (!isDeepThinkingAvailable && isDeepThinking) {
       setIsDeepThinking(false)
@@ -872,13 +879,6 @@ function App() {
     }
     return modelConfig.model ? [modelConfig.model, ...configuredModelOptions] : configuredModelOptions
   }, [configuredModelOptions, modelConfig.model])
-
-  const isDeepThinkingAvailable = useMemo(
-    () =>
-      supportsDeepThinking &&
-      DEEP_THINKING_SUPPORTED_PROVIDERS.has(modelConfig.provider),
-    [supportsDeepThinking, modelConfig.provider]
-  )
 
   const toggleLanguage = () => {
     setLanguage(prev => (prev === 'en' ? 'zh' : 'en'))
@@ -1068,7 +1068,7 @@ function App() {
 
   const languageToggleLabel =
     language === 'en'
-      ? getTranslationValue('zh', 'toggles.languageShortChinese') ?? '涓枃'
+      ? getTranslationValue('zh', 'toggles.languageShortChinese') ?? '中文'
       : getTranslationValue('en', 'toggles.languageShortEnglish') ?? 'EN'
 
   const isDarkMode = theme === 'dark'
@@ -1717,7 +1717,7 @@ function App() {
                         type="button"
                         onClick={() => handleRemoveCustomModel(modelConfig.provider, model)}
                       >
-                        脳
+                        ×
                       </button>
                     </span>
                   ))}
