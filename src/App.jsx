@@ -98,41 +98,15 @@ function App() {
 
   // ==================== 消息处理 ====================
   
-  const handleSendMessage = useCallback(async (content, attachments = []) => {
-    if (!content.trim() && attachments.length === 0) return
-    if (isGenerating) return
+  const regenerateAssistantReply = useCallback(async ({ messages, placeholderMessage }) => {
+    if (!currentConversationId) return
 
-    // 添加用户消息
-    const userMessage = conversationUtils.createMessage({
-      role: 'user',
-      content,
-      attachments
-    })
-    appendMessage(currentConversationId, userMessage)
-
-    // 清空输入
-    setPendingAttachments([])
-
-    // 创建占位符消息
-    const placeholderMessage = conversationUtils.createMessage({
-      role: 'assistant',
-      content: '',
-      status: 'loading'
-    })
-    appendMessage(currentConversationId, placeholderMessage)
-
-    // 生成 AI 响应
     setIsGenerating(true)
     abortControllerRef.current = new AbortController()
 
     let accumulatedContent = ''
 
     try {
-      const messages = [
-        ...(currentConversation?.messages || []),
-        userMessage
-      ]
-
       const response = await generateAIResponse({
         messages,
         modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
@@ -150,7 +124,6 @@ function App() {
         }
       })
 
-      // 提取思考过程和答案
       let finalContent = typeof response?.content === 'string'
         ? response.content
         : accumulatedContent
@@ -167,7 +140,6 @@ function App() {
         }
       }
 
-      // 完成更新
       updateMessage(currentConversationId, placeholderMessage.id, () => ({
         content: finalContent,
         status: 'done',
@@ -176,7 +148,6 @@ function App() {
           ...(finalReasoning ? { reasoning: finalReasoning } : {})
         }
       }))
-
     } catch (error) {
       if (error.name !== 'AbortError') {
         toast.error(translate('toasts.failedToGenerate'))
@@ -200,13 +171,44 @@ function App() {
     }
   }, [
     currentConversationId,
-    currentConversation,
     modelConfig,
     isDeepThinking,
-    isGenerating,
-    appendMessage,
     updateMessage,
     translate
+  ])
+
+  const handleSendMessage = useCallback(async (content, attachments = []) => {
+    if (!content.trim() && attachments.length === 0) return
+    if (isGenerating) return
+
+    const existingMessages = currentConversation?.messages || []
+
+    const userMessage = conversationUtils.createMessage({
+      role: 'user',
+      content,
+      attachments
+    })
+    appendMessage(currentConversationId, userMessage)
+
+    setPendingAttachments([])
+
+    const placeholderMessage = conversationUtils.createMessage({
+      role: 'assistant',
+      content: '',
+      status: 'loading'
+    })
+    appendMessage(currentConversationId, placeholderMessage)
+
+    await regenerateAssistantReply({
+      messages: [...existingMessages, userMessage],
+      placeholderMessage
+    })
+  }, [
+    currentConversationId,
+    currentConversation,
+    appendMessage,
+    regenerateAssistantReply,
+    isGenerating
   ])
 
   const handleStopGeneration = useCallback(() => {
@@ -228,7 +230,8 @@ function App() {
 
   const handleRegenerateMessage = useCallback(async (messageId) => {
     if (!currentConversationId || !currentConversation) return
-    
+    if (isGenerating) return
+
     // 找到要重新生成的消息
     const messageIndex = currentConversation.messages.findIndex(m => m.id === messageId)
     if (messageIndex === -1) return
@@ -241,17 +244,35 @@ function App() {
     
     if (userMessageIndex < 0) return
     
-    const userMessage = currentConversation.messages[userMessageIndex]
-    
     // 删除旧的助手回复
     deleteMessage(currentConversationId, messageId)
-    
+
+    const messagesAfterDeletion = currentConversation.messages
+      .filter(msg => msg.id !== messageId)
+
     // 显示提示
     toast.info(translate('toasts.messageRegenerating', 'Regenerating response...'))
-    
-    // 重新发送消息
-    await handleSendMessage(userMessage.content, userMessage.attachments || [])
-  }, [currentConversationId, currentConversation, deleteMessage, handleSendMessage, translate])
+
+    const placeholderMessage = conversationUtils.createMessage({
+      role: 'assistant',
+      content: '',
+      status: 'loading'
+    })
+    appendMessage(currentConversationId, placeholderMessage)
+
+    await regenerateAssistantReply({
+      messages: messagesAfterDeletion,
+      placeholderMessage
+    })
+  }, [
+    currentConversationId,
+    currentConversation,
+    isGenerating,
+    deleteMessage,
+    appendMessage,
+    regenerateAssistantReply,
+    translate
+  ])
 
   // ==================== 对话操作 ====================
   
