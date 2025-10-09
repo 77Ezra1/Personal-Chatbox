@@ -17,6 +17,7 @@ export function ConfigPanel({
   onModelChange,
   onSaveConfig,
   onClose,
+  isOpen = true,
   translate
 }) {
   const [draftConfig, setDraftConfig] = useState(modelConfig)
@@ -31,7 +32,7 @@ export function ConfigPanel({
   }
 
   return (
-    <aside className="config-panel">
+    <aside className={`config-panel ${isOpen ? 'open' : ''}`}>
       {/* 头部 */}
       <div className="config-header">
         <h2>{translate('headings.modelConfiguration', 'Model configuration')}</h2>

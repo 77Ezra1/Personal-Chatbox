@@ -67,7 +67,7 @@ function App() {
 
   // ==================== 本地状态 ====================
   
-  const [showConfig, setShowConfig] = useState(false)
+  const [showConfig, setShowConfig] = useState(true)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
@@ -324,19 +324,18 @@ function App() {
       />
 
       {/* 配置面板 */}
-      {showConfig && (
-        <ConfigPanel
-          modelConfig={modelConfig}
-          currentProvider={currentProvider}
-          currentModel={currentModel}
-          providerModels={currentProviderModels}
-          onProviderChange={setProvider}
-          onModelChange={setModel}
-          onSaveConfig={handleSaveConfig}
-          onClose={() => setShowConfig(false)}
-          translate={translate}
-        />
-      )}
+      <ConfigPanel
+        modelConfig={modelConfig}
+        currentProvider={currentProvider}
+        currentModel={currentModel}
+        providerModels={currentProviderModels}
+        onProviderChange={setProvider}
+        onModelChange={setModel}
+        onSaveConfig={handleSaveConfig}
+        onClose={() => setShowConfig(false)}
+        isOpen={showConfig}
+        translate={translate}
+      />
 
       {/* 快捷键帮助 */}
       {showShortcuts && (
