@@ -9,7 +9,8 @@ import {
   loadStoredCustomModels,
   loadStoredModelState,
   buildModelConfigFromState,
-  applyModelSettings
+  applyModelSettings,
+  ensureModelEntry
 } from '../lib/modelConfig'
 import { cloneState } from '../lib/utils'
 
@@ -73,12 +74,30 @@ export function useModelConfig() {
     return getProviderModels(modelState.currentProvider)
   }, [modelState.currentProvider, getProviderModels])
 
+  // 添加自定义模型
+  const addCustomModel = useCallback((provider, modelName) => {
+    if (!provider || typeof modelName !== 'string' || !modelName.trim()) return
+
+    const normalizedModel = modelName.trim()
+
+    setCustomModels(prev => {
+      const providerModels = prev[provider] ?? []
+      const defaults = PROVIDERS[provider]?.models ?? []
+      if (providerModels.includes(normalizedModel) || defaults.includes(normalizedModel)) return prev
+
+      return {
+        ...prev,
+        [provider]: [...providerModels, normalizedModel]
+      }
+    })
+  }, [])
+
   // 切换提供商
   const setProvider = useCallback((provider) => {
     setModelState(prev => {
       const nextProviders = cloneState(prev.providers)
       const defaultModel = getDefaultModel(provider, customModels)
-      
+
       return {
         ...prev,
         currentProvider: provider,
@@ -90,44 +109,70 @@ export function useModelConfig() {
 
   // 切换模型
   const setModel = useCallback((model) => {
-    setModelState(prev => ({
-      ...prev,
-      currentModel: model
-    }))
-  }, [])
+    const provider = modelState.currentProvider
+    const trimmedModel = typeof model === 'string' ? model.trim() : ''
+
+    setModelState(prev => {
+      const nextProviders = cloneState(prev.providers)
+      const targetModel =
+        trimmedModel || prev.currentModel || getDefaultModel(provider, customModels)
+
+      if (targetModel) {
+        ensureModelEntry(nextProviders, provider, targetModel, customModels)
+      }
+
+      return {
+        ...prev,
+        currentModel: targetModel,
+        providers: nextProviders
+      }
+    })
+
+    if (trimmedModel) {
+      addCustomModel(provider, trimmedModel)
+    }
+  }, [addCustomModel, customModels, modelState.currentProvider])
 
   // 更新模型配置
   const updateConfig = useCallback((updates) => {
     setModelState(prev => {
       const nextProviders = cloneState(prev.providers)
+      const provider = prev.currentProvider
+      const requestedModel =
+        typeof updates === 'object' && updates !== null && typeof updates.model === 'string'
+          ? updates.model.trim()
+          : ''
+      const targetModel =
+        requestedModel || prev.currentModel || getDefaultModel(provider, customModels)
+
+      if (targetModel) {
+        ensureModelEntry(nextProviders, provider, targetModel, customModels)
+      }
+
       applyModelSettings(
         nextProviders,
-        prev.currentProvider,
-        prev.currentModel,
+        provider,
+        targetModel,
         customModels,
         updates
       )
+
       return {
         ...prev,
+        currentModel: targetModel,
         providers: nextProviders
       }
     })
-  }, [customModels])
 
-  // 添加自定义模型
-  const addCustomModel = useCallback((provider, modelName) => {
-    if (!provider || !modelName) return
-    
-    setCustomModels(prev => {
-      const providerModels = prev[provider] ?? []
-      if (providerModels.includes(modelName)) return prev
-      
-      return {
-        ...prev,
-        [provider]: [...providerModels, modelName]
-      }
-    })
-  }, [])
+    if (
+      typeof updates === 'object' &&
+      updates !== null &&
+      typeof updates.model === 'string' &&
+      updates.model.trim()
+    ) {
+      addCustomModel(modelState.currentProvider, updates.model)
+    }
+  }, [addCustomModel, customModels, modelState.currentProvider])
 
   // 移除自定义模型
   const removeCustomModel = useCallback((provider, modelName) => {

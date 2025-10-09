@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PROVIDERS } from '@/lib/constants'
@@ -21,6 +21,27 @@ export function ConfigPanel({
   translate
 }) {
   const [draftConfig, setDraftConfig] = useState(modelConfig)
+  const [modelInput, setModelInput] = useState(currentModel || '')
+
+  const commitModelValue = (value) => {
+    const trimmedValue = value.trim()
+    if (!trimmedValue) {
+      setModelInput(currentModel || '')
+      setDraftConfig(prev => ({ ...prev, model: currentModel || '' }))
+      return
+    }
+    setModelInput(trimmedValue)
+    setDraftConfig(prev => ({ ...prev, model: trimmedValue }))
+    onModelChange(trimmedValue)
+  }
+
+  useEffect(() => {
+    setDraftConfig(modelConfig)
+  }, [modelConfig])
+
+  useEffect(() => {
+    setModelInput(currentModel || '')
+  }, [currentModel])
 
   const handleSave = () => {
     onSaveConfig(draftConfig)
@@ -61,18 +82,49 @@ export function ConfigPanel({
 
         {/* 模型选择 */}
         <div className="config-field">
-          <label>{translate('labels.model', 'Model')}</label>
-          <select
-            value={currentModel}
-            onChange={(e) => onModelChange(e.target.value)}
-            className="config-select"
-          >
-            {providerModels.map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
-            ))}
-          </select>
+          <label>{translate('labels.modelId', 'Model ID')}</label>
+          <input
+            type="text"
+            value={modelInput}
+            onChange={(e) => setModelInput(e.target.value)}
+            onBlur={() => {
+              commitModelValue(modelInput)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                commitModelValue(modelInput)
+              }
+            }}
+            className="config-input"
+            placeholder={translate('placeholders.customModel', 'Enter custom model ID')}
+          />
+          <p className="config-hint">
+            {translate(
+              'hints.customModelInput',
+              '直接输入模型 ID，或点击下方推荐项快速填入。'
+            )}
+          </p>
+          {providerModels?.length > 0 && (
+            <div
+              className="config-model-suggestions"
+              style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}
+            >
+              {providerModels.map((model) => (
+                <Button
+                  key={model}
+                  type="button"
+                  variant={model === currentModel ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    commitModelValue(model)
+                  }}
+                >
+                  {model}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* API Key */}
