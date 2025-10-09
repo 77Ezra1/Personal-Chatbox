@@ -468,6 +468,21 @@ button:hover:not(:disabled),
   padding: 0 8px;
 }
 
+.message-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.message.message-user .message-body {
+  align-items: flex-end;
+}
+
+.message.message-ai .message-body {
+  align-items: flex-start;
+}
+
 .message.message-user {
   justify-content: flex-end;
   margin-left: auto;
@@ -507,23 +522,7 @@ button:hover:not(:disabled),
   word-break: inherit;
   overflow-wrap: inherit;
 }
-
-.message-content.has-copy-button {
-  padding-right: 52px;
-}
-
-.message-content-user.has-copy-button {
-  padding-top: 28px;
-}
-
-.message-content-ai.has-copy-button {
-  padding-top: 36px;
-}
-
 .message-copy-button {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   width: 28px;
   height: 28px;
   display: inline-flex;
@@ -538,11 +537,11 @@ button:hover:not(:disabled),
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
-.message-content-ai .message-copy-button {
+.message-footer-ai .message-copy-button {
   background: rgba(245, 247, 255, 0.9);
 }
 
-.dark .message-content-ai .message-copy-button {
+.dark .message-footer-ai .message-copy-button {
   background: rgba(35, 39, 52, 0.85);
 }
 
@@ -617,6 +616,23 @@ button:hover:not(:disabled),
 .message.message-user .markdown-body,
 .message.message-ai .markdown-body {
   align-items: flex-start;
+}
+
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+}
+
+.message-footer-user {
+  justify-content: flex-end;
+  align-self: flex-end;
+}
+
+.message-footer-ai {
+  justify-content: flex-start;
+  align-self: flex-start;
 }
 
 .message.message-user .markdown-body > *,
@@ -1821,7 +1837,6 @@ button:hover:not(:disabled),
 .message-actions {
   display: flex;
   gap: 0.25rem;
-  margin-top: 0.5rem;
   opacity: 0;
   transition: opacity 0.2s;
 }
