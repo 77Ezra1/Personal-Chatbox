@@ -7,11 +7,13 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { useTheme } from '@/hooks/useTheme'
 import { useModelConfig } from '@/hooks/useModelConfig'
 import { useDeepThinking } from '@/hooks/useDeepThinking'
+import { useKeyboardShortcuts, DEFAULT_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
 
 // Components
 import { Sidebar } from '@/components/sidebar/Sidebar'
 import { ChatContainer } from '@/components/chat/ChatContainer'
 import { ConfigPanel } from '@/components/config/ConfigPanel'
+import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
 
 // Utils
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
@@ -64,6 +66,7 @@ function App() {
   // ==================== 本地状态 ====================
   
   const [showConfig, setShowConfig] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
   
@@ -209,6 +212,34 @@ function App() {
     updateConfig(config)
   }, [updateConfig])
 
+  // ==================== 快捷键 ====================
+  
+  useKeyboardShortcuts([
+    {
+      ...DEFAULT_SHORTCUTS.NEW_CONVERSATION,
+      handler: handleNewConversation
+    },
+    {
+      ...DEFAULT_SHORTCUTS.SETTINGS,
+      handler: () => setShowConfig(true)
+    },
+    {
+      ...DEFAULT_SHORTCUTS.SHOW_SHORTCUTS,
+      handler: () => setShowShortcuts(true)
+    },
+    {
+      ...DEFAULT_SHORTCUTS.CLOSE_DIALOG,
+      handler: () => {
+        setShowConfig(false)
+        setShowShortcuts(false)
+      }
+    },
+    {
+      ...DEFAULT_SHORTCUTS.TOGGLE_THEME,
+      handler: toggleTheme
+    }
+  ])
+
   // ==================== 渲染 ====================
   
   // 转换对话对象为数组
@@ -261,6 +292,15 @@ function App() {
           onModelChange={setModel}
           onSaveConfig={handleSaveConfig}
           onClose={() => setShowConfig(false)}
+          translate={translate}
+        />
+      )}
+
+      {/* 快捷键帮助 */}
+      {showShortcuts && (
+        <ShortcutsDialog
+          shortcuts={DEFAULT_SHORTCUTS}
+          onClose={() => setShowShortcuts(false)}
           translate={translate}
         />
       )}

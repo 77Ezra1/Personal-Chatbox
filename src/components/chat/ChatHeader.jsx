@@ -1,5 +1,7 @@
-import { Trash, Languages, Moon, Sun, Settings } from 'lucide-react'
+import { Trash, Languages, Moon, Sun, Settings, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { ExportMenu } from './ExportMenu'
 
 /**
  * 聊天区域头部组件
@@ -9,16 +11,23 @@ export function ChatHeader({
   title,
   language,
   theme,
+  conversation,
   onClear,
   onToggleLanguage,
   onToggleTheme,
   onOpenSettings,
   translate
 }) {
+  const [showExportMenu, setShowExportMenu] = useState(false)
+
   const handleClear = () => {
     if (confirm('确定要清空当前对话吗?')) {
       onClear()
     }
+  }
+
+  const handleExport = () => {
+    setShowExportMenu(!showExportMenu)
   }
 
   return (
@@ -26,6 +35,26 @@ export function ChatHeader({
       <h1 className="chat-title">{title}</h1>
       
       <div className="chat-header-actions">
+        {/* 导出对话 */}
+        <div className="export-menu-container">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleExport}
+            title={translate('tooltips.exportConversation', 'Export conversation')}
+          >
+            <Download className="w-4 h-4" />
+          </Button>
+          {showExportMenu && (
+            <div className="export-menu-wrapper">
+              <ExportMenu
+                conversation={conversation}
+                onClose={() => setShowExportMenu(false)}
+              />
+            </div>
+          )}
+        </div>
+
         {/* 清空对话 */}
         <Button
           variant="ghost"

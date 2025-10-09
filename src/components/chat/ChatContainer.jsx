@@ -33,6 +33,7 @@ export function ChatContainer({
         title={conversation?.title || translate('buttons.newConversation', 'New conversation')}
         language={language}
         theme={theme}
+        conversation={conversation}
         onClear={onClearConversation}
         onToggleLanguage={onToggleLanguage}
         onToggleTheme={onToggleTheme}
