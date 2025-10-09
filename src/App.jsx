@@ -284,9 +284,10 @@ const PROVIDERS = {
   }
 }
 
-// DeepSeek 当前仅提供非流式接口，stream 参数会报错，因此不加入该集合
+// 所有提供商都支持流式输出
 const STREAMING_CAPABLE_PROVIDERS = new Set([
   'openai',
+  'deepseek',
   'moonshot',
   'groq',
   'mistral',
@@ -318,7 +319,8 @@ const THIRD_PARTY_PROVIDERS = new Set([
 const DEFAULT_MODEL_SETTINGS = {
   apiKey: '',
   temperature: 0.7,
-  maxTokens: 1024
+  maxTokens: 1024,
+  supportsDeepThinking: false
 }
 
 const toNumber = (value, fallback) => {
@@ -333,7 +335,8 @@ const toNumber = (value, fallback) => {
 const sanitizeModelSettings = (settings = {}) => ({
   apiKey: typeof settings.apiKey === 'string' ? settings.apiKey : DEFAULT_MODEL_SETTINGS.apiKey,
   temperature: toNumber(settings.temperature, DEFAULT_MODEL_SETTINGS.temperature),
-  maxTokens: toNumber(settings.maxTokens, DEFAULT_MODEL_SETTINGS.maxTokens)
+  maxTokens: toNumber(settings.maxTokens, DEFAULT_MODEL_SETTINGS.maxTokens),
+  supportsDeepThinking: typeof settings.supportsDeepThinking === 'boolean' ? settings.supportsDeepThinking : DEFAULT_MODEL_SETTINGS.supportsDeepThinking
 })
 
 const cloneState = (value) => JSON.parse(JSON.stringify(value ?? {}))
@@ -778,10 +781,8 @@ function App() {
   }, [isDeepThinking])
 
   const isDeepThinkingAvailable = useMemo(
-    () =>
-      supportsDeepThinking &&
-      DEEP_THINKING_SUPPORTED_PROVIDERS.has(modelConfig.provider),
-    [supportsDeepThinking, modelConfig.provider]
+    () => modelConfig.supportsDeepThinking === true,
+    [modelConfig.supportsDeepThinking]
   )
 
   useEffect(() => {
@@ -1220,13 +1221,22 @@ function App() {
                 if (segments.reasoning) {
                   latestReasoning = segments.reasoning
                 }
+                // 在流式输出时也更新思考过程
+                updateMessage(conversationId, placeholder.id, () => ({
+                  content: latestContent,
+                  status: 'loading',
+                  metadata: {
+                    deepThinking: true,
+                    reasoning: latestReasoning || undefined
+                  }
+                }))
               } else {
                 latestContent = fullText
+                updateMessage(conversationId, placeholder.id, () => ({
+                  content: fullText,
+                  status: 'loading'
+                }))
               }
-              updateMessage(conversationId, placeholder.id, () => ({
-                content: isDeepThinking ? latestContent : fullText,
-                status: 'loading'
-              }))
             }
           : undefined
       })
@@ -1781,6 +1791,26 @@ function App() {
                 }))
               }
             />
+          </div>
+
+          <div className="config-section">
+            <label className="config-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                checked={modelConfig.supportsDeepThinking === true}
+                onChange={(event) =>
+                  setModelConfig(prev => ({
+                    ...prev,
+                    supportsDeepThinking: event.target.checked
+                  }))
+                }
+                style={{ width: 'auto', margin: 0 }}
+              />
+              <span>{translate('labels.supportsDeepThinking', 'Supports Deep Thinking')}</span>
+            </label>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #666)', marginTop: '4px' }}>
+              {translate('hints.supportsDeepThinking', 'Enable this if the model supports deep thinking mode (e.g., o1, o3-mini)')}
+            </p>
           </div>
 
           <div className="config-section">
