@@ -7,15 +7,18 @@ import {
 } from './constants'
 import { toNumber, cloneState } from './utils'
 
+const sanitizeApiKey = (apiKey) => (
+  typeof apiKey === 'string' ? apiKey : DEFAULT_MODEL_SETTINGS.apiKey
+)
+
 /**
  * 清理模型设置
  */
 export const sanitizeModelSettings = (settings = {}) => ({
-  apiKey: typeof settings.apiKey === 'string' ? settings.apiKey : DEFAULT_MODEL_SETTINGS.apiKey,
   temperature: toNumber(settings.temperature, DEFAULT_MODEL_SETTINGS.temperature),
   maxTokens: toNumber(settings.maxTokens, DEFAULT_MODEL_SETTINGS.maxTokens),
-  supportsDeepThinking: typeof settings.supportsDeepThinking === 'boolean' 
-    ? settings.supportsDeepThinking 
+  supportsDeepThinking: typeof settings.supportsDeepThinking === 'boolean'
+    ? settings.supportsDeepThinking
     : DEFAULT_MODEL_SETTINGS.supportsDeepThinking
 })
 
@@ -25,7 +28,10 @@ export const sanitizeModelSettings = (settings = {}) => ({
 export const ensureProviderEntry = (state, provider, customModels = {}) => {
   let entry = state[provider]
   if (!entry || typeof entry !== 'object') {
-    entry = { activeModel: '', models: {} }
+    entry = { apiKey: DEFAULT_MODEL_SETTINGS.apiKey, activeModel: '', models: {} }
+  }
+  if (typeof entry.apiKey !== 'string') {
+    entry.apiKey = DEFAULT_MODEL_SETTINGS.apiKey
   }
   if (!entry.models || typeof entry.models !== 'object') {
     entry.models = {}
@@ -61,8 +67,9 @@ export const buildModelConfigFromState = (state, provider, modelName, customMode
   const settings = sanitizeModelSettings(entry.models[model])
   entry.models[model] = settings
   entry.activeModel = model
+  entry.apiKey = sanitizeApiKey(entry.apiKey)
   state[provider] = entry
-  return { provider, model, ...settings }
+  return { provider, model, apiKey: entry.apiKey, ...settings }
 }
 
 /**
@@ -70,13 +77,24 @@ export const buildModelConfigFromState = (state, provider, modelName, customMode
  */
 export const applyModelSettings = (state, provider, modelName, customModels = {}, updates = {}) => {
   const { entry, model } = ensureModelEntry(state, provider, modelName, customModels)
-  const existing = entry.models[model]
-  const next = typeof updates === 'function' ? updates(existing) : { ...existing, ...updates }
-  const sanitized = sanitizeModelSettings(next)
+  const existing = sanitizeModelSettings(entry.models[model])
+  entry.models[model] = existing
+
+  const currentConfig = { ...existing, apiKey: sanitizeApiKey(entry.apiKey) }
+  const resolvedUpdates = typeof updates === 'function' ? updates(currentConfig) : updates
+  const updatesObject = resolvedUpdates && typeof resolvedUpdates === 'object' ? resolvedUpdates : {}
+
+  if ('apiKey' in updatesObject) {
+    entry.apiKey = sanitizeApiKey(updatesObject.apiKey)
+  }
+
+  const { apiKey: _ignoredApiKey, model: _requestedModel, provider: _requestedProvider, ...modelUpdates } = updatesObject
+  const sanitized = sanitizeModelSettings({ ...existing, ...modelUpdates })
   entry.models[model] = sanitized
   entry.activeModel = model
+  entry.apiKey = sanitizeApiKey(entry.apiKey)
   state[provider] = entry
-  return sanitized
+  return { ...sanitized, apiKey: entry.apiKey }
 }
 
 /**
@@ -101,6 +119,7 @@ export const loadStoredModelState = (customModels) => {
   const fallbackModel = getDefaultModel(FALLBACK_PROVIDER, customModels)
   const baseProviders = {
     [FALLBACK_PROVIDER]: {
+      apiKey: DEFAULT_MODEL_SETTINGS.apiKey,
       activeModel: fallbackModel,
       models: {
         [fallbackModel]: sanitizeModelSettings()
@@ -141,9 +160,13 @@ export const loadStoredModelState = (customModels) => {
       const activeModelRaw = typeof value?.activeModel === 'string' ? value.activeModel : ''
       const modelsRaw = value?.models && typeof value.models === 'object' ? value.models : {}
       const models = {}
+      let providerApiKeyFromModels = ''
       Object.entries(modelsRaw).forEach(([model, settings]) => {
         if (!model) return
         models[model] = sanitizeModelSettings(settings)
+        if (!providerApiKeyFromModels && settings && typeof settings.apiKey === 'string') {
+          providerApiKeyFromModels = settings.apiKey
+        }
       })
       let activeModel = activeModelRaw
       if (!activeModel || !models[activeModel]) {
@@ -152,7 +175,17 @@ export const loadStoredModelState = (customModels) => {
       if (!models[activeModel]) {
         models[activeModel] = sanitizeModelSettings()
       }
-      normalizedProviders[provider] = { activeModel, models }
+      let providerApiKey = DEFAULT_MODEL_SETTINGS.apiKey
+      if (value && Object.prototype.hasOwnProperty.call(value, 'apiKey') && typeof value.apiKey === 'string') {
+        providerApiKey = value.apiKey
+      } else if (providerApiKeyFromModels) {
+        providerApiKey = providerApiKeyFromModels
+      }
+      normalizedProviders[provider] = {
+        apiKey: sanitizeApiKey(providerApiKey),
+        activeModel,
+        models
+      }
     })
 
     if (!normalizedProviders[FALLBACK_PROVIDER]) {
