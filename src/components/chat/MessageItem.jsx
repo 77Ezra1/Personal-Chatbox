@@ -13,6 +13,9 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(content)
 
+  const isUser = role === 'user'
+  const canCopyMessage = typeof content === 'string' && content.trim().length > 0
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content)
@@ -64,43 +67,40 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
   }
 
   return (
-    <div className={`message message-${role}`}>
-      {/* 消息内容 */}
-      <div className={`message-content message-content-${role}`}>
-        {/* 附件列表 */}
-        {attachments && attachments.length > 0 && (
-          <div className="message-attachments">
-            {attachments.map((attachment) => (
-              <div key={attachment.id} className="message-attachment">
-                {attachment.category === 'image' ? (
-                  <img
-                    src={attachment.dataUrl}
-                    alt={attachment.name}
-                    className="attachment-image"
-                  />
-                ) : (
-                  <div className="attachment-file">
-                    <span className="attachment-name">{attachment.name}</span>
-                    <span className="attachment-size">
-                      {formatFileSize(attachment.size)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+    <div className={`message ${isUser ? 'message-user' : 'message-ai'}`}>
+      <div
+        className={`message-content ${
+          isUser ? 'message-content-user' : 'message-content-ai'
+        } ${status === 'error' ? 'message-error' : ''} ${
+          canCopyMessage && !isEditing ? 'has-copy-button' : ''
+        }`}
+      >
+        {/* 复制按钮 */}
+        {canCopyMessage && !isEditing && (
+          <button
+            type="button"
+            className="message-copy-button"
+            onClick={handleCopy}
+            aria-label={translate('tooltips.copyMessage', 'Copy message')}
+            title={translate('tooltips.copyMessage', 'Copy message')}
+          >
+            <Copy className="w-4 h-4" />
+          </button>
         )}
 
-        {/* 消息文本 */}
-        {content && !isEditing && (
-          <div className="message-text">
-            <MarkdownRenderer content={content} />
+        {/* 消息内容 - 正常显示 */}
+        {!isEditing && (
+          <>
+            <MarkdownRenderer
+              content={content || (status === 'loading' ? '...' : '')}
+              isStreaming={status === 'loading'}
+            />
             {edited && (
               <span className="message-edited">
                 {translate('labels.edited', '(edited)')}
               </span>
             )}
-          </div>
+          </>
         )}
 
         {/* 编辑模式 */}
@@ -146,35 +146,41 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
           </details>
         )}
 
-        {/* 加载状态 */}
-        {status === 'loading' && !content && (
-          <div className="message-loading">
-            <span className="loading-dot"></span>
-            <span className="loading-dot"></span>
-            <span className="loading-dot"></span>
-          </div>
-        )}
-
-        {/* 错误状态 */}
-        {status === 'error' && (
-          <div className="message-error">
-            {translate('toasts.failedToGenerate', 'Failed to generate response.')}
+        {/* 附件列表 */}
+        {Array.isArray(attachments) && attachments.length > 0 && (
+          <div className="message-attachments">
+            {attachments.map((attachment) => {
+              const isImageAttachment = attachment.category === 'image' && attachment.dataUrl
+              return (
+                <div
+                  key={attachment.id}
+                  className={`attachment-item${isImageAttachment ? ' attachment-item-image' : ''}`}
+                >
+                  <div className="attachment-preview">
+                    {isImageAttachment ? (
+                      <img
+                        src={attachment.dataUrl}
+                        alt={attachment.name || translate('buttons.addImage', 'Add image')}
+                      />
+                    ) : (
+                      <div className="attachment-file">
+                        <span className="attachment-name">{attachment.name}</span>
+                        <span className="attachment-size">
+                          {formatFileSize(attachment.size)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
 
         {/* 操作按钮 */}
         {content && status === 'done' && !isEditing && (
           <div className="message-actions">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopy}
-              title={translate('tooltips.copyMessage', 'Copy message')}
-            >
-              <Copy className="w-3 h-3" />
-            </Button>
-            
-            {role === 'user' && onEdit && (
+            {isUser && onEdit && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -185,7 +191,7 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
               </Button>
             )}
             
-            {role === 'assistant' && onRegenerate && (
+            {!isUser && onRegenerate && (
               <Button
                 variant="ghost"
                 size="sm"
