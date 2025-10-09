@@ -48,10 +48,10 @@ export function MessageInput({
   }
 
   return (
-    <div className="message-input-container">
+    <div className="input-area message-input-container">
       {/* 附件预览 */}
       {pendingAttachments.length > 0 && (
-        <div className="attachment-preview-list">
+        <div className="message-input-attachments">
           {pendingAttachments.map((attachment) => (
             <AttachmentPreview
               key={attachment.id}
@@ -63,60 +63,65 @@ export function MessageInput({
       )}
 
       {/* 输入区域 */}
-      <div className="message-input">
-        {/* 工具栏 */}
-        <div className="message-input-toolbar">
-          {/* 上传附件 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isGenerating}
-            title={translate('tooltips.uploadAttachment', 'Upload attachment')}
-          >
-            <Paperclip className="w-4 h-4" />
-          </Button>
+      <div className="message-input-body">
+        <div className="message-input-main">
+          {/* 工具栏 */}
+          <div className="message-input-toolbar">
+            {/* 上传附件 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="message-input-toolbar-button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isGenerating}
+              title={translate('tooltips.uploadAttachment', 'Upload attachment')}
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
 
-          {/* 添加图片 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => imageInputRef.current?.click()}
-            disabled={isGenerating}
-            title={translate('tooltips.addImage', 'Insert image')}
-          >
-            <ImagePlus className="w-4 h-4" />
-          </Button>
+            {/* 添加图片 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="message-input-toolbar-button"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={isGenerating}
+              title={translate('tooltips.addImage', 'Insert image')}
+            >
+              <ImagePlus className="w-4 h-4" />
+            </Button>
 
-          {/* 深度思考切换 */}
-          <Button
-            variant={isDeepThinking ? 'default' : 'ghost'}
-            size="sm"
-            onClick={onToggleDeepThinking}
-            disabled={!isDeepThinkingAvailable || isGenerating}
-            title={translate('tooltips.toggleDeepThinking', 'Toggle deep thinking mode')}
-          >
-            <BrainCircuit className="w-4 h-4" />
-            <span className="ml-1 text-xs">
-              {isDeepThinking
-                ? translate('toggles.deepThinkingOn', 'Deep thinking: On')
-                : translate('toggles.deepThinkingOff', 'Deep thinking: Off')
-              }
-            </span>
-          </Button>
+            {/* 深度思考切换 */}
+            <Button
+              variant={isDeepThinking ? 'default' : 'ghost'}
+              size="sm"
+              className="message-input-toolbar-button"
+              onClick={onToggleDeepThinking}
+              disabled={!isDeepThinkingAvailable || isGenerating}
+              title={translate('tooltips.toggleDeepThinking', 'Toggle deep thinking mode')}
+            >
+              <BrainCircuit className="w-4 h-4" />
+              <span className="ml-1 text-xs">
+                {isDeepThinking
+                  ? translate('toggles.deepThinkingOn', 'Deep thinking: On')
+                  : translate('toggles.deepThinkingOff', 'Deep thinking: Off')
+                }
+              </span>
+            </Button>
+          </div>
+
+          {/* 文本输入框 */}
+          <textarea
+            ref={textareaRef}
+            className="message-input-textarea"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={translate('placeholders.messageInput', 'Type a message...')}
+            disabled={isGenerating}
+            rows={3}
+          />
         </div>
-
-        {/* 文本输入框 */}
-        <textarea
-          ref={textareaRef}
-          className="message-input-textarea"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={translate('placeholders.messageInput', 'Type a message...')}
-          disabled={isGenerating}
-          rows={3}
-        />
 
         {/* 发送按钮 */}
         <Button
