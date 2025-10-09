@@ -15,6 +15,7 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
 
   const isUser = role === 'user'
   const canCopyMessage = typeof content === 'string' && content.trim().length > 0
+  const hasAttachments = Array.isArray(attachments) && attachments.length > 0
 
   const handleCopy = async () => {
     try {
@@ -67,12 +68,13 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
   }
 
   const hasFooterActions =
-    content &&
     status === 'done' &&
     !isEditing &&
+    (canCopyMessage || hasAttachments) &&
     ((isUser && onEdit) || (!isUser && onRegenerate) || onDelete)
 
-  const shouldShowFooter = (canCopyMessage && !isEditing) || hasFooterActions
+  const shouldShowFooter =
+    (!isEditing && (canCopyMessage || hasAttachments)) || hasFooterActions
 
   return (
     <div className={`message ${isUser ? 'message-user' : 'message-ai'}`}>
@@ -141,7 +143,7 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
           )}
 
           {/* 附件列表 */}
-          {Array.isArray(attachments) && attachments.length > 0 && (
+          {hasAttachments && (
             <div className="message-attachments">
               {attachments.map((attachment) => {
                 const isImageAttachment = attachment.category === 'image' && attachment.dataUrl
