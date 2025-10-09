@@ -23,7 +23,12 @@ export function Sidebar({
   translate
 }) {
   const handleDelete = (id, title) => {
-    if (confirm(`确定要删除对话"${title}"吗?`)) {
+    const messageTemplate = translate(
+      'confirms.deleteConversation',
+      'Are you sure you want to delete the conversation "{title}"?'
+    )
+    const confirmationMessage = messageTemplate.replace('{title}', title ?? '')
+    if (confirm(confirmationMessage)) {
       onDeleteConversation(id)
     }
   }
