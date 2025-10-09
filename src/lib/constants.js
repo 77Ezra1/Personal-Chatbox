@@ -29,7 +29,7 @@ export const PROVIDERS = {
   },
   mistral: {
     label: 'Mistral',
-    models: ['mistral-large-latest', 'mistral-medium']
+    models: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest']
   },
   together: {
     label: 'Together AI',
