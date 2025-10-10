@@ -54,27 +54,27 @@
 }
 
 .dark {
-  --background: #FFFFFF;
-  --foreground: #1F2430;
-  --card: #FFFFFF;
-  --card-foreground: #1F2430;
-  --popover: #FFFFFF;
-  --popover-foreground: #1F2430;
-  --primary: #FFFFFF;
-  --primary-foreground: #1F2430;
-  --secondary: #FFFFFF;
-  --secondary-foreground: #1F2430;
-  --muted: #FFFFFF;
-  --muted-foreground: #5F6B8C;
-  --accent: #FFFFFF;
-  --accent-foreground: #1F2430;
-  --destructive: #FF5F57;
-  --border: #EFEFEF;
-  --input: #E8EAF2;
-  --ring: #EFEFEF;
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #1F2430;
-  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --background: #1a1b26;
+  --foreground: #c0caf5;
+  --card: #24283b;
+  --card-foreground: #c0caf5;
+  --popover: #24283b;
+  --popover-foreground: #c0caf5;
+  --primary: #7aa2f7;
+  --primary-foreground: #1a1b26;
+  --secondary: #414868;
+  --secondary-foreground: #c0caf5;
+  --muted: #414868;
+  --muted-foreground: #9aa5ce;
+  --accent: #414868;
+  --accent-foreground: #c0caf5;
+  --destructive: #f7768e;
+  --border: #414868;
+  --input: #414868;
+  --ring: #7aa2f7;
+  --sidebar: #1f2335;
+  --sidebar-foreground: #c0caf5;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {

@@ -40,7 +40,6 @@ export function ConfirmDialog({
           <button
             className="confirm-dialog-close"
             onClick={handleCancel}
-            aria-label="关闭"
           >
             <X className="w-4 h-4" />
           </button>
