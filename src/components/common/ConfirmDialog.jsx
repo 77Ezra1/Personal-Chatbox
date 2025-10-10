@@ -19,6 +19,7 @@ export function ConfirmDialog({
 
   const handleConfirm = () => {
     onConfirm?.()
+    onCancel?.() // 执行确认操作后自动关闭弹窗
   }
 
   const handleCancel = () => {
