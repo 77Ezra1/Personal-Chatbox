@@ -23,7 +23,8 @@
 ### 3. 模型配置
 - ✅ 支持多个 AI 提供商
 - ✅ 灵活切换和自定义模型
-- ✅ API 密钥管理
+- ✅ API 密钥管理（按服务商共享）
+- ✅ API Key 查看/隐藏和复制功能
 - ✅ 参数调节
 - ✅ IndexedDB 结构化存储
 
@@ -60,6 +61,16 @@ pnpm dev
 \`\`\`
 
 ## 🚀 最近更新
+
+### v3.1.0 - API Key 共享功能
+- ✅ 实现 API Key 在同一服务商下的模型间共享
+- ✅ 新增 provider_api_keys 数据表（数据库升级至 v2）
+- ✅ API Key 按服务商级别存储，同一服务商的所有模型共享同一个 API Key
+- ✅ 首次配置某服务商的模型时输入 API Key，后续添加该服务商的其他模型时自动加载
+- ✅ API Key 输入框支持查看/隐藏明文功能（👁️ 图标）
+- ✅ API Key 输入框支持一键复制到剪贴板功能（📋 图标）
+- ✅ 数据库自动升级，向后兼容
+- ✅ 不影响现有业务逻辑和全局布局
 
 ### v3.0.0 - 系统提示词功能重构
 - ✅ 从 localStorage 升级到 IndexedDB 存储
@@ -98,6 +109,9 @@ MIT License
 \`\`\`javascript
 // 模型操作
 import { getAllModels, saveModel, updateModel } from '@/lib/db/models'
+
+// 服务商 API Key 操作
+import { getProviderApiKey, setProviderApiKey } from '@/lib/db/providerApiKeys'
 
 // 系统提示词操作
 import { getSystemPromptConfig, setGlobalPrompt } from '@/lib/db/systemPrompts'
