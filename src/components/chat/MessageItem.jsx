@@ -73,11 +73,9 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
   const hasFooterActions =
     status === 'done' &&
     !isEditing &&
-    (canCopyMessage || hasAttachments) &&
-    ((isUser && onEdit) || (!isUser && onRegenerate) || onDelete)
+    (canCopyMessage || (isUser && onEdit) || (!isUser && onRegenerate) || onDelete)
 
-  const shouldShowFooter =
-    (!isEditing && (canCopyMessage || hasAttachments)) || hasFooterActions
+  const shouldShowFooter = hasFooterActions
 
   return (
     <div className={`message ${isUser ? 'message-user' : 'message-ai'}`}>
@@ -183,20 +181,18 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
               isUser ? 'message-footer-user' : 'message-footer-ai'
             }`}
           >
-            {canCopyMessage && !isEditing && (
-              <button
-                type="button"
-                className="message-copy-button"
-                onClick={handleCopy}
-                aria-label={translate('tooltips.copyMessage', 'Copy message')}
-                title={translate('tooltips.copyMessage', 'Copy message')}
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            )}
-
             {hasFooterActions && (
               <div className="message-actions">
+                {canCopyMessage && !isEditing && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopy}
+                    title={translate('tooltips.copyMessage', 'Copy message')}
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                )}
                 {isUser && onEdit && (
                   <Button
                     variant="ghost"
