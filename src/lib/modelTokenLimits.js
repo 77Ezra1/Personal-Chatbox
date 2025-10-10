@@ -1,30 +1,87 @@
 /**
  * 模型最大Token数配置
- * 根据各服务商官方文档整理
+ * 
+ * 重要说明：
+ * 1. maxOutputTokens：最大输出Token数（max_tokens参数的最大值）
+ * 2. contextWindow：上下文窗口大小（输入+输出的总Token数）
+ * 3. 某些模型的最大输出是动态的，取决于输入长度
+ * 
+ * 数据来源：各服务商官方API文档
+ * 最后更新：2025年10月10日
  */
 
 export const MODEL_MAX_TOKENS = {
+  // ============================================
   // OpenAI Models
-  'gpt-4o-mini': {
-    maxOutputTokens: 16384,
-    contextWindow: 128000,
-    description: 'GPT-4o mini 模型'
+  // 来源：https://platform.openai.com/docs/models
+  // ============================================
+  
+  // GPT-5 系列
+  'gpt-5': {
+    maxOutputTokens: 128000,
+    contextWindow: 400000,
+    description: 'GPT-5 - 最强大的OpenAI模型'
   },
+  
+  // GPT-4o 系列
   'gpt-4o': {
+    maxOutputTokens: 16384,          // 官方确认
+    contextWindow: 128000,
+    description: 'GPT-4o - 多模态旗舰模型'
+  },
+  'gpt-4o-mini': {
+    maxOutputTokens: 16384,          // 官方确认
+    contextWindow: 128000,
+    description: 'GPT-4o mini - 快速且经济的小型模型'
+  },
+  'gpt-4o-2024-08-06': {
     maxOutputTokens: 16384,
     contextWindow: 128000,
-    description: 'GPT-4o 模型'
+    description: 'GPT-4o (2024-08-06)'
   },
+  'gpt-4o-2024-11-20': {
+    maxOutputTokens: 16384,
+    contextWindow: 128000,
+    description: 'GPT-4o (2024-11-20)'
+  },
+  'gpt-4o-mini-2024-07-18': {
+    maxOutputTokens: 16384,
+    contextWindow: 128000,
+    description: 'GPT-4o mini (2024-07-18)'
+  },
+  
+  // GPT-4.1 系列
+  'gpt-4.1': {
+    maxOutputTokens: 32768,
+    contextWindow: 128000,
+    description: 'GPT-4.1 - 最智能的非推理模型'
+  },
+  'gpt-4.1-mini': {
+    maxOutputTokens: 32768,
+    contextWindow: 128000,
+    description: 'GPT-4.1 mini'
+  },
+  
+  // GPT-4 系列
   'gpt-4': {
     maxOutputTokens: 8192,
     contextWindow: 8192,
     description: 'GPT-4 模型'
   },
+  'gpt-4-turbo': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'GPT-4 Turbo'
+  },
+  
+  // GPT-3.5 系列
   'gpt-3.5-turbo': {
     maxOutputTokens: 4096,
     contextWindow: 16385,
     description: 'GPT-3.5 Turbo 模型'
   },
+  
+  // O系列（推理模型）
   'o1': {
     maxOutputTokens: 32768,
     contextWindow: 200000,
@@ -41,85 +98,461 @@ export const MODEL_MAX_TOKENS = {
     description: 'O3 Mini 推理模型'
   },
 
-  // DeepSeek Models
-  'deepseek-chat': {
-    maxOutputTokens: 8192,
-    contextWindow: 64000,
-    description: 'DeepSeek Chat 模型'
+  // ============================================
+  // Anthropic Claude Models
+  // 来源：https://docs.claude.com/en/docs/about-claude/models/overview
+  // ============================================
+  
+  // Claude Sonnet 系列（最大输出64K）
+  'claude-sonnet-4.5': {
+    maxOutputTokens: 64000,          // 官方确认
+    contextWindow: 200000,
+    description: 'Claude Sonnet 4.5'
   },
-  'deepseek-coder': {
-    maxOutputTokens: 8192,
-    contextWindow: 64000,
-    description: 'DeepSeek Coder 模型'
+  'claude-sonnet-4': {
+    maxOutputTokens: 64000,          // 官方确认
+    contextWindow: 200000,
+    description: 'Claude Sonnet 4'
   },
-  'deepseek-reasoner': {
+  'claude-3.7-sonnet': {
+    maxOutputTokens: 64000,          // 官方确认
+    contextWindow: 200000,
+    description: 'Claude 3.7 Sonnet'
+  },
+  'claude-3.5-sonnet': {
+    maxOutputTokens: 64000,          // 官方确认（之前错误配置为8192）
+    contextWindow: 200000,
+    description: 'Claude 3.5 Sonnet'
+  },
+  'claude-3-sonnet': {
+    maxOutputTokens: 64000,          // 官方确认（之前错误配置为4096）
+    contextWindow: 200000,
+    description: 'Claude 3 Sonnet'
+  },
+  'claude-3-5-sonnet-20240620': {
     maxOutputTokens: 64000,
-    contextWindow: 64000,
-    description: 'DeepSeek Reasoner 推理模型'
+    contextWindow: 200000,
+    description: 'Claude 3.5 Sonnet (2024-06-20)'
+  },
+  'claude-3-5-sonnet-20241022': {
+    maxOutputTokens: 64000,
+    contextWindow: 200000,
+    description: 'Claude 3.5 Sonnet (2024-10-22)'
+  },
+  'claude-3-sonnet-20240229': {
+    maxOutputTokens: 64000,
+    contextWindow: 200000,
+    description: 'Claude 3 Sonnet (2024-02-29)'
+  },
+  
+  // Claude Opus 系列（最大输出32K）
+  'claude-opus-4.1': {
+    maxOutputTokens: 32000,          // 官方确认
+    contextWindow: 200000,
+    description: 'Claude Opus 4.1'
+  },
+  'claude-opus-4': {
+    maxOutputTokens: 32000,          // 官方确认
+    contextWindow: 200000,
+    description: 'Claude Opus 4'
+  },
+  'claude-3-opus': {
+    maxOutputTokens: 32000,          // 官方确认（之前错误配置为4096）
+    contextWindow: 200000,
+    description: 'Claude 3 Opus'
+  },
+  'claude-3-opus-20240229': {
+    maxOutputTokens: 32000,
+    contextWindow: 200000,
+    description: 'Claude 3 Opus (2024-02-29)'
+  },
+  
+  // Claude Haiku 系列
+  'claude-3.5-haiku': {
+    maxOutputTokens: 8192,           // 官方确认
+    contextWindow: 200000,
+    description: 'Claude 3.5 Haiku'
+  },
+  'claude-3-haiku': {
+    maxOutputTokens: 4096,           // 官方确认
+    contextWindow: 200000,
+    description: 'Claude 3 Haiku'
+  },
+  'claude-3-5-haiku-20241022': {
+    maxOutputTokens: 8192,
+    contextWindow: 200000,
+    description: 'Claude 3.5 Haiku (2024-10-22)'
+  },
+  'claude-3-haiku-20240307': {
+    maxOutputTokens: 4096,
+    contextWindow: 200000,
+    description: 'Claude 3 Haiku (2024-03-07)'
   },
 
-  // Moonshot Models
-  'moonshot-v1-8k': {
+  // ============================================
+  // Google Gemini Models
+  // 来源：https://ai.google.dev/gemini-api/docs/models
+  // ============================================
+  
+  'gemini-2.5-pro': {
+    maxOutputTokens: 65536,          // 官方确认
+    contextWindow: 1048576,
+    description: 'Gemini 2.5 Pro'
+  },
+  'gemini-2.0-flash': {
+    maxOutputTokens: 8192,           // 官方确认（之前错误配置为65536）
+    contextWindow: 1048576,
+    description: 'Gemini 2.0 Flash'
+  },
+  'gemini-1.5-pro': {
+    maxOutputTokens: 8192,           // 官方确认
+    contextWindow: 2097152,
+    description: 'Gemini 1.5 Pro'
+  },
+  'gemini-1.5-flash': {
     maxOutputTokens: 8192,
+    contextWindow: 1048576,
+    description: 'Gemini 1.5 Flash'
+  },
+  'gemini-pro': {
+    maxOutputTokens: 8192,           // 官方确认
+    contextWindow: 1048576,
+    description: 'Gemini Pro'
+  },
+  'gemini-pro-vision': {
+    maxOutputTokens: 8192,
+    contextWindow: 1048576,
+    description: 'Gemini Pro Vision'
+  },
+  'gemini-ultra': {
+    maxOutputTokens: 8192,
+    contextWindow: 1048576,
+    description: 'Gemini Ultra'
+  },
+
+  // ============================================
+  // Moonshot (Kimi) Models
+  // 来源：https://platform.moonshot.cn/docs/guide/faq
+  // 注意：最大输出是动态的，公式为：上下文窗口 - 输入Token数
+  // ============================================
+  
+  'moonshot-v1-8k': {
+    maxOutputTokens: 8192,           // 官方：8*1024 - prompt_tokens
     contextWindow: 8192,
-    description: 'Moonshot v1 8K 模型'
+    description: 'Moonshot v1 8K（最大输出动态）',
+    isDynamic: true
   },
   'moonshot-v1-32k': {
-    maxOutputTokens: 32768,
+    maxOutputTokens: 32768,          // 官方：32*1024 - prompt_tokens
     contextWindow: 32768,
-    description: 'Moonshot v1 32K 模型'
+    description: 'Moonshot v1 32K（最大输出动态）',
+    isDynamic: true
   },
   'moonshot-v1-128k': {
-    maxOutputTokens: 128000,
-    contextWindow: 128000,
-    description: 'Moonshot v1 128K 模型'
+    maxOutputTokens: 131072,         // 官方：128*1024 - prompt_tokens（之前错误配置为128000）
+    contextWindow: 131072,
+    description: 'Moonshot v1 128K（最大输出动态）',
+    isDynamic: true
+  },
+  'moonshot-v1-auto': {
+    maxOutputTokens: 131072,
+    contextWindow: 131072,
+    description: 'Moonshot v1 Auto（自动选择）',
+    isDynamic: true
   },
   'kimi-k2-0711-preview': {
-    maxOutputTokens: 256000,
-    contextWindow: 256000,
-    description: 'Kimi K2 预览版模型'
+    maxOutputTokens: 262144,         // 256*1024（之前错误配置为256000）
+    contextWindow: 262144,
+    description: 'Kimi K2 (0711) Preview（最大输出动态）',
+    isDynamic: true
+  },
+  'kimi-k2-0905-preview': {
+    maxOutputTokens: 262144,         // 官方：256*1024 - prompt_tokens
+    contextWindow: 262144,
+    description: 'Kimi K2 (0905) Preview（最大输出动态）',
+    isDynamic: true
+  },
+  'kimi-k2-turbo-preview': {
+    maxOutputTokens: 262144,         // 官方：256*1024 - prompt_tokens
+    contextWindow: 262144,
+    description: 'Kimi K2 Turbo Preview（最大输出动态）',
+    isDynamic: true
   },
 
-  // Groq Models
-  'mixtral-8x7b-32768': {
-    maxOutputTokens: 32768,
+  // ============================================
+  // Volcano Engine (豆包) Models
+  // 来源：用户反馈 + 搜索结果
+  // 注意：所有豆包模型的输出都限制在约16K，与上下文窗口无关
+  // ============================================
+  
+  'doubao-pro-32k': {
+    maxOutputTokens: 16000,          // 用户反馈（之前错误配置为32768）
     contextWindow: 32768,
-    description: 'Mixtral 8x7B 模型'
+    description: '豆包 Pro 32K（输出限制约16K）'
+  },
+  'doubao-pro-128k': {
+    maxOutputTokens: 16000,          // 用户反馈（之前错误配置为128000）
+    contextWindow: 128000,
+    description: '豆包 Pro 128K（输出限制约16K）'
+  },
+  'doubao-pro-256k': {
+    maxOutputTokens: 16000,
+    contextWindow: 256000,
+    description: '豆包 Pro 256K（输出限制约16K）'
+  },
+  'doubao-lite-32k': {
+    maxOutputTokens: 16000,          // 用户反馈（之前错误配置为32768）
+    contextWindow: 32768,
+    description: '豆包 Lite 32K（输出限制约16K）'
+  },
+  'doubao-lite-128k': {
+    maxOutputTokens: 16000,
+    contextWindow: 128000,
+    description: '豆包 Lite 128K（输出限制约16K）'
+  },
+
+  // ============================================
+  // DeepSeek Models
+  // 来源：https://api-docs.deepseek.com
+  // ============================================
+  
+  'deepseek-chat': {
+    maxOutputTokens: 8192,           // 官方确认
+    contextWindow: 64000,
+    description: 'DeepSeek Chat'
+  },
+  'deepseek-coder': {
+    maxOutputTokens: 8192,           // 官方确认
+    contextWindow: 64000,
+    description: 'DeepSeek Coder'
+  },
+  'deepseek-reasoner': {
+    maxOutputTokens: 64000,          // 官方确认：包括思考过程
+    contextWindow: 64000,
+    description: 'DeepSeek Reasoner（包括思考过程）'
+  },
+
+  // ============================================
+  // Groq Models
+  // 来源：https://console.groq.com/docs/models
+  // ============================================
+  
+  'llama-3.1-8b-instant': {
+    maxOutputTokens: 131072,         // 官方确认
+    contextWindow: 131072,
+    description: 'Llama 3.1 8B Instant'
+  },
+  'llama-3.3-70b-versatile': {
+    maxOutputTokens: 32768,          // 官方确认（之前错误配置为8192）
+    contextWindow: 131072,
+    description: 'Llama 3.3 70B Versatile'
   },
   'llama3-70b-8192': {
     maxOutputTokens: 8192,
     contextWindow: 8192,
-    description: 'Llama 3 70B 模型'
+    description: 'Llama 3 70B（可能已弃用）'
+  },
+  'llama3-8b-8192': {
+    maxOutputTokens: 8192,
+    contextWindow: 8192,
+    description: 'Llama 3 8B（可能已弃用）'
   },
   'llama-3.1-70b-versatile': {
     maxOutputTokens: 8192,
     contextWindow: 131072,
-    description: 'Llama 3.1 70B Versatile 模型'
+    description: 'Llama 3.1 70B Versatile'
   },
-  'llama-3.3-70b-versatile': {
+  'mixtral-8x7b-32768': {
+    maxOutputTokens: 32768,
+    contextWindow: 32768,
+    description: 'Mixtral 8x7B（可能已弃用）'
+  },
+  'gemma-7b-it': {
     maxOutputTokens: 8192,
+    contextWindow: 8192,
+    description: 'Gemma 7B IT'
+  },
+  'gemma2-9b-it': {
+    maxOutputTokens: 8192,
+    contextWindow: 8192,
+    description: 'Gemma2 9B IT'
+  },
+  'meta-llama/llama-guard-4-12b': {
+    maxOutputTokens: 1024,           // 官方确认
     contextWindow: 131072,
-    description: 'Llama 3.3 70B Versatile 模型'
+    description: 'Llama Guard 4 12B'
+  },
+  'openai/gpt-oss-120b': {
+    maxOutputTokens: 65536,          // 官方确认
+    contextWindow: 131072,
+    description: 'GPT-OSS 120B'
+  },
+  'openai/gpt-oss-20b': {
+    maxOutputTokens: 65536,          // 官方确认
+    contextWindow: 131072,
+    description: 'GPT-OSS 20B'
+  },
+  'groq/compound': {
+    maxOutputTokens: 8192,           // 官方确认
+    contextWindow: 131072,
+    description: 'Groq Compound'
+  },
+  'groq/compound-mini': {
+    maxOutputTokens: 8192,           // 官方确认
+    contextWindow: 131072,
+    description: 'Groq Compound Mini'
   },
 
+  // ============================================
   // Mistral Models
+  // 来源：https://docs.mistral.ai/getting-started/models/models_overview/
+  // 注意：根据prompthub.us，Mistral Large的最大输出是4096
+  // 文档中的Max Tokens可能指上下文窗口，需要进一步确认
+  // ============================================
+  
+  // Mistral Large 系列
   'mistral-large-latest': {
-    maxOutputTokens: 128000,
+    maxOutputTokens: 4096,           // 根据prompthub.us（待官方确认）
     contextWindow: 128000,
-    description: 'Mistral Large 最新版'
+    description: 'Mistral Large Latest'
   },
+  'mistral-large-2411': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Mistral Large (2024-11)'
+  },
+  'mistral-large-2407': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Mistral Large (2024-07)'
+  },
+  
+  // Mistral Medium 系列
   'mistral-medium-latest': {
-    maxOutputTokens: 32768,
+    maxOutputTokens: 4096,
     contextWindow: 32768,
-    description: 'Mistral Medium 最新版'
+    description: 'Mistral Medium Latest'
   },
+  'mistral-medium-2508': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Mistral Medium (2025-08)'
+  },
+  'mistral-medium-2505': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Mistral Medium (2025-05)'
+  },
+  
+  // Mistral Small 系列
   'mistral-small-latest': {
-    maxOutputTokens: 32768,
+    maxOutputTokens: 4096,
     contextWindow: 32768,
-    description: 'Mistral Small 最新版'
+    description: 'Mistral Small Latest'
+  },
+  'mistral-small-2506': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Mistral Small (2025-06)'
+  },
+  'mistral-small-2503': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Mistral Small (2025-03)'
+  },
+  'mistral-small-2501': {
+    maxOutputTokens: 4096,
+    contextWindow: 32000,
+    description: 'Mistral Small (2025-01)'
+  },
+  'mistral-small-2407': {
+    maxOutputTokens: 4096,
+    contextWindow: 32000,
+    description: 'Mistral Small (2024-07)'
+  },
+  
+  // Codestral 系列
+  'codestral-latest': {
+    maxOutputTokens: 4096,
+    contextWindow: 256000,
+    description: 'Codestral Latest'
+  },
+  'codestral-2508': {
+    maxOutputTokens: 4096,
+    contextWindow: 256000,
+    description: 'Codestral (2025-08)'
+  },
+  'codestral-2501': {
+    maxOutputTokens: 4096,
+    contextWindow: 256000,
+    description: 'Codestral (2025-01)'
+  },
+  
+  // Ministral 系列
+  'ministral-3b-latest': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Ministral 3B Latest'
+  },
+  'ministral-8b-latest': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Ministral 8B Latest'
+  },
+  'ministral-3b-2410': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Ministral 3B (2024-10)'
+  },
+  'ministral-8b-2410': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Ministral 8B (2024-10)'
+  },
+  
+  // Pixtral 系列
+  'pixtral-large-latest': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Pixtral Large Latest'
+  },
+  'pixtral-large-2411': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Pixtral Large (2024-11)'
+  },
+  'pixtral-12b-2409': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Pixtral 12B (2024-09)'
+  },
+  
+  // 其他 Mistral 模型
+  'open-mistral-nemo': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Open Mistral Nemo'
+  },
+  'open-mistral-7b': {
+    maxOutputTokens: 4096,
+    contextWindow: 32768,
+    description: 'Open Mistral 7B'
+  },
+  'open-mixtral-8x7b': {
+    maxOutputTokens: 4096,
+    contextWindow: 32768,
+    description: 'Open Mixtral 8x7B'
+  },
+  'open-mixtral-8x22b': {
+    maxOutputTokens: 4096,
+    contextWindow: 64000,
+    description: 'Open Mixtral 8x22B'
   },
 
+  // ============================================
   // Together AI Models
+  // ============================================
+  
   'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo': {
     maxOutputTokens: 8192,
     contextWindow: 131072,
@@ -131,70 +564,47 @@ export const MODEL_MAX_TOKENS = {
     description: 'Meta Llama 3 8B Instruct'
   },
 
-  // Anthropic Models
-  'claude-3-opus-20240229': {
+  // ============================================
+  // 其他模型
+  // ============================================
+  
+  // Cohere
+  'command-r-plus': {
     maxOutputTokens: 4096,
-    contextWindow: 200000,
-    description: 'Claude 3 Opus 模型'
-  },
-  'claude-3-sonnet-20240229': {
-    maxOutputTokens: 4096,
-    contextWindow: 200000,
-    description: 'Claude 3 Sonnet 模型'
-  },
-  'claude-3-haiku-20240307': {
-    maxOutputTokens: 4096,
-    contextWindow: 200000,
-    description: 'Claude 3 Haiku 模型'
-  },
-  'claude-3.5-sonnet': {
-    maxOutputTokens: 8192,
-    contextWindow: 200000,
-    description: 'Claude 3.5 Sonnet 模型'
-  },
-
-  // Google Gemini Models
-  'gemini-pro': {
-    maxOutputTokens: 8192,
-    contextWindow: 1048576,
-    description: 'Gemini Pro 模型'
-  },
-  'gemini-ultra': {
-    maxOutputTokens: 8192,
-    contextWindow: 1048576,
-    description: 'Gemini Ultra 模型'
-  },
-  'gemini-1.5-pro': {
-    maxOutputTokens: 8192,
-    contextWindow: 2097152,
-    description: 'Gemini 1.5 Pro 模型'
-  },
-  'gemini-2.0-flash': {
-    maxOutputTokens: 65536,
-    contextWindow: 1048576,
-    description: 'Gemini 2.0 Flash 模型'
-  },
-  'gemini-2.5-pro': {
-    maxOutputTokens: 65536,
-    contextWindow: 1048576,
-    description: 'Gemini 2.5 Pro 模型'
-  },
-
-  // Volcano Engine (豆包) Models
-  'doubao-pro-32k': {
-    maxOutputTokens: 32768,
-    contextWindow: 32768,
-    description: '豆包 Pro 32K 模型'
-  },
-  'doubao-pro-128k': {
-    maxOutputTokens: 128000,
     contextWindow: 128000,
-    description: '豆包 Pro 128K 模型'
+    description: 'Command R Plus'
   },
-  'doubao-lite-32k': {
-    maxOutputTokens: 32768,
-    contextWindow: 32768,
-    description: '豆包 Lite 32K 模型'
+  'command-r': {
+    maxOutputTokens: 4096,
+    contextWindow: 128000,
+    description: 'Command R'
+  },
+  'command': {
+    maxOutputTokens: 4096,
+    contextWindow: 4096,
+    description: 'Command'
+  },
+  'command-light': {
+    maxOutputTokens: 4096,
+    contextWindow: 4096,
+    description: 'Command Light'
+  },
+  
+  // Meta Llama（通过其他平台）
+  'llama-2-70b-chat': {
+    maxOutputTokens: 4096,
+    contextWindow: 4096,
+    description: 'Llama 2 70B Chat'
+  },
+  'llama-2-13b-chat': {
+    maxOutputTokens: 4096,
+    contextWindow: 4096,
+    description: 'Llama 2 13B Chat'
+  },
+  'llama-2-7b-chat': {
+    maxOutputTokens: 4096,
+    contextWindow: 4096,
+    description: 'Llama 2 7B Chat'
   }
 }
 
@@ -226,6 +636,16 @@ export function getModelContextWindow(modelName) {
 export function getModelDescription(modelName) {
   const config = MODEL_MAX_TOKENS[modelName]
   return config?.description ?? modelName
+}
+
+/**
+ * 检查模型的最大输出是否是动态的
+ * @param {string} modelName - 模型名称
+ * @returns {boolean} 是否动态
+ */
+export function isModelDynamic(modelName) {
+  const config = MODEL_MAX_TOKENS[modelName]
+  return config?.isDynamic ?? false
 }
 
 /**
