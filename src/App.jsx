@@ -8,6 +8,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { useModelConfig } from '@/hooks/useModelConfig'
 import { useDeepThinking } from '@/hooks/useDeepThinking'
 import { useKeyboardShortcuts, DEFAULT_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
+import { useSystemPrompt } from '@/hooks/useSystemPrompt'
 
 // Components
 import { Sidebar } from '@/components/sidebar/Sidebar'
@@ -67,6 +68,14 @@ function App() {
     toggleDeepThinking
   } = useDeepThinking(modelConfig)
 
+  // 系统提示词
+  const {
+    systemPrompt,
+    setMode: setSystemPromptMode,
+    setGlobalPrompt,
+    setModelPrompts
+  } = useSystemPrompt()
+
   // ==================== 本地状态 ====================
   
   const [showConfig, setShowConfig] = useState(true)
@@ -122,6 +131,7 @@ function App() {
         messages,
         modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
         signal: abortControllerRef.current.signal,
+        systemPrompt,
         onToken: (token, fullText) => {
           if (typeof fullText === 'string') {
             accumulatedContent = fullText
@@ -445,6 +455,18 @@ function App() {
           isOpen={showConfig}
           translate={translate}
           language={language}
+          systemPrompt={systemPrompt}
+          onSystemPromptModeChange={setSystemPromptMode}
+          onSystemPromptGlobalChange={setGlobalPrompt}
+          onSystemPromptModelChange={(modelKeys, prompt, newPrompts) => {
+            if (newPrompts) {
+              // 直接设置新的prompts对象（用于删除）
+              setModelPrompts([], '', newPrompts)
+            } else {
+              // 批量设置模型提示词
+              setModelPrompts(modelKeys, prompt)
+            }
+          }}
         />
       </div>
 
