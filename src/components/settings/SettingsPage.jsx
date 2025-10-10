@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare } from 'lucide-react'
+import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare, Plug } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfigPanel } from '../config/ConfigPanel'
 import { SystemPromptConfigNew } from '../config/SystemPromptConfigNew'
+import { McpServiceConfig } from '../mcp/McpServiceConfig'
 import './SettingsPage.css'
 
 /**
@@ -42,6 +43,7 @@ export function SettingsPage({
   const tabs = [
     { id: 'model', icon: SettingsIcon, label: translate('settings.tabs.model', 'Model Configuration') },
     { id: 'systemPrompt', icon: MessageSquare, label: translate('settings.tabs.systemPrompt', 'System Prompt') },
+    { id: 'mcpServices', icon: Plug, label: translate('settings.tabs.mcpServices', 'MCP Services') },
     { id: 'appearance', icon: Palette, label: translate('settings.tabs.appearance', 'Appearance') },
     { id: 'language', icon: Globe, label: translate('settings.tabs.language', 'Language') },
     { id: 'profile', icon: User, label: translate('settings.tabs.profile', 'User Profile') },
@@ -119,6 +121,21 @@ export function SettingsPage({
                   language={language}
                   translate={translate}
                   allModels={models}
+                />
+              </div>
+            )}
+
+            {activeTab === 'mcpServices' && (
+              <div className="settings-section">
+                <h3 className="settings-section-title">
+                  {translate('settings.mcpServices.title', 'MCP Services')}
+                </h3>
+                <p className="settings-section-description">
+                  {translate('settings.mcpServices.description', 'Configure external services to enhance AI capabilities with real-time information')}
+                </p>
+                <McpServiceConfig
+                  language={language}
+                  translate={translate}
                 />
               </div>
             )}

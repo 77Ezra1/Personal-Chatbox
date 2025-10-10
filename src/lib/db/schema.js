@@ -4,7 +4,7 @@
  */
 
 export const DB_NAME = 'ai-life-system-db'
-export const DB_VERSION = 2
+export const DB_VERSION = 3 // 升级版本以支持 MCP
 
 /**
  * 对象存储（表）定义
@@ -15,7 +15,8 @@ export const STORES = {
   MODEL_PROMPTS: 'model_prompts',
   CONVERSATIONS: 'conversations',
   APP_SETTINGS: 'app_settings',
-  PROVIDER_API_KEYS: 'provider_api_keys'
+  PROVIDER_API_KEYS: 'provider_api_keys',
+  MCP_SERVERS: 'mcp_servers' // 新增：MCP 服务器配置
 }
 
 /**
@@ -56,6 +57,13 @@ export function initSchema(db) {
   // 6. provider_api_keys表 - 存储服务商API Key
   if (!db.objectStoreNames.contains(STORES.PROVIDER_API_KEYS)) {
     db.createObjectStore(STORES.PROVIDER_API_KEYS, { keyPath: 'provider' })
+  }
+
+  // 7. mcp_servers表 - 存储MCP服务器配置
+  if (!db.objectStoreNames.contains(STORES.MCP_SERVERS)) {
+    const mcpServersStore = db.createObjectStore(STORES.MCP_SERVERS, { keyPath: 'id' })
+    mcpServersStore.createIndex('type', 'type', { unique: false })
+    mcpServersStore.createIndex('isEnabled', 'isEnabled', { unique: false })
   }
 }
 

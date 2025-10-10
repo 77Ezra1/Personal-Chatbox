@@ -310,4 +310,8 @@ export * from './modelPrompts'
 export * from './conversations'
 export * from './appSettings'
 export * from './providerApiKeys'
+export * from './mcpServers'
+
+// 为了向后兼容，导出 openDB 别名
+export { openDatabase as openDB }
 
