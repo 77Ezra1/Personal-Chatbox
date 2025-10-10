@@ -266,3 +266,91 @@
   }
 }
 
+
+
+/* 服务商分组样式 */
+.system-prompt-provider-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.system-prompt-provider-group {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.system-prompt-provider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.system-prompt-provider-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  padding: 0;
+  text-align: left;
+  transition: color 0.2s;
+}
+
+.system-prompt-provider-toggle:hover {
+  color: var(--primary);
+}
+
+.system-prompt-provider-name {
+  font-weight: 600;
+}
+
+.system-prompt-provider-count {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.system-prompt-select-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.system-prompt-select-all:hover {
+  border-color: var(--primary);
+}
+
+.system-prompt-select-all.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.system-prompt-model-list-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  padding: 12px;
+}
+
