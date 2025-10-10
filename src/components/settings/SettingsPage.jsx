@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, Settings as SettingsIcon, Palette, Globe, User, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import ConfigPanel from '../config/ConfigPanel'
+import { ConfigPanel } from '../config/ConfigPanel'
 import './SettingsPage.css'
 
 /**
