@@ -175,6 +175,13 @@
   max-height: 300px;
   overflow-y: auto;
   padding: 4px;
+  /* 隐藏滚动条但保留滚动功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.system-prompt-model-grid::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .system-prompt-model-option {

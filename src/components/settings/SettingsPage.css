@@ -76,6 +76,13 @@
   border-right: 1px solid var(--border);
   padding: 16px;
   overflow-y: auto;
+  /* 隐藏滚动条但保留滚动功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.settings-sidebar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .settings-tab {
@@ -109,6 +116,13 @@
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  /* 隐藏滚动条但保留滚动功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.settings-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .settings-section {
