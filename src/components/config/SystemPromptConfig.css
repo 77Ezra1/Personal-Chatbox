@@ -75,7 +75,7 @@
   color: var(--foreground);
   font-size: 14px;
   font-family: inherit;
-  resize: vertical;
+  resize: none; /* 禁止用户手动调整大小 */
   margin-bottom: 12px;
   transition: border-color 0.2s;
   /* 滑动式输入框，不撑开布局 */

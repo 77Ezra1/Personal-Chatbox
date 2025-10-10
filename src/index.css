@@ -19,7 +19,7 @@
 textarea {
   overflow-y: auto;
   overflow-x: hidden;
-  resize: vertical;
+  resize: none; /* 禁止用户手动调整大小，避免影响布局 */
   word-wrap: break-word;
   white-space: pre-wrap;
 }

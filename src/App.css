@@ -1105,7 +1105,7 @@ button:hover:not(:disabled),
   font-size: 15px;
   line-height: 1.6;
   color: var(--foreground);
-  resize: vertical;
+  resize: none; /* 禁止用户手动调整大小 */
   min-height: 72px;
   /* 滑动式输入框，不撑开布局 */
   max-height: 200px;
@@ -1532,8 +1532,10 @@ button:hover:not(:disabled),
   background: #ffffff;
   padding: 12px 14px;
   font-size: 13px;
-  resize: vertical;
+  resize: none; /* 禁止用户手动调整大小 */
   min-height: 120px;
+  max-height: 300px; /* 添加最大高度限制 */
+  overflow-y: auto; /* 添加滚动功能 */
   color: var(--foreground);
 }
 
@@ -1853,7 +1855,7 @@ button:hover:not(:disabled),
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.5;
-  resize: vertical;
+  resize: none; /* 禁止用户手动调整大小 */
   background: var(--bg-secondary);
   color: var(--text-primary);
   /* 滑动式输入框，不撑开布局 */
