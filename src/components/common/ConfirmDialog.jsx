@@ -9,11 +9,12 @@ export function ConfirmDialog({
   isOpen,
   title,
   message,
-  confirmText = '确定',
-  cancelText = '取消',
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
-  variant = 'default' // 'default' | 'danger'
+  variant = 'default', // 'default' | 'danger'
+  translate
 }) {
   if (!isOpen) return null
 
@@ -57,13 +58,13 @@ export function ConfirmDialog({
             variant="outline"
             onClick={handleCancel}
           >
-            {cancelText}
+            {cancelText || translate?.('confirms.cancelButton', 'Cancel')}
           </Button>
           <Button
             variant={variant === 'danger' ? 'destructive' : 'default'}
             onClick={handleConfirm}
           >
-            {confirmText}
+            {confirmText || translate?.('confirms.confirmButton', 'Confirm')}
           </Button>
         </div>
       </div>

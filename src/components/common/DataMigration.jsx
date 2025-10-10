@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { needsMigration, migrateData } from '@/lib/db/migration'
 import { toast } from 'sonner'
 
-export function DataMigration({ children, language = 'zh' }) {
+export function DataMigration({ children, language = 'zh', translate }) {
   const [migrationStatus, setMigrationStatus] = useState('checking') // checking | migrating | done | error
   const [migrationResult, setMigrationResult] = useState(null)
 
@@ -42,26 +42,20 @@ export function DataMigration({ children, language = 'zh' }) {
           console.error('[Migration] Migration failed:', result.errors)
           setMigrationStatus('error')
           
-          const message = language === 'zh'
-            ? '数据迁移失败，请刷新页面重试。'
-            : 'Migration failed. Please refresh the page and try again.'
-          
+          const message = translate?.('dataMigration.migrationFailed', 'Data migration failed. Please refresh the page and try again.')
           toast.error(message)
         }
       } catch (error) {
         console.error('[Migration] Migration error:', error)
         setMigrationStatus('error')
         
-        const message = language === 'zh'
-          ? '数据迁移出错，请刷新页面重试。'
-          : 'Migration error. Please refresh the page and try again.'
-        
+        const message = translate?.('dataMigration.migrationError', 'Data migration error. Please refresh the page and try again.')
         toast.error(message)
       }
     }
 
     performMigration()
-  }, [language])
+  }, [language, translate])
 
   // 在迁移过程中显示加载状态
   if (migrationStatus === 'checking' || migrationStatus === 'migrating') {
@@ -86,7 +80,7 @@ export function DataMigration({ children, language = 'zh' }) {
           fontSize: '0.875rem',
           color: '#6b7280'
         }}>
-          {language === 'zh' ? '正在迁移数据...' : 'Migrating data...'}
+          {translate?.('dataMigration.migrating', 'Migrating data...')}
         </p>
         <style>{`
           @keyframes spin {

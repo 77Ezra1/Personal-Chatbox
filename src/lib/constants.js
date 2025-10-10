@@ -156,7 +156,49 @@ export const TRANSLATIONS = {
     confirms: {
       deleteMessage: 'Are you sure you want to delete this message?',
       deleteConversation: 'Are you sure you want to delete the conversation "{title}"?',
-      clearAllConversations: 'Are you sure you want to clear all conversations?'
+      clearAllConversations: 'Are you sure you want to clear all conversations?',
+      confirmButton: 'Confirm',
+      cancelButton: 'Cancel'
+    },
+    dataMigration: {
+      migrating: 'Migrating data...',
+      migrationFailed: 'Data migration failed. Please refresh the page and try again.',
+      migrationError: 'Data migration error. Please refresh the page and try again.'
+    },
+    config: {
+      modelInputHint: 'Enter model ID directly or click recommended items below.',
+      deleteModel: 'Delete this model',
+      viewComparison: 'View comparison',
+      unlimitedHint: 'Leave empty for unlimited',
+      unlimited: 'Unlimited',
+      setUnlimited: 'Set to unlimited (use model maximum)',
+      currentUnlimited: 'Current: Unlimited (using model maximum output tokens)',
+      alreadyUnlimited: 'Already set to unlimited, will use model maximum output tokens'
+    },
+    systemPrompt: {
+      description: 'System prompt defines the role and behavior of the model',
+      mode: 'Application Mode',
+      modeNone: 'Not Used',
+      modeGlobal: 'Global',
+      modeSpecific: 'Specific Models',
+      globalPrompt: 'Global Prompt (applies to all models)',
+      globalPromptPlaceholder: 'Enter system prompt...',
+      clear: 'Clear',
+      globalPromptSet: 'Global prompt is currently set',
+      addModelPrompt: 'Add Model Prompt',
+      addModelFirst: 'Please add models above before configuring model-specific prompts.',
+      selectModels: 'Select models to apply (multiple selection allowed)',
+      collapseAll: 'Collapse All',
+      expandAll: 'Expand All',
+      selectAll: 'Select/Deselect All',
+      configuredModels: 'Configured Models',
+      delete: 'Delete',
+      globalPromptHelp: 'Global prompt applies to all model conversations, defining the role and behavior.',
+      specificPromptHelp: 'Specific model prompts apply only to selected models, allowing different roles for different models.'
+    },
+    tokenInfo: {
+      title: 'Token Settings Guide',
+      gotIt: 'Got it'
     },
     toasts: {
       generationCancelled: 'Generation cancelled.',
@@ -292,7 +334,49 @@ export const TRANSLATIONS = {
     confirms: {
       deleteMessage: '确定要删除这条消息吗？',
       deleteConversation: '确定要删除对话「{title}」吗？',
-      clearAllConversations: '确定要清除所有对话吗？'
+      clearAllConversations: '确定要清除所有对话吗？',
+      confirmButton: '确定',
+      cancelButton: '取消'
+    },
+    dataMigration: {
+      migrating: '正在迁移数据...',
+      migrationFailed: '数据迁移失败，请刷新页面重试。',
+      migrationError: '数据迁移出错，请刷新页面重试。'
+    },
+    config: {
+      modelInputHint: '直接输入模型 ID，或点击下方推荐项快速填入。',
+      deleteModel: '删除此模型',
+      viewComparison: '查看优劣势说明',
+      unlimitedHint: '留空表示无限制',
+      unlimited: '无限制',
+      setUnlimited: '设置为无限制（使用模型最大值）',
+      currentUnlimited: '当前：无限制（使用模型支持的最大输出Token数）',
+      alreadyUnlimited: '已设置为无限制，将使用模型支持的最大输出Token数'
+    },
+    systemPrompt: {
+      description: '系统提示词用于定义模型的角色和行为',
+      mode: '应用模式',
+      modeNone: '不使用',
+      modeGlobal: '全局',
+      modeSpecific: '指定模型',
+      globalPrompt: '全局提示词（应用于所有模型）',
+      globalPromptPlaceholder: '输入系统提示词...',
+      clear: '清除',
+      globalPromptSet: '当前已设置全局提示词',
+      addModelPrompt: '添加模型提示词',
+      addModelFirst: '请先在上方添加模型，然后才能配置指定模型的提示词。',
+      selectModels: '选择要应用的模型（可多选）',
+      collapseAll: '全部折叠',
+      expandAll: '全部展开',
+      selectAll: '全选/取消全选',
+      configuredModels: '已配置的模型',
+      delete: '删除',
+      globalPromptHelp: '全局提示词将应用于所有模型的对话中，用于定义模型的角色和行为。',
+      specificPromptHelp: '指定模型提示词只应用于选定的模型，可以为不同模型设置不同的角色。'
+    },
+    tokenInfo: {
+      title: 'Token数设置说明',
+      gotIt: '我知道了'
     },
     toasts: {
       generationCancelled: '生成已取消。',

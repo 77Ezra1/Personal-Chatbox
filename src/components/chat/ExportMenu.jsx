@@ -42,18 +42,18 @@ export function ExportMenu({ conversation, translate, onClose }) {
   return (
     <div className="export-menu">
       <div className="export-menu-header">
-        <h3>导出对话</h3>
+        <h3>{translate?.('export.title', 'Export Conversation')}</h3>
       </div>
 
       <div className="export-menu-section">
-        <h4>下载文件</h4>
+        <h4>{translate?.('export.downloadFiles', 'Download Files')}</h4>
         <div className="export-menu-options">
           <button
             className="export-menu-option"
             onClick={() => handleExport('markdown')}
           >
             <FileText size={18} />
-            <span>Markdown (.md)</span>
+            <span>{translate?.('export.formats.markdown', 'Markdown (.md)')}</span>
           </button>
 
           <button
@@ -61,7 +61,7 @@ export function ExportMenu({ conversation, translate, onClose }) {
             onClick={() => handleExport('text')}
           >
             <FileText size={18} />
-            <span>纯文本 (.txt)</span>
+            <span>{translate?.('export.formats.text', 'Plain Text (.txt)')}</span>
           </button>
 
           <button
@@ -69,13 +69,13 @@ export function ExportMenu({ conversation, translate, onClose }) {
             onClick={() => handleExport('json')}
           >
             <FileJson size={18} />
-            <span>JSON (.json)</span>
+            <span>{translate?.('export.formats.json', 'JSON (.json)')}</span>
           </button>
         </div>
       </div>
 
       <div className="export-menu-section">
-        <h4>复制到剪贴板</h4>
+        <h4>{translate?.('export.copyToClipboard', 'Copy to Clipboard')}</h4>
         <div className="export-menu-options">
           <button
             className="export-menu-option"
@@ -83,7 +83,12 @@ export function ExportMenu({ conversation, translate, onClose }) {
             disabled={copying}
           >
             <Copy size={18} />
-            <span>{copying ? '复制中...' : 'Markdown 格式'}</span>
+            <span>
+              {copying 
+                ? translate?.('export.copying', 'Copying...') 
+                : translate?.('export.formats.markdownFormat', 'Markdown Format')
+              }
+            </span>
           </button>
 
           <button
@@ -92,7 +97,12 @@ export function ExportMenu({ conversation, translate, onClose }) {
             disabled={copying}
           >
             <Copy size={18} />
-            <span>{copying ? '复制中...' : '纯文本格式'}</span>
+            <span>
+              {copying 
+                ? translate?.('export.copying', 'Copying...') 
+                : translate?.('export.formats.textFormat', 'Plain Text Format')
+              }
+            </span>
           </button>
         </div>
       </div>

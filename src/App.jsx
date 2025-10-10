@@ -404,7 +404,7 @@ function App() {
   const conversationList = Object.values(conversations || {})
 
   return (
-    <DataMigration language={language}>
+    <DataMigration language={language} translate={translate}>
       {/* Toast 通知 */}
       <Toaster position="top-center" />
 
@@ -495,10 +495,11 @@ function App() {
         title={confirmDialog.title}
         message={confirmDialog.message}
         variant={confirmDialog.variant}
-        confirmText={language === 'zh' ? '确定' : 'Confirm'}
-        cancelText={language === 'zh' ? '取消' : 'Cancel'}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        translate={translate}
       />
     </DataMigration>
   )
