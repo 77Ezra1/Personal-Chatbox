@@ -105,6 +105,7 @@ function App() {
     abortControllerRef.current = new AbortController()
 
     let accumulatedContent = ''
+    let accumulatedReasoning = ''
 
     try {
       const response = await generateAIResponse({
@@ -117,9 +118,24 @@ function App() {
           } else if (typeof token === 'string') {
             accumulatedContent += token
           }
+          
+          // 在流式输出时，如果开启深度思考模式，实时提取并分离reasoning和answer
+          let displayContent = accumulatedContent
+          if (isDeepThinking && accumulatedContent) {
+            const segments = extractReasoningSegments(accumulatedContent)
+            if (segments) {
+              displayContent = segments.answer
+              accumulatedReasoning = segments.reasoning
+            }
+          }
+          
           updateMessage(currentConversationId, placeholderMessage.id, () => ({
-            content: accumulatedContent,
-            status: 'loading'
+            content: displayContent,
+            status: 'loading',
+            metadata: {
+              ...(isDeepThinking ? { deepThinking: true } : {}),
+              ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {})
+            }
           }))
         }
       })
@@ -127,7 +143,7 @@ function App() {
       let finalContent = typeof response?.content === 'string'
         ? response.content
         : accumulatedContent
-      let finalReasoning = response?.reasoning ?? null
+      let finalReasoning = response?.reasoning ?? accumulatedReasoning ?? null
 
       if (isDeepThinking) {
         const contentForExtraction = finalContent || accumulatedContent

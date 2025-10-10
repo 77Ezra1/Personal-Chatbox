@@ -745,7 +745,7 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
 
       const reasoningDelta = extractVolcengineReasoning(event)
       if (reasoningDelta) {
-        reasoningText = reasoningDelta
+        reasoningText += reasoningDelta
       }
     }, { treatNonSSEAsJSON: true })
 
