@@ -13,27 +13,33 @@ export const FALLBACK_PROVIDER = 'openai'
 export const PROVIDERS = {
   openai: {
     label: 'OpenAI',
-    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4', 'gpt-3.5-turbo']
+    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4', 'gpt-3.5-turbo'],
+    endpoint: 'https://api.openai.com/v1/chat/completions'
   },
   deepseek: {
     label: 'DeepSeek',
-    models: ['deepseek-chat', 'deepseek-coder']
+    models: ['deepseek-chat', 'deepseek-coder'],
+    endpoint: 'https://api.deepseek.com/v1/chat/completions'
   },
   moonshot: {
     label: 'Moonshot',
-    models: ['moonshot-v1-8k', 'moonshot-v1-32k']
+    models: ['moonshot-v1-8k', 'moonshot-v1-32k'],
+    endpoint: 'https://api.moonshot.ai/v1/chat/completions'
   },
   groq: {
     label: 'Groq',
-    models: ['mixtral-8x7b-32768', 'llama3-70b-8192']
+    models: ['mixtral-8x7b-32768', 'llama3-70b-8192'],
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions'
   },
   mistral: {
     label: 'Mistral',
-    models: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest']
+    models: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest'],
+    endpoint: 'https://api.mistral.ai/v1/chat/completions'
   },
   together: {
     label: 'Together AI',
-    models: ['meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'meta-llama/Meta-Llama-3-8B-Instruct']
+    models: ['meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'meta-llama/Meta-Llama-3-8B-Instruct'],
+    endpoint: 'https://api.together.xyz/v1/chat/completions'
   },
   anthropic: {
     label: 'Anthropic',
@@ -41,15 +47,18 @@ export const PROVIDERS = {
       'claude-3-opus-20240229',
       'claude-3-sonnet-20240229',
       'claude-3-haiku-20240307'
-    ]
+    ],
+    endpoint: 'https://api.anthropic.com/v1/messages'
   },
   google: {
     label: 'Google Gemini',
-    models: ['gemini-pro', 'gemini-ultra']
+    models: ['gemini-pro', 'gemini-ultra'],
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta'
   },
   volcengine: {
     label: 'Volcano Engine',
-    models: ['doubao-pro-32k']
+    models: ['doubao-pro-32k'],
+    endpoint: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'
   }
 }
 

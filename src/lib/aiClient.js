@@ -1,35 +1,35 @@
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
-const GOOGLE_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
-const VOLCENGINE_URL = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'
+import { PROVIDERS } from './constants'
+
+// Helper function to get endpoint from PROVIDERS config or use custom endpoint
+function getProviderEndpoint(provider, customEndpoint) {
+  if (customEndpoint && typeof customEndpoint === 'string') {
+    return customEndpoint
+  }
+  return PROVIDERS[provider]?.endpoint || ''
+}
+
 const OPENAI_COMPATIBLE_PROVIDER_CONFIG = {
   openai: {
-    endpoint: OPENAI_URL,
     defaultModel: 'gpt-4o-mini',
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   },
   deepseek: {
-    endpoint: 'https://api.deepseek.com/v1/chat/completions',
     defaultModel: 'deepseek-chat',
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   },
   moonshot: {
-    endpoint: 'https://api.moonshot.cn/v1/chat/completions',
     defaultModel: 'moonshot-v1-8k',
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   },
   groq: {
-    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
     defaultModel: 'mixtral-8x7b-32768',
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   },
   mistral: {
-    endpoint: 'https://api.mistral.ai/v1/chat/completions',
     defaultModel: 'mistral-large-latest',
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   },
   together: {
-    endpoint: 'https://api.together.xyz/v1/chat/completions',
     defaultModel: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
     headers: (key) => ({ Authorization: `Bearer ${key}` })
   }
@@ -238,6 +238,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   const openAICompatibleConfig = OPENAI_COMPATIBLE_PROVIDER_CONFIG[provider]
   let result
   if (openAICompatibleConfig) {
+    const endpoint = getProviderEndpoint(provider, modelConfig.endpoint)
     result = await callOpenAICompatible({
       messages: requestMessages,
       model: model || openAICompatibleConfig.defaultModel,
@@ -246,20 +247,47 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
       maxTokens,
       onToken,
       signal,
-      endpoint: openAICompatibleConfig.endpoint,
+      endpoint,
       headersBuilder: openAICompatibleConfig.headers,
       enableReasoning: deepThinking && provider === 'openai'
     })
   } else {
     switch (provider) {
       case 'anthropic':
-        result = await callAnthropic({ messages: requestMessages, model, apiKey, temperature, maxTokens, onToken, signal })
+        result = await callAnthropic({ 
+          messages: requestMessages, 
+          model, 
+          apiKey, 
+          temperature, 
+          maxTokens, 
+          onToken, 
+          signal,
+          endpoint: getProviderEndpoint('anthropic', modelConfig.endpoint)
+        })
         break
       case 'google':
-        result = await callGoogle({ messages: requestMessages, model, apiKey, temperature, maxTokens, onToken, signal })
+        result = await callGoogle({ 
+          messages: requestMessages, 
+          model, 
+          apiKey, 
+          temperature, 
+          maxTokens, 
+          onToken, 
+          signal,
+          baseUrl: getProviderEndpoint('google', modelConfig.endpoint)
+        })
         break
       case 'volcengine':
-        result = await callVolcengine({ messages: requestMessages, model, apiKey, temperature, maxTokens, onToken, signal })
+        result = await callVolcengine({ 
+          messages: requestMessages, 
+          model, 
+          apiKey, 
+          temperature, 
+          maxTokens, 
+          onToken, 
+          signal,
+          endpoint: getProviderEndpoint('volcengine', modelConfig.endpoint)
+        })
         break
       default:
         throw new Error(`Unsupported provider: ${provider}`)
@@ -522,9 +550,10 @@ function extractOpenAIText(content) {
   return ''
 }
 
-async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal }) {
+async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal, endpoint }) {
   const shouldStream = !!onToken
-  const response = await fetch(ANTHROPIC_URL, {
+  const apiUrl = endpoint || getProviderEndpoint('anthropic')
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -575,12 +604,13 @@ async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', api
   return { role: 'assistant', content, raw: data, reasoning }
 }
 
-async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature, maxTokens, onToken, signal }) {
+async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature, maxTokens, onToken, signal, baseUrl }) {
   const targetModel = model || 'gemini-pro'
   const shouldStream = !!onToken
+  const googleBaseUrl = baseUrl || getProviderEndpoint('google')
   const url = shouldStream
-    ? `${GOOGLE_BASE_URL}/${encodeURIComponent(targetModel)}:streamGenerateContent?key=${apiKey}`
-    : `${GOOGLE_BASE_URL}/${encodeURIComponent(targetModel)}:generateContent?key=${apiKey}`
+    ? `${googleBaseUrl}/models/${encodeURIComponent(targetModel)}:streamGenerateContent?key=${apiKey}`
+    : `${googleBaseUrl}/models/${encodeURIComponent(targetModel)}:generateContent?key=${apiKey}`
 
   const payload = {
     contents: convertMessagesToGoogleFormat(messages),
@@ -670,7 +700,7 @@ function convertMessagesToGoogleFormat(messages) {
   })
 }
 
-async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temperature, maxTokens, onToken, signal }) {
+async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temperature, maxTokens, onToken, signal, endpoint }) {
   if (!model) {
     throw new Error('Please provide a Volcano Engine model ID.')
   }
@@ -692,7 +722,8 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
     headers.Accept = 'text/event-stream'
   }
 
-  const response = await fetch(VOLCENGINE_URL, {
+  const apiUrl = endpoint || getProviderEndpoint('volcengine')
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
