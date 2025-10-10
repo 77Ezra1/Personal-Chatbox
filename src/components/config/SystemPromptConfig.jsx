@@ -14,18 +14,18 @@ export function SystemPromptConfig({
   onModelPromptsChange,
   language,
   translate,
-  providerModels
+  customModels
 }) {
-  const [promptText, setPromptText] = useState('')
+  const [globalPromptText, setGlobalPromptText] = useState('')
+  const [perModelPromptText, setPerModelPromptText] = useState('')
   const [selectedModels, setSelectedModels] = useState([])
-  const [showModelSelector, setShowModelSelector] = useState(false)
 
   // 获取所有可用的模型列表（来自用户配置的模型）
   const allModels = useMemo(() => {
-    if (!providerModels) return []
+    if (!customModels) return []
     
     const models = []
-    Object.entries(providerModels).forEach(([providerId, modelList]) => {
+    Object.entries(customModels).forEach(([providerId, modelList]) => {
       const providerConfig = PROVIDERS[providerId]
       if (!providerConfig || !modelList || modelList.length === 0) return
       
@@ -39,7 +39,7 @@ export function SystemPromptConfig({
       })
     })
     return models
-  }, [providerModels])
+  }, [customModels])
 
   // 获取已配置的模型列表
   const configuredModels = useMemo(() => {
@@ -63,25 +63,24 @@ export function SystemPromptConfig({
 
   // 处理全局提示词保存
   const handleSaveGlobalPrompt = () => {
-    onGlobalPromptChange(promptText)
-    setPromptText('')
+    onGlobalPromptChange(globalPromptText)
+    setGlobalPromptText('')
   }
 
   // 处理全局提示词清除
   const handleClearGlobalPrompt = () => {
     onGlobalPromptChange('')
-    setPromptText('')
+    setGlobalPromptText('')
   }
 
   // 处理指定模型提示词保存
   const handleSaveModelPrompts = () => {
-    if (selectedModels.length === 0 || !promptText.trim()) {
+    if (selectedModels.length === 0 || !perModelPromptText.trim()) {
       return
     }
-    onModelPromptsChange(selectedModels, promptText)
-    setPromptText('')
+    onModelPromptsChange(selectedModels, perModelPromptText)
+    setPerModelPromptText('')
     setSelectedModels([])
-    setShowModelSelector(false)
   }
 
   // 切换模型选择
@@ -97,7 +96,6 @@ export function SystemPromptConfig({
 
   // 删除已配置的模型提示词
   const handleRemoveModelPrompt = (modelKey) => {
-    const [provider, model] = modelKey.split(':')
     const newPrompts = { ...systemPrompt.prompts }
     delete newPrompts[modelKey]
     onModelPromptsChange([], '', newPrompts)
@@ -163,14 +161,14 @@ export function SystemPromptConfig({
           <textarea
             className="system-prompt-textarea"
             placeholder={language === 'zh' ? '输入系统提示词...' : 'Enter system prompt...'}
-            value={promptText || systemPrompt.prompt}
-            onChange={(e) => setPromptText(e.target.value)}
+            value={globalPromptText || systemPrompt.prompt}
+            onChange={(e) => setGlobalPromptText(e.target.value)}
             rows={6}
           />
           <div className="system-prompt-actions">
             <Button
               onClick={handleSaveGlobalPrompt}
-              disabled={!promptText.trim()}
+              disabled={!globalPromptText.trim()}
               size="sm"
             >
               {translate('buttons.save', 'Save')}
@@ -200,95 +198,105 @@ export function SystemPromptConfig({
             {language === 'zh' ? '添加模型提示词' : 'Add Model Prompt'}
           </label>
 
-          {/* 模型选择器 */}
-          <div className="system-prompt-model-selector">
-            <div className="system-prompt-model-selector-header">
-              <span>{language === 'zh' ? '选择要应用的模型（可多选）' : 'Select models to apply (multiple)'}</span>
-            </div>
-            <div className="system-prompt-model-grid">
-              {allModels.map(({ key, providerLabel, model }) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={`system-prompt-model-option ${selectedModels.includes(key) ? 'selected' : ''}`}
-                  onClick={() => toggleModelSelection(key)}
-                >
-                  {selectedModels.includes(key) && (
-                    <Check className="w-3 h-3 system-prompt-model-check" />
-                  )}
-                  <span className="system-prompt-model-provider">{providerLabel}</span>
-                  <span className="system-prompt-model-name-small">{model}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 提示词输入 - 只在选择了模型后显示 */}
-          {selectedModels.length > 0 && (
-            <div className="system-prompt-input">
-              <label className="system-prompt-label">
-                {language === 'zh' 
-                  ? `提示词（将应用于 ${selectedModels.length} 个模型）` 
-                  : `Prompt (will apply to ${selectedModels.length} models)`}
-              </label>
-              <textarea
-                className="system-prompt-textarea"
-                placeholder={language === 'zh' ? '输入系统提示词...' : 'Enter system prompt...'}
-                value={promptText}
-                onChange={(e) => setPromptText(e.target.value)}
-                rows={6}
-              />
-              <div className="system-prompt-actions">
-                <Button
-                  onClick={handleSaveModelPrompts}
-                  disabled={!promptText.trim()}
-                  size="sm"
-                >
-                  {translate('buttons.save', 'Save')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    setPromptText('')
-                    setSelectedModels([])
-                  }}
-                  variant="outline"
-                  size="sm"
-                >
-                  {translate('buttons.cancel', 'Cancel')}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* 已配置的模型列表 */}
-          {configuredModels.length > 0 && (
-            <div className="system-prompt-configured">
-              <label className="system-prompt-label">
-                {language === 'zh' ? '已配置的模型' : 'Configured Models'}
-              </label>
-              <div className="system-prompt-model-list">
-                {configuredModels.map(({ key, providerLabel, model, prompt }) => (
-                  <div key={key} className="system-prompt-model-item">
-                    <div className="system-prompt-model-info">
-                      <span className="system-prompt-model-name">
-                        {providerLabel} / {model}
-                      </span>
-                      <span className="system-prompt-model-preview">
-                        {prompt.substring(0, 50)}{prompt.length > 50 ? '...' : ''}
-                      </span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveModelPrompt(key)}
-                      title={language === 'zh' ? '删除' : 'Remove'}
+          {allModels.length === 0 ? (
+            <p className="system-prompt-hint">
+              {language === 'zh' 
+                ? '请先在上方添加模型，然后才能配置指定模型的提示词。' 
+                : 'Please add models above before configuring per-model prompts.'}
+            </p>
+          ) : (
+            <>
+              {/* 模型选择器 */}
+              <div className="system-prompt-model-selector">
+                <div className="system-prompt-model-selector-header">
+                  <span>{language === 'zh' ? '选择要应用的模型（可多选）' : 'Select models to apply (multiple)'}</span>
+                </div>
+                <div className="system-prompt-model-grid">
+                  {allModels.map(({ key, providerLabel, model }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={`system-prompt-model-option ${selectedModels.includes(key) ? 'selected' : ''}`}
+                      onClick={() => toggleModelSelection(key)}
                     >
-                      <X className="w-3 h-3" />
+                      {selectedModels.includes(key) && (
+                        <Check className="w-3 h-3 system-prompt-model-check" />
+                      )}
+                      <span className="system-prompt-model-provider">{providerLabel}</span>
+                      <span className="system-prompt-model-name-small">{model}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 提示词输入 - 只在选择了模型后显示 */}
+              {selectedModels.length > 0 && (
+                <div className="system-prompt-input">
+                  <label className="system-prompt-label">
+                    {language === 'zh' 
+                      ? `提示词（将应用于 ${selectedModels.length} 个模型）` 
+                      : `Prompt (will apply to ${selectedModels.length} models)`}
+                  </label>
+                  <textarea
+                    className="system-prompt-textarea"
+                    placeholder={language === 'zh' ? '输入系统提示词...' : 'Enter system prompt...'}
+                    value={perModelPromptText}
+                    onChange={(e) => setPerModelPromptText(e.target.value)}
+                    rows={6}
+                  />
+                  <div className="system-prompt-actions">
+                    <Button
+                      onClick={handleSaveModelPrompts}
+                      disabled={!perModelPromptText.trim()}
+                      size="sm"
+                    >
+                      {translate('buttons.save', 'Save')}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setPerModelPromptText('')
+                        setSelectedModels([])
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {translate('buttons.cancel', 'Cancel')}
                     </Button>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+
+              {/* 已配置的模型列表 */}
+              {configuredModels.length > 0 && (
+                <div className="system-prompt-configured">
+                  <label className="system-prompt-label">
+                    {language === 'zh' ? '已配置的模型' : 'Configured Models'}
+                  </label>
+                  <div className="system-prompt-model-list">
+                    {configuredModels.map(({ key, providerLabel, model, prompt }) => (
+                      <div key={key} className="system-prompt-model-item">
+                        <div className="system-prompt-model-info">
+                          <span className="system-prompt-model-name">
+                            {providerLabel} / {model}
+                          </span>
+                          <span className="system-prompt-model-preview">
+                            {prompt.substring(0, 50)}{prompt.length > 50 ? '...' : ''}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveModelPrompt(key)}
+                          title={language === 'zh' ? '删除' : 'Remove'}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

@@ -16,6 +16,7 @@ export function SettingsPage({
   currentProvider,
   currentModel,
   providerModels,
+  customModels,
   onProviderChange,
   onModelChange,
   onRemoveModel,
@@ -85,6 +86,7 @@ export function SettingsPage({
                   currentProvider={currentProvider}
                   currentModel={currentModel}
                   providerModels={providerModels}
+                  customModels={customModels}
                   onProviderChange={onProviderChange}
                   onModelChange={onModelChange}
                   onRemoveModel={onRemoveModel}

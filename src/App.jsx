@@ -55,6 +55,7 @@ function App() {
     currentProvider,
     currentModel,
     currentProviderModels,
+    customModels,
     setProvider,
     setModel,
     updateConfig,
@@ -449,6 +450,7 @@ function App() {
           currentProvider={currentProvider}
           currentModel={currentModel}
           providerModels={currentProviderModels}
+          customModels={customModels}
           onProviderChange={setProvider}
           onModelChange={setModel}
           onRemoveModel={handleRemoveModel}

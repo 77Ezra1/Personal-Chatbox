@@ -15,6 +15,7 @@ export function ConfigPanel({
   currentProvider,
   currentModel,
   providerModels,
+  customModels,
   onProviderChange,
   onModelChange,
   onRemoveModel,
@@ -254,7 +255,7 @@ export function ConfigPanel({
           onModelPromptsChange={onSystemPromptModelChange}
           language={language}
           translate={translate}
-          providerModels={providerModels}
+          customModels={customModels}
         />
 
         {/* 保存按钮 */}
