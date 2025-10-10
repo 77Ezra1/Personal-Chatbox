@@ -21,6 +21,10 @@ import {
   setCurrentProvider as dbSetCurrentProvider,
   setCurrentModel as dbSetCurrentModel
 } from '@/lib/db/appSettings'
+import {
+  getProviderApiKey,
+  setProviderApiKey
+} from '@/lib/db/providerApiKeys'
 import { openDatabase } from '@/lib/db'
 import { generateModelId } from '@/lib/db/schema'
 
@@ -31,6 +35,7 @@ export function useModelConfigDB() {
   const [models, setModels] = useState([])
   const [currentProvider, setCurrentProviderState] = useState('openai')
   const [currentModel, setCurrentModelState] = useState('')
+  const [currentApiKey, setCurrentApiKey] = useState('')
   const [loading, setLoading] = useState(true)
 
   // 加载所有模型
@@ -51,6 +56,10 @@ export function useModelConfigDB() {
       
       setCurrentProviderState(provider)
       setCurrentModelState(model)
+      
+      // 加载当前服务商的API Key
+      const apiKey = await getProviderApiKey(provider)
+      setCurrentApiKey(apiKey)
     } catch (error) {
       console.error('[useModelConfigDB] Failed to load models:', error)
     } finally {
@@ -62,6 +71,15 @@ export function useModelConfigDB() {
   useEffect(() => {
     loadModels()
   }, [loadModels])
+
+  // 当服务商变化时,加载对应的API Key
+  useEffect(() => {
+    const loadApiKey = async () => {
+      const apiKey = await getProviderApiKey(currentProvider)
+      setCurrentApiKey(apiKey)
+    }
+    loadApiKey()
+  }, [currentProvider])
 
   // 当前服务商的模型列表
   const currentProviderModels = useMemo(() => {
@@ -91,7 +109,7 @@ export function useModelConfigDB() {
       return {
         provider: model.provider,
         model: model.modelName,
-        apiKey: model.apiKey,
+        apiKey: currentApiKey, // 使用服务商级别的API Key
         temperature: model.temperature,
         maxTokens: model.maxTokens,
         supportsDeepThinking: model.supportsDeepThinking
@@ -101,18 +119,22 @@ export function useModelConfigDB() {
     return {
       provider: currentProvider,
       model: currentModel,
-      apiKey: '',
+      apiKey: currentApiKey, // 使用服务商级别的API Key
       temperature: 0.7,
       maxTokens: 1024,
       supportsDeepThinking: false
     }
-  }, [models, currentProvider, currentModel])
+  }, [models, currentProvider, currentModel, currentApiKey])
 
   // 切换服务商
   const setProvider = useCallback(async (provider) => {
     try {
       await dbSetCurrentProvider(provider)
       setCurrentProviderState(provider)
+      
+      // 加载新服务商的API Key
+      const apiKey = await getProviderApiKey(provider)
+      setCurrentApiKey(apiKey)
       
       // 获取该服务商的激活模型
       const activeModel = await getActiveModel(provider)
@@ -174,11 +196,12 @@ export function useModelConfigDB() {
         return
       }
       
-      // 创建新模型
+      // 创建新模型（不再存储apiKey）
       await saveModel({
         provider,
         providerLabel: providerConfig.label,
         modelName: modelName.trim(),
+        apiKey: '', // 不再在模型级别存储API Key
         isActive: false
       })
       
@@ -198,6 +221,12 @@ export function useModelConfigDB() {
       
       const modelId = generateModelId(currentProvider, modelName)
       
+      // 如果更新了API Key，保存到服务商级别
+      if (updates.apiKey !== undefined) {
+        await setProviderApiKey(currentProvider, updates.apiKey)
+        setCurrentApiKey(updates.apiKey)
+      }
+      
       // 检查模型是否存在
       let model = await getModelById(modelId)
       
@@ -208,16 +237,15 @@ export function useModelConfigDB() {
           provider: currentProvider,
           providerLabel: providerConfig.label,
           modelName,
-          apiKey: updates.apiKey || '',
+          apiKey: '', // 不再在模型级别存储API Key
           temperature: updates.temperature ?? 0.7,
           maxTokens: updates.maxTokens ?? 1024,
           supportsDeepThinking: updates.supportsDeepThinking ?? false,
           isActive: true
         })
       } else {
-        // 更新现有模型
+        // 更新现有模型（不更新apiKey字段）
         await updateModel(modelId, {
-          apiKey: updates.apiKey !== undefined ? updates.apiKey : model.apiKey,
           temperature: updates.temperature !== undefined ? updates.temperature : model.temperature,
           maxTokens: updates.maxTokens !== undefined ? updates.maxTokens : model.maxTokens,
           supportsDeepThinking: updates.supportsDeepThinking !== undefined ? updates.supportsDeepThinking : model.supportsDeepThinking

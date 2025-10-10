@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Info, Zap } from 'lucide-react'
+import { X, Info, Zap, Eye, EyeOff, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PROVIDERS } from '@/lib/constants'
 import { toast } from 'sonner'
@@ -28,6 +28,7 @@ export function ConfigPanel({
   const [draftConfig, setDraftConfig] = useState(modelConfig)
   const [modelInput, setModelInput] = useState(currentModel || '')
   const [showTokenInfo, setShowTokenInfo] = useState(false)
+  const [showApiKey, setShowApiKey] = useState(false)
 
   const commitModelValue = (value) => {
     const trimmedValue = value.trim()
@@ -149,13 +150,49 @@ export function ConfigPanel({
         {/* API Key */}
         <div className="config-field">
           <label>{translate('labels.apiKey', 'API key')}</label>
-          <input
-            type="password"
-            value={draftConfig.apiKey || ''}
-            onChange={(e) => updateField('apiKey', e.target.value)}
-            className="config-input"
-            placeholder="sk-..."
-          />
+          <div className="config-input-group" style={{ position: 'relative' }}>
+            <input
+              type={showApiKey ? 'text' : 'password'}
+              value={draftConfig.apiKey || ''}
+              onChange={(e) => updateField('apiKey', e.target.value)}
+              className="config-input"
+              placeholder="sk-..."
+              style={{ paddingRight: '80px' }}
+            />
+            <div style={{ 
+              position: 'absolute', 
+              right: '8px', 
+              top: '50%', 
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              gap: '4px'
+            }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setShowApiKey(!showApiKey)}
+                title={showApiKey ? translate?.('config.hideApiKey', 'Hide API Key') : translate?.('config.showApiKey', 'Show API Key')}
+              >
+                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  if (draftConfig.apiKey) {
+                    navigator.clipboard.writeText(draftConfig.apiKey)
+                    toast.success(translate?.('config.apiKeyCopied', 'API Key copied to clipboard'))
+                  }
+                }}
+                title={translate?.('config.copyApiKey', 'Copy API Key')}
+                disabled={!draftConfig.apiKey}
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Temperature */}

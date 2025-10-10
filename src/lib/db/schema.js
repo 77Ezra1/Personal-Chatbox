@@ -4,7 +4,7 @@
  */
 
 export const DB_NAME = 'ai-life-system-db'
-export const DB_VERSION = 1
+export const DB_VERSION = 2
 
 /**
  * 对象存储（表）定义
@@ -14,7 +14,8 @@ export const STORES = {
   SYSTEM_PROMPTS: 'system_prompts',
   MODEL_PROMPTS: 'model_prompts',
   CONVERSATIONS: 'conversations',
-  APP_SETTINGS: 'app_settings'
+  APP_SETTINGS: 'app_settings',
+  PROVIDER_API_KEYS: 'provider_api_keys'
 }
 
 /**
@@ -50,6 +51,11 @@ export function initSchema(db) {
   // 5. app_settings表 - 存储应用设置
   if (!db.objectStoreNames.contains(STORES.APP_SETTINGS)) {
     db.createObjectStore(STORES.APP_SETTINGS, { keyPath: 'key' })
+  }
+
+  // 6. provider_api_keys表 - 存储服务商API Key
+  if (!db.objectStoreNames.contains(STORES.PROVIDER_API_KEYS)) {
+    db.createObjectStore(STORES.PROVIDER_API_KEYS, { keyPath: 'provider' })
   }
 }
 
