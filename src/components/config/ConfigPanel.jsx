@@ -16,6 +16,7 @@ export function ConfigPanel({
   providerModels,
   onProviderChange,
   onModelChange,
+  onRemoveModel,
   onSaveConfig,
   onClose,
   isOpen = true,
@@ -114,17 +115,28 @@ export function ConfigPanel({
               style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}
             >
               {providerModels.map((model) => (
-                <Button
-                  key={model}
-                  type="button"
-                  variant={model === currentModel ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    commitModelValue(model)
-                  }}
-                >
-                  {model}
-                </Button>
+                <div key={model} className="config-model-item">
+                  <Button
+                    type="button"
+                    variant={model === currentModel ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      commitModelValue(model)
+                    }}
+                  >
+                    {model}
+                  </Button>
+                  {onRemoveModel && (
+                    <button
+                      type="button"
+                      className="config-model-remove"
+                      onClick={() => onRemoveModel(model)}
+                      title={language === 'zh' ? '删除此模型' : 'Remove this model'}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}

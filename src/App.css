@@ -2083,6 +2083,48 @@ button:hover:not(:disabled),
   flex: 1;
 }
 
+/* 模型项容器 */
+.config-model-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 模型删除按钮 */
+.config-model-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--destructive);
+  color: white;
+  border: 2px solid var(--background);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+  font-weight: bold;
+}
+
+.config-model-item:hover .config-model-remove {
+  display: flex;
+}
+
+.config-model-remove:hover {
+  background: #ff3b30;
+  transform: scale(1.1);
+}
+
+.config-model-remove:active {
+  transform: scale(0.95);
+}
+
 .config-max-tokens-button {
   display: flex;
   align-items: center;

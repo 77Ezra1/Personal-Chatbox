@@ -18,6 +18,7 @@ import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
 // Utils
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
 import { readFileAsDataUrl, createAttachmentId } from '@/lib/utils'
+import { PROVIDERS } from '@/lib/constants'
 
 import './App.css'
 
@@ -54,7 +55,8 @@ function App() {
     currentProviderModels,
     setProvider,
     setModel,
-    updateConfig
+    updateConfig,
+    removeCustomModel
   } = useModelConfig()
 
   // 深度思考
@@ -302,6 +304,41 @@ function App() {
     updateConfig(config)
   }, [updateConfig])
 
+  const handleRemoveModel = useCallback((modelId) => {
+    // 检查是否是自定义模型（不在PROVIDERS的默认模型列表中）
+    const defaultModels = PROVIDERS[currentProvider]?.models || []
+    if (defaultModels.includes(modelId)) {
+      toast.error(
+        language === 'zh' 
+          ? '无法删除默认模型' 
+          : 'Cannot remove default model'
+      )
+      return
+    }
+
+    // 确认删除
+    const confirmMessage = language === 'zh'
+      ? `确定要删除模型 "${modelId}" 吗？`
+      : `Are you sure you want to remove model "${modelId}"?`
+    
+    if (window.confirm(confirmMessage)) {
+      removeCustomModel(currentProvider, modelId)
+      
+      // 如果删除的是当前选中的模型，切换到默认模型
+      if (currentModel === modelId) {
+        const remainingModels = currentProviderModels.filter(m => m !== modelId)
+        const nextModel = remainingModels[0] || defaultModels[0] || ''
+        setModel(nextModel)
+      }
+      
+      toast.success(
+        language === 'zh' 
+          ? `已删除模型 "${modelId}"` 
+          : `Model "${modelId}" removed`
+      )
+    }
+  }, [currentProvider, currentModel, currentProviderModels, removeCustomModel, setModel, language])
+
   // ==================== 快捷键 ====================
   
   useKeyboardShortcuts([
@@ -386,6 +423,7 @@ function App() {
           providerModels={currentProviderModels}
           onProviderChange={setProvider}
           onModelChange={setModel}
+          onRemoveModel={handleRemoveModel}
           onSaveConfig={handleSaveConfig}
           onClose={() => setShowConfig(false)}
           isOpen={showConfig}
