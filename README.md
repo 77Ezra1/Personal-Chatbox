@@ -1,6 +1,6 @@
-# AI Chat - Apple Design
+# Personal Chatbox
 
-一个基于 Apple 设计理念的 AI 对话应用前端界面，支持用户自主配置 AI 模型。
+一个基于 Apple 设计理念的 AI 对话应用，支持用户自主配置 AI 模型。
 
 ## ✨ 设计理念
 

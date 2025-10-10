@@ -38,7 +38,10 @@ export function MessageList({ messages, translate, onEdit, onDelete, onRegenerat
     <div ref={listRef} className="messages-container">
       {messages.length === 0 ? (
         <div className="empty-state">
-          <p>{translate('placeholders.messageInput', 'Type a message...')}</p>
+          <div className="welcome-message">
+            <h2>你好，我是Personal Chatbox</h2>
+            <p>希望与你聊的开心...</p>
+          </div>
         </div>
       ) : (
         messages.map((message) => (

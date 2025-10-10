@@ -214,7 +214,7 @@ export function SettingsPage({
                 <div className="about-content">
                   <div className="about-item">
                     <strong>{translate('settings.about.appName', 'Application Name')}:</strong>
-                    <span>AI Life System</span>
+                    <span>Personal Chatbox</span>
                   </div>
                   <div className="about-item">
                     <strong>{translate('settings.about.version', 'Version')}:</strong>
