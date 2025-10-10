@@ -65,6 +65,17 @@ export function Sidebar({
         <h2 className="sidebar-title">
           {translate('headings.conversation', 'Conversation')}
         </h2>
+        <Button
+          className="new-chat-btn-header"
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            onNewConversation()
+          }}
+        >
+          <Plus className="w-4 h-4" />
+          {translate('buttons.newConversation', 'New conversation')}
+        </Button>
       </div>
 
       {/* 对话列表 */}
@@ -82,18 +93,6 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-footer">
-        <Button
-          className="new-chat-btn"
-          variant="secondary"
-          size="lg"
-          onClick={() => {
-            onNewConversation()
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          {translate('buttons.newConversation', 'New conversation')}
-        </Button>
-
         <div className="sidebar-footer-actions">
           <Button
             variant="ghost"

@@ -117,6 +117,9 @@
 .sidebar-header {
   padding: 20px 20px 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .new-chat-btn {
@@ -134,6 +137,23 @@
 .new-chat-btn:hover {
   transform: translateY(-2px);
   box-shadow: none;
+}
+
+.new-chat-btn-header {
+  width: 100%;
+  justify-content: flex-start;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.new-chat-btn-header:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .conversation-list {
