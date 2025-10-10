@@ -154,10 +154,10 @@
 }
 
 .sidebar-footer-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
 }
 
 .sidebar-footer-tools {
@@ -168,26 +168,30 @@
 }
 
 .sidebar-clear-all-button {
-  justify-content: flex-start;
+  justify-content: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  padding-inline: 12px;
+  padding: 8px 10px;
+  grid-column: 1 / -1;
+  width: 100%;
 }
 
 .sidebar-clear-all-button span {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-language-button {
-  min-width: 76px;
-  justify-content: flex-start;
-  padding-inline: 10px;
+  justify-content: center;
+  padding: 8px 10px;
+  width: 100%;
 }
 
 .sidebar-language-label {
   margin-left: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -358,12 +362,14 @@ button,
 .button,
 [role="button"] {
   transition: box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: none;
+  transform: none;
 }
 
 button:hover:not(:disabled),
 .button:hover,
 [role="button"]:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }
 
@@ -560,8 +566,8 @@ button:hover:not(:disabled),
   background: rgba(255, 255, 255, 0.92);
   color: var(--muted-foreground);
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
 }
 
 .message-footer-ai .message-copy-button {
@@ -576,6 +582,7 @@ button:hover:not(:disabled),
   background: color-mix(in srgb, var(--primary) 18%, transparent);
   color: var(--foreground);
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
 .message-copy-button:disabled {
@@ -1866,15 +1873,28 @@ button:hover:not(:disabled),
 .message-actions {
   display: flex;
   gap: 0.25rem;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.message:hover .message-actions {
   opacity: 1;
+  transition: opacity 0.2s;
 }
 
 .message-actions button {
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
+  box-shadow: none;
+  transform: none;
 }
+
+.message-actions button:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+
+
+/* Sidebar footer按钮网格布局优化 */
+.sidebar-footer-actions > button[size="icon"] {
+  width: 100%;
+  justify-content: center;
+  padding: 8px;
+}
+
