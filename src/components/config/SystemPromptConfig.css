@@ -1,8 +1,6 @@
 /* 系统提示词配置样式 */
 .system-prompt-config {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
+  /* 移除顶部边框和间距，因为现在是独立的标签页 */
 }
 
 .system-prompt-header {

@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button'
 import { PROVIDERS } from '@/lib/constants'
 import { toast } from 'sonner'
 import { TokenInfoDialog } from './TokenInfoDialog'
-import { SystemPromptConfigNew } from './SystemPromptConfigNew'
 
 /**
  * 配置面板组件
- * 提供模型配置和系统提示词设置
+ * 提供模型配置设置
  */
 export function ConfigPanel({
   modelConfig,
@@ -16,7 +15,6 @@ export function ConfigPanel({
   currentModel,
   providerModels,
   customModels,
-  models = [], // 新增：完整的模型列表
   onProviderChange,
   onModelChange,
   onRemoveModel,
@@ -24,11 +22,7 @@ export function ConfigPanel({
   onClose,
   isOpen = true,
   translate,
-  language = 'zh',
-  systemPrompt,
-  onSystemPromptModeChange,
-  onSystemPromptGlobalChange,
-  onSystemPromptModelChange
+  language = 'zh'
 }) {
   const [draftConfig, setDraftConfig] = useState(modelConfig)
   const [modelInput, setModelInput] = useState(currentModel || '')
@@ -247,17 +241,6 @@ export function ConfigPanel({
             {translate('hints.supportsDeepThinking', 'Enable if model supports deep thinking mode (e.g. o1, o3-mini)')}
           </p>
         </div>
-
-        {/* 系统提示词配置 */}
-        <SystemPromptConfigNew
-          systemPrompt={systemPrompt}
-          onModeChange={onSystemPromptModeChange}
-          onGlobalPromptChange={onSystemPromptGlobalChange}
-          onModelPromptsChange={onSystemPromptModelChange}
-          language={language}
-          translate={translate}
-          allModels={models}
-        />
 
         {/* 保存按钮 */}
         <Button onClick={handleSave} className="config-save-button">
