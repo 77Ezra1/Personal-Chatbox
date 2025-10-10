@@ -112,7 +112,8 @@ export function useModelConfigDB() {
         apiKey: currentApiKey, // 使用服务商级别的API Key
         temperature: model.temperature,
         maxTokens: model.maxTokens,
-        supportsDeepThinking: model.supportsDeepThinking
+        supportsDeepThinking: model.supportsDeepThinking,
+        thinkingMode: model.thinkingMode || 'optional'  // 新增
       }
     }
     
@@ -122,7 +123,8 @@ export function useModelConfigDB() {
       apiKey: currentApiKey, // 使用服务商级别的API Key
       temperature: 0.7,
       maxTokens: 1024,
-      supportsDeepThinking: false
+      supportsDeepThinking: false,
+      thinkingMode: 'optional'  // 新增
     }
   }, [models, currentProvider, currentModel, currentApiKey])
 
