@@ -201,7 +201,6 @@
 }
 
 .system-prompt-model-option:hover {
-  background: var(--accent);
   border-color: var(--primary);
 }
 
