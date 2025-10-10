@@ -452,8 +452,7 @@ button:hover:not(:disabled),
 }
 
 .messages-container::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  display: none;
 }
 
 .scroll-to-bottom-btn {
@@ -1108,6 +1107,12 @@ button:hover:not(:disabled),
   color: var(--foreground);
   resize: vertical;
   min-height: 72px;
+  /* 滑动式输入框，不撑开布局 */
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .message-input-textarea::placeholder {
@@ -1286,12 +1291,7 @@ button:hover:not(:disabled),
 }
 
 .config-form::-webkit-scrollbar {
-  width: 6px;
-}
-
-.config-form::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
-  border-radius: 999px;
+  display: none;
 }
 
 .config-field {
@@ -1429,22 +1429,21 @@ button:hover:not(:disabled),
   box-shadow: 0 12px 24px rgba(31, 36, 48, 0.12);
 }
 
+/* 隐藏所有滚动条，但保留滚动功能 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--muted-foreground);
-  border-radius: 4px;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  transform: scaleX(1.1);
+  display: none;
 }
 
 @media (max-width: 768px) {
@@ -1857,6 +1856,12 @@ button:hover:not(:disabled),
   resize: vertical;
   background: var(--bg-secondary);
   color: var(--text-primary);
+  /* 滑动式输入框，不撑开布局 */
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .message-edit-textarea:focus {

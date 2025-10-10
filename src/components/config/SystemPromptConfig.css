@@ -78,6 +78,12 @@
   resize: vertical;
   margin-bottom: 12px;
   transition: border-color 0.2s;
+  /* 滑动式输入框，不撑开布局 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 300px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .system-prompt-textarea:focus {

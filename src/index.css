@@ -1,0 +1,40 @@
+/* 全局样式 - 隐藏滚动条但保留滚动功能 */
+
+/* 隐藏所有元素的滚动条（Webkit浏览器：Chrome、Safari、Edge） */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* 隐藏所有元素的滚动条（Firefox） */
+* {
+  scrollbar-width: none;
+}
+
+/* 隐藏所有元素的滚动条（IE和旧版Edge） */
+* {
+  -ms-overflow-style: none;
+}
+
+/* 确保所有textarea使用滑动式布局，不撑开页面 */
+textarea {
+  overflow-y: auto;
+  overflow-x: hidden;
+  resize: vertical;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* 确保所有带滚动的容器不显示滚动条 */
+.overflow-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+.overflow-auto,
+.overflow-y-auto,
+.overflow-x-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
