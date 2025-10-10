@@ -22,7 +22,8 @@ export function ConfigPanel({
   onClose,
   isOpen = true,
   translate,
-  language = 'zh'
+  language = 'zh',
+  showHeader = true // 新增：控制是否显示头部
 }) {
   const [draftConfig, setDraftConfig] = useState(modelConfig)
   const [modelInput, setModelInput] = useState(currentModel || '')
@@ -60,12 +61,14 @@ export function ConfigPanel({
   return (
     <aside className={`config-panel ${isOpen ? 'open' : ''}`}>
       {/* 头部 */}
-      <div className="config-header">
-        <h2>{translate('headings.modelConfiguration', 'Model configuration')}</h2>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
+      {showHeader && (
+        <div className="config-header">
+          <h2>{translate('headings.modelConfiguration', 'Model configuration')}</h2>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
 
       {/* 配置表单 */}
       <div className="config-form">

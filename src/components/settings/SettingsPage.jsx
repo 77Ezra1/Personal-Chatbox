@@ -98,6 +98,7 @@ export function SettingsPage({
                   isOpen={true}
                   translate={translate}
                   language={language}
+                  showHeader={false}
                 />
               </div>
             )}
