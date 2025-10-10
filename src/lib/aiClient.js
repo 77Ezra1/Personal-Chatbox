@@ -39,6 +39,7 @@ const DEFAULT_MAX_TOKENS = 1024
 const DEEP_THINKING_SYSTEM_PROMPT = [
   'Deep thinking mode is enabled.',
   'Carefully reason through the request step by step before answering and explore multiple angles when helpful.',
+  'IMPORTANT: Use the SAME LANGUAGE as the user\'s message in your reasoning process. If the user writes in Chinese, think in Chinese. If in English, think in English.',
   'If possible, expose your internal reasoning inside <reasoning></reasoning> tags and place your final response inside <answer></answer> tags so it can be rendered separately.'
 ].join(' ')
 const TEXT_MIME_PREFIXES = [
@@ -55,8 +56,13 @@ const TEXT_MIME_PREFIXES = [
 function normalizeReasoningContent(value) {
   if (!value) return null
   if (typeof value === 'string') {
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : null
+    // 清理XML标签（如 <reasoning>, </reasoning>, <think>, </think> 等）
+    const cleaned = value
+      .replace(/<\/?reasoning>/gi, '')
+      .replace(/<\/?think>/gi, '')
+      .replace(/<\/?answer>/gi, '')
+      .trim()
+    return cleaned.length > 0 ? cleaned : null
   }
   if (Array.isArray(value)) {
     const joined = value

@@ -87,7 +87,7 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
         >
           {/* 思考过程折叠框 - 只在有 reasoning 内容且非编辑模式时展示 */}
           {!isEditing && metadata?.deepThinking && metadata?.reasoning && (
-            <details className="thinking-process-container" open>
+            <details className="thinking-process-container">
               <summary className="thinking-process-summary">
                 <span className="thinking-icon">💭</span>
                 <span className="thinking-label">
