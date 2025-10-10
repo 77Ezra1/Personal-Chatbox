@@ -20,6 +20,7 @@ export function Sidebar({
   onToggleLanguage,
   onToggleTheme,
   onOpenSettings,
+  onShowConfirm,
   translate
 }) {
   const handleDelete = (id, title) => {
@@ -28,22 +29,33 @@ export function Sidebar({
       'Are you sure you want to delete the conversation "{title}"?'
     )
     const confirmationMessage = messageTemplate.replace('{title}', title ?? '')
-    if (confirm(confirmationMessage)) {
-      onDeleteConversation(id)
-    }
+    
+    onShowConfirm?.({
+      title: translate('confirms.deleteConversationTitle', 'Delete Conversation'),
+      message: confirmationMessage,
+      variant: 'danger',
+      onConfirm: () => onDeleteConversation(id)
+    })
   }
 
   const handleClearAll = () => {
-    if (confirm(translate('confirms.clearAllConversations', 'Are you sure you want to clear all conversations?'))) {
-      onClearAll()
-    }
+    onShowConfirm?.({
+      title: translate('confirms.clearAllConversationsTitle', 'Clear All Conversations'),
+      message: translate('confirms.clearAllConversations', 'Are you sure you want to clear all conversations?'),
+      variant: 'danger',
+      onConfirm: () => onClearAll()
+    })
   }
 
   const handleClearConversation = () => {
     if (!currentConversation) return
-    if (confirm(translate('confirms.clearConversation', 'Are you sure you want to clear this conversation?'))) {
-      onClearConversation?.()
-    }
+    
+    onShowConfirm?.({
+      title: translate('confirms.clearConversationTitle', 'Clear Conversation'),
+      message: translate('confirms.clearConversation', 'Are you sure you want to clear this conversation?'),
+      variant: 'danger',
+      onConfirm: () => onClearConversation?.()
+    })
   }
 
   return (

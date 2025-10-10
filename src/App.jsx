@@ -14,6 +14,7 @@ import { Sidebar } from '@/components/sidebar/Sidebar'
 import { ChatContainer } from '@/components/chat/ChatContainer'
 import { ConfigPanel } from '@/components/config/ConfigPanel'
 import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 
 // Utils
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
@@ -72,6 +73,13 @@ function App() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    variant: 'default'
+  })
   
   const abortControllerRef = useRef(null)
 
@@ -316,27 +324,33 @@ function App() {
       return
     }
 
-    // 确认删除
-    const confirmMessage = language === 'zh'
-      ? `确定要删除模型 "${modelId}" 吗？`
-      : `Are you sure you want to remove model "${modelId}"?`
-    
-    if (window.confirm(confirmMessage)) {
-      removeCustomModel(currentProvider, modelId)
-      
-      // 如果删除的是当前选中的模型，切换到默认模型
-      if (currentModel === modelId) {
-        const remainingModels = currentProviderModels.filter(m => m !== modelId)
-        const nextModel = remainingModels[0] || defaultModels[0] || ''
-        setModel(nextModel)
+    // 显示确认对话框
+    setConfirmDialog({
+      isOpen: true,
+      title: language === 'zh' ? '确认删除' : 'Confirm Delete',
+      message: language === 'zh'
+        ? `确定要删除模型 "${modelId}" 吗？`
+        : `Are you sure you want to remove model "${modelId}"?`,
+      variant: 'danger',
+      onConfirm: () => {
+        removeCustomModel(currentProvider, modelId)
+        
+        // 如果删除的是当前选中的模型，切换到默认模型
+        if (currentModel === modelId) {
+          const remainingModels = currentProviderModels.filter(m => m !== modelId)
+          const nextModel = remainingModels[0] || defaultModels[0] || ''
+          setModel(nextModel)
+        }
+        
+        toast.success(
+          language === 'zh' 
+            ? `已删除模型 "${modelId}"` 
+            : `Model "${modelId}" removed`
+        )
+        
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }))
       }
-      
-      toast.success(
-        language === 'zh' 
-          ? `已删除模型 "${modelId}"` 
-          : `Model "${modelId}" removed`
-      )
-    }
+    })
   }, [currentProvider, currentModel, currentProviderModels, removeCustomModel, setModel, language])
 
   // ==================== 快捷键 ====================
@@ -393,6 +407,7 @@ function App() {
           onToggleLanguage={toggleLanguage}
           onToggleTheme={toggleTheme}
           onOpenSettings={() => setShowConfig(true)}
+          onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
           translate={translate}
         />
 
@@ -412,6 +427,7 @@ function App() {
           onEditMessage={handleEditMessage}
           onDeleteMessage={handleDeleteMessage}
           onRegenerateMessage={handleRegenerateMessage}
+          onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
           translate={translate}
         />
 
@@ -440,6 +456,18 @@ function App() {
           translate={translate}
         />
       )}
+
+      {/* 确认对话框 */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+        confirmText={language === 'zh' ? '确定' : 'Confirm'}
+        cancelText={language === 'zh' ? '取消' : 'Cancel'}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </>
   )
 }

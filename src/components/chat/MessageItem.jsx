@@ -8,7 +8,7 @@ import { formatFileSize } from '@/lib/utils'
  * 单条消息组件
  * 显示消息内容、附件和操作按钮
  */
-export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRegenerate }) {
+export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRegenerate, onShowConfirm }) {
   const { role, content, metadata, attachments, status, edited } = message
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(content)
@@ -58,9 +58,12 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
   }
 
   const handleDelete = () => {
-    if (confirm(translate('confirms.deleteMessage', 'Are you sure you want to delete this message?'))) {
-      onDelete?.(message.id)
-    }
+    onShowConfirm?.({
+      title: translate('confirms.deleteMessageTitle', 'Delete Message'),
+      message: translate('confirms.deleteMessage', 'Are you sure you want to delete this message?'),
+      variant: 'danger',
+      onConfirm: () => onDelete?.(message.id)
+    })
   }
 
   const handleRegenerate = () => {

@@ -6,7 +6,7 @@ import { MessageItem } from './MessageItem'
  * 消息列表组件
  * 显示所有消息并自动滚动到底部
  */
-export function MessageList({ messages, translate, onEdit, onDelete, onRegenerate }) {
+export function MessageList({ messages, translate, onEdit, onDelete, onRegenerate, onShowConfirm }) {
   const listRef = useRef(null)
 
   // 自动滚动到底部
@@ -50,6 +50,7 @@ export function MessageList({ messages, translate, onEdit, onDelete, onRegenerat
             onEdit={handleEdit}
             onDelete={handleDelete}
             onRegenerate={handleRegenerate}
+            onShowConfirm={onShowConfirm}
           />
         ))
       )}

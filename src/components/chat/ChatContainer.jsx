@@ -22,6 +22,7 @@ export function ChatContainer({
   onEditMessage,
   onDeleteMessage,
   onRegenerateMessage,
+  onShowConfirm,
   translate
 }) {
   const [showExportMenu, setShowExportMenu] = useState(false)
@@ -58,6 +59,7 @@ export function ChatContainer({
         onEdit={onEditMessage}
         onDelete={onDeleteMessage}
         onRegenerate={onRegenerateMessage}
+        onShowConfirm={onShowConfirm}
       />
 
       {/* 输入区域 */}
