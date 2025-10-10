@@ -240,6 +240,19 @@ export const TRANSLATIONS = {
       cancel: 'Cancel',
       export: 'Export'
     },
+    export: {
+      title: 'Export Conversation',
+      downloadFiles: 'Download Files',
+      copyToClipboard: 'Copy to Clipboard',
+      copying: 'Copying...',
+      formats: {
+        markdown: 'Markdown (.md)',
+        text: 'Plain Text (.txt)',
+        json: 'JSON (.json)',
+        markdownFormat: 'Markdown Format',
+        textFormat: 'Plain Text Format'
+      }
+    },
     toggles: {
       languageShortEnglish: 'EN',
       languageShortChinese: '中文',
@@ -417,6 +430,19 @@ export const TRANSLATIONS = {
       save: '保存',
       cancel: '取消',
       export: '导出'
+    },
+    export: {
+      title: '导出对话',
+      downloadFiles: '下载文件',
+      copyToClipboard: '复制到剪贴板',
+      copying: '复制中...',
+      formats: {
+        markdown: 'Markdown (.md)',
+        text: '纯文本 (.txt)',
+        json: 'JSON (.json)',
+        markdownFormat: 'Markdown 格式',
+        textFormat: '纯文本格式'
+      }
     },
     toggles: {
       languageShortEnglish: 'EN',
