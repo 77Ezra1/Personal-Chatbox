@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import { Send, CircleStop, Paperclip, ImagePlus, BrainCircuit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AttachmentPreview } from './AttachmentPreview'
+import { THINKING_MODE } from '@/lib/constants'
+import { getThinkingModeDescription } from '@/lib/modelThinkingDetector'
 
 /**
  * 消息输入组件
@@ -12,6 +14,8 @@ export function MessageInput({
   pendingAttachments,
   isDeepThinking,
   isDeepThinkingAvailable,
+  isButtonDisabled,      // 新增：按钮是否禁用
+  thinkingMode,          // 新增：思考模式
   onSend,
   onStop,
   onAddAttachment,
@@ -97,15 +101,36 @@ export function MessageInput({
               size="sm"
               className="message-input-toolbar-button"
               onClick={onToggleDeepThinking}
-              disabled={!isDeepThinkingAvailable || isGenerating}
-              title={translate('tooltips.toggleDeepThinking', 'Toggle deep thinking mode')}
+              disabled={isButtonDisabled || !isDeepThinkingAvailable || isGenerating}
+              title={(() => {
+                // 获取当前语言
+                const currentLang = document.documentElement.lang === 'en' ? 'en' : 'zh'
+                // 获取思考模式描述
+                const modeDesc = getThinkingModeDescription(thinkingMode || THINKING_MODE.DISABLED, currentLang)
+                return modeDesc.tooltip
+              })()}
             >
               <BrainCircuit className="w-4 h-4" />
               <span className="ml-1 text-xs">
-                {isDeepThinking
-                  ? translate('toggles.deepThinkingOn', 'Deep thinking: On')
-                  : translate('toggles.deepThinkingOff', 'Deep thinking: Off')
-                }
+                {(() => {
+                  const currentLang = document.documentElement.lang === 'en' ? 'en' : 'zh'
+                  const prefix = currentLang === 'zh' ? '深度思考：' : 'Deep thinking: '
+                  
+                  // 根据思考模式显示不同的文本
+                  switch (thinkingMode) {
+                    case THINKING_MODE.DISABLED:
+                      return prefix + (currentLang === 'zh' ? '不支持' : 'Not Supported')
+                    case THINKING_MODE.ALWAYS_ON:
+                      return prefix + (currentLang === 'zh' ? '开启 🔒' : 'On 🔒')
+                    case THINKING_MODE.ADAPTIVE:
+                      return prefix + (currentLang === 'zh' ? '自动 🤖' : 'Auto 🤖')
+                    case THINKING_MODE.OPTIONAL:
+                    default:
+                      return isDeepThinking
+                        ? translate('toggles.deepThinkingOn', '深度思考：开启')
+                        : translate('toggles.deepThinkingOff', '深度思考：关闭')
+                  }
+                })()}
               </span>
             </Button>
           </div>

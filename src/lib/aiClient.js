@@ -1,4 +1,5 @@
-import { PROVIDERS } from './constants.js'
+import { PROVIDERS, THINKING_MODE } from './constants.js'
+import { shouldSendThinkingParam } from './modelThinkingDetector.js'
 
 // Helper function to get endpoint from PROVIDERS config or use custom endpoint
 function getProviderEndpoint(provider, customEndpoint) {
@@ -213,7 +214,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
     apiKey,
     temperature = 0.7,
     maxTokens = DEFAULT_MAX_TOKENS,
-    deepThinking = false
+    deepThinking = false,
+    thinkingMode = null  // 新增：思考模式
   } = modelConfig
 
   if (!apiKey) {
@@ -246,10 +248,16 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   if (openAICompatibleConfig) {
     const endpoint = getProviderEndpoint(provider, modelConfig.endpoint)
     
-    // DeepSeek 特殊处理：根据 deepThinking 切换模型
+    // DeepSeek 特殊处理：根据 deepThinking 和 thinkingMode 切换模型
     let targetModel = model || openAICompatibleConfig.defaultModel
     if (provider === 'deepseek') {
-      targetModel = deepThinking ? 'deepseek-reasoner' : 'deepseek-chat'
+      // 如果是自适应模式或强制开启模式，使用用户选择的模型（不自动切换）
+      if (thinkingMode === THINKING_MODE.ADAPTIVE || thinkingMode === THINKING_MODE.ALWAYS_ON) {
+        targetModel = model || openAICompatibleConfig.defaultModel
+      } else {
+        // 可选模式：根据用户选择切换
+        targetModel = deepThinking ? 'deepseek-reasoner' : 'deepseek-chat'
+      }
     }
     
     result = await callOpenAICompatible({
@@ -276,7 +284,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
           onToken, 
           signal,
           endpoint: getProviderEndpoint('anthropic', modelConfig.endpoint),
-          deepThinking
+          deepThinking,
+          thinkingMode  // 新增
         })
         break
       case 'google':
@@ -289,7 +298,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
           onToken, 
           signal,
           baseUrl: getProviderEndpoint('google', modelConfig.endpoint),
-          deepThinking
+          deepThinking,
+          thinkingMode  // 新增
         })
         break
       case 'volcengine':
@@ -302,7 +312,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
           onToken, 
           signal,
           endpoint: getProviderEndpoint('volcengine', modelConfig.endpoint),
-          deepThinking
+          deepThinking,
+          thinkingMode  // 新增
         })
         break
       default:
@@ -573,7 +584,7 @@ function extractOpenAIText(content) {
   return ''
 }
 
-async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal, endpoint, deepThinking = false }) {
+async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal, endpoint, deepThinking = false, thinkingMode = null }) {
   const shouldStream = !!onToken
   const apiUrl = endpoint || getProviderEndpoint('anthropic')
   
@@ -593,7 +604,8 @@ async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', api
   }
 
   // 添加 Extended Thinking 支持
-  if (deepThinking) {
+  // 只有在需要发送thinking参数时才添加（排除自适应模式）
+  if (deepThinking && shouldSendThinkingParam(thinkingMode)) {
     requestBody.thinking = {
       type: 'enabled',
       budget_tokens: 10000
@@ -652,7 +664,7 @@ async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', api
   return { role: 'assistant', content, raw: data, reasoning }
 }
 
-async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature, maxTokens, onToken, signal, baseUrl, deepThinking = false }) {
+async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature, maxTokens, onToken, signal, baseUrl, deepThinking = false, thinkingMode = null }) {
   const targetModel = model || 'gemini-pro'
   const shouldStream = !!onToken
   const googleBaseUrl = baseUrl || getProviderEndpoint('google')
@@ -670,7 +682,8 @@ async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature,
   }
 
   // 添加 Thinking 支持
-  if (deepThinking) {
+  // 只有在需要发送thinking参数时才添加（排除自适应模式）
+  if (deepThinking && shouldSendThinkingParam(thinkingMode)) {
     generationConfig.thinkingConfig = {
       thinkingBudget: 1024,
       includeThoughts: true
@@ -768,7 +781,7 @@ function convertMessagesToGoogleFormat(messages) {
   })
 }
 
-async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temperature, maxTokens, onToken, signal, endpoint, deepThinking = false }) {
+async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temperature, maxTokens, onToken, signal, endpoint, deepThinking = false, thinkingMode = null }) {
   if (!model) {
     throw new Error('Please provide a Volcano Engine model ID.')
   }
@@ -786,15 +799,19 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
   }
 
   // 添加深度思考支持
-  if (deepThinking) {
-    payload.thinking = {
-      type: 'enabled'
-    }
-  } else {
-    payload.thinking = {
-      type: 'disabled'
+  // 只有在需要发送thinking参数时才添加（排除自适应模式）
+  if (shouldSendThinkingParam(thinkingMode)) {
+    if (deepThinking) {
+      payload.thinking = {
+        type: 'enabled'
+      }
+    } else {
+      payload.thinking = {
+        type: 'disabled'
+      }
     }
   }
+  // 如果是自适应模式，不发送thinking参数，让模型自己决定
 
   const headers = {
     'Content-Type': 'application/json',

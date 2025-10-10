@@ -14,6 +14,8 @@ export function ChatContainer({
   pendingAttachments,
   isDeepThinking,
   isDeepThinkingAvailable,
+  isButtonDisabled,      // 新增
+  thinkingMode,          // 新增
   onSendMessage,
   onStopGeneration,
   onAddAttachment,
@@ -68,6 +70,8 @@ export function ChatContainer({
         pendingAttachments={pendingAttachments}
         isDeepThinking={isDeepThinking}
         isDeepThinkingAvailable={isDeepThinkingAvailable}
+        isButtonDisabled={isButtonDisabled}      // 新增
+        thinkingMode={thinkingMode}              // 新增
         onSend={onSendMessage}
         onStop={onStopGeneration}
         onAddAttachment={onAddAttachment}

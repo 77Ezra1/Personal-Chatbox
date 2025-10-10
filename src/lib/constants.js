@@ -6,6 +6,14 @@ export const THEME_KEY = 'theme-preference.v1'
 export const DEEP_THINKING_KEY = 'deep-thinking-mode.v1'
 export const SYSTEM_PROMPT_KEY = 'system-prompt.v1'
 
+// Deep Thinking Modes
+export const THINKING_MODE = {
+  DISABLED: 'disabled',      // 不支持深度思考
+  OPTIONAL: 'optional',      // 可选（支持开启/关闭）
+  ALWAYS_ON: 'always-on',    // 强制开启（不可关闭）
+  ADAPTIVE: 'adaptive'       // 自适应（模型自动判断）
+}
+
 // Defaults
 export const FALLBACK_PROVIDER = 'openai'
 
@@ -81,7 +89,8 @@ export const DEFAULT_MODEL_SETTINGS = {
   apiKey: '',
   temperature: 0.7,
   maxTokens: 1024,
-  supportsDeepThinking: false
+  supportsDeepThinking: false,
+  thinkingMode: THINKING_MODE.DISABLED  // 默认不支持
 }
 
 // Translations
@@ -109,12 +118,24 @@ export const TRANSLATIONS = {
       apiKey: 'API key',
       temperature: 'Temperature',
       maxTokens: 'Max tokens',
+      supportsDeepThinking: 'Supports Deep Thinking',
+      thinkingMode: 'Deep Thinking Mode',
       user: 'You',
       assistant: 'Assistant'
     },
     placeholders: {
       messageInput: 'Type a message...',
       customModel: 'Enter custom model'
+    },
+    hints: {
+      supportsDeepThinking: 'Enable if model supports deep thinking mode (e.g. o1, o3-mini)',
+      thinkingMode: 'Select how the model handles deep thinking mode'
+    },
+    thinkingMode: {
+      disabled: 'Not Supported',
+      optional: 'Optional (Can Toggle)',
+      alwaysOn: 'Always On (Cannot Disable)',
+      adaptive: 'Adaptive (Auto Decide)'
     },
     sections: {
       reasoning: 'Reasoning',
@@ -333,6 +354,7 @@ export const TRANSLATIONS = {
       temperature: '温度',
       maxTokens: '最大 Token 数',
       supportsDeepThinking: '支持深度思考',
+      thinkingMode: '深度思考模式',
       user: '你',
       assistant: '助手'
     },
@@ -341,7 +363,14 @@ export const TRANSLATIONS = {
       customModel: '添加自定义模型'
     },
     hints: {
-      supportsDeepThinking: '如果模型支持深度思考模式请启用此选项（例如 o1、o3-mini）'
+      supportsDeepThinking: '如果模型支持深度思考模式请启用此选项（例如 o1、o3-mini）',
+      thinkingMode: '选择模型如何处理深度思考模式'
+    },
+    thinkingMode: {
+      disabled: '不支持',
+      optional: '可选（可切换）',
+      alwaysOn: '强制开启（无法关闭）',
+      adaptive: '自适应（自动判断）'
     },
     sections: {
       reasoning: '思考过程',

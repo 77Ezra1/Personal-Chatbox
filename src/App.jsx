@@ -70,6 +70,8 @@ function App() {
   const {
     isDeepThinking,
     isDeepThinkingAvailable,
+    isButtonDisabled,      // 新增
+    thinkingMode,          // 新增
     toggleDeepThinking
   } = useDeepThinking(modelConfig)
 
@@ -436,6 +438,8 @@ function App() {
           pendingAttachments={pendingAttachments}
           isDeepThinking={isDeepThinking}
           isDeepThinkingAvailable={isDeepThinkingAvailable}
+          isButtonDisabled={isButtonDisabled}              // 新增
+          thinkingMode={thinkingMode}                      // 新增
           onSendMessage={handleSendMessage}
           onStopGeneration={handleStopGeneration}
           onAddAttachment={handleAddAttachment}

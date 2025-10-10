@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { PROVIDERS } from '@/lib/constants'
 import { toast } from 'sonner'
 import { TokenInfoDialog } from './TokenInfoDialog'
+import { detectThinkingMode } from '@/lib/modelThinkingDetector'
 
 /**
  * 配置面板组件
@@ -38,7 +39,16 @@ export function ConfigPanel({
       return
     }
     setModelInput(trimmedValue)
-    setDraftConfig(prev => ({ ...prev, model: trimmedValue }))
+    
+    // 自动检测思考模式
+    const detectedMode = detectThinkingMode(trimmedValue)
+    
+    setDraftConfig(prev => ({ 
+      ...prev, 
+      model: trimmedValue,
+      thinkingMode: detectedMode,  // 自动设置思考模式
+      supportsDeepThinking: detectedMode !== 'disabled'  // 自动设置是否支持深度思考
+    }))
     onModelChange(trimmedValue)
   }
 
@@ -260,13 +270,21 @@ export function ConfigPanel({
           </p>
         </div>
 
-        {/* Supports Deep Thinking */}
+        {/* Supports Deep Thinking (保留向后兼容) */}
         <div className="config-field">
           <label className="config-checkbox-label">
             <input
               type="checkbox"
               checked={draftConfig.supportsDeepThinking || false}
-              onChange={(e) => updateField('supportsDeepThinking', e.target.checked)}
+              onChange={(e) => {
+                updateField('supportsDeepThinking', e.target.checked)
+                // 自动设置thinkingMode
+                if (e.target.checked && !draftConfig.thinkingMode) {
+                  updateField('thinkingMode', 'optional')
+                } else if (!e.target.checked) {
+                  updateField('thinkingMode', 'disabled')
+                }
+              }}
               className="config-checkbox"
             />
             <span>{translate('labels.supportsDeepThinking', 'Supports Deep Thinking')}</span>
@@ -275,6 +293,28 @@ export function ConfigPanel({
             {translate('hints.supportsDeepThinking', 'Enable if model supports deep thinking mode (e.g. o1, o3-mini)')}
           </p>
         </div>
+
+        {/* Thinking Mode (新增) */}
+        {draftConfig.supportsDeepThinking && (
+          <div className="config-field">
+            <label className="config-label">
+              {translate('labels.thinkingMode', 'Deep Thinking Mode')}
+            </label>
+            <select
+              value={draftConfig.thinkingMode || 'optional'}
+              onChange={(e) => updateField('thinkingMode', e.target.value)}
+              className="config-select"
+            >
+              <option value="disabled">{translate('thinkingMode.disabled', 'Not Supported')}</option>
+              <option value="optional">{translate('thinkingMode.optional', 'Optional (Can Toggle)')}</option>
+              <option value="always-on">{translate('thinkingMode.alwaysOn', 'Always On (Cannot Disable)')}</option>
+              <option value="adaptive">{translate('thinkingMode.adaptive', 'Adaptive (Auto Decide)')}</option>
+            </select>
+            <p className="config-hint">
+              {translate('hints.thinkingMode', 'Select how the model handles deep thinking mode')}
+            </p>
+          </div>
+        )}
 
         {/* 保存按钮 */}
         <Button onClick={handleSave} className="config-save-button">
