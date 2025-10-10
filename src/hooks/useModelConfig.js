@@ -63,11 +63,9 @@ export function useModelConfig() {
     )
   }, [modelState, customModels])
 
-  // 获取提供商的模型列表
+  // 获取提供商的模型列表（只返回用户自定义的模型）
   const getProviderModels = useCallback((provider) => {
-    const defaults = PROVIDERS[provider]?.models ?? []
-    const customs = customModels[provider] ?? []
-    return [...defaults, ...customs]
+    return customModels[provider] ?? []
   }, [customModels])
 
   // 当前提供商的模型列表

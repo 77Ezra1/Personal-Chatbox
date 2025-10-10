@@ -254,6 +254,7 @@ export function ConfigPanel({
           onModelPromptsChange={onSystemPromptModelChange}
           language={language}
           translate={translate}
+          providerModels={providerModels}
         />
 
         {/* 保存按钮 */}

@@ -13,7 +13,7 @@ import { useSystemPrompt } from '@/hooks/useSystemPrompt'
 // Components
 import { Sidebar } from '@/components/sidebar/Sidebar'
 import { ChatContainer } from '@/components/chat/ChatContainer'
-import { ConfigPanel } from '@/components/config/ConfigPanel'
+import { SettingsPage } from '@/components/settings/SettingsPage'
 import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 
@@ -78,7 +78,7 @@ function App() {
 
   // ==================== 本地状态 ====================
   
-  const [showConfig, setShowConfig] = useState(true)
+  const [showSettings, setShowSettings] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
@@ -416,7 +416,7 @@ function App() {
           currentConversation={currentConversation}
           onToggleLanguage={toggleLanguage}
           onToggleTheme={toggleTheme}
-          onOpenSettings={() => setShowConfig(true)}
+          onOpenSettings={() => setShowSettings(true)}
           onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
           translate={translate}
         />
@@ -441,8 +441,10 @@ function App() {
           translate={translate}
         />
 
-        {/* 配置面板 */}
-        <ConfigPanel
+        {/* 设置页面 */}
+        <SettingsPage
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
           modelConfig={modelConfig}
           currentProvider={currentProvider}
           currentModel={currentModel}
@@ -451,22 +453,21 @@ function App() {
           onModelChange={setModel}
           onRemoveModel={handleRemoveModel}
           onSaveConfig={handleSaveConfig}
-          onClose={() => setShowConfig(false)}
-          isOpen={showConfig}
-          translate={translate}
-          language={language}
           systemPrompt={systemPrompt}
           onSystemPromptModeChange={setSystemPromptMode}
           onSystemPromptGlobalChange={setGlobalPrompt}
           onSystemPromptModelChange={(modelKeys, prompt, newPrompts) => {
             if (newPrompts) {
-              // 直接设置新的prompts对象（用于删除）
               setModelPrompts([], '', newPrompts)
             } else {
-              // 批量设置模型提示词
               setModelPrompts(modelKeys, prompt)
             }
           }}
+          theme={theme}
+          onThemeChange={toggleTheme}
+          language={language}
+          onLanguageChange={toggleLanguage}
+          translate={translate}
         />
       </div>
 

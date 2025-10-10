@@ -13,51 +13,38 @@ export const FALLBACK_PROVIDER = 'openai'
 export const PROVIDERS = {
   openai: {
     label: 'OpenAI',
-    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4', 'gpt-3.5-turbo'],
     endpoint: 'https://api.openai.com/v1/chat/completions'
   },
   deepseek: {
     label: 'DeepSeek',
-    models: ['deepseek-chat', 'deepseek-coder'],
     endpoint: 'https://api.deepseek.com/v1/chat/completions'
   },
   moonshot: {
     label: 'Moonshot',
-    models: ['moonshot-v1-8k', 'moonshot-v1-32k'],
     endpoint: 'https://api.moonshot.ai/v1/chat/completions'
   },
   groq: {
     label: 'Groq',
-    models: ['mixtral-8x7b-32768', 'llama3-70b-8192'],
     endpoint: 'https://api.groq.com/openai/v1/chat/completions'
   },
   mistral: {
     label: 'Mistral',
-    models: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest'],
     endpoint: 'https://api.mistral.ai/v1/chat/completions'
   },
   together: {
     label: 'Together AI',
-    models: ['meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'meta-llama/Meta-Llama-3-8B-Instruct'],
     endpoint: 'https://api.together.xyz/v1/chat/completions'
   },
   anthropic: {
     label: 'Anthropic',
-    models: [
-      'claude-3-opus-20240229',
-      'claude-3-sonnet-20240229',
-      'claude-3-haiku-20240307'
-    ],
     endpoint: 'https://api.anthropic.com/v1/messages'
   },
   google: {
     label: 'Google Gemini',
-    models: ['gemini-pro', 'gemini-ultra'],
     endpoint: 'https://generativelanguage.googleapis.com/v1beta'
   },
   volcengine: {
     label: 'Volcano Engine',
-    models: ['doubao-pro-32k'],
     endpoint: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'
   }
 }
@@ -132,6 +119,39 @@ export const TRANSLATIONS = {
     sections: {
       reasoning: 'Reasoning',
       systemPrompt: 'System prompt'
+    },
+    settings: {
+      title: 'Settings',
+      tabs: {
+        model: 'Model Configuration',
+        appearance: 'Appearance',
+        language: 'Language',
+        profile: 'User Profile',
+        about: 'About'
+      },
+      appearance: {
+        title: 'Theme',
+        description: 'Choose your preferred color theme',
+        light: 'Light',
+        dark: 'Dark'
+      },
+      language: {
+        title: 'Language',
+        description: 'Choose your preferred language'
+      },
+      profile: {
+        title: 'User Profile',
+        description: 'Manage your user profile and preferences',
+        comingSoon: 'User profile features coming soon'
+      },
+      about: {
+        title: 'About',
+        appName: 'Application Name',
+        version: 'Version',
+        description: 'Description',
+        descriptionText: 'A multi-model AI chat application supporting various AI providers',
+        repository: 'Repository'
+      }
     },
     confirms: {
       deleteMessage: 'Are you sure you want to delete this message?',
@@ -236,6 +256,39 @@ export const TRANSLATIONS = {
       reasoning: '思考过程',
       systemPrompt: '系统提示词'
     },
+    settings: {
+      title: '设置',
+      tabs: {
+        model: '模型配置',
+        appearance: '外观',
+        language: '语言',
+        profile: '用户资料',
+        about: '关于'
+      },
+      appearance: {
+        title: '主题',
+        description: '选择您偏好的颜色主题',
+        light: '浅色',
+        dark: '深色'
+      },
+      language: {
+        title: '语言',
+        description: '选择您偏好的语言'
+      },
+      profile: {
+        title: '用户资料',
+        description: '管理您的用户资料和偏好设置',
+        comingSoon: '用户资料功能即将推出'
+      },
+      about: {
+        title: '关于',
+        appName: '应用名称',
+        version: '版本',
+        description: '描述',
+        descriptionText: '支持多种AI服务商的多模型AI聊天应用',
+        repository: '代码仓库'
+      }
+    },
     confirms: {
       deleteMessage: '确定要删除这条消息吗？',
       deleteConversation: '确定要删除对话「{title}」吗？',
@@ -310,9 +363,8 @@ export function isDeepThinkingSupported() {
 }
 
 export function getDefaultModel(provider, customModels = {}) {
-  const defaults = PROVIDERS[provider]?.models ?? []
   const customs = customModels[provider] ?? []
-  return [...defaults, ...customs][0] ?? defaults[0] ?? 'gpt-4o-mini'
+  return customs[0] ?? ''
 }
 
 export function getTranslationValue(language, key) {

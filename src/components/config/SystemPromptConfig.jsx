@@ -13,17 +13,23 @@ export function SystemPromptConfig({
   onGlobalPromptChange,
   onModelPromptsChange,
   language,
-  translate
+  translate,
+  providerModels
 }) {
   const [promptText, setPromptText] = useState('')
   const [selectedModels, setSelectedModels] = useState([])
   const [showModelSelector, setShowModelSelector] = useState(false)
 
-  // 获取所有可用的模型列表
+  // 获取所有可用的模型列表（来自用户配置的模型）
   const allModels = useMemo(() => {
+    if (!providerModels) return []
+    
     const models = []
-    Object.entries(PROVIDERS).forEach(([providerId, providerConfig]) => {
-      providerConfig.models.forEach(model => {
+    Object.entries(providerModels).forEach(([providerId, modelList]) => {
+      const providerConfig = PROVIDERS[providerId]
+      if (!providerConfig || !modelList || modelList.length === 0) return
+      
+      modelList.forEach(model => {
         models.push({
           key: `${providerId}:${model}`,
           provider: providerId,
@@ -33,7 +39,7 @@ export function SystemPromptConfig({
       })
     })
     return models
-  }, [])
+  }, [providerModels])
 
   // 获取已配置的模型列表
   const configuredModels = useMemo(() => {
@@ -111,28 +117,34 @@ export function SystemPromptConfig({
         <label className="system-prompt-label">
           {language === 'zh' ? '应用模式' : 'Application Mode'}
         </label>
-        <div className="system-prompt-mode-options">
-          <button
-            type="button"
-            className={`system-prompt-mode-option ${systemPrompt.mode === 'none' ? 'active' : ''}`}
-            onClick={() => handleModeChange('none')}
-          >
-            {language === 'zh' ? '不使用' : 'None'}
-          </button>
-          <button
-            type="button"
-            className={`system-prompt-mode-option ${systemPrompt.mode === 'global' ? 'active' : ''}`}
-            onClick={() => handleModeChange('global')}
-          >
-            {language === 'zh' ? '全局' : 'Global'}
-          </button>
-          <button
-            type="button"
-            className={`system-prompt-mode-option ${systemPrompt.mode === 'per-model' ? 'active' : ''}`}
-            onClick={() => handleModeChange('per-model')}
-          >
-            {language === 'zh' ? '指定模型' : 'Per Model'}
-          </button>
+        <div className="system-prompt-mode-radio-group">
+          <label className="system-prompt-mode-radio">
+            <input
+              type="radio"
+              name="system-prompt-mode"
+              checked={systemPrompt.mode === 'none'}
+              onChange={() => handleModeChange('none')}
+            />
+            <span>{language === 'zh' ? '不使用' : 'None'}</span>
+          </label>
+          <label className="system-prompt-mode-radio">
+            <input
+              type="radio"
+              name="system-prompt-mode"
+              checked={systemPrompt.mode === 'global'}
+              onChange={() => handleModeChange('global')}
+            />
+            <span>{language === 'zh' ? '全局' : 'Global'}</span>
+          </label>
+          <label className="system-prompt-mode-radio">
+            <input
+              type="radio"
+              name="system-prompt-mode"
+              checked={systemPrompt.mode === 'per-model'}
+              onChange={() => handleModeChange('per-model')}
+            />
+            <span>{language === 'zh' ? '指定模型' : 'Per Model'}</span>
+          </label>
         </div>
       </div>
 

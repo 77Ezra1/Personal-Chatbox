@@ -32,33 +32,35 @@
   margin-bottom: 20px;
 }
 
-.system-prompt-mode-options {
+.system-prompt-mode-radio-group {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.system-prompt-mode-radio {
+  display: flex;
+  align-items: center;
   gap: 8px;
-}
-
-.system-prompt-mode-option {
-  flex: 1;
-  padding: 8px 16px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--background);
-  color: var(--foreground);
-  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 14px;
+  color: var(--foreground);
+  transition: color 0.2s;
 }
 
-.system-prompt-mode-option:hover {
-  background: var(--accent);
-  border-color: var(--primary);
+.system-prompt-mode-radio:hover {
+  color: var(--primary);
 }
 
-.system-prompt-mode-option.active {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
-  font-weight: 500;
+.system-prompt-mode-radio input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.system-prompt-mode-radio span {
+  user-select: none;
 }
 
 /* 全局提示词 */
