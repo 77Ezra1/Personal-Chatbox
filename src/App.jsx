@@ -5,10 +5,10 @@ import { Toaster, toast } from 'sonner'
 import { useConversations, conversationUtils } from '@/hooks/useConversations'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useTheme } from '@/hooks/useTheme'
-import { useModelConfig } from '@/hooks/useModelConfig'
+import { useModelConfigDB } from '@/hooks/useModelConfigDB'
 import { useDeepThinking } from '@/hooks/useDeepThinking'
 import { useKeyboardShortcuts, DEFAULT_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
-import { useSystemPrompt } from '@/hooks/useSystemPrompt'
+import { useSystemPromptDB } from '@/hooks/useSystemPromptDB'
 
 // Components
 import { Sidebar } from '@/components/sidebar/Sidebar'
@@ -16,6 +16,7 @@ import { ChatContainer } from '@/components/chat/ChatContainer'
 import { SettingsPage } from '@/components/settings/SettingsPage'
 import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { DataMigration } from '@/components/common/DataMigration'
 
 // Utils
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
@@ -56,11 +57,14 @@ function App() {
     currentModel,
     currentProviderModels,
     customModels,
+    models,
+    loading: modelsLoading,
     setProvider,
     setModel,
     updateConfig,
+    addCustomModel,
     removeCustomModel
-  } = useModelConfig()
+  } = useModelConfigDB()
 
   // 深度思考
   const {
@@ -72,10 +76,12 @@ function App() {
   // 系统提示词
   const {
     systemPrompt,
+    loading: promptLoading,
     setMode: setSystemPromptMode,
     setGlobalPrompt,
-    setModelPrompts
-  } = useSystemPrompt()
+    setModelPrompts,
+    getEffectivePrompt
+  } = useSystemPromptDB()
 
   // ==================== 本地状态 ====================
   
@@ -398,7 +404,7 @@ function App() {
   const conversationList = Object.values(conversations || {})
 
   return (
-    <>
+    <DataMigration language={language}>
       {/* Toast 通知 */}
       <Toaster position="top-center" />
 
@@ -451,6 +457,7 @@ function App() {
           currentModel={currentModel}
           providerModels={currentProviderModels}
           customModels={customModels}
+          models={models}
           onProviderChange={setProvider}
           onModelChange={setModel}
           onRemoveModel={handleRemoveModel}
@@ -493,7 +500,7 @@ function App() {
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
-    </>
+    </DataMigration>
   )
 }
 

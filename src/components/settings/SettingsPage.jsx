@@ -17,6 +17,7 @@ export function SettingsPage({
   currentModel,
   providerModels,
   customModels,
+  models = [], // 新增：完整的模型列表
   onProviderChange,
   onModelChange,
   onRemoveModel,
@@ -87,6 +88,7 @@ export function SettingsPage({
                   currentModel={currentModel}
                   providerModels={providerModels}
                   customModels={customModels}
+                  models={models}
                   onProviderChange={onProviderChange}
                   onModelChange={onModelChange}
                   onRemoveModel={onRemoveModel}

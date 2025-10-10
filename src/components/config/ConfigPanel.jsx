@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { PROVIDERS } from '@/lib/constants'
 import { toast } from 'sonner'
 import { TokenInfoDialog } from './TokenInfoDialog'
-import { SystemPromptConfig } from './SystemPromptConfig'
+import { SystemPromptConfigNew } from './SystemPromptConfigNew'
 
 /**
  * 配置面板组件
@@ -16,6 +16,7 @@ export function ConfigPanel({
   currentModel,
   providerModels,
   customModels,
+  models = [], // 新增：完整的模型列表
   onProviderChange,
   onModelChange,
   onRemoveModel,
@@ -248,14 +249,14 @@ export function ConfigPanel({
         </div>
 
         {/* 系统提示词配置 */}
-        <SystemPromptConfig
+        <SystemPromptConfigNew
           systemPrompt={systemPrompt}
           onModeChange={onSystemPromptModeChange}
           onGlobalPromptChange={onSystemPromptGlobalChange}
           onModelPromptsChange={onSystemPromptModelChange}
           language={language}
           translate={translate}
-          customModels={customModels}
+          allModels={models}
         />
 
         {/* 保存按钮 */}
