@@ -390,6 +390,7 @@ function App() {
           onClose={() => setShowConfig(false)}
           isOpen={showConfig}
           translate={translate}
+          language={language}
         />
       </div>
 

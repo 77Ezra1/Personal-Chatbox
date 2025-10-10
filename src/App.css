@@ -1898,3 +1898,242 @@ button:hover:not(:disabled),
   padding: 8px;
 }
 
+
+
+/* ==================== Token Info Dialog ==================== */
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dialog-content {
+  background-color: var(--background);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+.token-info-dialog {
+  max-width: 700px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.token-info-section {
+  margin-bottom: 2rem;
+}
+
+.token-info-section:last-child {
+  margin-bottom: 0;
+}
+
+.token-info-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.token-info-pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .token-info-pros-cons {
+    grid-template-columns: 1fr;
+  }
+}
+
+.token-info-pros,
+.token-info-cons {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+}
+
+.token-info-pros {
+  border-left: 3px solid #10B981;
+}
+
+.token-info-cons {
+  border-left: 3px solid #EF4444;
+}
+
+.token-info-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.token-info-subtitle.pros {
+  color: #10B981;
+}
+
+.token-info-subtitle.cons {
+  color: #EF4444;
+}
+
+.token-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.token-info-list li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.token-info-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0.5rem;
+  font-weight: bold;
+}
+
+.token-info-pros .token-info-list li::before {
+  color: #10B981;
+}
+
+.token-info-cons .token-info-list li::before {
+  color: #EF4444;
+}
+
+.token-info-recommendation {
+  padding: 1rem;
+  background-color: var(--muted);
+  border-radius: var(--radius-md);
+  border-left: 3px solid #3B82F6;
+}
+
+.token-info-recommendation p {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.token-info-recommendation p:first-child {
+  margin-top: 0;
+}
+
+.token-info-recommendation p:last-child {
+  margin-bottom: 0;
+}
+
+/* ==================== Config Panel Token Controls ==================== */
+
+.config-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.config-input-group .config-input {
+  flex: 1;
+}
+
+.config-max-tokens-button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.config-max-tokens-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.config-info-button {
+  margin-left: 0.5rem;
+  padding: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.config-info-button:hover {
+  opacity: 1;
+}
+
+.config-field label {
+  display: flex;
+  align-items: center;
+}
+
+/* ==================== Animations ==================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
