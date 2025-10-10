@@ -110,7 +110,7 @@ export function SystemPromptConfig({
         <Button
           variant="ghost"
           size="sm"
-          title={language === 'zh' ? '系统提示词用于定义模型的角色和行为' : 'System prompt defines the role and behavior of the model'}
+          title={translate?.('systemPrompt.description', 'System prompt defines the role and behavior of the model')}
         >
           <Info className="w-4 h-4" />
         </Button>
@@ -119,7 +119,7 @@ export function SystemPromptConfig({
       {/* 模式选择 */}
       <div className="system-prompt-mode">
         <label className="system-prompt-label">
-          {language === 'zh' ? '应用模式' : 'Application Mode'}
+          {translate?.('systemPrompt.mode', 'Application Mode')}
         </label>
         <div className="system-prompt-mode-radio-group">
           <label className="system-prompt-mode-radio">
@@ -129,7 +129,7 @@ export function SystemPromptConfig({
               checked={systemPrompt.mode === 'none'}
               onChange={() => handleModeChange('none')}
             />
-            <span>{language === 'zh' ? '不使用' : 'None'}</span>
+            <span>{translate?.('systemPrompt.modeNone', 'Not Used')}</span>
           </label>
           <label className="system-prompt-mode-radio">
             <input
@@ -138,7 +138,7 @@ export function SystemPromptConfig({
               checked={systemPrompt.mode === 'global'}
               onChange={() => handleModeChange('global')}
             />
-            <span>{language === 'zh' ? '全局' : 'Global'}</span>
+            <span>{translate?.('systemPrompt.modeGlobal', 'Global')}</span>
           </label>
           <label className="system-prompt-mode-radio">
             <input
@@ -147,7 +147,7 @@ export function SystemPromptConfig({
               checked={systemPrompt.mode === 'per-model'}
               onChange={() => handleModeChange('per-model')}
             />
-            <span>{language === 'zh' ? '指定模型' : 'Per Model'}</span>
+            <span>{translate?.('systemPrompt.modeSpecific', 'Specific Models')}</span>
           </label>
         </div>
       </div>
@@ -156,11 +156,11 @@ export function SystemPromptConfig({
       {systemPrompt.mode === 'global' && (
         <div className="system-prompt-global">
           <label className="system-prompt-label">
-            {language === 'zh' ? '全局提示词（应用于所有模型）' : 'Global Prompt (applies to all models)'}
+            {translate?.('systemPrompt.globalPrompt', 'Global Prompt (applies to all models)')}
           </label>
           <textarea
             className="system-prompt-textarea"
-            placeholder={language === 'zh' ? '输入系统提示词...' : 'Enter system prompt...'}
+            placeholder={translate?.('systemPrompt.globalPromptPlaceholder', 'Enter system prompt...')}
             value={globalPromptText || systemPrompt.prompt}
             onChange={(e) => setGlobalPromptText(e.target.value)}
             rows={6}
@@ -179,13 +179,13 @@ export function SystemPromptConfig({
                 variant="outline"
                 size="sm"
               >
-                {language === 'zh' ? '清除' : 'Clear'}
+                {translate?.('systemPrompt.clear', 'Clear')}
               </Button>
             )}
           </div>
           {systemPrompt.prompt && (
             <p className="system-prompt-hint">
-              {language === 'zh' ? '当前已设置全局提示词' : 'Global prompt is currently set'}
+              {translate?.('systemPrompt.globalPromptSet', 'Global prompt is currently set')}
             </p>
           )}
         </div>
@@ -195,21 +195,19 @@ export function SystemPromptConfig({
       {systemPrompt.mode === 'per-model' && (
         <div className="system-prompt-per-model">
           <label className="system-prompt-label">
-            {language === 'zh' ? '添加模型提示词' : 'Add Model Prompt'}
+            {translate?.('systemPrompt.addModelPrompt', 'Add Model Prompt')}
           </label>
 
           {allModels.length === 0 ? (
             <p className="system-prompt-hint">
-              {language === 'zh' 
-                ? '请先在上方添加模型，然后才能配置指定模型的提示词。' 
-                : 'Please add models above before configuring per-model prompts.'}
+              {translate?.('systemPrompt.addModelFirst', 'Please add models above before configuring model-specific prompts.')}
             </p>
           ) : (
             <>
               {/* 模型选择器 */}
               <div className="system-prompt-model-selector">
                 <div className="system-prompt-model-selector-header">
-                  <span>{language === 'zh' ? '选择要应用的模型（可多选）' : 'Select models to apply (multiple)'}</span>
+                  <span>{translate?.('systemPrompt.selectModels', 'Select models to apply (multiple selection allowed)')}</span>
                 </div>
                 <div className="system-prompt-model-grid">
                   {allModels.map(({ key, providerLabel, model }) => (
@@ -239,7 +237,7 @@ export function SystemPromptConfig({
                   </label>
                   <textarea
                     className="system-prompt-textarea"
-                    placeholder={language === 'zh' ? '输入系统提示词...' : 'Enter system prompt...'}
+                    placeholder={translate?.('systemPrompt.globalPromptPlaceholder', 'Enter system prompt...')}
                     value={perModelPromptText}
                     onChange={(e) => setPerModelPromptText(e.target.value)}
                     rows={6}
@@ -270,7 +268,7 @@ export function SystemPromptConfig({
               {configuredModels.length > 0 && (
                 <div className="system-prompt-configured">
                   <label className="system-prompt-label">
-                    {language === 'zh' ? '已配置的模型' : 'Configured Models'}
+                    {translate?.('systemPrompt.configuredModels', 'Configured Models')}
                   </label>
                   <div className="system-prompt-model-list">
                     {configuredModels.map(({ key, providerLabel, model, prompt }) => (
@@ -287,7 +285,7 @@ export function SystemPromptConfig({
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRemoveModelPrompt(key)}
-                          title={language === 'zh' ? '删除' : 'Remove'}
+                          title={translate?.('systemPrompt.delete', 'Delete')}
                         >
                           <X className="w-3 h-3" />
                         </Button>
@@ -305,12 +303,8 @@ export function SystemPromptConfig({
       {systemPrompt.mode !== 'none' && (
         <p className="system-prompt-description">
           {systemPrompt.mode === 'global' 
-            ? (language === 'zh' 
-                ? '全局提示词将应用于所有模型的对话中，用于定义模型的角色和行为。' 
-                : 'Global prompt will be applied to all model conversations to define the role and behavior.')
-            : (language === 'zh'
-                ? '指定模型提示词只应用于选定的模型，可以为不同模型设置不同的角色。'
-                : 'Per-model prompts apply only to selected models, allowing different roles for different models.')}
+            ? translate?.('systemPrompt.globalPromptHelp', 'Global prompt applies to all model conversations, defining the role and behavior.')
+            : translate?.('systemPrompt.specificPromptHelp', 'Specific model prompts apply only to selected models, allowing different roles for different models.')}
         </p>
       )}
     </div>

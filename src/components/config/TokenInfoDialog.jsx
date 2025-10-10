@@ -5,7 +5,7 @@ import { MAX_TOKENS_PROS_CONS } from '@/lib/modelTokenLimits'
 /**
  * Token数优劣势说明对话框组件
  */
-export function TokenInfoDialog({ isOpen, onClose, language = 'zh' }) {
+export function TokenInfoDialog({ isOpen, onClose, language = 'zh', translate }) {
   if (!isOpen) return null
 
   const content = MAX_TOKENS_PROS_CONS[language] || MAX_TOKENS_PROS_CONS.zh
@@ -17,7 +17,7 @@ export function TokenInfoDialog({ isOpen, onClose, language = 'zh' }) {
         <div className="dialog-header">
           <div className="dialog-title">
             <Info className="w-5 h-5" />
-            <h2>{language === 'zh' ? 'Token数设置说明' : 'Token Settings Guide'}</h2>
+            <h2>{translate?.('tokenInfo.title', 'Token Settings Guide')}</h2>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-4 h-4" />
@@ -90,7 +90,7 @@ export function TokenInfoDialog({ isOpen, onClose, language = 'zh' }) {
         {/* 底部按钮 */}
         <div className="dialog-footer">
           <Button onClick={onClose}>
-            {language === 'zh' ? '我知道了' : 'Got it'}
+            {translate?.('tokenInfo.gotIt', 'Got it')}
           </Button>
         </div>
       </div>

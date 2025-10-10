@@ -109,8 +109,8 @@ export function ConfigPanel({
           />
           <p className="config-hint">
             {translate(
-              'hints.customModelInput',
-              '直接输入模型 ID，或点击下方推荐项快速填入。'
+              'config.modelInputHint',
+              'Enter model ID directly or click recommended items below.'
             )}
           </p>
           {providerModels?.length > 0 && (
@@ -135,7 +135,7 @@ export function ConfigPanel({
                       type="button"
                       className="config-model-remove"
                       onClick={() => onRemoveModel(model)}
-                      title={language === 'zh' ? '删除此模型' : 'Remove this model'}
+                      title={translate?.('config.deleteModel', 'Delete this model')}
                     >
                       ×
                     </button>
@@ -183,7 +183,7 @@ export function ConfigPanel({
               size="icon"
               className="config-info-button"
               onClick={() => setShowTokenInfo(true)}
-              title={language === 'zh' ? '查看优劣势说明' : 'View pros and cons'}
+              title={translate?.('config.viewComparison', 'View comparison')}
             >
               <Info className="w-4 h-4" />
             </Button>
@@ -197,7 +197,7 @@ export function ConfigPanel({
                 updateField('maxTokens', value)
               }}
               className="config-input"
-              placeholder={language === 'zh' ? '留空表示无限制' : 'Leave empty for unlimited'}
+              placeholder={translate?.('config.unlimitedHint', 'Leave empty for unlimited')}
               min="1"
             />
             <Button
@@ -207,25 +207,19 @@ export function ConfigPanel({
               onClick={() => {
                 updateField('maxTokens', -1)
                 toast.success(
-                  language === 'zh' 
-                    ? '已设置为无限制，将使用模型支持的最大输出Token数' 
-                    : 'Set to unlimited, will use model\'s maximum output tokens'
+                  translate?.('config.alreadyUnlimited', 'Already set to unlimited, will use model maximum output tokens')
                 )
               }}
-              title={language === 'zh' ? '设置为无限制（使用模型最大值）' : 'Set to unlimited (use model maximum)'}
+              title={translate?.('config.setUnlimited', 'Set to unlimited (use model maximum)')}
             >
               <Zap className="w-3 h-3" />
-              {language === 'zh' ? '无限制' : 'Unlimited'}
+              {translate?.('config.unlimited', 'Unlimited')}
             </Button>
           </div>
           <p className="config-hint">
             {draftConfig.maxTokens === -1 
-              ? (language === 'zh' 
-                  ? '当前：无限制（使用模型支持的最大输出Token数）' 
-                  : 'Current: Unlimited (uses model\'s maximum output tokens)')
-              : (language === 'zh' 
-                  ? `当前：${draftConfig.maxTokens || 1024} tokens` 
-                  : `Current: ${draftConfig.maxTokens || 1024} tokens`)}
+              ? translate?.('config.currentUnlimited', 'Current: Unlimited (using model maximum output tokens)')
+              : `Current: ${draftConfig.maxTokens || 1024} tokens`}
           </p>
         </div>
 
@@ -256,6 +250,7 @@ export function ConfigPanel({
         isOpen={showTokenInfo}
         onClose={() => setShowTokenInfo(false)}
         language={language}
+        translate={translate}
       />
     </aside>
   )

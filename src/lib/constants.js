@@ -253,6 +253,41 @@ export const TRANSLATIONS = {
         textFormat: 'Plain Text Format'
       }
     },
+    config: {
+      modelInputHint: 'Enter model ID directly or click recommended items below.',
+      deleteModel: 'Delete this model',
+      viewComparison: 'View comparison',
+      unlimitedHint: 'Leave empty for unlimited',
+      alreadyUnlimited: 'Already set to unlimited, will use model maximum output tokens',
+      setUnlimited: 'Set to unlimited (use model maximum)',
+      unlimited: 'Unlimited',
+      currentUnlimited: 'Current: Unlimited (using model maximum output tokens)'
+    },
+    tokenInfo: {
+      title: 'Token Settings Guide',
+      gotIt: 'Got it'
+    },
+    systemPrompt: {
+      description: 'System prompt defines the role and behavior of the model',
+      mode: 'Application Mode',
+      modeNone: 'Not Used',
+      modeGlobal: 'Global',
+      modeSpecific: 'Specific Models',
+      globalPrompt: 'Global Prompt (applies to all models)',
+      globalPromptPlaceholder: 'Enter system prompt...',
+      clear: 'Clear',
+      globalPromptSet: 'Global prompt is currently set',
+      addModelPrompt: 'Add Model Prompt',
+      addModelFirst: 'Please add models above before configuring model-specific prompts.',
+      selectModels: 'Select models to apply (multiple selection allowed)',
+      collapseAll: 'Collapse All',
+      expandAll: 'Expand All',
+      selectAll: 'Select/Deselect All',
+      configuredModels: 'Configured Models',
+      delete: 'Delete',
+      globalPromptHelp: 'Global prompt applies to all model conversations, defining the role and behavior.',
+      specificPromptHelp: 'Specific model prompts apply only to selected models, allowing different roles for different models.'
+    },
     toggles: {
       languageShortEnglish: 'EN',
       languageShortChinese: '中文',
@@ -443,6 +478,41 @@ export const TRANSLATIONS = {
         markdownFormat: 'Markdown 格式',
         textFormat: '纯文本格式'
       }
+    },
+    config: {
+      modelInputHint: '直接输入模型 ID，或点击下方推荐项快速填入。',
+      deleteModel: '删除此模型',
+      viewComparison: '查看优劣势说明',
+      unlimitedHint: '留空表示无限制',
+      alreadyUnlimited: '已设置为无限制，将使用模型支持的最大输出Token数',
+      setUnlimited: '设置为无限制（使用模型最大值）',
+      unlimited: '无限制',
+      currentUnlimited: '当前：无限制（使用模型支持的最大输出Token数）'
+    },
+    tokenInfo: {
+      title: 'Token数设置说明',
+      gotIt: '我知道了'
+    },
+    systemPrompt: {
+      description: '系统提示词用于定义模型的角色和行为',
+      mode: '应用模式',
+      modeNone: '不使用',
+      modeGlobal: '全局',
+      modeSpecific: '指定模型',
+      globalPrompt: '全局提示词（应用于所有模型）',
+      globalPromptPlaceholder: '输入系统提示词...',
+      clear: '清除',
+      globalPromptSet: '当前已设置全局提示词',
+      addModelPrompt: '添加模型提示词',
+      addModelFirst: '请先在上方添加模型，然后才能配置指定模型的提示词。',
+      selectModels: '选择要应用的模型（可多选）',
+      collapseAll: '全部折叠',
+      expandAll: '全部展开',
+      selectAll: '全选/取消全选',
+      configuredModels: '已配置的模型',
+      delete: '删除',
+      globalPromptHelp: '全局提示词将应用于所有模型的对话中，用于定义模型的角色和行为。',
+      specificPromptHelp: '指定模型提示词只应用于选定的模型，可以为不同模型设置不同的角色。'
     },
     toggles: {
       languageShortEnglish: 'EN',
