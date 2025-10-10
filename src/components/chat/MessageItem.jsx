@@ -85,6 +85,21 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
             isUser ? 'message-content-user' : 'message-content-ai'
           } ${status === 'error' ? 'message-error' : ''}`}
         >
+          {/* 思考过程折叠框 - 只在有 reasoning 内容且非编辑模式时展示 */}
+          {!isEditing && metadata?.deepThinking && metadata?.reasoning && (
+            <details className="thinking-process-container" open>
+              <summary className="thinking-process-summary">
+                <span className="thinking-icon">💭</span>
+                <span className="thinking-label">
+                  {translate('sections.thinkingProcess', '思考过程')}
+                </span>
+              </summary>
+              <div className="thinking-process-content">
+                <MarkdownRenderer content={metadata.reasoning} />
+              </div>
+            </details>
+          )}
+
           {/* 消息内容 - 正常显示 */}
           {!isEditing && (
             <>
@@ -131,16 +146,6 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
                 </Button>
               </div>
             </div>
-          )}
-
-          {/* 思考过程 */}
-          {metadata?.reasoning && (
-            <details className="reasoning-block">
-              <summary>{translate('sections.reasoning', 'Reasoning')}</summary>
-              <div className="reasoning-content">
-                <MarkdownRenderer content={metadata.reasoning} />
-              </div>
-            </details>
           )}
 
           {/* 附件列表 */}

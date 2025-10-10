@@ -118,6 +118,7 @@ export const TRANSLATIONS = {
     },
     sections: {
       reasoning: 'Reasoning',
+      thinkingProcess: 'Thinking Process',
       systemPrompt: 'System prompt'
     },
     settings: {
@@ -344,6 +345,7 @@ export const TRANSLATIONS = {
     },
     sections: {
       reasoning: '思考过程',
+      thinkingProcess: '思考过程',
       systemPrompt: '系统提示词'
     },
     settings: {

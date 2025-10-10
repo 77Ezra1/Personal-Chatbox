@@ -239,9 +239,16 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   let result
   if (openAICompatibleConfig) {
     const endpoint = getProviderEndpoint(provider, modelConfig.endpoint)
+    
+    // DeepSeek 特殊处理：根据 deepThinking 切换模型
+    let targetModel = model || openAICompatibleConfig.defaultModel
+    if (provider === 'deepseek') {
+      targetModel = deepThinking ? 'deepseek-reasoner' : 'deepseek-chat'
+    }
+    
     result = await callOpenAICompatible({
       messages: requestMessages,
-      model: model || openAICompatibleConfig.defaultModel,
+      model: targetModel,
       apiKey,
       temperature,
       maxTokens,
@@ -262,7 +269,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
           maxTokens, 
           onToken, 
           signal,
-          endpoint: getProviderEndpoint('anthropic', modelConfig.endpoint)
+          endpoint: getProviderEndpoint('anthropic', modelConfig.endpoint),
+          deepThinking
         })
         break
       case 'google':
@@ -274,7 +282,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
           maxTokens, 
           onToken, 
           signal,
-          baseUrl: getProviderEndpoint('google', modelConfig.endpoint)
+          baseUrl: getProviderEndpoint('google', modelConfig.endpoint),
+          deepThinking
         })
         break
       case 'volcengine':
@@ -286,7 +295,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
           maxTokens, 
           onToken, 
           signal,
-          endpoint: getProviderEndpoint('volcengine', modelConfig.endpoint)
+          endpoint: getProviderEndpoint('volcengine', modelConfig.endpoint),
+          deepThinking
         })
         break
       default:
@@ -557,7 +567,7 @@ function extractOpenAIText(content) {
   return ''
 }
 
-async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal, endpoint }) {
+async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal, endpoint, deepThinking = false }) {
   const shouldStream = !!onToken
   const apiUrl = endpoint || getProviderEndpoint('anthropic')
   
@@ -574,6 +584,14 @@ async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', api
   // 只有当maxTokens不是-1时才添加max_tokens参数
   if (maxTokens !== -1) {
     requestBody.max_tokens = maxTokens
+  }
+
+  // 添加 Extended Thinking 支持
+  if (deepThinking) {
+    requestBody.thinking = {
+      type: 'enabled',
+      budget_tokens: 10000
+    }
   }
 
   const response = await fetch(apiUrl, {
@@ -611,14 +629,24 @@ async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', api
   }
 
   const data = await response.json()
-  const content = Array.isArray(data?.content)
-    ? data.content.map(block => block?.text ?? '').join('')
-    : (data?.content ?? '')
-  const reasoning = normalizeReasoningContent(data?.reasoning)
+  let content = ''
+  let reasoning = null
+
+  if (Array.isArray(data?.content)) {
+    // 分离 thinking 和 text 内容块
+    const thinkingBlocks = data.content.filter(block => block?.type === 'thinking')
+    const textBlocks = data.content.filter(block => block?.type === 'text')
+    
+    reasoning = thinkingBlocks.map(block => block?.thinking ?? '').join('\n').trim() || null
+    content = textBlocks.map(block => block?.text ?? '').join('')
+  } else {
+    content = data?.content ?? ''
+  }
+
   return { role: 'assistant', content, raw: data, reasoning }
 }
 
-async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature, maxTokens, onToken, signal, baseUrl }) {
+async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature, maxTokens, onToken, signal, baseUrl, deepThinking = false }) {
   const targetModel = model || 'gemini-pro'
   const shouldStream = !!onToken
   const googleBaseUrl = baseUrl || getProviderEndpoint('google')
@@ -633,6 +661,14 @@ async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature,
   // 只有当maxTokens不是-1时才添加maxOutputTokens参数
   if (maxTokens !== -1) {
     generationConfig.maxOutputTokens = maxTokens
+  }
+
+  // 添加 Thinking 支持
+  if (deepThinking) {
+    generationConfig.thinkingConfig = {
+      thinkingBudget: 1024,
+      includeThoughts: true
+    }
   }
 
   const payload = {
@@ -666,8 +702,14 @@ async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature,
 
   const data = await response.json()
   const parts = data?.candidates?.[0]?.content?.parts ?? []
-  const content = parts.map(part => part?.text ?? '').join('')
-  const reasoning = normalizeReasoningContent(data?.candidates?.[0]?.content?.thoughts)
+  
+  // 分离 thought 和普通 text
+  const thoughtParts = parts.filter(part => part?.thought === true)
+  const textParts = parts.filter(part => part?.thought !== true)
+  
+  const reasoning = thoughtParts.map(part => part?.text ?? '').join('\n').trim() || null
+  const content = textParts.map(part => part?.text ?? '').join('')
+  
   return { role: 'assistant', content, raw: data, reasoning }
 }
 
@@ -720,7 +762,7 @@ function convertMessagesToGoogleFormat(messages) {
   })
 }
 
-async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temperature, maxTokens, onToken, signal, endpoint }) {
+async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temperature, maxTokens, onToken, signal, endpoint, deepThinking = false }) {
   if (!model) {
     throw new Error('Please provide a Volcano Engine model ID.')
   }
@@ -735,6 +777,17 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
   // 只有当maxTokens不是-1时才添加max_tokens参数
   if (maxTokens !== -1) {
     payload.max_tokens = maxTokens
+  }
+
+  // 添加深度思考支持
+  if (deepThinking) {
+    payload.thinking = {
+      type: 'enabled'
+    }
+  } else {
+    payload.thinking = {
+      type: 'disabled'
+    }
   }
 
   const headers = {
