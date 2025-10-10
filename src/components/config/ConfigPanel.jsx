@@ -3,7 +3,6 @@ import { X, Info, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PROVIDERS } from '@/lib/constants'
 import { toast } from 'sonner'
-import { getModelMaxTokens, getModelDescription } from '@/lib/modelTokenLimits'
 import { TokenInfoDialog } from './TokenInfoDialog'
 
 /**
@@ -55,20 +54,6 @@ export function ConfigPanel({
   const updateField = (field, value) => {
     setDraftConfig(prev => ({ ...prev, [field]: value }))
   }
-
-  const handleSetMaxTokens = () => {
-    const maxTokens = getModelMaxTokens(currentModel)
-    updateField('maxTokens', maxTokens)
-    const modelDesc = getModelDescription(currentModel)
-    toast.success(
-      language === 'zh' 
-        ? `已设置为最大Token数：${maxTokens}（${modelDesc}）` 
-        : `Set to maximum tokens: ${maxTokens} (${modelDesc})`
-    )
-  }
-
-  const currentModelMaxTokens = getModelMaxTokens(currentModel)
-  const isAtMaxTokens = draftConfig.maxTokens === currentModelMaxTokens
 
   return (
     <aside className={`config-panel ${isOpen ? 'open' : ''}`}>
@@ -190,32 +175,41 @@ export function ConfigPanel({
           <div className="config-input-group">
             <input
               type="number"
-              value={draftConfig.maxTokens || 1024}
-              onChange={(e) => updateField('maxTokens', parseInt(e.target.value))}
+              value={draftConfig.maxTokens === -1 ? '' : (draftConfig.maxTokens || 1024)}
+              onChange={(e) => {
+                const value = e.target.value === '' ? -1 : parseInt(e.target.value)
+                updateField('maxTokens', value)
+              }}
               className="config-input"
+              placeholder={language === 'zh' ? '留空表示无限制' : 'Leave empty for unlimited'}
               min="1"
-              max="128000"
             />
             <Button
               variant="outline"
               size="sm"
               className="config-max-tokens-button"
-              onClick={handleSetMaxTokens}
-              disabled={isAtMaxTokens}
-              title={
-                isAtMaxTokens
-                  ? (language === 'zh' ? '已是最大值' : 'Already at maximum')
-                  : (language === 'zh' ? '一键设置为最大Token数' : 'Set to maximum tokens')
-              }
+              onClick={() => {
+                updateField('maxTokens', -1)
+                toast.success(
+                  language === 'zh' 
+                    ? '已设置为无限制，将使用模型支持的最大输出Token数' 
+                    : 'Set to unlimited, will use model\'s maximum output tokens'
+                )
+              }}
+              title={language === 'zh' ? '设置为无限制（使用模型最大值）' : 'Set to unlimited (use model maximum)'}
             >
               <Zap className="w-3 h-3" />
-              {language === 'zh' ? '最大值' : 'Max'}
+              {language === 'zh' ? '无限制' : 'Unlimited'}
             </Button>
           </div>
           <p className="config-hint">
-            {language === 'zh' 
-              ? `当前模型最大支持：${currentModelMaxTokens} tokens` 
-              : `Model maximum: ${currentModelMaxTokens} tokens`}
+            {draftConfig.maxTokens === -1 
+              ? (language === 'zh' 
+                  ? '当前：无限制（使用模型支持的最大输出Token数）' 
+                  : 'Current: Unlimited (uses model\'s maximum output tokens)')
+              : (language === 'zh' 
+                  ? `当前：${draftConfig.maxTokens || 1024} tokens` 
+                  : `Current: ${draftConfig.maxTokens || 1024} tokens`)}
           </p>
         </div>
 

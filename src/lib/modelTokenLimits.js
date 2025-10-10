@@ -673,10 +673,11 @@ export function getSupportedModels() {
 export const MAX_TOKENS_PROS_CONS = {
   zh: {
     maxTokens: {
-      title: '设置最大Token数',
+      title: '设置为"无限制"',
       pros: {
         title: '优势',
         items: [
+          '使用模型支持的最大输出Token数',
           '生成更长、更完整的回答',
           '适合需要详细解释或长篇内容的场景',
           '减少因Token限制导致的内容截断',
@@ -694,10 +695,11 @@ export const MAX_TOKENS_PROS_CONS = {
       }
     },
     defaultTokens: {
-      title: '使用默认Token数',
+      title: '设置为具体数值',
       pros: {
         title: '优势',
         items: [
+          '精确控制输出长度',
           '节省API配额和费用',
           '响应速度更快',
           '内容更加精炼和聚焦',
@@ -715,16 +717,17 @@ export const MAX_TOKENS_PROS_CONS = {
       }
     },
     recommendation: {
-      title: '建议',
-      content: '根据您的使用场景选择合适的Token数：\n\n• 简短问答、日常对话：使用默认值（1024-2048）\n• 代码生成、技术文档：使用中等值（4096-8192）\n• 长篇文章、详细分析：使用最大值\n• 成本敏感场景：使用较小值并根据需要调整'
+      title: '使用建议',
+      content: '根据您的使用场景选择合适的Token数：\n\n• 简短问答、日常对话：使用较小值（1024-2048）\n• 代码生成、技术文档：使用中等值（4096-8192）\n• 长篇文章、详细分析：使用"无限制"\n• 成本敏感场景：使用较小值并根据需要调整\n\n💡 提示：选择"无限制"时，系统不会传递max_tokens参数给API，让模型使用其支持的最大输出Token数。'
     }
   },
   en: {
     maxTokens: {
-      title: 'Set Maximum Tokens',
+      title: 'Set to "Unlimited"',
       pros: {
         title: 'Advantages',
         items: [
+          'Use model\'s maximum supported output tokens',
           'Generate longer and more complete responses',
           'Suitable for scenarios requiring detailed explanations or long-form content',
           'Reduce content truncation due to token limits',
@@ -742,10 +745,11 @@ export const MAX_TOKENS_PROS_CONS = {
       }
     },
     defaultTokens: {
-      title: 'Use Default Tokens',
+      title: 'Set to Specific Value',
       pros: {
         title: 'Advantages',
         items: [
+          'Precise control over output length',
           'Save API quota and costs',
           'Faster response speed',
           'More concise and focused content',
@@ -763,8 +767,8 @@ export const MAX_TOKENS_PROS_CONS = {
       }
     },
     recommendation: {
-      title: 'Recommendation',
-      content: 'Choose appropriate token count based on your use case:\n\n• Short Q&A, casual conversation: Use default (1024-2048)\n• Code generation, technical docs: Use medium (4096-8192)\n• Long articles, detailed analysis: Use maximum\n• Cost-sensitive scenarios: Use smaller values and adjust as needed'
+      title: 'Recommendations',
+      content: 'Choose appropriate token count based on your use case:\n\n• Short Q&A, casual conversation: Use smaller values (1024-2048)\n• Code generation, technical docs: Use medium values (4096-8192)\n• Long articles, detailed analysis: Use "Unlimited"\n• Cost-sensitive scenarios: Use smaller values and adjust as needed\n\n💡 Tip: When "Unlimited" is selected, the system will not pass the max_tokens parameter to the API, allowing the model to use its maximum supported output tokens.'
     }
   }
 }

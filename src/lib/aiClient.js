@@ -484,20 +484,27 @@ async function callOpenAICompatible({
     }
   })
 
+  const requestBody = {
+    model,
+    messages: payloadMessages,
+    temperature,
+    stream: shouldStream,
+    ...(enableReasoning ? { reasoning: { effort: 'medium' } } : {})
+  }
+
+  // 只有当maxTokens不是-1时才添加max_tokens参数
+  // -1表示无限制，使用模型的默认最大值
+  if (maxTokens !== -1) {
+    requestBody.max_tokens = maxTokens
+  }
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...headersBuilder(apiKey)
     },
-    body: JSON.stringify({
-      model,
-      messages: payloadMessages,
-      temperature,
-      max_tokens: maxTokens,
-      stream: shouldStream,
-      ...(enableReasoning ? { reasoning: { effort: 'medium' } } : {})
-    }),
+    body: JSON.stringify(requestBody),
     signal
   })
 
@@ -553,6 +560,22 @@ function extractOpenAIText(content) {
 async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal, endpoint }) {
   const shouldStream = !!onToken
   const apiUrl = endpoint || getProviderEndpoint('anthropic')
+  
+  const requestBody = {
+    model,
+    temperature,
+    stream: shouldStream,
+    messages: messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'assistant' : 'user',
+      content: buildAnthropicContentParts(msg)
+    }))
+  }
+
+  // 只有当maxTokens不是-1时才添加max_tokens参数
+  if (maxTokens !== -1) {
+    requestBody.max_tokens = maxTokens
+  }
+
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
@@ -560,16 +583,7 @@ async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', api
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01'
     },
-    body: JSON.stringify({
-      model,
-      temperature,
-      max_tokens: maxTokens,
-      stream: shouldStream,
-      messages: messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
-        content: buildAnthropicContentParts(msg)
-      }))
-    }),
+    body: JSON.stringify(requestBody),
     signal
   })
 
@@ -612,12 +626,18 @@ async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature,
     ? `${googleBaseUrl}/models/${encodeURIComponent(targetModel)}:streamGenerateContent?key=${apiKey}`
     : `${googleBaseUrl}/models/${encodeURIComponent(targetModel)}:generateContent?key=${apiKey}`
 
+  const generationConfig = {
+    temperature
+  }
+
+  // 只有当maxTokens不是-1时才添加maxOutputTokens参数
+  if (maxTokens !== -1) {
+    generationConfig.maxOutputTokens = maxTokens
+  }
+
   const payload = {
     contents: convertMessagesToGoogleFormat(messages),
-    generationConfig: {
-      temperature,
-      maxOutputTokens: maxTokens
-    }
+    generationConfig
   }
 
   const response = await fetch(url, {
@@ -709,8 +729,12 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
     model,
     messages: convertMessagesToVolcengineFormat(messages),
     temperature,
-    max_tokens: maxTokens,
     stream: !!onToken
+  }
+
+  // 只有当maxTokens不是-1时才添加max_tokens参数
+  if (maxTokens !== -1) {
+    payload.max_tokens = maxTokens
   }
 
   const headers = {
