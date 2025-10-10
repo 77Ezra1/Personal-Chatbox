@@ -1,4 +1,4 @@
-import { PROVIDERS } from './constants'
+import { PROVIDERS } from './constants.js'
 
 // Helper function to get endpoint from PROVIDERS config or use custom endpoint
 function getProviderEndpoint(provider, customEndpoint) {
