@@ -241,6 +241,7 @@ export function useModelConfigDB() {
           temperature: updates.temperature ?? 0.7,
           maxTokens: updates.maxTokens ?? 1024,
           supportsDeepThinking: updates.supportsDeepThinking ?? false,
+          thinkingMode: updates.thinkingMode ?? 'optional',  // 新增
           isActive: true
         })
       } else {
@@ -248,7 +249,8 @@ export function useModelConfigDB() {
         await updateModel(modelId, {
           temperature: updates.temperature !== undefined ? updates.temperature : model.temperature,
           maxTokens: updates.maxTokens !== undefined ? updates.maxTokens : model.maxTokens,
-          supportsDeepThinking: updates.supportsDeepThinking !== undefined ? updates.supportsDeepThinking : model.supportsDeepThinking
+          supportsDeepThinking: updates.supportsDeepThinking !== undefined ? updates.supportsDeepThinking : model.supportsDeepThinking,
+          thinkingMode: updates.thinkingMode !== undefined ? updates.thinkingMode : model.thinkingMode  // 新增
         })
       }
       
