@@ -67,6 +67,7 @@ export async function callOpenWeatherCurrent(apiKey, location, units = 'metric')
 
     const response = await fetch(url)
 
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}))
       throw new Error(error.message || `API request failed: ${response.status}`)
@@ -230,18 +231,19 @@ export function convertMcpToolsToOpenAIFormat(servers) {
           type: 'function',
           function: {
             name: 'get_current_weather',
-            description: '获取指定城市的当前天气信息',
+            description: '获取指定城市的当前天气信息。注意：必须使用英文城市名。',
             parameters: {
               type: 'object',
               properties: {
                 location: {
                   type: 'string',
-                  description: '城市名称，例如：Beijing, London, New York'
+                  description: '城市的英文名称（必须使用英文！），例如：Guangzhou（广州）, Beijing（北京）, Shanghai（上海）, London, New York'
                 },
                 units: {
                   type: 'string',
                   enum: ['metric', 'imperial'],
-                  description: '温度单位，metric 为摄氏度，imperial 为华氏度'
+                  description: '温度单位，metric 为摄氏度，imperial 为华氏度',
+                  default: 'metric'
                 }
               },
               required: ['location']
@@ -252,18 +254,19 @@ export function convertMcpToolsToOpenAIFormat(servers) {
           type: 'function',
           function: {
             name: 'get_weather_forecast',
-            description: '获取指定城市的天气预报（未来5天）',
+            description: '获取指定城市的天气预报（未来5天）。注意：必须使用英文城市名。',
             parameters: {
               type: 'object',
               properties: {
                 location: {
                   type: 'string',
-                  description: '城市名称，例如：Beijing, London, New York'
+                  description: '城市的英文名称（必须使用英文！），例如：Guangzhou（广州）, Beijing（北京）, Shanghai（上海）, London, New York'
                 },
                 units: {
                   type: 'string',
                   enum: ['metric', 'imperial'],
-                  description: '温度单位，metric 为摄氏度，imperial 为华氏度'
+                  description: '温度单位，metric 为摄氏度，imperial 为华氏度',
+                  default: 'metric'
                 }
               },
               required: ['location']

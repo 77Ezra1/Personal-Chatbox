@@ -207,7 +207,7 @@ function buildAttachmentSummaryText(attachment, options = {}) {
  * @param {AbortSignal} [params.signal]
  * @returns {Promise<{role: string, content: string}>}
  */
-export async function generateAIResponse({ messages = [], modelConfig = {}, onToken, signal, systemPrompt }) {
+export async function generateAIResponse({ messages = [], modelConfig = {}, onToken, signal, systemPrompt, tools = [] }) {
   const {
     provider = 'openai',
     model,
@@ -270,7 +270,8 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
       signal,
       endpoint,
       headersBuilder: openAICompatibleConfig.headers,
-      enableReasoning: deepThinking && provider === 'openai'
+      enableReasoning: deepThinking && provider === 'openai',
+      tools
     })
   } else {
     switch (provider) {
@@ -355,11 +356,24 @@ function sanitizeMessages(messages) {
           }
         })
         .filter(Boolean)
-      return {
+      const result = {
         role: msg.role,
         content: baseContent,
         attachments
       }
+      
+      // 保留工具相关字段
+      if (msg.tool_calls) {
+        result.tool_calls = msg.tool_calls
+      }
+      if (msg.tool_call_id) {
+        result.tool_call_id = msg.tool_call_id
+      }
+      if (msg.name) {
+        result.name = msg.name
+      }
+      
+      return result
     })
 }
 
@@ -463,11 +477,22 @@ async function callOpenAICompatible({
   signal,
   endpoint,
   headersBuilder = (key) => ({ Authorization: `Bearer ${key}` }),
-  enableReasoning = false
+  enableReasoning = false,
+  tools = []
 }) {
   const shouldStream = !!onToken
 
   const payloadMessages = messages.map(msg => {
+    // 如果是工具结果消息，直接返回
+    if (msg.role === 'tool') {
+      return {
+        role: msg.role,
+        tool_call_id: msg.tool_call_id,
+        name: msg.name,
+        content: msg.content
+      }
+    }
+
     const attachments = Array.isArray(msg.attachments) ? msg.attachments : []
     const imageAttachments = attachments.filter(att => att?.dataUrl && (att?.category === 'image' || att?.type?.startsWith('image/')))
     const otherAttachments = attachments.filter(att => !imageAttachments.includes(att))
@@ -498,17 +523,38 @@ async function callOpenAICompatible({
       })
     })
 
+    // 如果只有一个文本部分，直接使用字符串
     if (parts.length === 1 && parts[0].type === 'text') {
-      return {
+      const result = {
         role: msg.role,
         content: parts[0].text
       }
+      // 保留 tool_calls 字段
+      if (msg.tool_calls) {
+        result.tool_calls = msg.tool_calls
+      }
+      return result
     }
 
-    return {
+    // 如果没有内容但有 tool_calls，content 设为空字符串
+    if (parts.length === 0 && msg.tool_calls) {
+      return {
+        role: msg.role,
+        content: '',
+        tool_calls: msg.tool_calls
+      }
+    }
+
+    // 如果有多个部分或有图片，使用 parts 数组
+    const result = {
       role: msg.role,
       content: parts
     }
+    // 保留 tool_calls 字段
+    if (msg.tool_calls) {
+      result.tool_calls = msg.tool_calls
+    }
+    return result
   })
 
   const requestBody = {
@@ -516,13 +562,16 @@ async function callOpenAICompatible({
     messages: payloadMessages,
     temperature,
     stream: shouldStream,
-    ...(enableReasoning ? { reasoning: { effort: 'medium' } } : {})
+    ...(enableReasoning ? { reasoning: { effort: 'medium' } } : {}),
+    ...(tools && tools.length > 0 ? { tools, tool_choice: 'auto' } : {})
   }
 
   // 只有当maxTokens不是-1时才添加max_tokens参数
   // -1表示无限制，使用模型的默认最大值
   if (maxTokens !== -1) {
+  console.log('[API] Request body:', JSON.stringify(requestBody, null, 2))
     requestBody.max_tokens = maxTokens
+  console.log('[AI] Request body:', JSON.stringify(requestBody, null, 2))
   }
 
   const response = await fetch(endpoint, {
@@ -534,12 +583,17 @@ async function callOpenAICompatible({
     body: JSON.stringify(requestBody),
     signal
   })
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('[AI] API Error:', response.status, errorText)
+  }
 
   await ensureResponseOk(response)
 
   if (response.body && shouldStream) {
     let fullText = ''
     let reasoningText = ''
+    let toolCalls = []
     await processEventStream(response.body, (event) => {
       const deltaText = extractOpenAIText(event?.choices?.[0]?.delta?.content)
       if (deltaText) {
@@ -550,16 +604,42 @@ async function callOpenAICompatible({
       if (deltaReasoning) {
         reasoningText += deltaReasoning
       }
+      // 收集工具调用
+      const deltaToolCalls = event?.choices?.[0]?.delta?.tool_calls
+      if (deltaToolCalls && Array.isArray(deltaToolCalls)) {
+        deltaToolCalls.forEach(tc => {
+          if (tc?.index !== undefined) {
+            if (!toolCalls[tc.index]) {
+              toolCalls[tc.index] = {
+                id: tc.id || '',
+                type: tc.type || 'function',
+                function: { name: '', arguments: '' }
+              }
+            }
+            if (tc.id) toolCalls[tc.index].id = tc.id
+            if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name
+            if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments
+          }
+        })
+      }
     })
     const reasoning = normalizeReasoningContent(reasoningText)
-    return { role: 'assistant', content: fullText, raw: null, reasoning }
+    const result = { role: 'assistant', content: fullText, raw: null, reasoning }
+    if (toolCalls.length > 0) {
+      result.tool_calls = toolCalls.filter(tc => tc && tc.id)
+    }
+    return result
   }
 
   const data = await response.json()
   const message = data?.choices?.[0]?.message ?? {}
   const content = extractOpenAIText(message?.content)
   const reasoning = normalizeReasoningContent(message?.reasoning)
-  return { role: 'assistant', content, raw: data, reasoning }
+  const result = { role: 'assistant', content, raw: data, reasoning }
+  if (message.tool_calls && Array.isArray(message.tool_calls)) {
+    result.tool_calls = message.tool_calls
+  }
+  return result
 }
 
 function extractOpenAIText(content) {

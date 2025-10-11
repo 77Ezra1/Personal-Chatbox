@@ -52,7 +52,8 @@ export function useMcpServers() {
   const getTools = useCallback(async () => {
     try {
       const enabledServers = await getEnabledServers()
-      return convertMcpToolsToOpenAIFormat(enabledServers)
+      const tools = convertMcpToolsToOpenAIFormat(enabledServers)
+      return tools
     } catch (err) {
       console.error('Failed to get tools:', err)
       return []

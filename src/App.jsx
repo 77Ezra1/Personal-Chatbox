@@ -9,6 +9,7 @@ import { useModelConfigDB } from '@/hooks/useModelConfigDB'
 import { useDeepThinking } from '@/hooks/useDeepThinking'
 import { useKeyboardShortcuts, DEFAULT_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
 import { useSystemPromptDB } from '@/hooks/useSystemPromptDB'
+import { useMcpServers } from '@/hooks/useMcpServers'
 
 // Components
 import { Sidebar } from '@/components/sidebar/Sidebar'
@@ -85,6 +86,9 @@ function App() {
     getEffectivePrompt
   } = useSystemPromptDB()
 
+  // MCP 服务器
+  const { getTools, callTool } = useMcpServers()
+
   // ==================== 本地状态 ====================
   
   const [showSettings, setShowSettings] = useState(false)
@@ -136,11 +140,15 @@ function App() {
     let accumulatedReasoning = ''
 
     try {
+      // 获取 MCP 工具列表
+      const tools = await getTools()
+      
       const response = await generateAIResponse({
         messages,
         modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
         signal: abortControllerRef.current.signal,
         systemPrompt,
+        tools,
         onToken: (token, fullText) => {
           if (typeof fullText === 'string') {
             accumulatedContent = fullText
@@ -169,30 +177,127 @@ function App() {
         }
       })
 
-      let finalContent = typeof response?.content === 'string'
-        ? response.content
-        : accumulatedContent
-      let finalReasoning = response?.reasoning ?? accumulatedReasoning ?? null
-
-      if (isDeepThinking) {
-        const contentForExtraction = finalContent || accumulatedContent
-        if (!finalReasoning && contentForExtraction) {
-          const segments = extractReasoningSegments(contentForExtraction)
-          if (segments) {
-            finalContent = segments.answer
-            finalReasoning = segments.reasoning
+      // 检查是否有工具调用
+      if (response?.tool_calls && Array.isArray(response.tool_calls) && response.tool_calls.length > 0) {
+        // 执行工具调用
+        const toolResults = []
+        for (const toolCall of response.tool_calls) {
+          try {
+          console.log('[App] Processing tool call:', toolCall)
+            const args = JSON.parse(toolCall.function.arguments)
+            const result = await callTool(toolCall.function.name, args)
+            toolResults.push({
+              tool_call_id: toolCall.id,
+              role: 'tool',
+              name: toolCall.function.name,
+              content: result.success ? result.content : `Error: ${result.error}`
+            })
+          } catch (error) {
+            toolResults.push({
+              tool_call_id: toolCall.id,
+              role: 'tool',
+              name: toolCall.function.name,
+              content: `Error: ${error.message}`
+            })
           }
         }
-      }
-
-      updateMessage(currentConversationId, placeholderMessage.id, () => ({
-        content: finalContent,
-        status: 'done',
-        metadata: {
-          ...(isDeepThinking ? { deepThinking: true } : {}),
-          ...(finalReasoning ? { reasoning: finalReasoning } : {})
+        
+        // 将工具调用和结果添加到消息历史
+        const messagesWithTools = [
+          ...messages,
+          {
+            role: 'assistant',
+            content: response.content || null,
+            tool_calls: response.tool_calls
+          },
+          ...toolResults
+        ]
+        
+        // 使用工具结果重新生成回复
+        const finalResponse = await generateAIResponse({
+          messages: messagesWithTools,
+          modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
+          signal: abortControllerRef.current.signal,
+          systemPrompt,
+          tools,
+          onToken: (token, fullText) => {
+            if (typeof fullText === 'string') {
+              accumulatedContent = fullText
+            } else if (typeof token === 'string') {
+              accumulatedContent += token
+            }
+            
+            let displayContent = accumulatedContent
+            if (isDeepThinking && accumulatedContent) {
+              const segments = extractReasoningSegments(accumulatedContent)
+              if (segments) {
+                displayContent = segments.answer
+                accumulatedReasoning = segments.reasoning
+              }
+            }
+            
+            updateMessage(currentConversationId, placeholderMessage.id, () => ({
+              content: displayContent,
+              status: 'loading',
+              metadata: {
+                ...(isDeepThinking ? { deepThinking: true } : {}),
+                ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {})
+              }
+            }))
+          }
+        })
+        
+        let finalContent = typeof finalResponse?.content === 'string'
+          ? finalResponse.content
+          : accumulatedContent
+        let finalReasoning = finalResponse?.reasoning ?? accumulatedReasoning ?? null
+        
+        if (isDeepThinking) {
+          const contentForExtraction = finalContent || accumulatedContent
+          if (!finalReasoning && contentForExtraction) {
+            const segments = extractReasoningSegments(contentForExtraction)
+            if (segments) {
+              finalContent = segments.answer
+              finalReasoning = segments.reasoning
+            }
+          }
         }
-      }))
+        
+        updateMessage(currentConversationId, placeholderMessage.id, () => ({
+          content: finalContent,
+          status: 'done',
+          metadata: {
+            ...(isDeepThinking ? { deepThinking: true } : {}),
+            ...(finalReasoning ? { reasoning: finalReasoning } : {})
+          }
+        }))
+      } else {
+        // 没有工具调用，正常处理
+        let finalContent = typeof response?.content === 'string'
+          ? response.content
+          : accumulatedContent
+        let finalReasoning = response?.reasoning ?? accumulatedReasoning ?? null
+
+        if (isDeepThinking) {
+          const contentForExtraction = finalContent || accumulatedContent
+          if (!finalReasoning && contentForExtraction) {
+            const segments = extractReasoningSegments(contentForExtraction)
+            if (segments) {
+              finalContent = segments.answer
+              finalReasoning = segments.reasoning
+            }
+          }
+        }
+
+        updateMessage(currentConversationId, placeholderMessage.id, () => ({
+          content: finalContent,
+          status: 'done',
+          metadata: {
+            ...(isDeepThinking ? { deepThinking: true } : {}),
+            ...(finalReasoning ? { reasoning: finalReasoning } : {})
+          }
+        }))
+      }
     } catch (error) {
       if (error.name !== 'AbortError') {
         toast.error(translate('toasts.failedToGenerate'))
