@@ -421,21 +421,18 @@ async function callSearchAPI(parameters) {
     const qualityAssessment = assessSearchQuality(searchResults, queryAnalysis)
     console.log('[Search API] 搜索质量评估:', qualityAssessment)
     
-    // 如果搜索质量不足且未达到最大尝试次数，建议重新搜索
-    if (qualityAssessment.score < 60 && attempt < MAX_ATTEMPTS) {
-      return {
-        success: true,
-        content: formatSearchResultsForThinking(searchResults, queryAnalysis, qualityAssessment, sourceLinks),
-        metadata: {
-          searchKeywords,
-          queryAnalysis,
-          qualityScore: qualityAssessment.score,
-          reliabilityScore,
-          attempt,
-          needsRefinement: true,
-          refinementSuggestion: qualityAssessment.suggestion
-        }
-      }
+    // 如果搜索质量不足且未达到最大尝试次数，尝试重新搜索
+    if (qualityAssessment.score < 30 && attempt < MAX_ATTEMPTS && searchResults.length === 0) {
+      console.log(`[Search API] 质量评分过低(${qualityAssessment.score})，尝试第${attempt + 1}次搜索`)
+      
+      // 优化搜索关键词后重试
+      const refinedQuery = refineSearchQuery(query, qualityAssessment.suggestion)
+      return await callSearchAPI(refinedQuery, attempt + 1)
+    }
+    
+    // 即使质量不高，只要有搜索结果就返回（让AI自己判断是否需要更多信息）
+    if (searchResults.length > 0) {
+      console.log(`[Search API] 返回搜索结果，质量评分: ${qualityAssessment.score}`)
     }
 
     // 格式化最终搜索结果（用于AI思考过程）
@@ -874,41 +871,116 @@ function getWeatherDescription(code) {
 }
 
 /**
- * 提取搜索关键词
+ * 提取搜索关键词 - 优化版本，生成更直接有效的搜索词
  */
 function extractSearchKeywords(query) {
   if (!query || typeof query !== 'string') {
     return []
   }
   
-  // 移除常见的停用词
+  // 预定义的领域关键词映射，用于生成更精确的搜索词
+  const domainMappings = {
+    '美妆': ['化妆品', '美妆', '护肤品', '美容'],
+    '市场': ['市场', '行业', '产业'],
+    '发展': ['发展', '趋势', '前景', '分析'],
+    '技术': ['技术', '科技', 'AI', '人工智能'],
+    '医疗': ['医疗', '健康', '医学', '医院'],
+    '教育': ['教育', '学校', '培训', '学习'],
+    '金融': ['金融', '银行', '投资', '理财']
+  }
+  
+  // 移除常见的停用词和修饰词
   const stopWords = new Set([
-    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这', '那', '什么', '可以', '这个', '我们', '能够', '如何', '怎么', '为什么', '哪里', '什么时候', '谁', '哪个', '多少',
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'what', 'where', 'when', 'why', 'how', 'who', 'which'
+    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这', '那', '什么', '可以', '这个', '我们', '能够', '如何', '怎么', '为什么', '哪里', '什么时候', '谁', '哪个', '多少', '请', '帮', '分析', '一下'
   ])
   
-  // 分词并过滤
-  const words = query
-    .toLowerCase()
-    .replace(/[^\w\s\u4e00-\u9fff]/g, ' ') // 保留中文、英文、数字
-    .split(/\s+/)
-    .filter(word => {
-      return word.length > 1 && !stopWords.has(word)
-    })
+  // 提取核心概念
+  const coreKeywords = []
   
-  // 提取重要关键词（限制数量避免搜索过于分散）
-  const keywords = []
+  // 1. 提取地理位置
+  const locations = ['中国', '美国', '欧洲', '亚洲', '全球', '国际', '国内']
+  const foundLocation = locations.find(loc => query.includes(loc))
+  if (foundLocation) {
+    coreKeywords.push(foundLocation)
+  }
   
-  // 优先提取数字年份
+  // 2. 提取年份
   const yearPattern = /20\d{2}/g
   const years = query.match(yearPattern)
   if (years) {
-    keywords.push(...years)
+    // 只取最新的年份
+    coreKeywords.push(years[years.length - 1])
   }
   
-  // 提取其他关键词
-  const otherWords = words.filter(word => !/20\d{2}/.test(word))
-  keywords.push(...otherWords.slice(0, 5 - keywords.length))
+  // 3. 提取主要领域词汇
+  for (const [domain, synonyms] of Object.entries(domainMappings)) {
+    if (synonyms.some(synonym => query.includes(synonym))) {
+      // 使用最常见的词汇
+      coreKeywords.push(synonyms[0])
+      break // 只取一个主要领域
+    }
+  }
   
-  return keywords.slice(0, 5) // 最多返回5个关键词
+  // 4. 提取其他重要词汇
+  const words = query
+    .replace(/[^\w\s\u4e00-\u9fff]/g, ' ')
+    .split(/\s+/)
+    .filter(word => {
+      return word.length > 1 && 
+             !stopWords.has(word) && 
+             !coreKeywords.includes(word) &&
+             !/20\d{2}/.test(word)
+    })
+  
+  // 添加最重要的其他词汇
+  coreKeywords.push(...words.slice(0, 3 - coreKeywords.length))
+  
+  // 生成搜索词组合
+  const searchTerms = []
+  
+  // 生成核心组合词
+  if (coreKeywords.length >= 2) {
+    // 组合最相关的词汇
+    const location = coreKeywords.find(k => locations.includes(k))
+    const domain = coreKeywords.find(k => !locations.includes(k) && !/20\d{2}/.test(k))
+    
+    if (location && domain) {
+      searchTerms.push(`${location}${domain}`)
+    }
+  }
+  
+  // 添加单独的核心词汇
+  searchTerms.push(...coreKeywords.slice(0, 3))
+  
+  return searchTerms.slice(0, 3) // 最多返回3个搜索词，保持精确性
+}
+
+/**
+ * 优化搜索查询
+ */
+function refineSearchQuery(originalQuery, suggestion) {
+  // 根据建议优化搜索查询
+  if (suggestion.includes('扩大搜索范围')) {
+    // 移除一些限定词，使搜索更宽泛
+    return originalQuery.replace(/具体|详细|精确/g, '').trim()
+  } else if (suggestion.includes('优化搜索关键词')) {
+    // 尝试同义词替换
+    const synonyms = {
+      '美妆': '化妆品 护肤品 美容',
+      '市场': '行业 产业',
+      '发展': '趋势 前景',
+      '分析': '报告 研究'
+    }
+    
+    let refinedQuery = originalQuery
+    for (const [original, replacement] of Object.entries(synonyms)) {
+      if (refinedQuery.includes(original)) {
+        refinedQuery = refinedQuery.replace(original, replacement)
+        break
+      }
+    }
+    return refinedQuery
+  }
+  
+  return originalQuery
 }
