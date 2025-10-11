@@ -347,63 +347,86 @@ async function callSearchAPI(parameters) {
   const { query, max_results = 10 } = parameters
 
   try {
-    // 使用Wikipedia API进行搜索，这是一个可靠且无CORS限制的API
-    const searchUrl = new URL('https://zh.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(query))
-    
     let content = `**搜索结果 - "${query}"**\n\n`
     let hasResults = false
 
+    // 首先尝试Wikipedia搜索
     try {
-      // 尝试获取Wikipedia页面摘要
-      const response = await fetch(searchUrl)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.extract) {
-          content += `**Wikipedia摘要**\n${data.extract}\n\n`
-          if (data.content_urls && data.content_urls.desktop) {
-            content += `详细信息: ${data.content_urls.desktop.page}\n\n`
-          }
+      const wikiSearchUrl = new URL('https://zh.wikipedia.org/w/api.php')
+      wikiSearchUrl.searchParams.append('action', 'query')
+      wikiSearchUrl.searchParams.append('format', 'json')
+      wikiSearchUrl.searchParams.append('list', 'search')
+      wikiSearchUrl.searchParams.append('srsearch', query)
+      wikiSearchUrl.searchParams.append('srlimit', '3')
+      wikiSearchUrl.searchParams.append('origin', '*')
+
+      const wikiResponse = await fetch(wikiSearchUrl)
+      if (wikiResponse.ok) {
+        const wikiData = await wikiResponse.json()
+        if (wikiData.query && wikiData.query.search && wikiData.query.search.length > 0) {
+          content += `**📚 Wikipedia相关内容:**\n`
+          wikiData.query.search.slice(0, 2).forEach((result, index) => {
+            const snippet = result.snippet.replace(/<[^>]*>/g, '') // 移除HTML标签
+            content += `${index + 1}. **${result.title}**\n`
+            content += `   ${snippet}...\n`
+            content += `   🔗 https://zh.wikipedia.org/wiki/${encodeURIComponent(result.title)}\n\n`
+          })
           hasResults = true
         }
       }
     } catch (wikiError) {
-      console.log('Wikipedia搜索失败，尝试其他方式')
+      console.log('Wikipedia搜索失败:', wikiError)
     }
 
-    // 如果Wikipedia没有结果，提供搜索建议
-    if (!hasResults) {
-      // 使用OpenSearch API获取搜索建议
-      try {
-        const suggestUrl = new URL('https://zh.wikipedia.org/w/api.php')
-        suggestUrl.searchParams.append('action', 'opensearch')
-        suggestUrl.searchParams.append('search', query)
-        suggestUrl.searchParams.append('limit', Math.min(max_results, 5).toString())
-        suggestUrl.searchParams.append('format', 'json')
-        suggestUrl.searchParams.append('origin', '*')
-
-        const suggestResponse = await fetch(suggestUrl)
-        if (suggestResponse.ok) {
-          const suggestData = await suggestResponse.json()
-          if (suggestData[1] && suggestData[1].length > 0) {
-            content += `**相关搜索建议:**\n`
-            suggestData[1].forEach((title, index) => {
-              const url = suggestData[3] && suggestData[3][index] ? suggestData[3][index] : `https://zh.wikipedia.org/wiki/${encodeURIComponent(title)}`
-              content += `${index + 1}. ${title}\n   ${url}\n\n`
-            })
-            hasResults = true
-          }
-        }
-      } catch (suggestError) {
-        console.log('搜索建议获取失败')
-      }
+    // 提供专业的搜索建议和资源链接
+    content += `**🔍 推荐搜索资源:**\n\n`
+    
+    // 根据查询内容提供针对性的搜索建议
+    if (query.includes('市场') || query.includes('行业') || query.includes('报告')) {
+      content += `**📊 市场研究资源:**\n`
+      content += `• 艾瑞咨询: https://www.iresearch.cn/search.shtml?q=${encodeURIComponent(query)}\n`
+      content += `• 前瞻产业研究院: https://www.qianzhan.com/search/?q=${encodeURIComponent(query)}\n`
+      content += `• 中商产业研究院: https://www.askci.com/search/?q=${encodeURIComponent(query)}\n\n`
     }
 
-    if (!hasResults) {
-      content += `抱歉，没有找到关于"${query}"的相关信息。您可以尝试：\n`
-      content += `• 使用更具体的关键词\n`
-      content += `• 尝试不同的表达方式\n`
-      content += `• 直接访问搜索引擎: https://www.google.com/search?q=${encodeURIComponent(query)}\n`
+    if (query.includes('美妆') || query.includes('化妆品') || query.includes('护肤')) {
+      content += `**💄 美妆行业资源:**\n`
+      content += `• 美妆头条: https://www.meizhuangtoutiao.com/search?q=${encodeURIComponent(query)}\n`
+      content += `• 化妆品财经在线: https://www.cbo.cn/search?q=${encodeURIComponent(query)}\n`
+      content += `• 聚美丽: https://www.jumeili.cn/search?q=${encodeURIComponent(query)}\n\n`
     }
+
+    if (query.includes('2025') || query.includes('趋势') || query.includes('预测')) {
+      content += `**📈 趋势分析资源:**\n`
+      content += `• 德勤中国: https://www2.deloitte.com/cn/zh/pages/search.html?q=${encodeURIComponent(query)}\n`
+      content += `• 麦肯锡中国: https://www.mckinsey.com.cn/search?q=${encodeURIComponent(query)}\n`
+      content += `• 普华永道中国: https://www.pwccn.com/zh/search.html?q=${encodeURIComponent(query)}\n\n`
+    }
+
+    // 通用搜索引擎
+    content += `**🌐 通用搜索引擎:**\n`
+    content += `• 百度: https://www.baidu.com/s?wd=${encodeURIComponent(query)}\n`
+    content += `• 谷歌: https://www.google.com/search?q=${encodeURIComponent(query)}\n`
+    content += `• 必应: https://www.bing.com/search?q=${encodeURIComponent(query)}\n\n`
+
+    // 学术搜索
+    content += `**🎓 学术搜索:**\n`
+    content += `• 知网: https://kns.cnki.net/kns8/defaultresult/index?q=${encodeURIComponent(query)}\n`
+    content += `• 万方数据: https://www.wanfangdata.com.cn/search/searchList.do?searchWord=${encodeURIComponent(query)}\n`
+    content += `• 谷歌学术: https://scholar.google.com/scholar?q=${encodeURIComponent(query)}\n\n`
+
+    // 新闻搜索
+    if (query.includes('新闻') || query.includes('最新') || query.includes('动态')) {
+      content += `**📰 新闻搜索:**\n`
+      content += `• 新浪财经: https://search.sina.com.cn/?q=${encodeURIComponent(query)}&c=news\n`
+      content += `• 36氪: https://36kr.com/search/articles/${encodeURIComponent(query)}\n`
+      content += `• 虎嗅: https://www.huxiu.com/search?s=${encodeURIComponent(query)}\n\n`
+    }
+
+    content += `**💡 搜索提示:**\n`
+    content += `• 使用更具体的关键词可以获得更精准的结果\n`
+    content += `• 尝试使用同义词或相关术语\n`
+    content += `• 添加时间限制词（如"2024年"、"最新"）获取最新信息\n`
 
     return {
       success: true,

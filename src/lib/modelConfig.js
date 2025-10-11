@@ -63,13 +63,17 @@ export const ensureModelEntry = (state, provider, modelName, customModels = {}) 
  * 从状态构建模型配置
  */
 export const buildModelConfigFromState = (state, provider, modelName, customModels = {}) => {
+  console.log('[buildModelConfigFromState] Input:', { state, provider, modelName, customModels })
   const { entry, model } = ensureModelEntry(state, provider, modelName, customModels)
+  console.log('[buildModelConfigFromState] After ensureModelEntry:', { entry, model })
   const settings = sanitizeModelSettings(entry.models[model])
   entry.models[model] = settings
   entry.activeModel = model
   entry.apiKey = sanitizeApiKey(entry.apiKey)
   state[provider] = entry
-  return { provider, model, apiKey: entry.apiKey, ...settings }
+  const result = { provider, model, apiKey: entry.apiKey, ...settings }
+  console.log('[buildModelConfigFromState] Result:', result)
+  return result
 }
 
 /**

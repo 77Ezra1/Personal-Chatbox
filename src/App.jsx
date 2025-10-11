@@ -303,7 +303,14 @@ function App() {
         }))
       }
     } catch (error) {
+      console.error('[App] Error in regenerateAssistantReply:', error)
       if (error.name !== 'AbortError') {
+        console.error('[App] API Error details:', {
+          message: error.message,
+          stack: error.stack,
+          modelConfig,
+          tools: tools?.length || 0
+        })
         toast.error(translate('toasts.failedToGenerate'))
         updateMessage(currentConversationId, placeholderMessage.id, () => ({
           status: 'error'

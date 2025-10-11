@@ -208,6 +208,7 @@ function buildAttachmentSummaryText(attachment, options = {}) {
  * @returns {Promise<{role: string, content: string}>}
  */
 export async function generateAIResponse({ messages = [], modelConfig = {}, onToken, signal, systemPrompt, tools = [] }) {
+  console.log('[aiClient] generateAIResponse called with modelConfig:', modelConfig)
   const {
     provider = 'openai',
     model,
@@ -217,6 +218,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
     deepThinking = false,
     thinkingMode = null  // 新增：思考模式
   } = modelConfig
+  console.log('[aiClient] Extracted values:', { provider, model, apiKey: apiKey ? 'present' : 'missing', temperature, maxTokens })
 
   if (!apiKey) {
     throw new Error('Please configure the API key for the selected provider first.')

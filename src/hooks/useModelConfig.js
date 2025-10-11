@@ -55,12 +55,20 @@ export function useModelConfig() {
 
   // 当前模型配置
   const modelConfig = useMemo(() => {
-    return buildModelConfigFromState(
+    console.log('[useModelConfig] Building config with:', {
+      providers: modelState.providers,
+      currentProvider: modelState.currentProvider,
+      currentModel: modelState.currentModel,
+      customModels
+    })
+    const result = buildModelConfigFromState(
       cloneState(modelState.providers),
       modelState.currentProvider,
       modelState.currentModel,
       customModels
     )
+    console.log('[useModelConfig] Built config:', result)
+    return result
   }, [modelState, customModels])
 
   // 获取提供商的模型列表（只返回用户自定义的模型）
