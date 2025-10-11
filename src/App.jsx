@@ -9,7 +9,7 @@ import { useModelConfigDB } from '@/hooks/useModelConfigDB'
 import { useDeepThinking } from '@/hooks/useDeepThinking'
 import { useKeyboardShortcuts, DEFAULT_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
 import { useSystemPromptDB } from '@/hooks/useSystemPromptDB'
-import { useMcpServers } from '@/hooks/useMcpServers'
+import { useMcpManager } from '@/hooks/useMcpManager'
 
 // Components
 import { Sidebar } from '@/components/sidebar/Sidebar'
@@ -23,6 +23,7 @@ import { DataMigration } from '@/components/common/DataMigration'
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
 import { readFileAsDataUrl, createAttachmentId } from '@/lib/utils'
 import { PROVIDERS } from '@/lib/constants'
+
 
 import './App.css'
 
@@ -87,7 +88,7 @@ function App() {
   } = useSystemPromptDB()
 
   // MCP 服务器
-  const { getTools, callTool } = useMcpServers()
+  const { getAllTools, callTool, loading: mcpLoading, error: mcpError } = useMcpManager()
 
   // ==================== 本地状态 ====================
   
@@ -104,6 +105,8 @@ function App() {
   })
   
   const abortControllerRef = useRef(null)
+
+  // ==================== 初始化 ====================
 
   // ==================== 附件处理 ====================
   
@@ -141,7 +144,8 @@ function App() {
 
     try {
       // 获取 MCP 工具列表
-      const tools = await getTools()
+      const tools = getAllTools()
+      console.log('[App] MCP Tools loaded:', tools.length, tools)
       
       const response = await generateAIResponse({
         messages,

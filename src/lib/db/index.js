@@ -3,7 +3,7 @@
  * 数据库管理器
  */
 
-import { DB_NAME, DB_VERSION, initSchema } from './schema'
+import { DB_NAME, DB_VERSION, initSchema } from './schema.js'
 
 let dbInstance = null
 let dbPromise = null

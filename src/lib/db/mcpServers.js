@@ -3,8 +3,8 @@
  * MCP 服务器数据库操作
  */
 
-import { openDatabase } from './index'
-import { generateId, STORES } from './schema'
+import { openDatabase } from './index.js'
+import { generateId, STORES } from './schema.js'
 
 /**
  * 获取所有 MCP 服务器
