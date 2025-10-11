@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { initializeMcpServices, getEnabledServices, updateServiceStatus } from '@/lib/mcpInit'
-import { MCP_SERVICE_TYPES, MCP_SERVICE_TYPE_ICONS, validateApiKey } from '@/lib/mcpTypes'
+import { useMcpManager } from '@/hooks/useMcpManager'
 import './McpServiceConfig.css'
 
 /**
@@ -13,46 +12,20 @@ import './McpServiceConfig.css'
  * 用于配置搜索、天气和时间等 MCP 服务
  */
 export function McpServiceConfig({ language, translate }) {
-  const [servers, setServers] = useState([])
+  // 使用新的 MCP Manager Hook
+  const { services, loading, error, toggleService, reload } = useMcpManager()
+  
   const [expandedServer, setExpandedServer] = useState(null)
   const [showApiKey, setShowApiKey] = useState({})
   const [copiedKey, setCopiedKey] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  // 加载已保存的配置
-  useEffect(() => {
-    loadServers()
-  }, [])
-
-  const loadServers = async () => {
-    try {
-      setLoading(true)
-      // 初始化并获取服务
-      await initializeMcpServices()
-      const services = await getEnabledServices()
-      setServers(services)
-      setError(null)
-    } catch (err) {
-      console.error('Failed to load MCP servers:', err)
-      setError('加载配置失败')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleToggleServer = async (serverId) => {
     try {
-      const server = servers.find(s => s.id === serverId)
-      const newEnabled = !server.isEnabled
+      const service = services.find(s => s.id === serverId)
+      const newEnabled = !service.enabled
       
-      // 更新服务状态
-      await updateServiceStatus(serverId, newEnabled)
-      
-      // 更新本地状态
-      setServers(prev => prev.map(s => 
-        s.id === serverId ? { ...s, isEnabled: newEnabled } : s
-      ))
+      // 调用后端API更新服务状态
+      await toggleService(serverId, newEnabled)
     } catch (err) {
       console.error('Failed to toggle server:', err)
       alert('操作失败，请重试')
@@ -72,9 +45,9 @@ export function McpServiceConfig({ language, translate }) {
   }
 
   const handleCopyApiKey = (serverId) => {
-    const server = servers.find(s => s.id === serverId)
-    if (server?.apiKey) {
-      navigator.clipboard.writeText(server.apiKey)
+    const service = services.find(s => s.id === serverId)
+    if (service?.apiKey) {
+      navigator.clipboard.writeText(service.apiKey)
       setCopiedKey({ ...copiedKey, [serverId]: true })
       setTimeout(() => {
         setCopiedKey({ ...copiedKey, [serverId]: false })
@@ -105,108 +78,39 @@ export function McpServiceConfig({ language, translate }) {
     )
   }
 
-  // 按类型分组
-  const searchServers = servers.filter(s => s.type === MCP_SERVICE_TYPES.SEARCH)
-  const weatherServers = servers.filter(s => s.type === MCP_SERVICE_TYPES.WEATHER)
-  const timeServers = servers.filter(s => s.type === MCP_SERVICE_TYPES.TIME)
-
   return (
     <div className="mcp-service-config">
       <div className="mcp-intro">
         <p>
-          通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询和时间服务。
-          推荐的服务都是免费的，其中标记为"免费"的服务无需API密钥即可使用。
+          通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询、网页抓取等功能。
+          所有服务都是免费的，无需API密钥即可使用。
         </p>
       </div>
 
-      <Tabs defaultValue="search" className="mcp-tabs">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="search" className="flex items-center gap-2">
-            <Search className="w-4 h-4" />
-            搜索服务
-          </TabsTrigger>
-          <TabsTrigger value="weather" className="flex items-center gap-2">
-            <Cloud className="w-4 h-4" />
-            天气服务
-          </TabsTrigger>
-          <TabsTrigger value="time" className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            时间服务
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="search" className="mcp-tab-content">
-          <div className="mcp-service-grid">
-            {searchServers.map(server => (
-              <ServiceCard
-                key={server.id}
-                server={server}
-                expanded={expandedServer === server.id}
-                showApiKey={showApiKey[server.id]}
-                copiedKey={copiedKey[server.id]}
-                onToggle={() => handleToggleServer(server.id)}
-                onExpand={() => setExpandedServer(
-                  expandedServer === server.id ? null : server.id
-                )}
-                onToggleShowKey={() => setShowApiKey({
-                  ...showApiKey,
-                  [server.id]: !showApiKey[server.id]
-                })}
-                onCopyKey={() => handleCopyApiKey(server.id)}
-                onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="weather" className="mcp-tab-content">
-          <div className="mcp-service-grid">
-            {weatherServers.map(server => (
-              <ServiceCard
-                key={server.id}
-                server={server}
-                expanded={expandedServer === server.id}
-                showApiKey={showApiKey[server.id]}
-                copiedKey={copiedKey[server.id]}
-                onToggle={() => handleToggleServer(server.id)}
-                onExpand={() => setExpandedServer(
-                  expandedServer === server.id ? null : server.id
-                )}
-                onToggleShowKey={() => setShowApiKey({
-                  ...showApiKey,
-                  [server.id]: !showApiKey[server.id]
-                })}
-                onCopyKey={() => handleCopyApiKey(server.id)}
-                onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="time" className="mcp-tab-content">
-          <div className="mcp-service-grid">
-            {timeServers.map(server => (
-              <ServiceCard
-                key={server.id}
-                server={server}
-                expanded={expandedServer === server.id}
-                showApiKey={showApiKey[server.id]}
-                copiedKey={copiedKey[server.id]}
-                onToggle={() => handleToggleServer(server.id)}
-                onExpand={() => setExpandedServer(
-                  expandedServer === server.id ? null : server.id
-                )}
-                onToggleShowKey={() => setShowApiKey({
-                  ...showApiKey,
-                  [server.id]: !showApiKey[server.id]
-                })}
-                onCopyKey={() => handleCopyApiKey(server.id)}
-                onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="mcp-service-list">
+        <h3 className="text-lg font-semibold mb-4">可用服务</h3>
+        <div className="mcp-service-grid">
+          {services.map(service => (
+            <ServiceCard
+              key={service.id}
+              server={service}
+              expanded={expandedServer === service.id}
+              showApiKey={showApiKey[service.id]}
+              copiedKey={copiedKey[service.id]}
+              onToggle={() => handleToggleServer(service.id)}
+              onExpand={() => setExpandedServer(
+                expandedServer === service.id ? null : service.id
+              )}
+              onToggleShowKey={() => setShowApiKey({
+                ...showApiKey,
+                [service.id]: !showApiKey[service.id]
+              })}
+              onCopyKey={() => handleCopyApiKey(service.id)}
+              onSaveKey={(apiKey) => handleSaveApiKey(service.id, apiKey)}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -237,12 +141,24 @@ function ServiceCard({
     }
   }
 
+  const getServiceIcon = (id) => {
+    const icons = {
+      weather: '🌤️',
+      search: '🔍',
+      time: '🕐',
+      youtube: '📹',
+      coincap: '💰',
+      fetch: '🌐'
+    }
+    return icons[id] || '🔧'
+  }
+
   return (
-    <div className={`mcp-service-card ${server.isEnabled ? 'enabled' : ''}`}>
+    <div className={`mcp-service-card ${server.enabled ? 'enabled' : ''}`}>
       <div className="mcp-service-header">
         <div className="mcp-service-info">
           <div className="mcp-service-title">
-            <span className="mcp-service-icon">{getServiceIcon(server.type)}</span>
+            <span className="mcp-service-icon">{getServiceIcon(server.id)}</span>
             <h5 className="mcp-service-name">{server.name}</h5>
             <ServiceInfoDialog server={server} />
           </div>
@@ -263,7 +179,7 @@ function ServiceCard({
           <label className="mcp-switch">
             <input
               type="checkbox"
-              checked={server.isEnabled}
+              checked={server.enabled}
               onChange={onToggle}
             />
             <span className="mcp-switch-slider"></span>
