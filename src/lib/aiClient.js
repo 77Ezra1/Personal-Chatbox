@@ -588,10 +588,11 @@ async function callOpenAICompatible({
   // 只有当maxTokens不是-1时才添加max_tokens参数
   // -1表示无限制，使用模型的默认最大值
   if (maxTokens !== -1) {
-  console.log('[API] Request body:', JSON.stringify(requestBody, null, 2))
     requestBody.max_tokens = maxTokens
-  console.log('[AI] Request body:', JSON.stringify(requestBody, null, 2))
   }
+  
+  // 输出完整的请求体用于调试
+  console.log('[AI] Request body:', JSON.stringify(requestBody, null, 2))
 
   const response = await fetch(endpoint, {
     method: 'POST',
