@@ -2406,3 +2406,110 @@ button:hover:not(:disabled),
   }
 }
 
+
+
+/* ===== 思考过程折叠框样式 ===== */
+
+.thinking-process-container {
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--muted) 30%, transparent);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.thinking-process-container:hover {
+  border-color: color-mix(in srgb, var(--border) 80%, var(--foreground) 20%);
+}
+
+.thinking-process-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.thinking-process-toggle:hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+.thinking-process-toggle svg {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.thinking-process-content {
+  padding: 14px;
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 50%, transparent);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+.thinking-process-content .markdown-body {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+.thinking-process-content .markdown-heading-1,
+.thinking-process-content .markdown-heading-2,
+.thinking-process-content .markdown-heading-3,
+.thinking-process-content .markdown-heading-4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+
+.thinking-process-content .markdown-paragraph {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.thinking-process-content .markdown-list {
+  margin-bottom: 8px;
+}
+
+.thinking-process-content .markdown-code-inline {
+  font-size: 13px;
+}
+
+.thinking-process-content .markdown-code-block {
+  margin: 8px 0;
+}
+
+/* 深色模式适配 */
+.dark .thinking-process-container {
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+.dark .thinking-process-toggle:hover {
+  background: color-mix(in srgb, var(--muted) 15%, transparent);
+}
+
+.dark .thinking-process-content {
+  background: color-mix(in srgb, var(--background) 30%, transparent);
+}
+

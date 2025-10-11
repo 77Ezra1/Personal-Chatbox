@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
-import { Check, Copy } from 'lucide-react'
+import { Check, Copy, ChevronDown, ChevronUp } from 'lucide-react'
 
 import { ScrollArea } from '@/components/ui/scroll-area.jsx'
 import { cn } from '@/lib/utils.js'
@@ -75,6 +75,37 @@ function CodeBlock({ className, code = '', ...props }) {
   )
 }
 
+/**
+ * 思考过程折叠框组件
+ */
+function ThinkingProcess({ content }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  return (
+    <div className="thinking-process-container">
+      <button
+        className="thinking-process-toggle"
+        onClick={() => setIsExpanded(!isExpanded)}
+        type="button"
+      >
+        {isExpanded ? (
+          <ChevronUp className="w-4 h-4" />
+        ) : (
+          <ChevronDown className="w-4 h-4" />
+        )}
+        <span>思考过程</span>
+      </button>
+      {isExpanded && (
+        <div className="thinking-process-content">
+          <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MARKDOWN_COMPONENTS}>
+            {content}
+          </ReactMarkdown>
+        </div>
+      )}
+    </div>
+  )
+}
+
 const MARKDOWN_COMPONENTS = {
   h1: ({ className, ...props }) => <h1 className={cn('markdown-heading-1', className)} {...props} />,
   h2: ({ className, ...props }) => <h2 className={cn('markdown-heading-2', className)} {...props} />,
@@ -101,17 +132,93 @@ const MARKDOWN_COMPONENTS = {
   }
 }
 
+/**
+ * 解析MCP工具调用标记
+ * 格式: < | tool_calls_begin | >< | tool_call_begin | >...< | tool_call_end | >...< | tool_calls_end | >
+ */
+function parseMCPContent(text) {
+  const parts = []
+  let currentIndex = 0
+  
+  // 正则匹配 tool_calls 块
+  const toolCallsRegex = /<\s*\|\s*tool_calls_begin\s*\|\s*>([\s\S]*?)<\s*\|\s*tool_calls_end\s*\|\s*>/g
+  
+  let match
+  while ((match = toolCallsRegex.exec(text)) !== null) {
+    // 添加工具调用之前的内容
+    if (match.index > currentIndex) {
+      const beforeContent = text.substring(currentIndex, match.index).trim()
+      if (beforeContent) {
+        parts.push({ type: 'content', text: beforeContent })
+      }
+    }
+    
+    // 提取工具调用内容
+    const toolCallsContent = match[1]
+    
+    // 解析单个工具调用
+    const toolCallRegex = /<\s*\|\s*tool_call_begin\s*\|\s*>([\s\S]*?)<\s*\|\s*tool_call_end\s*\|\s*>/g
+    let toolMatch
+    let thinkingContent = ''
+    
+    while ((toolMatch = toolCallRegex.exec(toolCallsContent)) !== null) {
+      thinkingContent += toolMatch[1] + '\n\n'
+    }
+    
+    if (thinkingContent.trim()) {
+      parts.push({ type: 'thinking', text: thinkingContent.trim() })
+    }
+    
+    currentIndex = match.index + match[0].length
+  }
+  
+  // 添加剩余内容
+  if (currentIndex < text.length) {
+    const remainingContent = text.substring(currentIndex).trim()
+    if (remainingContent) {
+      parts.push({ type: 'content', text: remainingContent })
+    }
+  }
+  
+  return parts
+}
+
 export function MarkdownRenderer({ content, className, isStreaming = false }) {
   const text = typeof content === 'string' ? content : String(content ?? '')
   if (!text.trim()) {
     return null
   }
 
+  // 解析内容
+  const parts = useMemo(() => parseMCPContent(text), [text])
+  
+  // 如果没有MCP标记,直接渲染
+  if (parts.length === 0 || (parts.length === 1 && parts[0].type === 'content')) {
+    return (
+      <div className={cn('markdown-body', className, isStreaming && 'streaming')}>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MARKDOWN_COMPONENTS}>
+          {text}
+        </ReactMarkdown>
+      </div>
+    )
+  }
+  
+  // 渲染包含MCP内容的消息
   return (
     <div className={cn('markdown-body', className, isStreaming && 'streaming')}>
-      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MARKDOWN_COMPONENTS}>
-        {text}
-      </ReactMarkdown>
+      {parts.map((part, index) => {
+        if (part.type === 'thinking') {
+          return <ThinkingProcess key={index} content={part.text} />
+        }
+        return (
+          <div key={index}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MARKDOWN_COMPONENTS}>
+              {part.text}
+            </ReactMarkdown>
+          </div>
+        )
+      })}
     </div>
   )
 }
+
