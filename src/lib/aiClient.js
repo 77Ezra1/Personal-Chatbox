@@ -547,7 +547,24 @@ async function callOpenAICompatible({
       }
     }
 
-    // 如果有多个部分或有图片，使用 parts 数组
+    // 对于DeepSeek等不支持多模态的API，将所有内容合并为字符串
+    if (endpoint.includes('deepseek') || !endpoint.includes('openai')) {
+      // 将所有文本部分合并为字符串
+      const textParts = parts.filter(p => p.type === 'text').map(p => p.text)
+      const imageParts = parts.filter(p => p.type === 'image_url').map(p => '[图片内容]')
+      const allText = [...textParts, ...imageParts].join('\n\n')
+      
+      const result = {
+        role: msg.role,
+        content: allText || ''
+      }
+      if (msg.tool_calls) {
+        result.tool_calls = msg.tool_calls
+      }
+      return result
+    }
+
+    // 对于支持多模态的API，使用 parts 数组
     const result = {
       role: msg.role,
       content: parts
