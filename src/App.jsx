@@ -251,16 +251,21 @@ function App() {
         
         // 添加系统提示，指导AI如何处理工具结果
         const systemPromptForToolResult = `
-基于以上MCP服务搜索结果，请进行全面分析和整理：
-1. 仔细分析搜索到的信息，确保准确性和相关性
-2. 如果信息不够充分或不够准确，可以再次调用搜索服务
-3. 将搜索结果整理成结构化、易读的回复
-4. 在回复末尾适当添加重要信息的来源链接
-5. 确保回复内容的可靠性、精确性和时效性
-6. 所有的搜索过程和分析过程都应该在思考过程中体现
+你现在已经获得了详细的搜索结果。请立即基于这些信息生成一个完整的回复：
+
+**要求：**
+1. 必须基于搜索结果中的具体信息进行分析，不要忽略任何重要内容
+2. 生成至少500字的详细分析报告，确保内容丰富有价值
+3. 使用结构化格式（标题、子标题、要点列表）使内容易读
+4. 不要说"需要更多信息"或"让我再次搜索"，直接基于现有信息进行全面分析
+5. 必须提及搜索结果中的具体内容、数据、案例和来源
+6. 在适当位置添加重要信息的来源链接
+7. 确保回复专业、准确、有深度
+
+**现在就开始生成完整的回复，基于搜索结果提供有价值的分析。**
 `
         
-        // 使用工具结果重新生成回复，允许再次调用工具（如果需要）
+        // 使用工具结果重新生成回复，不再允许再次调用工具
         const finalResponse = await generateAIResponse({
           messages: [
             ...messagesWithTools,
@@ -273,7 +278,7 @@ function App() {
           modelConfig: { ...modelConfig, deepThinking: true }, // 强制开启深度思考
           signal: abortControllerRef.current.signal,
           systemPrompt,
-          tools, // 允许再次调用工具
+          tools: [], // 不允许再次调用工具，强制基于现有结果回复
           onToken: (token, fullText) => {
             if (typeof fullText === 'string') {
               accumulatedContent = fullText
