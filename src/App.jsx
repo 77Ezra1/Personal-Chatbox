@@ -217,13 +217,13 @@ function App() {
           ...toolResults
         ]
         
-        // 使用工具结果重新生成回复
+        // 使用工具结果重新生成回复（不传递tools参数，避免重复调用）
         const finalResponse = await generateAIResponse({
           messages: messagesWithTools,
           modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
           signal: abortControllerRef.current.signal,
           systemPrompt,
-          tools,
+          // 不传递tools参数，避免在处理工具结果时再次调用工具
           onToken: (token, fullText) => {
             if (typeof fullText === 'string') {
               accumulatedContent = fullText

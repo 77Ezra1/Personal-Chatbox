@@ -1,4 +1,4 @@
-import { THINKING_MODE } from './constants'
+import { THINKING_MODE } from './constants.js'
 
 /**
  * 根据模型ID自动检测深度思考模式
