@@ -61,14 +61,17 @@ module.exports = {
       description: '获取实时加密货币价格和市场数据'
     },
     
-    // 网页抓取服务(新)
+    // 网页抓取服务
     fetch: {
       id: 'fetch',
       name: '网页内容抓取',
-      enabled: false,
-      autoLoad: false,
+      enabled: true,
+      autoLoad: true,
       description: '从URL获取网页内容并转换为Markdown'
-    }
+    },
+    
+    // Dexscreener加密货币服务(已在index.cjs中配置)
+    // 这里的配置会被index.cjs中的动态配置覆盖
   },
 
   // 缓存配置
