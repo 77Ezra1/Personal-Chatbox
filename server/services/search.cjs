@@ -10,6 +10,11 @@ class SearchService extends BaseService {
   constructor(config) {
     super(config);
     
+    // 请求间隔控制
+    this.lastRequestTime = 0;
+    this.minRequestInterval = 2000; // 最小请求间隔2秒
+    this.maxRetries = 3; // 最大重试次数
+    
     // 定义工具
     this.tools = [
       {
@@ -54,10 +59,8 @@ class SearchService extends BaseService {
       
       logger.info(`搜索: "${query}", 最大结果: ${max_results}`);
       
-      // 执行搜索
-      const searchResults = await search(query, {
-        safeSearch: 0 // 0 = off, 1 = moderate, 2 = strict
-      });
+      // 执行带重试的搜索
+      const searchResults = await this.searchWithRetry(query, max_results);
       
       if (!searchResults || !searchResults.results || searchResults.results.length === 0) {
         return {
@@ -94,7 +97,8 @@ class SearchService extends BaseService {
         };
       }
       
-      if (error.message && error.message.includes('rate limit')) {
+      if (error.message && error.message.includes('rate limit') || 
+          error.message && error.message.includes('anomaly')) {
         return {
           success: false,
           error: 'API限流',
@@ -104,6 +108,68 @@ class SearchService extends BaseService {
       
       return this.handleApiError(error, this.name);
     }
+  }
+
+  /**
+   * 带重试机制的搜索
+   */
+  async searchWithRetry(query, maxResults) {
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        // 检查请求间隔
+        await this.waitForNextRequest();
+        
+        logger.info(`搜索尝试 ${attempt}/${this.maxRetries}: "${query}"`);
+        
+        // 执行搜索
+        const results = await search(query, {
+          safeSearch: 0
+        });
+        
+        // 更新最后请求时间
+        this.lastRequestTime = Date.now();
+        
+        return results;
+        
+      } catch (error) {
+        logger.warn(`搜索尝试 ${attempt} 失败:`, error.message);
+        
+        // 如果是频率限制错误且还有重试机会,等待更长时间
+        if ((error.message.includes('anomaly') || error.message.includes('rate limit')) 
+            && attempt < this.maxRetries) {
+          const waitTime = this.minRequestInterval * attempt * 2; // 指数退避
+          logger.info(`等待 ${waitTime}ms 后重试...`);
+          await this.sleep(waitTime);
+          continue;
+        }
+        
+        // 最后一次尝试失败或其他错误,抛出
+        if (attempt === this.maxRetries) {
+          throw error;
+        }
+      }
+    }
+  }
+
+  /**
+   * 等待到下次可以请求的时间
+   */
+  async waitForNextRequest() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+      logger.debug(`等待 ${waitTime}ms 以满足请求间隔...`);
+      await this.sleep(waitTime);
+    }
+  }
+
+  /**
+   * 睡眠函数
+   */
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   formatSearchResults(query, results) {

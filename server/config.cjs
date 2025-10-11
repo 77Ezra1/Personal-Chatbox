@@ -37,8 +37,8 @@ module.exports = {
     search: {
       id: 'search',
       name: '多引擎搜索',
-      enabled: false,  // 默认关闭,用户手动开启
-      autoLoad: false,
+      enabled: true,  // ✅ 已启用
+      autoLoad: true,
       description: '支持多个搜索引擎的网络搜索服务',
       engines: ['bing', 'duckduckgo', 'brave']
     },
