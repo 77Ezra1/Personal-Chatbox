@@ -6,6 +6,10 @@ const BaseService = require('./base.cjs');
 const logger = require('../utils/logger.cjs');
 const cheerio = require('cheerio');
 const TurndownService = require('turndown');
+const { createProxyClient } = require('../lib/ProxyClient.cjs');
+
+// 创建支持代理的HTTP客户端
+const axios = createProxyClient();
 
 class FetchService extends BaseService {
   constructor(config) {
@@ -73,14 +77,15 @@ class FetchService extends BaseService {
       logger.info(`抓取网页: ${url}`);
       
       // 获取网页内容
-      const response = await fetch(url, {
+      const response = await axios.get(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; AI-Life-System/1.0; +https://github.com/77Ezra1/AI-Life-system)'
         },
-        redirect: 'follow'
+        maxRedirects: 5,
+        timeout: 10000
       });
       
-      if (!response.ok) {
+      if (response.status !== 200) {
         return {
           success: false,
           error: `网页请求失败: ${response.status}`,
@@ -88,7 +93,7 @@ class FetchService extends BaseService {
         };
       }
       
-      const html = await response.text();
+      const html = response.data;
       
       // 提取主要内容
       const extractedContent = this.extractMainContent(html);

@@ -4,13 +4,14 @@
  */
 const BaseService = require('./base.cjs');
 const logger = require('../utils/logger.cjs');
-const axios = require('axios');
+const { createProxyClient } = require('../lib/ProxyClient.cjs');
+
+// 创建支持代理的HTTP客户端
+const axios = createProxyClient('https://api.dexscreener.com');
 
 class DexscreenerService extends BaseService {
   constructor(config) {
     super(config);
-    
-    this.baseUrl = 'https://api.dexscreener.com';
     
     // 定义工具
     this.tools = [
@@ -100,13 +101,10 @@ class DexscreenerService extends BaseService {
       
       logger.info(`搜索代币: ${query}`);
       
-      const response = await axios.get(
-        `${this.baseUrl}/latest/dex/search`,
-        {
-          params: { q: query },
-          timeout: 10000
-        }
-      );
+      const response = await axios.get('/latest/dex/search', {
+        params: { q: query },
+        timeout: 10000
+      });
       
       if (!response.data || !response.data.pairs || response.data.pairs.length === 0) {
         return {
@@ -157,7 +155,7 @@ class DexscreenerService extends BaseService {
       logger.info(`获取代币价格: ${chainId}/${tokenAddress}`);
       
       const response = await axios.get(
-        `${this.baseUrl}/latest/dex/tokens/${chainId}/${tokenAddress}`,
+        `/latest/dex/tokens/${chainId}/${tokenAddress}`,
         { timeout: 10000 }
       );
       
@@ -206,7 +204,7 @@ class DexscreenerService extends BaseService {
       logger.info('获取热门代币');
       
       const response = await axios.get(
-        `${this.baseUrl}/token-profiles/latest/v1`,
+        '/token-profiles/latest/v1',
         { timeout: 10000 }
       );
       

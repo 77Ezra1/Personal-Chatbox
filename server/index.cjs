@@ -8,6 +8,7 @@ const config = require('./config.cjs');
 const logger = require('./utils/logger.cjs');
 const { errorHandler } = require('./utils/errors.cjs');
 const { router: mcpRouter, initializeRouter } = require('./routes/mcp.cjs');
+const proxyRouter = require('./routes/proxy.cjs');
 
 // 导入服务
 const WeatherService = require('./services/weather.cjs');
@@ -85,6 +86,7 @@ async function initializeServices() {
 
 // API路由
 app.use('/api/mcp', mcpRouter);
+app.use('/api/proxy', proxyRouter);
 
 // 健康检查
 app.get('/health', (req, res) => {
