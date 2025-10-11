@@ -183,20 +183,52 @@ function App() {
 
       // 检查是否有工具调用
       if (response?.tool_calls && Array.isArray(response.tool_calls) && response.tool_calls.length > 0) {
+        console.log('[App] 检测到工具调用，开始处理MCP服务请求')
+        
+        // 更新消息显示工具调用正在进行
+        updateMessage(currentConversationId, placeholderMessage.id, () => ({
+          content: '正在调用MCP服务获取信息...',
+          status: 'loading',
+          metadata: {
+            ...(isDeepThinking ? { deepThinking: true } : {}),
+            toolCalling: true
+          }
+        }))
+        
         // 执行工具调用
         const toolResults = []
+        let toolCallReasoning = accumulatedReasoning || ''
+        
         for (const toolCall of response.tool_calls) {
           try {
-          console.log('[App] Processing tool call:', toolCall)
+            console.log('[App] Processing tool call:', toolCall)
             const args = JSON.parse(toolCall.function.arguments)
+            
+            // 在思考过程中记录工具调用
+            toolCallReasoning += `\n\n[MCP服务调用] ${toolCall.function.name}\n参数: ${JSON.stringify(args, null, 2)}\n`
+            
             const result = await callTool(toolCall.function.name, args)
-            toolResults.push({
-              tool_call_id: toolCall.id,
-              role: 'tool',
-              name: toolCall.function.name,
-              content: result.success ? result.content : `Error: ${result.error}`
-            })
+            
+            // 在思考过程中记录工具调用结果
+            if (result.success) {
+              toolCallReasoning += `[搜索结果获取成功]\n${result.content}\n`
+              toolResults.push({
+                tool_call_id: toolCall.id,
+                role: 'tool',
+                name: toolCall.function.name,
+                content: result.content
+              })
+            } else {
+              toolCallReasoning += `[搜索结果获取失败] ${result.error}\n`
+              toolResults.push({
+                tool_call_id: toolCall.id,
+                role: 'tool',
+                name: toolCall.function.name,
+                content: `Error: ${result.error}`
+              })
+            }
           } catch (error) {
+            toolCallReasoning += `[工具调用异常] ${error.message}\n`
             toolResults.push({
               tool_call_id: toolCall.id,
               role: 'tool',
@@ -217,13 +249,31 @@ function App() {
           ...toolResults
         ]
         
-        // 使用工具结果重新生成回复（不传递tools参数，避免重复调用）
+        // 添加系统提示，指导AI如何处理工具结果
+        const systemPromptForToolResult = `
+基于以上MCP服务搜索结果，请进行全面分析和整理：
+1. 仔细分析搜索到的信息，确保准确性和相关性
+2. 如果信息不够充分或不够准确，可以再次调用搜索服务
+3. 将搜索结果整理成结构化、易读的回复
+4. 在回复末尾适当添加重要信息的来源链接
+5. 确保回复内容的可靠性、精确性和时效性
+6. 所有的搜索过程和分析过程都应该在思考过程中体现
+`
+        
+        // 使用工具结果重新生成回复，允许再次调用工具（如果需要）
         const finalResponse = await generateAIResponse({
-          messages: messagesWithTools,
-          modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
+          messages: [
+            ...messagesWithTools,
+            {
+              role: 'system',
+              content: systemPromptForToolResult,
+              attachments: []
+            }
+          ],
+          modelConfig: { ...modelConfig, deepThinking: true }, // 强制开启深度思考
           signal: abortControllerRef.current.signal,
           systemPrompt,
-          // 不传递tools参数，避免在处理工具结果时再次调用工具
+          tools, // 允许再次调用工具
           onToken: (token, fullText) => {
             if (typeof fullText === 'string') {
               accumulatedContent = fullText
@@ -232,11 +282,14 @@ function App() {
             }
             
             let displayContent = accumulatedContent
-            if (isDeepThinking && accumulatedContent) {
+            let currentReasoning = toolCallReasoning
+            
+            // 提取新的推理内容
+            if (accumulatedContent) {
               const segments = extractReasoningSegments(accumulatedContent)
               if (segments) {
                 displayContent = segments.answer
-                accumulatedReasoning = segments.reasoning
+                currentReasoning = toolCallReasoning + '\n\n[分析整理过程]\n' + segments.reasoning
               }
             }
             
@@ -244,26 +297,27 @@ function App() {
               content: displayContent,
               status: 'loading',
               metadata: {
-                ...(isDeepThinking ? { deepThinking: true } : {}),
-                ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {})
+                deepThinking: true, // 确保显示思考过程
+                reasoning: currentReasoning,
+                toolCalling: false
               }
             }))
           }
         })
         
+        // 处理最终响应
         let finalContent = typeof finalResponse?.content === 'string'
           ? finalResponse.content
           : accumulatedContent
-        let finalReasoning = finalResponse?.reasoning ?? accumulatedReasoning ?? null
+        let finalReasoning = toolCallReasoning
         
-        if (isDeepThinking) {
-          const contentForExtraction = finalContent || accumulatedContent
-          if (!finalReasoning && contentForExtraction) {
-            const segments = extractReasoningSegments(contentForExtraction)
-            if (segments) {
-              finalContent = segments.answer
-              finalReasoning = segments.reasoning
-            }
+        // 提取最终的推理内容
+        const contentForExtraction = finalContent || accumulatedContent
+        if (contentForExtraction) {
+          const segments = extractReasoningSegments(contentForExtraction)
+          if (segments) {
+            finalContent = segments.answer
+            finalReasoning = toolCallReasoning + '\n\n[分析整理过程]\n' + segments.reasoning
           }
         }
         
@@ -271,8 +325,9 @@ function App() {
           content: finalContent,
           status: 'done',
           metadata: {
-            ...(isDeepThinking ? { deepThinking: true } : {}),
-            ...(finalReasoning ? { reasoning: finalReasoning } : {})
+            deepThinking: true,
+            reasoning: finalReasoning,
+            toolCalling: false
           }
         }))
       } else {
