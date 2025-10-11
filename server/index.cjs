@@ -18,6 +18,7 @@ const YouTubeService = require('./services/youtube.cjs');
 const CoincapService = require('./services/coincap.cjs');
 const DexscreenerService = require('./services/dexscreener.cjs');
 const FetchService = require('./services/fetch.cjs');
+const PlaywrightBrowserService = require('./services/playwright-browser.cjs');
 
 // 创建Express应用
 const app = express();
@@ -55,6 +56,7 @@ async function initializeServices() {
       autoLoad: true
     });
     services.fetch = new FetchService(config.services.fetch);
+    services.playwright = new PlaywrightBrowserService(config.services.playwright);
     
     // 初始化自动加载的服务
     for (const [id, service] of Object.entries(services)) {

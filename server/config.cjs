@@ -72,6 +72,15 @@ module.exports = {
     
     // Dexscreener加密货币服务(已在index.cjs中配置)
     // 这里的配置会被index.cjs中的动态配置覆盖
+    
+    // Playwright浏览器自动化服务
+    playwright: {
+      id: 'playwright',
+      name: 'Playwright浏览器自动化',
+      enabled: true,
+      autoLoad: true,
+      description: '使用Playwright进行浏览器自动化操作'
+    }
   },
 
   // 缓存配置
