@@ -11,89 +11,117 @@ class PlaywrightBrowserService extends BaseService {
 
   getInfo() {
     return {
-      name: 'Playwright浏览器自动化',
-      description: '使用Playwright进行浏览器自动化操作,包括导航、点击、填写表单、截图等',
+      id: this.id,
+      name: this.name,
+      description: this.description,
+      enabled: this.enabled,
+      loaded: this.loaded,
       version: '1.0.0',
       author: 'AI-Life-system',
-      tools: this.getTools()
+      tools: this.getTools().map(tool => ({
+        name: tool.name,
+        description: tool.description
+      }))
     };
   }
 
   getTools() {
+    if (!this.enabled) {
+      return [];
+    }
+    
     return [
       {
-        name: 'navigate_to_url',
-        description: '导航到指定的URL',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            url: {
-              type: 'string',
-              description: '要访问的URL地址'
-            }
-          },
-          required: ['url']
-        }
-      },
-      {
-        name: 'get_page_content',
-        description: '获取当前页面的文本内容',
-        inputSchema: {
-          type: 'object',
-          properties: {}
-        }
-      },
-      {
-        name: 'click_element',
-        description: '点击页面上的元素',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            selector: {
-              type: 'string',
-              description: 'CSS选择器或文本选择器'
-            }
-          },
-          required: ['selector']
-        }
-      },
-      {
-        name: 'fill_input',
-        description: '填写输入框',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            selector: {
-              type: 'string',
-              description: 'CSS选择器'
+        type: 'function',
+        function: {
+          name: 'navigate_to_url',
+          description: '导航到指定的URL',
+          parameters: {
+            type: 'object',
+            properties: {
+              url: {
+                type: 'string',
+                description: '要访问的URL地址'
+              }
             },
-            text: {
-              type: 'string',
-              description: '要填写的文本'
-            }
-          },
-          required: ['selector', 'text']
+            required: ['url']
+          }
         }
       },
       {
-        name: 'take_screenshot',
-        description: '截取当前页面的屏幕截图',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            path: {
-              type: 'string',
-              description: '保存截图的路径(可选)'
+        type: 'function',
+        function: {
+          name: 'get_page_content',
+          description: '获取当前页面的文本内容',
+          parameters: {
+            type: 'object',
+            properties: {}
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'click_element',
+          description: '点击页面上的元素',
+          parameters: {
+            type: 'object',
+            properties: {
+              selector: {
+                type: 'string',
+                description: 'CSS选择器或文本选择器'
+              }
+            },
+            required: ['selector']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'fill_input',
+          description: '填写输入框',
+          parameters: {
+            type: 'object',
+            properties: {
+              selector: {
+                type: 'string',
+                description: 'CSS选择器'
+              },
+              text: {
+                type: 'string',
+                description: '要填写的文本'
+              }
+            },
+            required: ['selector', 'text']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'take_screenshot',
+          description: '截取当前页面的屏幕截图',
+          parameters: {
+            type: 'object',
+            properties: {
+              path: {
+                type: 'string',
+                description: '保存截图的路径(可选)'
+              }
             }
           }
         }
       },
       {
-        name: 'close_browser',
-        description: '关闭浏览器',
-        inputSchema: {
-          type: 'object',
-          properties: {}
+        type: 'function',
+        function: {
+          name: 'close_browser',
+          description: '关闭浏览器',
+          parameters: {
+            type: 'object',
+            properties: {}
+          }
         }
       }
     ];
