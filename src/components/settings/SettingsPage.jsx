@@ -3,7 +3,7 @@ import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare,
 import { Button } from '@/components/ui/button'
 import { ConfigPanel } from '../config/ConfigPanel'
 import { SystemPromptConfigNew } from '../config/SystemPromptConfigNew'
-import { McpServiceConfig } from '../mcp/McpServiceConfig'
+import McpServiceConfig from '../mcp/McpServiceConfig_Simple'
 import './SettingsPage.css'
 
 /**

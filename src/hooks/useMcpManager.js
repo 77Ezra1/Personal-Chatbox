@@ -347,45 +347,62 @@ async function callSearchAPI(parameters) {
   const { query, max_results = 10 } = parameters
 
   try {
-    // 使用DuckDuckGo Instant Answer API
-    const url = new URL('https://api.duckduckgo.com/')
-    url.searchParams.append('q', query)
-    url.searchParams.append('format', 'json')
-    url.searchParams.append('no_html', '1')
-    url.searchParams.append('skip_disambig', '1')
-
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`搜索请求失败: ${response.status}`)
-    }
-
-    const data = await response.json()
+    // 使用Wikipedia API进行搜索，这是一个可靠且无CORS限制的API
+    const searchUrl = new URL('https://zh.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(query))
     
     let content = `**搜索结果 - "${query}"**\n\n`
     let hasResults = false
 
-    if (data.Abstract) {
-      content += `**摘要**\n${data.Abstract}\n`
-      if (data.AbstractURL) {
-        content += `来源: ${data.AbstractURL}\n`
-      }
-      content += '\n'
-      hasResults = true
-    }
-
-    if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-      content += `**相关主题:**\n`
-      data.RelatedTopics.slice(0, Math.min(max_results, 5)).forEach((topic, index) => {
-        if (topic.Text && topic.FirstURL) {
-          content += `${index + 1}. ${topic.Text.split(' - ')[0] || topic.Text.substring(0, 100)}\n`
-          content += `   ${topic.FirstURL}\n\n`
+    try {
+      // 尝试获取Wikipedia页面摘要
+      const response = await fetch(searchUrl)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.extract) {
+          content += `**Wikipedia摘要**\n${data.extract}\n\n`
+          if (data.content_urls && data.content_urls.desktop) {
+            content += `详细信息: ${data.content_urls.desktop.page}\n\n`
+          }
           hasResults = true
         }
-      })
+      }
+    } catch (wikiError) {
+      console.log('Wikipedia搜索失败，尝试其他方式')
+    }
+
+    // 如果Wikipedia没有结果，提供搜索建议
+    if (!hasResults) {
+      // 使用OpenSearch API获取搜索建议
+      try {
+        const suggestUrl = new URL('https://zh.wikipedia.org/w/api.php')
+        suggestUrl.searchParams.append('action', 'opensearch')
+        suggestUrl.searchParams.append('search', query)
+        suggestUrl.searchParams.append('limit', Math.min(max_results, 5).toString())
+        suggestUrl.searchParams.append('format', 'json')
+        suggestUrl.searchParams.append('origin', '*')
+
+        const suggestResponse = await fetch(suggestUrl)
+        if (suggestResponse.ok) {
+          const suggestData = await suggestResponse.json()
+          if (suggestData[1] && suggestData[1].length > 0) {
+            content += `**相关搜索建议:**\n`
+            suggestData[1].forEach((title, index) => {
+              const url = suggestData[3] && suggestData[3][index] ? suggestData[3][index] : `https://zh.wikipedia.org/wiki/${encodeURIComponent(title)}`
+              content += `${index + 1}. ${title}\n   ${url}\n\n`
+            })
+            hasResults = true
+          }
+        }
+      } catch (suggestError) {
+        console.log('搜索建议获取失败')
+      }
     }
 
     if (!hasResults) {
-      content += '未找到相关结果。'
+      content += `抱歉，没有找到关于"${query}"的相关信息。您可以尝试：\n`
+      content += `• 使用更具体的关键词\n`
+      content += `• 尝试不同的表达方式\n`
+      content += `• 直接访问搜索引擎: https://www.google.com/search?q=${encodeURIComponent(query)}\n`
     }
 
     return {

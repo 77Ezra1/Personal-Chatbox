@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { initializeMcpServices, getEnabledServices, updateServiceStatus } from '@/lib/mcpInit'
+import { MCP_SERVICE_TYPES, MCP_SERVICE_TYPE_ICONS, validateApiKey } from '@/lib/mcpTypes'
 import './McpServiceConfig.css'
 
 /**
@@ -241,24 +242,20 @@ function ServiceCard({
       <div className="mcp-service-header">
         <div className="mcp-service-info">
           <div className="mcp-service-title">
-            <span className="mcp-service-icon">{server.icon}</span>
+            <span className="mcp-service-icon">{getServiceIcon(server.type)}</span>
             <h5 className="mcp-service-name">{server.name}</h5>
             <ServiceInfoDialog server={server} />
           </div>
           <p className="mcp-service-description">{server.description}</p>
           <div className="mcp-service-badges">
-            {server.isFree && (
-              <Badge variant="secondary" className="mcp-free-badge">
-                免费
-              </Badge>
-            )}
-            {server.freeLimit && (
-              <Badge variant="outline" className="mcp-limit-badge">
-                {server.freeLimit}
-              </Badge>
-            )}
+            <Badge variant="secondary" className="mcp-free-badge">
+              免费
+            </Badge>
+            <Badge variant="outline" className="mcp-limit-badge">
+              无需API密钥
+            </Badge>
             <Badge variant="outline" className="mcp-lang-badge">
-              {server.language}
+              实时数据
             </Badge>
           </div>
         </div>
@@ -274,7 +271,7 @@ function ServiceCard({
         </div>
       </div>
 
-      {server.requiresApiKey && (
+      {false && (
         <div className="mcp-service-body">
           <button
             className="mcp-expand-button"
@@ -335,7 +332,7 @@ function ServiceCard({
         </div>
       )}
 
-      {!server.requiresApiKey && server.isEnabled && (
+      {server.isEnabled && (
         <div className="mcp-service-footer">
           <Badge variant="secondary" className="mcp-ready-badge">
             ✓ 已就绪，无需配置
@@ -354,6 +351,31 @@ function ServiceInfoDialog({ server }) {
     navigator.clipboard.writeText(text)
   }
 
+  // 根据服务类型提供功能描述
+  const getServiceFeatures = (serverId) => {
+    switch (serverId) {
+      case 'open-meteo-weather':
+        return [
+          { name: '当前天气查询', description: '获取指定城市的实时天气信息' },
+          { name: '天气预报', description: '获取未来几天的天气预报' }
+        ]
+      case 'duckduckgo-search':
+        return [
+          { name: '网络搜索', description: '使用Wikipedia进行信息搜索' },
+          { name: '搜索建议', description: '提供相关搜索建议和链接' }
+        ]
+      case 'official-time-server':
+        return [
+          { name: '当前时间', description: '获取当前的日期和时间' },
+          { name: '时区支持', description: '支持不同时区的时间查询' }
+        ]
+      default:
+        return []
+    }
+  }
+
+  const features = getServiceFeatures(server.id)
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -364,7 +386,7 @@ function ServiceInfoDialog({ server }) {
       <DialogContent className="mcp-info-dialog max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="text-2xl">{server.icon}</span>
+            <span className="text-2xl">{getServiceIcon(server.type)}</span>
             {server.name}
           </DialogTitle>
         </DialogHeader>
@@ -375,110 +397,46 @@ function ServiceInfoDialog({ server }) {
             <h4 className="font-semibold mb-2">服务简介</h4>
             <p className="text-sm text-muted-foreground">{server.description}</p>
             <div className="flex gap-2 mt-2">
-              {server.isFree && (
-                <Badge variant="secondary">免费服务</Badge>
-              )}
-              {server.freeLimit && (
-                <Badge variant="outline">{server.freeLimit}</Badge>
-              )}
-              <Badge variant="outline">{server.language}</Badge>
+              <Badge variant="secondary">免费服务</Badge>
+              <Badge variant="outline">无需API密钥</Badge>
+              <Badge variant="outline">实时数据</Badge>
             </div>
           </div>
 
           {/* 功能列表 */}
-          <div>
-            <h4 className="font-semibold mb-2">提供的功能</h4>
-            <div className="space-y-2">
-              {server.tools.map((tool, index) => (
-                <div key={index} className="border rounded p-3">
-                  <div className="font-medium text-sm">{tool.name}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{tool.description}</div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    参数: {Object.entries(tool.parameters).map(([key, desc]) => 
-                      `${key} (${desc})`
-                    ).join(', ')}
+          {features.length > 0 && (
+            <div>
+              <h4 className="font-semibold mb-2">提供的功能</h4>
+              <div className="space-y-2">
+                {features.map((feature, index) => (
+                  <div key={index} className="border rounded p-3">
+                    <div className="font-medium text-sm">{feature.name}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{feature.description}</div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 安装配置 */}
-          <div>
-            <h4 className="font-semibold mb-2">安装命令</h4>
-            <div className="bg-muted p-3 rounded font-mono text-sm">
-              {server.installCommand}
-              <button
-                className="ml-2 text-xs text-primary hover:underline"
-                onClick={() => copyToClipboard(server.installCommand)}
-              >
-                复制
-              </button>
-            </div>
-          </div>
-
-          {/* 配置示例 */}
-          <div>
-            <h4 className="font-semibold mb-2">配置示例</h4>
-            <div className="bg-muted p-3 rounded">
-              <pre className="text-xs overflow-x-auto">
-                {JSON.stringify(server.configExample, null, 2)}
-              </pre>
-              <button
-                className="mt-2 text-xs text-primary hover:underline"
-                onClick={() => copyToClipboard(JSON.stringify(server.configExample, null, 2))}
-              >
-                复制配置
-              </button>
-            </div>
-          </div>
-
-          {/* 链接按钮 */}
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => window.open(server.repoUrl, '_blank')}
-            >
-              <ExternalLink className="w-4 h-4 mr-1" />
-              GitHub 仓库
-            </Button>
-            
-            {server.docsUrl && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(server.docsUrl, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-1" />
-                官方文档
-              </Button>
-            )}
-            
-            {server.signupUrl && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(server.signupUrl, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-1" />
-                获取 API Key
-              </Button>
-            )}
-          </div>
-
-          {/* API Key 要求 */}
-          {server.requiresApiKey && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-              <div className="flex items-center gap-2 text-yellow-800">
-                <AlertCircle className="w-4 h-4" />
-                <span className="font-medium">需要 API Key</span>
+                ))}
               </div>
-              <p className="text-sm text-yellow-700 mt-1">
-                此服务需要 API Key 才能使用。请访问官方网站注册并获取免费的 API Key。
-              </p>
             </div>
           )}
+
+          {/* 使用说明 */}
+          <div>
+            <h4 className="font-semibold mb-2">使用说明</h4>
+            <div className="bg-muted p-3 rounded text-sm">
+              <p>此服务已自动配置并启用，无需额外设置。</p>
+              <p className="mt-2">您可以直接在对话中询问相关问题，AI助手会自动调用此服务获取实时信息。</p>
+            </div>
+          </div>
+
+          {/* 服务状态 */}
+          <div>
+            <h4 className="font-semibold mb-2">服务状态</h4>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${server.isEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span className="text-sm">
+                {server.isEnabled ? '已启用' : '已禁用'}
+              </span>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
