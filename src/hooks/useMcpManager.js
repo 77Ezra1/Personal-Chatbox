@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { initializeMcpServices, getEnabledServices } from '@/lib/mcpInit'
+import { initializeMcpServices, getEnabledServices } from '../lib/mcpInit.js'
 
 /**
  * MCP 服务管理器
@@ -871,4 +871,44 @@ function getWeatherDescription(code) {
     99: '雷暴伴大冰雹'
   }
   return weatherCodes[code] || '未知天气'
+}
+
+/**
+ * 提取搜索关键词
+ */
+function extractSearchKeywords(query) {
+  if (!query || typeof query !== 'string') {
+    return []
+  }
+  
+  // 移除常见的停用词
+  const stopWords = new Set([
+    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这', '那', '什么', '可以', '这个', '我们', '能够', '如何', '怎么', '为什么', '哪里', '什么时候', '谁', '哪个', '多少',
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'what', 'where', 'when', 'why', 'how', 'who', 'which'
+  ])
+  
+  // 分词并过滤
+  const words = query
+    .toLowerCase()
+    .replace(/[^\w\s\u4e00-\u9fff]/g, ' ') // 保留中文、英文、数字
+    .split(/\s+/)
+    .filter(word => {
+      return word.length > 1 && !stopWords.has(word)
+    })
+  
+  // 提取重要关键词（限制数量避免搜索过于分散）
+  const keywords = []
+  
+  // 优先提取数字年份
+  const yearPattern = /20\d{2}/g
+  const years = query.match(yearPattern)
+  if (years) {
+    keywords.push(...years)
+  }
+  
+  // 提取其他关键词
+  const otherWords = words.filter(word => !/20\d{2}/.test(word))
+  keywords.push(...otherWords.slice(0, 5 - keywords.length))
+  
+  return keywords.slice(0, 5) // 最多返回5个关键词
 }
