@@ -395,7 +395,10 @@ function App() {
     modelConfig,
     isDeepThinking,
     updateMessage,
-    translate
+    translate,
+    getAllTools,
+    callTool,
+    systemPrompt
   ])
 
   const handleSendMessage = useCallback(async (content, attachments = []) => {

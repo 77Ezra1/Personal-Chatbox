@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP工具调用完整测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-left: 4px solid #2196F3;
+    }
+    .success {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .error {
+      color: #f44336;
+      font-weight: bold;
+    }
+    .warning {
+      color: #ff9800;
+      font-weight: bold;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    pre {
+      background: #263238;
+      color: #aed581;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .log {
+      background: #263238;
+      color: #fff;
+      padding: 15px;
+      border-radius: 4px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 MCP工具调用完整测试</h1>
+    
+    <div class="test-section">
+      <h2>测试步骤</h2>
+      <button onclick="runAllTests()">▶️ 运行所有测试</button>
+      <button onclick="clearLogs()">🗑️ 清除日志</button>
+    </div>
+    
+    <div class="test-section">
+      <h2>测试结果</h2>
+      <div id="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>详细日志</h2>
+      <div class="log" id="logs"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    const API_KEY = 'sk-03db8009812649359e2f83cc738861aa'
+    const API_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions'
+    
+    const DB_NAME = 'ai-life-system-db'
+    const DB_VERSION = 3
+    
+    let logContainer, resultsContainer
+    
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString()
+      const color = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : type === 'warning' ? '#ff9800' : '#fff'
+      logContainer.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`
+      logContainer.scrollTop = logContainer.scrollHeight
+    }
+    
+    function addResult(title, status, details = '') {
+      const statusClass = status === 'success' ? 'success' : status === 'error' ? 'error' : 'warning'
+      const statusIcon = status === 'success' ? '✅' : status === 'error' ? '❌' : '⚠️'
+      resultsContainer.innerHTML += `
+        <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 4px;">
+          <span class="${statusClass}">${statusIcon} ${title}</span>
+          ${details ? `<div style="margin-top: 5px; font-size: 14px; color: #666;">${details}</div>` : ''}
+        </div>
+      `
+    }
+    
+    async function test1_CheckDatabase() {
+      log('=== 测试1: 检查IndexedDB数据库 ===')
+      
+      try {
+        const db = await new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION)
+          request.onsuccess = () => resolve(request.result)
+          request.onerror = () => reject(request.error)
+        })
+        
+        log('✓ 数据库连接成功', 'success')
+        
+        // 检查MCP服务
+        const transaction = db.transaction(['mcp_servers'], 'readonly')
+        const store = transaction.objectStore('mcp_servers')
+        const services = await new Promise((resolve, reject) => {
+          const req = store.getAll()
+          req.onsuccess = () => resolve(req.result)
+          req.onerror = () => reject(req.error)
+        })
+        
+        log(`✓ 找到 ${services.length} 个MCP服务`, 'success')
+        const enabledServices = services.filter(s => s.isEnabled)
+        log(`✓ 其中 ${enabledServices.length} 个已启用`, 'success')
+        
+        enabledServices.forEach(s => {
+          log(`  - ${s.name} (${s.type})`)
+        })
+        
+        db.close()
+        
+        addResult('数据库检查', 'success', `找到${enabledServices.length}个已启用的MCP服务`)
+        return { success: true, enabledServices }
+        
+      } catch (error) {
+        log(`✗ 数据库检查失败: ${error.message}`, 'error')
+        addResult('数据库检查', 'error', error.message)
+        return { success: false, error }
+      }
+    }
+    
+    async function test2_CheckSystemPrompt() {
+      log('=== 测试2: 检查系统提示词 ===')
+      
+      try {
+        const db = await new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION)
+          request.onsuccess = () => resolve(request.result)
+          request.onerror = () => reject(request.error)
+        })
+        
+        const transaction = db.transaction(['system_prompts'], 'readonly')
+        const store = transaction.objectStore('system_prompts')
+        const systemPrompt = await new Promise((resolve, reject) => {
+          const req = store.get('default')
+          req.onsuccess = () => resolve(req.result)
+          req.onerror = () => reject(req.error)
+        })
+        
+        if (!systemPrompt || !systemPrompt.globalPrompt) {
+          log('✓ 未设置系统提示词', 'success')
+          addResult('系统提示词检查', 'success', '未设置系统提示词')
+          db.close()
+          return { success: true, hasPrompt: false }
+        }
+        
+        log(`系统提示词模式: ${systemPrompt.mode}`)
+        log(`全局提示词长度: ${systemPrompt.globalPrompt.length}字符`)
+        
+        const problematicPatterns = [
+          'tool_calls_begin',
+          'tool_call_begin',
+          'tool_sep',
+          'tool_calls_end',
+          'tool_call_end',
+          '<|',
+          '|>'
+        ]
+        
+        const foundProblems = problematicPatterns.filter(pattern => 
+          systemPrompt.globalPrompt.includes(pattern)
+        )
+        
+        if (foundProblems.length > 0) {
+          log(`✗ 发现干扰性内容: ${foundProblems.join(', ')}`, 'error')
+          addResult('系统提示词检查', 'error', `包含干扰性标记: ${foundProblems.join(', ')}`)
+          db.close()
+          return { success: false, hasProblems: true, problems: foundProblems }
+        }
+        
+        log('✓ 系统提示词正常', 'success')
+        addResult('系统提示词检查', 'success', '未发现干扰性内容')
+        db.close()
+        return { success: true, hasPrompt: true, hasProblems: false }
+        
+      } catch (error) {
+        log(`✗ 检查失败: ${error.message}`, 'error')
+        addResult('系统提示词检查', 'error', error.message)
+        return { success: false, error }
+      }
+    }
+    
+    async function test3_TestAPICall() {
+      log('=== 测试3: 测试DeepSeek API工具调用 ===')
+      
+      const tools = [
+        {
+          type: 'function',
+          function: {
+            name: 'duckduckgo_search',
+            description: '使用DuckDuckGo进行网络搜索',
+            parameters: {
+              type: 'object',
+              properties: {
+                query: { type: 'string', description: '搜索查询词' },
+                max_results: { type: 'number', description: '最大结果数量', default: 10 }
+              },
+              required: ['query']
+            }
+          }
+        }
+      ]
+      
+      const requestBody = {
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'user', content: '帮我分析一下2025年中国的美妆市场' }
+        ],
+        tools,
+        tool_choice: 'auto',
+        temperature: 0.7,
+        max_tokens: 2000
+      }
+      
+      log('发送API请求...')
+      
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify(requestBody)
+        })
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`API错误: ${response.status} - ${errorText}`)
+        }
+        
+        const data = await response.json()
+        const message = data?.choices?.[0]?.message
+        
+        log('✓ API调用成功', 'success')
+        
+        if (message?.tool_calls && message.tool_calls.length > 0) {
+          log(`✓ 检测到 ${message.tool_calls.length} 个工具调用`, 'success')
+          message.tool_calls.forEach(tc => {
+            log(`  - ${tc.function.name}: ${tc.function.arguments}`)
+          })
+          addResult('API工具调用测试', 'success', `成功检测到${message.tool_calls.length}个工具调用`)
+          return { success: true, hasToolCalls: true, toolCalls: message.tool_calls }
+        } else {
+          log('✗ 未检测到工具调用', 'error')
+          log(`返回内容: ${message?.content}`)
+          addResult('API工具调用测试', 'error', '未检测到工具调用')
+          return { success: false, hasToolCalls: false, content: message?.content }
+        }
+        
+      } catch (error) {
+        log(`✗ API调用失败: ${error.message}`, 'error')
+        addResult('API工具调用测试', 'error', error.message)
+        return { success: false, error }
+      }
+    }
+    
+    async function runAllTests() {
+      logContainer = document.getElementById('logs')
+      resultsContainer = document.getElementById('results')
+      
+      logContainer.innerHTML = ''
+      resultsContainer.innerHTML = ''
+      
+      log('开始运行所有测试...', 'success')
+      log('')
+      
+      const result1 = await test1_CheckDatabase()
+      log('')
+      
+      const result2 = await test2_CheckSystemPrompt()
+      log('')
+      
+      const result3 = await test3_TestAPICall()
+      log('')
+      
+      log('=== 测试完成 ===', 'success')
+      log('')
+      
+      // 生成诊断报告
+      if (result3.success && result3.hasToolCalls) {
+        log('✓ 所有测试通过! MCP工具调用功能正常', 'success')
+        log('如果应用中仍然不工作,可能是React组件状态问题', 'warning')
+        log('建议: 刷新应用页面或清除浏览器缓存', 'warning')
+      } else if (result2.hasProblems) {
+        log('✗ 问题原因: 系统提示词包含干扰性内容', 'error')
+        log('修复方法: 打开应用设置 > 系统提示词 > 删除包含特殊标记的内容', 'warning')
+      } else if (!result1.success) {
+        log('✗ 问题原因: 数据库未初始化或损坏', 'error')
+        log('修复方法: 打开应用让数据库自动初始化', 'warning')
+      } else {
+        log('✗ 问题原因未知,需要进一步调查', 'error')
+        log('建议: 查看浏览器控制台的完整日志', 'warning')
+      }
+    }
+    
+    function clearLogs() {
+      document.getElementById('logs').innerHTML = ''
+      document.getElementById('results').innerHTML = ''
+    }
+    
+    window.runAllTests = runAllTests
+    window.clearLogs = clearLogs
+    
+    // 页面加载时自动运行
+    window.addEventListener('load', () => {
+      setTimeout(runAllTests, 500)
+    })
+  </script>
+</body>
+</html>
+
