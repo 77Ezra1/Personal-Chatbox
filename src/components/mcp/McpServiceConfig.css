@@ -16,24 +16,32 @@
   line-height: 1.5;
 }
 
-.mcp-service-group {
-  margin-bottom: 2rem;
+/* Tabs */
+.mcp-tabs {
+  width: 100%;
 }
 
-.mcp-group-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
+.mcp-tab-content {
+  margin-top: 1.5rem;
 }
 
-.mcp-service-list {
-  display: flex;
-  flex-direction: column;
+/* Service Grid - 网格布局 */
+.mcp-service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .mcp-service-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .mcp-service-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mcp-service-card {
@@ -57,28 +65,60 @@
 }
 
 .mcp-service-info {
-  display: flex;
-  gap: 0.75rem;
   flex: 1;
+  min-width: 0;
+}
+
+.mcp-service-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .mcp-service-icon {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   flex-shrink: 0;
 }
 
 .mcp-service-name {
   font-size: 1rem;
   font-weight: 600;
-  margin: 0 0 0.25rem 0;
+  margin: 0;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.mcp-info-button {
+  padding: 0.25rem;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mcp-info-button:hover {
+  background: var(--background-hover);
   color: var(--text-primary);
 }
 
 .mcp-service-description {
   font-size: 0.875rem;
   color: var(--text-secondary);
-  margin: 0;
+  margin: 0 0 0.75rem 0;
   line-height: 1.4;
+}
+
+.mcp-service-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .mcp-service-actions {
@@ -252,16 +292,80 @@
   border-top: 1px solid var(--border-color);
 }
 
-.mcp-free-badge {
+.mcp-free-badge,
+.mcp-ready-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   background: var(--success-background);
   color: var(--success-color);
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
+}
+
+.mcp-limit-badge,
+.mcp-lang-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background: var(--background-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+/* Info Dialog */
+.mcp-info-dialog {
+  max-width: 42rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mcp-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mcp-info-content h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.mcp-info-content .bg-muted {
+  position: relative;
+  padding: 0.75rem;
+  background: var(--background-secondary);
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.75rem;
+}
+
+.mcp-info-content pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.mcp-info-content button {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.mcp-info-content button:hover {
+  opacity: 0.8;
 }
 
 .mcp-loading,

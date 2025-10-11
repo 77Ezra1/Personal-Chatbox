@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Search, Cloud, Eye, EyeOff, Copy, Check, ExternalLink, AlertCircle } from 'lucide-react'
+import { Search, Cloud, Eye, EyeOff, Copy, Check, ExternalLink, AlertCircle, Info, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { PRESET_MCP_SERVERS, MCP_SERVICE_TYPES, validateApiKey } from '@/lib/mcpConfig'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PRESET_MCP_SERVERS, MCP_SERVICE_TYPES, MCP_SERVICE_TYPE_ICONS, validateApiKey } from '@/lib/mcpConfig'
 import { 
   getAllMcpServers, 
   saveMcpServer, 
@@ -12,7 +15,7 @@ import './McpServiceConfig.css'
 
 /**
  * MCP 服务配置组件
- * 用于配置搜索和天气等 MCP 服务
+ * 用于配置搜索、天气和时间等 MCP 服务
  */
 export function McpServiceConfig({ language, translate }) {
   const [servers, setServers] = useState([])
@@ -131,14 +134,7 @@ export function McpServiceConfig({ language, translate }) {
   }
 
   const getServiceIcon = (type) => {
-    switch (type) {
-      case MCP_SERVICE_TYPES.SEARCH:
-        return <Search className="w-5 h-5" />
-      case MCP_SERVICE_TYPES.WEATHER:
-        return <Cloud className="w-5 h-5" />
-      default:
-        return null
-    }
+    return MCP_SERVICE_TYPE_ICONS[type] || '🔧'
   }
 
   if (loading) {
@@ -157,73 +153,105 @@ export function McpServiceConfig({ language, translate }) {
   // 按类型分组
   const searchServers = servers.filter(s => s.type === MCP_SERVICE_TYPES.SEARCH)
   const weatherServers = servers.filter(s => s.type === MCP_SERVICE_TYPES.WEATHER)
+  const timeServers = servers.filter(s => s.type === MCP_SERVICE_TYPES.TIME)
 
   return (
     <div className="mcp-service-config">
       <div className="mcp-intro">
         <p>
-          通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索和天气查询。
-          这些服务需要相应的 API Key 才能使用。
+          通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询和时间服务。
+          推荐的服务都是免费的，其中标记为"免费"的服务无需API密钥即可使用。
         </p>
       </div>
 
-      {/* 搜索服务 */}
-      <div className="mcp-service-group">
-        <h4 className="mcp-group-title">
-          <Search className="w-4 h-4" />
-          搜索服务
-        </h4>
-        <div className="mcp-service-list">
-          {searchServers.map(server => (
-            <ServiceCard
-              key={server.id}
-              server={server}
-              expanded={expandedServer === server.id}
-              showApiKey={showApiKey[server.id]}
-              copiedKey={copiedKey[server.id]}
-              onToggle={() => handleToggleServer(server.id)}
-              onExpand={() => setExpandedServer(
-                expandedServer === server.id ? null : server.id
-              )}
-              onToggleShowKey={() => setShowApiKey({
-                ...showApiKey,
-                [server.id]: !showApiKey[server.id]
-              })}
-              onCopyKey={() => handleCopyApiKey(server.id)}
-              onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
-            />
-          ))}
-        </div>
-      </div>
+      <Tabs defaultValue="search" className="mcp-tabs">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="search" className="flex items-center gap-2">
+            <Search className="w-4 h-4" />
+            搜索服务
+          </TabsTrigger>
+          <TabsTrigger value="weather" className="flex items-center gap-2">
+            <Cloud className="w-4 h-4" />
+            天气服务
+          </TabsTrigger>
+          <TabsTrigger value="time" className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            时间服务
+          </TabsTrigger>
+        </TabsList>
 
-      {/* 天气服务 */}
-      <div className="mcp-service-group">
-        <h4 className="mcp-group-title">
-          <Cloud className="w-4 h-4" />
-          天气服务
-        </h4>
-        <div className="mcp-service-list">
-          {weatherServers.map(server => (
-            <ServiceCard
-              key={server.id}
-              server={server}
-              expanded={expandedServer === server.id}
-              showApiKey={showApiKey[server.id]}
-              copiedKey={copiedKey[server.id]}
-              onToggle={() => handleToggleServer(server.id)}
-              onExpand={() => setExpandedServer(
-                expandedServer === server.id ? null : server.id
-              )}
-              onToggleShowKey={() => setShowApiKey({
-                ...showApiKey,
-                [server.id]: !showApiKey[server.id]
-              })}
-              onCopyKey={() => handleCopyApiKey(server.id)}
-              onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
-            />
-          ))}
-        </div>
-      </div>
+        <TabsContent value="search" className="mcp-tab-content">
+          <div className="mcp-service-grid">
+            {searchServers.map(server => (
+              <ServiceCard
+                key={server.id}
+                server={server}
+                expanded={expandedServer === server.id}
+                showApiKey={showApiKey[server.id]}
+                copiedKey={copiedKey[server.id]}
+                onToggle={() => handleToggleServer(server.id)}
+                onExpand={() => setExpandedServer(
+                  expandedServer === server.id ? null : server.id
+                )}
+                onToggleShowKey={() => setShowApiKey({
+                  ...showApiKey,
+                  [server.id]: !showApiKey[server.id]
+                })}
+                onCopyKey={() => handleCopyApiKey(server.id)}
+                onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="weather" className="mcp-tab-content">
+          <div className="mcp-service-grid">
+            {weatherServers.map(server => (
+              <ServiceCard
+                key={server.id}
+                server={server}
+                expanded={expandedServer === server.id}
+                showApiKey={showApiKey[server.id]}
+                copiedKey={copiedKey[server.id]}
+                onToggle={() => handleToggleServer(server.id)}
+                onExpand={() => setExpandedServer(
+                  expandedServer === server.id ? null : server.id
+                )}
+                onToggleShowKey={() => setShowApiKey({
+                  ...showApiKey,
+                  [server.id]: !showApiKey[server.id]
+                })}
+                onCopyKey={() => handleCopyApiKey(server.id)}
+                onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="time" className="mcp-tab-content">
+          <div className="mcp-service-grid">
+            {timeServers.map(server => (
+              <ServiceCard
+                key={server.id}
+                server={server}
+                expanded={expandedServer === server.id}
+                showApiKey={showApiKey[server.id]}
+                copiedKey={copiedKey[server.id]}
+                onToggle={() => handleToggleServer(server.id)}
+                onExpand={() => setExpandedServer(
+                  expandedServer === server.id ? null : server.id
+                )}
+                onToggleShowKey={() => setShowApiKey({
+                  ...showApiKey,
+                  [server.id]: !showApiKey[server.id]
+                })}
+                onCopyKey={() => handleCopyApiKey(server.id)}
+                onSaveKey={(apiKey) => handleSaveApiKey(server.id, apiKey)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
@@ -258,10 +286,26 @@ function ServiceCard({
     <div className={`mcp-service-card ${server.isEnabled ? 'enabled' : ''}`}>
       <div className="mcp-service-header">
         <div className="mcp-service-info">
-          <span className="mcp-service-icon">{server.icon}</span>
-          <div>
+          <div className="mcp-service-title">
+            <span className="mcp-service-icon">{server.icon}</span>
             <h5 className="mcp-service-name">{server.name}</h5>
-            <p className="mcp-service-description">{server.description}</p>
+            <ServiceInfoDialog server={server} />
+          </div>
+          <p className="mcp-service-description">{server.description}</p>
+          <div className="mcp-service-badges">
+            {server.isFree && (
+              <Badge variant="secondary" className="mcp-free-badge">
+                免费
+              </Badge>
+            )}
+            {server.freeLimit && (
+              <Badge variant="outline" className="mcp-limit-badge">
+                {server.freeLimit}
+              </Badge>
+            )}
+            <Badge variant="outline" className="mcp-lang-badge">
+              {server.language}
+            </Badge>
           </div>
         </div>
         <div className="mcp-service-actions">
@@ -322,39 +366,15 @@ function ServiceCard({
                   保存
                 </Button>
                 {server.signupUrl && (
-                  <a
-                    href={server.signupUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mcp-link"
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(server.signupUrl, '_blank')}
                   >
                     获取 API Key
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </Button>
                 )}
-                {server.docsUrl && (
-                  <a
-                    href={server.docsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mcp-link"
-                  >
-                    查看文档
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
-
-              {/* 工具列表 */}
-              <div className="mcp-tools-info">
-                <h6>提供的功能：</h6>
-                <ul>
-                  {server.tools.map((tool, index) => (
-                    <li key={index}>
-                      <strong>{tool.name}</strong>: {tool.description}
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
           )}
@@ -363,10 +383,150 @@ function ServiceCard({
 
       {!server.requiresApiKey && server.isEnabled && (
         <div className="mcp-service-footer">
-          <span className="mcp-free-badge">✓ 无需 API Key，免费使用</span>
+          <Badge variant="secondary" className="mcp-ready-badge">
+            ✓ 已就绪，无需配置
+          </Badge>
         </div>
       )}
     </div>
   )
 }
 
+/**
+ * 服务信息弹窗组件
+ */
+function ServiceInfoDialog({ server }) {
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="mcp-info-button" title="查看详细信息">
+          <Info className="w-4 h-4" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="mcp-info-dialog max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="text-2xl">{server.icon}</span>
+            {server.name}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="mcp-info-content space-y-6">
+          {/* 基本信息 */}
+          <div>
+            <h4 className="font-semibold mb-2">服务简介</h4>
+            <p className="text-sm text-muted-foreground">{server.description}</p>
+            <div className="flex gap-2 mt-2">
+              {server.isFree && (
+                <Badge variant="secondary">免费服务</Badge>
+              )}
+              {server.freeLimit && (
+                <Badge variant="outline">{server.freeLimit}</Badge>
+              )}
+              <Badge variant="outline">{server.language}</Badge>
+            </div>
+          </div>
+
+          {/* 功能列表 */}
+          <div>
+            <h4 className="font-semibold mb-2">提供的功能</h4>
+            <div className="space-y-2">
+              {server.tools.map((tool, index) => (
+                <div key={index} className="border rounded p-3">
+                  <div className="font-medium text-sm">{tool.name}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{tool.description}</div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    参数: {Object.entries(tool.parameters).map(([key, desc]) => 
+                      `${key} (${desc})`
+                    ).join(', ')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 安装配置 */}
+          <div>
+            <h4 className="font-semibold mb-2">安装命令</h4>
+            <div className="bg-muted p-3 rounded font-mono text-sm">
+              {server.installCommand}
+              <button
+                className="ml-2 text-xs text-primary hover:underline"
+                onClick={() => copyToClipboard(server.installCommand)}
+              >
+                复制
+              </button>
+            </div>
+          </div>
+
+          {/* 配置示例 */}
+          <div>
+            <h4 className="font-semibold mb-2">配置示例</h4>
+            <div className="bg-muted p-3 rounded">
+              <pre className="text-xs overflow-x-auto">
+                {JSON.stringify(server.configExample, null, 2)}
+              </pre>
+              <button
+                className="mt-2 text-xs text-primary hover:underline"
+                onClick={() => copyToClipboard(JSON.stringify(server.configExample, null, 2))}
+              >
+                复制配置
+              </button>
+            </div>
+          </div>
+
+          {/* 链接按钮 */}
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => window.open(server.repoUrl, '_blank')}
+            >
+              <ExternalLink className="w-4 h-4 mr-1" />
+              GitHub 仓库
+            </Button>
+            
+            {server.docsUrl && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.open(server.docsUrl, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-1" />
+                官方文档
+              </Button>
+            )}
+            
+            {server.signupUrl && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.open(server.signupUrl, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-1" />
+                获取 API Key
+              </Button>
+            )}
+          </div>
+
+          {/* API Key 要求 */}
+          {server.requiresApiKey && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+              <div className="flex items-center gap-2 text-yellow-800">
+                <AlertCircle className="w-4 h-4" />
+                <span className="font-medium">需要 API Key</span>
+              </div>
+              <p className="text-sm text-yellow-700 mt-1">
+                此服务需要 API Key 才能使用。请访问官方网站注册并获取免费的 API Key。
+              </p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
