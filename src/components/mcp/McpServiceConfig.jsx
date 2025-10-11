@@ -267,26 +267,118 @@ function ServiceInfoDialog({ server }) {
     navigator.clipboard.writeText(text)
   }
 
-  // 根据服务类型提供功能描述
+  // 根据服务类型提供功能描述和参数示例
   const getServiceFeatures = (serverId) => {
     switch (serverId) {
-      case 'open-meteo-weather':
-        return [
-          { name: '当前天气查询', description: '获取指定城市的实时天气信息' },
-          { name: '天气预报', description: '获取未来几天的天气预报' }
-        ]
-      case 'duckduckgo-search':
-        return [
-          { name: '网络搜索', description: '使用Wikipedia进行信息搜索' },
-          { name: '搜索建议', description: '提供相关搜索建议和链接' }
-        ]
-      case 'official-time-server':
-        return [
-          { name: '当前时间', description: '获取当前的日期和时间' },
-          { name: '时区支持', description: '支持不同时区的时间查询' }
-        ]
+      case 'weather':
+        return {
+          features: [
+            { name: '当前天气查询', description: '获取指定城市的实时天气信息' },
+            { name: '天气预报', description: '获取未来几天的天气预报' }
+          ],
+          tools: [
+            {
+              name: 'get_current_weather',
+              params: '{ "location": "北京", "units": "celsius" }',
+              description: '参数说明: location(城市名), units(温度单位,可选)'
+            },
+            {
+              name: 'get_weather_forecast',
+              params: '{ "location": "上海", "days": 3, "units": "celsius" }',
+              description: '参数说明: location(城市名), days(预报天数,1-7), units(温度单位,可选)'
+            }
+          ]
+        }
+      case 'search':
+        return {
+          features: [
+            { name: '网络搜索', description: '使用DuckDuckGo进行网络搜索' },
+            { name: '实时信息', description: '获取最新的网络信息和资讯' }
+          ],
+          tools: [
+            {
+              name: 'search_web',
+              params: '{ "query": "搜索关键词", "max_results": 10 }',
+              description: '参数说明: query(搜索词), max_results(结果数量,可选)'
+            }
+          ],
+          limitations: '注意: 请求过于频繁可能会被限流,建议间隔5-10秒'
+        }
+      case 'time':
+        return {
+          features: [
+            { name: '当前时间', description: '获取指定时区的当前时间' },
+            { name: '时区转换', description: '在不同时区之间转换时间' }
+          ],
+          tools: [
+            {
+              name: 'get_current_time',
+              params: '{ "timezone": "Asia/Shanghai" }',
+              description: '参数说明: timezone(时区,如Asia/Shanghai)'
+            },
+            {
+              name: 'convert_time',
+              params: '{ "time": "2025-01-01 12:00", "from_tz": "UTC", "to_tz": "Asia/Shanghai" }',
+              description: '参数说明: time(时间), from_tz(源时区), to_tz(目标时区)'
+            }
+          ]
+        }
+      case 'youtube':
+        return {
+          features: [
+            { name: 'YouTube字幕提取', description: '获取YouTube视频的字幕和转录文本' },
+            { name: '多语言支持', description: '支持中文、英文等多种语言字幕' }
+          ],
+          tools: [
+            {
+              name: 'get_youtube_transcript',
+              params: '{ "url": "https://www.youtube.com/watch?v=VIDEO_ID", "lang": "auto" }',
+              description: '参数说明: url(视频链接), lang(语言代码,可选,auto为自动)'
+            }
+          ],
+          limitations: '注意: 仅支持有字幕的视频,部分视频可能无可用字幕'
+        }
+      case 'coincap':
+        return {
+          features: [
+            { name: '加密货币价格', description: '获取实时加密货币价格和市场数据' },
+            { name: '市场数据', description: '查看加密货币的市值、交易量等信息' }
+          ],
+          tools: [
+            {
+              name: 'get_bitcoin_price',
+              params: '{}',
+              description: '获取比特币实时价格,无需参数'
+            },
+            {
+              name: 'get_crypto_price',
+              params: '{ "symbol": "ethereum" }',
+              description: '参数说明: symbol(加密货币符号,如bitcoin, ethereum)'
+            },
+            {
+              name: 'list_crypto_assets',
+              params: '{ "limit": 10 }',
+              description: '参数说明: limit(返回数量,可选,默认10)'
+            }
+          ],
+          limitations: '注意: 当前环境可能无法访问CoinCap API,生产环境中应正常'
+        }
+      case 'fetch':
+        return {
+          features: [
+            { name: '网页内容抓取', description: '从URL获取网页内容并转换为Markdown' },
+            { name: '内容提取', description: '自动提取网页的主要内容' }
+          ],
+          tools: [
+            {
+              name: 'fetch_url',
+              params: '{ "url": "https://example.com" }',
+              description: '参数说明: url(要抓取的网页地址)'
+            }
+          ]
+        }
       default:
-        return []
+        return { features: [], tools: [] }
     }
   }
 
@@ -320,16 +412,51 @@ function ServiceInfoDialog({ server }) {
           </div>
 
           {/* 功能列表 */}
-          {features.length > 0 && (
+          {features.features && features.features.length > 0 && (
             <div>
               <h4 className="font-semibold mb-2">提供的功能</h4>
               <div className="space-y-2">
-                {features.map((feature, index) => (
+                {features.features.map((feature, index) => (
                   <div key={index} className="border rounded p-3">
                     <div className="font-medium text-sm">{feature.name}</div>
                     <div className="text-xs text-muted-foreground mt-1">{feature.description}</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* 工具和参数 */}
+          {features.tools && features.tools.length > 0 && (
+            <div>
+              <h4 className="font-semibold mb-2">可用工具及参数</h4>
+              <div className="space-y-3">
+                {features.tools.map((tool, index) => (
+                  <div key={index} className="border rounded p-3 bg-slate-50">
+                    <div className="font-mono text-sm font-medium text-blue-600 mb-1">
+                      {tool.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-2">
+                      {tool.description}
+                    </div>
+                    <div className="bg-slate-900 text-green-400 p-2 rounded font-mono text-xs overflow-x-auto">
+                      {tool.params}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 限制说明 */}
+          {features.limitations && (
+            <div>
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-yellow-600" />
+                使用限制
+              </h4>
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm text-yellow-800">
+                {features.limitations}
               </div>
             </div>
           )}
