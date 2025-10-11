@@ -3,29 +3,32 @@ const { getSubtitles } = require('youtube-captions-scraper');
 const logger = require('../utils/logger.cjs');
 
 class YouTubeService extends BaseService {
-  constructor() {
-    super('youtube', 'YouTube字幕提取', 'YouTube字幕服务');
+  constructor(config) {
+    super(config);
   }
 
   getTools() {
     return [
       {
-        name: 'get_youtube_transcript',
-        description: '获取YouTube视频的字幕和转录文本。支持多种语言,如果未指定语言会自动尝试中文和英文。',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            url: {
-              type: 'string',
-              description: 'YouTube视频URL(如 https://www.youtube.com/watch?v=VIDEO_ID) 或视频ID'
+        type: 'function',
+        function: {
+          name: 'get_youtube_transcript',
+          description: '获取YouTube视频的字幕和转录文本。支持多种语言,如果未指定语言会自动尝试中文和英文。',
+          parameters: {
+            type: 'object',
+            properties: {
+              url: {
+                type: 'string',
+                description: 'YouTube视频URL(如 https://www.youtube.com/watch?v=VIDEO_ID) 或视频ID'
+              },
+              lang: {
+                type: 'string',
+                description: '字幕语言代码(可选,如zh表示中文,en表示英文)。如果不指定,会自动尝试中文和英文。',
+                default: 'auto'
+              }
             },
-            lang: {
-              type: 'string',
-              description: '字幕语言代码(可选,如zh表示中文,en表示英文)。如果不指定,会自动尝试中文和英文。',
-              default: 'auto'
-            }
-          },
-          required: ['url']
+            required: ['url']
+          }
         }
       }
     ];

@@ -13,8 +13,10 @@ const { router: mcpRouter, initializeRouter } = require('./routes/mcp.cjs');
 const WeatherService = require('./services/weather.cjs');
 const TimeService = require('./services/time.cjs');
 const SearchService = require('./services/search.cjs');
+const GoogleSearchService = require('./services/google-search.cjs');
 const YouTubeService = require('./services/youtube.cjs');
 const CoincapService = require('./services/coincap.cjs');
+const DexscreenerService = require('./services/dexscreener.cjs');
 const FetchService = require('./services/fetch.cjs');
 
 // 创建Express应用
@@ -43,17 +45,28 @@ async function initializeServices() {
     // 创建服务实例
     services.weather = new WeatherService(config.services.weather);
     services.time = new TimeService(config.services.time);
-    services.search = new SearchService(config.services.search);
+    services.search = new SearchService(config.services.search); // DuckDuckGo搜索
     services.youtube = new YouTubeService(config.services.youtube);
-    services.coincap = new CoincapService(config.services.coincap);
+    services.dexscreener = new DexscreenerService({
+      id: 'dexscreener',
+      name: 'Dexscreener加密货币',
+      description: '获取实时加密货币价格和市场数据',
+      enabled: true,
+      autoLoad: true
+    });
     services.fetch = new FetchService(config.services.fetch);
     
     // 初始化自动加载的服务
     for (const [id, service] of Object.entries(services)) {
-      const serviceConfig = config.services[id];
-      if (serviceConfig.autoLoad && serviceConfig.enabled) {
+      // 检查服务是否启用并需要初始化
+      if (service.enabled && service.initialize) {
         logger.info(`自动加载服务: ${service.name}`);
-        await service.initialize();
+        try {
+          await service.initialize();
+        } catch (error) {
+          logger.error(`服务${service.name}初始化失败:`, error);
+          // 继续初始化其他服务
+        }
       }
     }
     
