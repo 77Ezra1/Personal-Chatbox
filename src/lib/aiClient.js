@@ -596,41 +596,92 @@ async function callOpenAICompatible({
     let fullText = ''
     let reasoningText = ''
     let toolCalls = []
-    await processEventStream(response.body, (event) => {
-      const deltaText = extractOpenAIText(event?.choices?.[0]?.delta?.content)
-      if (deltaText) {
-        fullText += deltaText
-        onToken?.(deltaText, fullText)
-      }
-      const deltaReasoning = extractOpenAIText(event?.choices?.[0]?.delta?.reasoning)
-      if (deltaReasoning) {
-        reasoningText += deltaReasoning
-      }
-      // 收集工具调用
-      const deltaToolCalls = event?.choices?.[0]?.delta?.tool_calls
-      if (deltaToolCalls && Array.isArray(deltaToolCalls)) {
-        deltaToolCalls.forEach(tc => {
-          if (tc?.index !== undefined) {
-            if (!toolCalls[tc.index]) {
-              toolCalls[tc.index] = {
-                id: tc.id || '',
-                type: tc.type || 'function',
-                function: { name: '', arguments: '' }
+    
+    try {
+      await processEventStream(response.body, (event) => {
+        const deltaText = extractOpenAIText(event?.choices?.[0]?.delta?.content)
+        if (deltaText) {
+          fullText += deltaText
+          onToken?.(deltaText, fullText)
+        }
+        const deltaReasoning = extractOpenAIText(event?.choices?.[0]?.delta?.reasoning)
+        if (deltaReasoning) {
+          reasoningText += deltaReasoning
+        }
+        // 收集工具调用
+        const deltaToolCalls = event?.choices?.[0]?.delta?.tool_calls
+        if (deltaToolCalls && Array.isArray(deltaToolCalls)) {
+          deltaToolCalls.forEach(tc => {
+            if (tc?.index !== undefined) {
+              if (!toolCalls[tc.index]) {
+                toolCalls[tc.index] = {
+                  id: tc.id || '',
+                  type: tc.type || 'function',
+                  function: { name: '', arguments: '' }
+                }
               }
+              if (tc.id) toolCalls[tc.index].id = tc.id
+              if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name
+              if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments
             }
-            if (tc.id) toolCalls[tc.index].id = tc.id
-            if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name
-            if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments
-          }
-        })
+          })
+        }
+      })
+      
+      const reasoning = normalizeReasoningContent(reasoningText)
+      const result = { role: 'assistant', content: fullText, raw: null, reasoning }
+      if (toolCalls.length > 0) {
+        result.tool_calls = toolCalls.filter(tc => tc && tc.id)
       }
-    })
-    const reasoning = normalizeReasoningContent(reasoningText)
-    const result = { role: 'assistant', content: fullText, raw: null, reasoning }
-    if (toolCalls.length > 0) {
-      result.tool_calls = toolCalls.filter(tc => tc && tc.id)
+      return result
+      
+    } catch (streamError) {
+      console.warn('[AI] Stream processing failed, falling back to non-stream:', streamError.message)
+      
+      // Fallback: 重新发送非流式请求
+      const fallbackRequestBody = {
+        model,
+        messages: payloadMessages,
+        temperature,
+        stream: false, // 关闭流式响应
+        ...(enableReasoning ? { reasoning: { effort: 'medium' } } : {}),
+        ...(tools && tools.length > 0 ? { tools, tool_choice: 'auto' } : {})
+      }
+      
+      if (maxTokens !== -1) {
+        fallbackRequestBody.max_tokens = maxTokens
+      }
+      
+      console.log('[AI] Fallback request body:', JSON.stringify(fallbackRequestBody, null, 2))
+      
+      const fallbackResponse = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headersBuilder(apiKey)
+        },
+        body: JSON.stringify(fallbackRequestBody),
+        signal
+      })
+      
+      await ensureResponseOk(fallbackResponse)
+      
+      const fallbackData = await fallbackResponse.json()
+      const fallbackMessage = fallbackData?.choices?.[0]?.message ?? {}
+      const fallbackContent = extractOpenAIText(fallbackMessage?.content)
+      const fallbackReasoning = normalizeReasoningContent(fallbackMessage?.reasoning)
+      
+      // 模拟流式输出
+      if (onToken && fallbackContent) {
+        onToken(fallbackContent, fallbackContent)
+      }
+      
+      const fallbackResult = { role: 'assistant', content: fallbackContent, raw: fallbackData, reasoning: fallbackReasoning }
+      if (fallbackMessage.tool_calls && Array.isArray(fallbackMessage.tool_calls)) {
+        fallbackResult.tool_calls = fallbackMessage.tool_calls
+      }
+      return fallbackResult
     }
-    return result
   }
 
   const data = await response.json()
