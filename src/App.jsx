@@ -2,7 +2,8 @@ import { useState, useRef, useCallback } from 'react'
 import { Toaster, toast } from 'sonner'
 
 // Hooks
-import { useConversations, conversationUtils } from '@/hooks/useConversations'
+import { useConversationsDB as useConversations, conversationUtils } from '@/hooks/useConversationsDB'
+import { useDataMigration } from '@/hooks/useDataMigration'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useTheme } from '@/hooks/useTheme'
 import { useModelConfigDB } from '@/hooks/useModelConfigDB'
@@ -30,6 +31,9 @@ import './App.css'
 function App() {
   // ==================== Hooks ====================
   
+  // 数据迁移
+  const { migrationStatus } = useDataMigration()
+  
   // 对话管理
   const {
     conversations,
@@ -43,7 +47,8 @@ function App() {
     renameConversation,
     removeConversation,
     deleteMessage,
-    editMessage
+    editMessage,
+    loading: conversationsLoading
   } = useConversations()
 
   // 国际化

@@ -4,12 +4,14 @@
 
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const config = require('./config.cjs');
 const logger = require('./utils/logger.cjs');
 const { errorHandler } = require('./utils/errors.cjs');
 const { router: mcpRouter, initializeRouter } = require('./routes/mcp.cjs');
 const { router: chatRouter, initializeRouter: initializeChatRouter } = require('./routes/chat.cjs');
 const proxyRouter = require('./routes/proxy.cjs');
+const authRouter = require('./routes/auth.cjs');
 
 // 导入 MCP Manager
 const MCPManager = require('./services/mcp-manager.cjs');
@@ -36,7 +38,11 @@ const app = express();
 
 // 中间件
 app.use(express.json());
-app.use(cors(config.server.cors));
+app.use(cookieParser());
+app.use(cors({
+  ...config.server.cors,
+  credentials: true // 允许携带Cookie
+}));
 
 // 日志中间件
 app.use((req, res, next) => {
@@ -199,6 +205,8 @@ async function initializeServices() {
 }
 
 // API路由
+app.use('/api/auth', authRouter); // 认证路由
+app.use('/api/user-data', require('./routes/user-data.cjs')); // 用户数据路由
 app.use('/api/mcp', mcpRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/proxy', proxyRouter);
@@ -232,6 +240,12 @@ app.use(errorHandler);
  */
 async function start() {
   try {
+    // 初始化数据库
+    logger.info('初始化数据库...');
+    const { initDatabase } = require('./db/init.cjs');
+    await initDatabase();
+    logger.info('✅ 数据库初始化完成');
+    
     // 初始化服务
     await initializeServices();
     

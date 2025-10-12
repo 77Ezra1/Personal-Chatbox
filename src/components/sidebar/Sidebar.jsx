@@ -1,6 +1,7 @@
-import { Languages, Moon, Plus, Settings, Sun, Trash, Trash2 } from 'lucide-react'
+import { Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * 侧边栏组件
@@ -23,6 +24,16 @@ export function Sidebar({
   onShowConfirm,
   translate
 }) {
+  const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    onShowConfirm?.({
+      title: language === 'zh' ? '确认登出' : 'Confirm Logout',
+      message: language === 'zh' ? '确定要退出登录吗?' : 'Are you sure you want to logout?',
+      variant: 'default',
+      onConfirm: () => logout()
+    })
+  }
   const handleDelete = (id, title) => {
     const messageTemplate = translate(
       'confirms.deleteConversation',
@@ -93,6 +104,28 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-footer">
+        {/* 用户信息区域 */}
+        {user && (
+          <div className="sidebar-user-info">
+            <div className="user-info-content">
+              <User className="w-4 h-4" />
+              <div className="user-details">
+                <div className="user-name">{user.username || user.email}</div>
+                <div className="user-email">{user.email}</div>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              title={language === 'zh' ? '登出' : 'Logout'}
+              className="logout-button"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+
         <div className="sidebar-footer-actions">
           <Button
             variant="ghost"
