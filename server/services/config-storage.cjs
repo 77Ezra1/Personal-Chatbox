@@ -116,6 +116,12 @@ class ConfigStorage {
     return {
       version: '1.0.0',
       services: {
+        proxy: {
+          enabled: false,
+          protocol: 'http',
+          host: '127.0.0.1',
+          port: 7890
+        },
         braveSearch: {
           enabled: false,
           apiKey: ''
@@ -370,9 +376,19 @@ class ConfigStorage {
   getServiceConfig(serviceKey) {
     return this.config.services[serviceKey] || null;
   }
+
+  /**
+   * 更新服务配置(别名方法)
+   */
+  async updateServiceConfig(serviceKey, serviceConfig) {
+    return await this.updateService(serviceKey, serviceConfig);
+  }
 }
 
 // 导出单例
 const configStorage = new ConfigStorage();
+
+// 导出单例实例和获取函数
 module.exports = configStorage;
+module.exports.getConfigStorage = () => configStorage;
 

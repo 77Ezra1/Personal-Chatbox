@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
 const { EventEmitter } = require('events');
+const { getProxyManager } = require('../lib/ProxyManager.cjs');
 
 /**
  * MCP Manager - 管理所有 MCP 服务实例
@@ -12,6 +13,7 @@ class MCPManager extends EventEmitter {
     this.processes = new Map(); // 服务进程
     this.pendingRequests = new Map(); // 待处理的请求
     this.requestId = 1;
+    this.proxyManager = getProxyManager(); // 代理管理器
   }
 
   /**
@@ -30,11 +32,25 @@ class MCPManager extends EventEmitter {
       console.log(`[MCP Manager] 启动服务: ${id}`);
       console.log(`[MCP Manager] 命令: ${command} ${args.join(' ')}`);
 
-      // 合并环境变量
+      // 获取代理配置
+      await this.proxyManager.initialize();
+      const proxyInfo = await this.proxyManager.getProxyInfo();
+      
+      // 合并环境变量,包括代理配置
       const processEnv = {
         ...process.env,
         ...env
       };
+      
+      // 如果有代理,添加代理环境变量
+      if (proxyInfo.system && proxyInfo.system.enabled) {
+        const proxyUrl = proxyInfo.system.url;
+        processEnv.HTTP_PROXY = proxyUrl;
+        processEnv.HTTPS_PROXY = proxyUrl;
+        processEnv.http_proxy = proxyUrl;
+        processEnv.https_proxy = proxyUrl;
+        console.log(`[MCP Manager] ${id} 使用代理: ${proxyUrl}`);
+      }
 
       // 启动子进程
       // Windows 系统需要使用 shell: true 或者 .cmd 后缀

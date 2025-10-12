@@ -55,6 +55,24 @@ async function initializeServices() {
   logger.info('初始化配置存储...');
   await configStorage.initialize();
   
+  // 加载并应用代理配置
+  logger.info('加载代理配置...');
+  try {
+    const proxyConfig = await configStorage.getServiceConfig('proxy');
+    if (proxyConfig && proxyConfig.enabled) {
+      const proxyUrl = `${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`;
+      process.env.HTTP_PROXY = proxyUrl;
+      process.env.HTTPS_PROXY = proxyUrl;
+      process.env.http_proxy = proxyUrl;
+      process.env.https_proxy = proxyUrl;
+      logger.info(`✅ 已应用用户配置的代理: ${proxyUrl}`);
+    } else {
+      logger.info('ℹ️  未配置代理或代理已禁用');
+    }
+  } catch (error) {
+    logger.warn('加载代理配置失败:', error.message);
+  }
+  
   logger.info('初始化MCP服务...');
   
   try {

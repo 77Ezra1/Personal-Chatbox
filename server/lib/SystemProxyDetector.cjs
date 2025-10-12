@@ -13,7 +13,7 @@ class SystemProxyDetector {
 
   /**
    * 获取系统代理设置
-   * 优先从环境变量读取,这是最可靠的方式
+   * 优先级: 用户配置 > 环境变量 > 自动检测
    */
   async getSystemProxy() {
     const now = Date.now();
@@ -24,7 +24,32 @@ class SystemProxyDetector {
     }
 
     try {
-      // 方法1: 从环境变量读取 (最可靠)
+      // 方法1: 从用户配置读取 (最高优先级)
+      try {
+        const { getConfigStorage } = require('../services/config-storage.cjs');
+        const configStorage = getConfigStorage();
+        const proxyConfig = await configStorage.getServiceConfig('proxy');
+        
+        if (proxyConfig && proxyConfig.enabled) {
+          const proxyUrl = `${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`;
+          this.cachedProxy = {
+            enabled: true,
+            url: proxyUrl,
+            source: 'user_config',
+            protocol: proxyConfig.protocol,
+            host: proxyConfig.host,
+            port: proxyConfig.port
+          };
+          console.log('✅ 使用用户配置的代理:', this.cachedProxy.url);
+          this.lastCheck = now;
+          return this.cachedProxy;
+        }
+      } catch (error) {
+        // 如果配置读取失败,继续尝试其他方法
+        console.log('ℹ️  未找到用户配置的代理,尝试其他方法');
+      }
+
+      // 方法2: 从环境变量读取
       const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
       const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
       const proxyUrl = httpsProxy || httpProxy;
@@ -38,7 +63,7 @@ class SystemProxyDetector {
         };
         console.log('✅ 检测到环境变量代理:', this.cachedProxy.url);
       } else {
-        // 方法2: 尝试检测常见的Clash端口
+        // 方法3: 尝试检测常见的Clash端口
         const clashProxy = await this.detectClashProxy();
         if (clashProxy) {
           this.cachedProxy = clashProxy;

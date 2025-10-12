@@ -54,6 +54,7 @@
     "express": "^5.1.0",
     "framer-motion": "^12.15.0",
     "get-proxy-settings": "^0.1.13",
+    "https-proxy-agent": "^7.0.6",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.510.0",
     "mcp-sqlite": "^1.0.7",

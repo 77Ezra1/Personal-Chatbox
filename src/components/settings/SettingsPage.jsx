@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare, Plug, Key } from 'lucide-react'
+import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare, Plug, Key, Wifi } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfigPanel } from '../config/ConfigPanel'
 import { SystemPromptConfigNew } from '../config/SystemPromptConfigNew'
 import McpServiceConfig from '../mcp/McpServiceConfig_Simple'
 import { ApiKeysConfig } from './ApiKeysConfig'
+import ProxyConfig from './ProxyConfig'
 import './SettingsPage.css'
 
 /**
@@ -45,6 +46,7 @@ export function SettingsPage({
     { id: 'model', icon: SettingsIcon, label: translate('settings.tabs.model', 'Model Configuration') },
     { id: 'systemPrompt', icon: MessageSquare, label: translate('settings.tabs.systemPrompt', 'System Prompt') },
     { id: 'apiKeys', icon: Key, label: translate('settings.tabs.apiKeys', 'API Keys') },
+    { id: 'proxy', icon: Wifi, label: translate('settings.tabs.proxy', 'Proxy Settings') },
     { id: 'mcpServices', icon: Plug, label: translate('settings.tabs.mcpServices', 'MCP Services') },
     { id: 'appearance', icon: Palette, label: translate('settings.tabs.appearance', 'Appearance') },
     { id: 'language', icon: Globe, label: translate('settings.tabs.language', 'Language') },
@@ -213,6 +215,12 @@ export function SettingsPage({
                     <span>English</span>
                   </label>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'proxy' && (
+              <div className="settings-section">
+                <ProxyConfig translate={translate} />
               </div>
             )}
 
