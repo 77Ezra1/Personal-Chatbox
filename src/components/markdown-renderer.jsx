@@ -147,31 +147,22 @@ function parseMCPContent(text) {
   let thinkingContent = ''
   
   // 提取 <thinking> 标签内容 (deepseek-chat)
-  const thinkingRegex = /<thinking>([\s\S]*?)<\/thinking>/gi
-  let thinkingMatch
-  while ((thinkingMatch = thinkingRegex.exec(text)) !== null) {
-    thinkingContent += thinkingMatch[1].trim() + '\n\n'
-    // 从原文中移除
-    processedText = processedText.replace(thinkingMatch[0], '')
-  }
+  processedText = processedText.replace(/<thinking>([\s\S]*?)<\/thinking>/gi, (match, content) => {
+    thinkingContent += content.trim() + '\n\n'
+    return ''
+  })
   
   // 提取 <reasoning> 标签内容 (deepseek-reasoner)
-  const reasoningRegex = /<reasoning>([\s\S]*?)<\/reasoning>/gi
-  let reasoningMatch
-  while ((reasoningMatch = reasoningRegex.exec(text)) !== null) {
-    thinkingContent += reasoningMatch[1].trim() + '\n\n'
-    // 从原文中移除
-    processedText = processedText.replace(reasoningMatch[0], '')
-  }
+  processedText = processedText.replace(/<reasoning>([\s\S]*?)<\/reasoning>/gi, (match, content) => {
+    thinkingContent += content.trim() + '\n\n'
+    return ''
+  })
   
   // 提取 <tool_call> 标签内容
-  const toolCallRegex = /<tool_call>([\s\S]*?)<\/tool_call>/gi
-  let toolCallMatch
-  while ((toolCallMatch = toolCallRegex.exec(text)) !== null) {
-    thinkingContent += '**工具调用:**\n```json\n' + toolCallMatch[1].trim() + '\n```\n\n'
-    // 从原文中移除
-    processedText = processedText.replace(toolCallMatch[0], '')
-  }
+  processedText = processedText.replace(/<tool_call>([\s\S]*?)<\/tool_call>/gi, (match, content) => {
+    thinkingContent += '**工具调用:**\n```json\n' + content.trim() + '\n```\n\n'
+    return ''
+  })
   
   // 移除 <answer> 标签但保留内容 (deepseek-reasoner)
   processedText = processedText.replace(/<answer>([\s\S]*?)<\/answer>/gi, '$1')
