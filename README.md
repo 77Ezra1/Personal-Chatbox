@@ -1,4 +1,4 @@
-# AI Life System
+# Personal Chatbox
 
 **作者**: Ezra
 
@@ -6,7 +6,7 @@
 
 ## 📖 项目简介
 
-AI Life System是一个基于React和Node.js开发的全栈AI对话应用,旨在为用户提供:
+Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨在为用户提供:
 
 - **多模型支持**: 集成OpenAI、DeepSeek、Claude等主流AI模型
 - **MCP服务集成**: 支持15+种MCP服务,包括天气查询、搜索、数据库操作、文件管理等
@@ -26,8 +26,8 @@ AI Life System是一个基于React和Node.js开发的全栈AI对话应用,旨在
 
 1. **克隆项目**
    ```bash
-   git clone https://github.com/77Ezra1/AI-Life-system.git
-   cd AI-Life-system
+   git clone https://github.com/77Ezra1/Personal Chatbox.git
+   cd Personal Chatbox
    ```
 
 2. **安装依赖**
@@ -148,7 +148,7 @@ AI Life System是一个基于React和Node.js开发的全栈AI对话应用,旨在
 ## 📁 项目结构
 
 ```
-AI-Life-system/
+Personal Chatbox/
 ├── src/                      # 前端源代码
 │   ├── components/          # React组件
 │   │   ├── chat/           # 对话相关组件
@@ -262,8 +262,8 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 ## 📞 联系方式
 
 - **作者**: Ezra
-- **GitHub**: https://github.com/77Ezra1/AI-Life-system
-- **问题反馈**: https://github.com/77Ezra1/AI-Life-system/issues
+- **GitHub**: https://github.com/77Ezra1/Personal Chatbox
+- **问题反馈**: https://github.com/77Ezra1/Personal Chatbox/issues
 
 ---
 

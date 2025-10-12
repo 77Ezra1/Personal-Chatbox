@@ -24,10 +24,10 @@ git --version    # 应该显示 git version 2.x.x
 
 ```bash
 # 克隆仓库
-git clone https://github.com/77Ezra1/AI-Life-system.git
+git clone https://github.com/77Ezra1/Personal Chatbox.git
 
 # 进入项目目录
-cd AI-Life-system
+cd Personal Chatbox
 ```
 
 ### 第二步: 安装依赖
@@ -219,7 +219,7 @@ lsof -ti:3001 | xargs kill -9
 ## 📂 项目结构
 
 ```
-AI-Life-system/
+Personal Chatbox/
 ├── src/                    # 前端源代码
 │   ├── components/         # React组件
 │   ├── hooks/              # React Hooks
@@ -356,7 +356,7 @@ nohup node server/index.cjs > server.log 2>&1 &
 2. 查看 [DELIVERY_REPORT.md](./DELIVERY_REPORT.md) - 交付报告
 3. 查看后端日志: `cat server.log`
 4. 查看浏览器控制台
-5. 提交 GitHub Issue: https://github.com/77Ezra1/AI-Life-system/issues
+5. 提交 GitHub Issue: https://github.com/77Ezra1/Personal Chatbox/issues
 
 ## ✅ 启动检查清单
 

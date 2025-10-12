@@ -1,6 +1,6 @@
 # 推荐的 MCP 服务
 
-基于 [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) 仓库,以下是一些特别适合你的 AI-Life-system 项目的 MCP 服务推荐。
+基于 [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) 仓库,以下是一些特别适合你的 Personal Chatbox 项目的 MCP 服务推荐。
 
 ---
 

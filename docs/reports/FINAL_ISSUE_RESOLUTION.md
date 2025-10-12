@@ -158,7 +158,7 @@ modelConfig: { ...modelConfig, deepThinking: true }, // 确保思考过程完整
 
 ## 🎉 **最终结论**
 
-**问题已完全解决！** 您的AI-Life-system现在能够：
+**问题已完全解决！** 您的Personal Chatbox现在能够：
 - ✅ 正确调用MCP搜索服务
 - ✅ 基于搜索结果生成详细回复
 - ✅ 提供专业、有价值的分析内容

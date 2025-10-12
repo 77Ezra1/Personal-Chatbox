@@ -28,7 +28,7 @@
 - ✅ 已有完整的配置存储功能
 - ✅ 支持配置的加密存储
 - ✅ 支持配置的读取和更新
-- ✅ 配置文件路径: `/home/ubuntu/AI-Life-system/data/config.json`
+- ✅ 配置文件路径: `/home/ubuntu/Personal Chatbox/data/config.json`
 
 #### 配置API路由 (`server/routes/config.cjs`)
 - ✅ POST `/api/config/service/:serviceId` - 更新服务配置
@@ -53,7 +53,7 @@
   "enabled": true
 }
 ```
-**结果**: ✅ 配置成功保存到 `/home/ubuntu/AI-Life-system/data/config.json`
+**结果**: ✅ 配置成功保存到 `/home/ubuntu/Personal Chatbox/data/config.json`
 
 #### SQLite服务配置
 ```json
@@ -61,7 +61,7 @@
   "databasePath": "/home/ubuntu/test.db"
 }
 ```
-**结果**: ✅ 配置成功保存到 `/home/ubuntu/AI-Life-system/data/config.json`
+**结果**: ✅ 配置成功保存到 `/home/ubuntu/Personal Chatbox/data/config.json`
 
 ### 服务启动测试
 

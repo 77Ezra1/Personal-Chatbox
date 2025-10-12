@@ -8,7 +8,7 @@
 
 ## 📋 实施概述
 
-成功实施了VPN自动识别功能,让AI-Life-system应用能够自动检测和使用Clash代理(端口7890),使外部MCP服务(Dexscreener、网页抓取等)能够正常工作。
+成功实施了VPN自动识别功能,让Personal Chatbox应用能够自动检测和使用Clash代理(端口7890),使外部MCP服务(Dexscreener、网页抓取等)能够正常工作。
 
 ---
 
@@ -282,7 +282,7 @@ SystemProxyDetector初始化
 **步骤**:
 1. 打开Clash
 2. 确保"设置系统代理"已开启
-3. 启动AI-Life-system后端
+3. 启动Personal Chatbox后端
 4. 应用会自动检测并使用Clash代理
 
 **验证方法**:

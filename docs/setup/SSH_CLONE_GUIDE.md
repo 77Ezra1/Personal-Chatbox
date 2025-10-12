@@ -205,28 +205,28 @@ Hi YourUsername! You've successfully authenticated, but GitHub does not provide 
 
 ```bash
 # 使用SSH协议克隆
-git clone git@github.com:77Ezra1/AI-Life-system.git
+git clone git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 ### 浅克隆 (更快)
 
 ```bash
 # SSH + 浅克隆 = 最快速度
-git clone --depth 1 git@github.com:77Ezra1/AI-Life-system.git
+git clone --depth 1 git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 ### 克隆到指定目录
 
 ```bash
 # 克隆到自定义目录
-git clone git@github.com:77Ezra1/AI-Life-system.git my-project
+git clone git@github.com:77Ezra1/Personal Chatbox.git my-project
 ```
 
 ### 克隆特定分支
 
 ```bash
 # 只克隆 main 分支
-git clone -b main --single-branch git@github.com:77Ezra1/AI-Life-system.git
+git clone -b main --single-branch git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 ---
@@ -250,7 +250,7 @@ ssh-add ~/.ssh/id_ed25519
 ssh -T git@github.com
 
 # 5. 克隆项目
-git clone --depth 1 git@github.com:77Ezra1/AI-Life-system.git
+git clone --depth 1 git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 ---
@@ -493,7 +493,7 @@ chmod 600 ~/.ssh/config
 ssh -T git@github.com
 
 # 6. 克隆项目
-git clone --depth 1 git@github.com:77Ezra1/AI-Life-system.git
+git clone --depth 1 git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 ---
@@ -515,7 +515,7 @@ cat ~/.ssh/id_ed25519.pub
 
 **第3步**: 克隆项目
 ```bash
-git clone --depth 1 git@github.com:77Ezra1/AI-Life-system.git
+git clone --depth 1 git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 ---
@@ -524,7 +524,7 @@ git clone --depth 1 git@github.com:77Ezra1/AI-Life-system.git
 
 ```bash
 # 进入项目
-cd AI-Life-system
+cd Personal Chatbox
 
 # 安装依赖
 npm install --legacy-peer-deps
@@ -572,7 +572,7 @@ npm run dev            # 终端2
 
 **推荐命令**:
 ```bash
-git clone --depth 1 git@github.com:77Ezra1/AI-Life-system.git
+git clone --depth 1 git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 **配置一次,终身受益!** 🚀

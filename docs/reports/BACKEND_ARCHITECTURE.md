@@ -2,7 +2,7 @@
 
 ## 目标
 
-为AI-Life-system添加Node.js后端,支持5个新MCP服务的集成,同时保持现有功能不变。
+为Personal Chatbox添加Node.js后端,支持5个新MCP服务的集成,同时保持现有功能不变。
 
 ## 技术栈
 
@@ -14,7 +14,7 @@
 ## 目录结构
 
 ```
-AI-Life-system/
+Personal Chatbox/
 ├── src/                    # 前端代码(保持不变)
 ├── server/                 # 新增后端目录
 │   ├── index.js           # 服务器入口

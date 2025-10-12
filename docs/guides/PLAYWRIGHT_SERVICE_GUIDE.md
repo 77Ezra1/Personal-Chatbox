@@ -2,7 +2,7 @@
 
 ## 📖 简介
 
-Playwright浏览器自动化服务是集成到AI-Life-system中的强大MCP服务,允许AI助手通过自然语言指令控制浏览器,执行各种自动化任务。
+Playwright浏览器自动化服务是集成到Personal Chatbox中的强大MCP服务,允许AI助手通过自然语言指令控制浏览器,执行各种自动化任务。
 
 ## ✨ 功能特性
 
@@ -237,7 +237,7 @@ Playwright浏览器自动化服务是集成到AI-Life-system中的强大MCP服�
 
 ```bash
 # 拉取最新代码
-cd AI-Life-system
+cd Personal Chatbox
 git pull origin main
 
 # 安装Playwright依赖

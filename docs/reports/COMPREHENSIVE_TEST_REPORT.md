@@ -1,6 +1,6 @@
 
 
-> # AI-Life-system MCP 服务综合测试报告
+> # Personal Chatbox MCP 服务综合测试报告
 > 
 > **版本:** 1.0
 > **日期:** 2025年10月12日
@@ -8,7 +8,7 @@
 > 
 > ## 1. 简介
 > 
-> 本报告旨在全面评估和验证 `AI-Life-system` 项目中集成的模型上下文协议 (Model Context Protocol, MCP) 服务的稳定性、功能完整性和性能。测试的核心目标是确保所有 MCP 服务与 DeepSeek AI 模型无缝集成,并按预期提供可靠的功能支持。
+> 本报告旨在全面评估和验证 `Personal Chatbox` 项目中集成的模型上下文协议 (Model Context Protocol, MCP) 服务的稳定性、功能完整性和性能。测试的核心目标是确保所有 MCP 服务与 DeepSeek AI 模型无缝集成,并按预期提供可靠的功能支持。
 > 
 > 测试范围涵盖了所有已集成的 MCP 服务,包括 Memory(记忆系统)、Filesystem(文件系统)、Sequential Thinking(推理增强)和 SQLite(数据库)。此外,报告还记录了在测试过程中发现的问题、修复过程以及最终的验证结果。
 > 
@@ -17,7 +17,7 @@
 > | 组件 | 版本/配置 |
 > | --- | --- |
 > | **AI 模型** | DeepSeek (通过 OpenAI 兼容 API) |
-> | **项目** | AI-Life-system |
+> | **项目** | Personal Chatbox |
 > | **操作系统** | Ubuntu 22.04 (Manus Sandbox) |
 > | **Node.js 版本** | 22.13.0 |
 > | **前端框架** | Vite + React |
@@ -134,7 +134,7 @@
 
 ## 7. 结论与建议
 
-本次综合测试成功验证了 `AI-Life-system` 项目中所有 MCP 服务的稳定性、功能完整性以及与 DeepSeek AI 模型的无缝集成。所有已发现的关键问题都得到了有效解决,系统目前运行稳定,所有功能均符合预期。
+本次综合测试成功验证了 `Personal Chatbox` 项目中所有 MCP 服务的稳定性、功能完整性以及与 DeepSeek AI 模型的无缝集成。所有已发现的关键问题都得到了有效解决,系统目前运行稳定,所有功能均符合预期。
 
 **结论:**
 - 所有 MCP 服务均已成功集成并通过了 100% 的测试用例。

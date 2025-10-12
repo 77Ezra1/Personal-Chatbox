@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档描述了AI-Life-system项目的数据库架构重构方案。由于项目是纯前端应用，我们将使用**IndexedDB**作为客户端数据库，替代原有的localStorage存储方案。
+本文档描述了Personal Chatbox项目的数据库架构重构方案。由于项目是纯前端应用，我们将使用**IndexedDB**作为客户端数据库，替代原有的localStorage存储方案。
 
 ## 为什么选择IndexedDB
 

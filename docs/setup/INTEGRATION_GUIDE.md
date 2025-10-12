@@ -1,6 +1,6 @@
 # 集成指南 - 如何在现有项目中使用新的系统提示词功能
 
-本文档说明如何将新的IndexedDB存储和系统提示词功能集成到现有的AI-Life-system项目中。
+本文档说明如何将新的IndexedDB存储和系统提示词功能集成到现有的Personal Chatbox项目中。
 
 ## 快速开始
 
@@ -433,5 +433,5 @@ a.click()
 如有问题，请查看：
 - [数据库设计文档](./docs/database-design.md)
 - [重构指南](./REFACTORING_GUIDE.md)
-- [GitHub Issues](https://github.com/77Ezra1/AI-Life-system/issues)
+- [GitHub Issues](https://github.com/77Ezra1/Personal Chatbox/issues)
 

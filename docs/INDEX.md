@@ -1,9 +1,9 @@
-# AI Life System 文档索引
+# Personal Chatbox 文档索引
 
 **作者**: Ezra  
 **更新日期**: 2025-10-12
 
-欢迎查阅AI Life System的完整文档!本索引帮助您快速找到所需的文档。
+欢迎查阅Personal Chatbox的完整文档!本索引帮助您快速找到所需的文档。
 
 ---
 
@@ -130,15 +130,15 @@
 本文档索引由 **Ezra** 维护。
 
 如发现文档问题或有改进建议,请:
-1. 提交Issue: https://github.com/77Ezra1/AI-Life-system/issues
-2. 提交PR: https://github.com/77Ezra1/AI-Life-system/pulls
+1. 提交Issue: https://github.com/77Ezra1/Personal Chatbox/issues
+2. 提交PR: https://github.com/77Ezra1/Personal Chatbox/pulls
 
 ---
 
 ## 📌 快速链接
 
-- **项目主页**: https://github.com/77Ezra1/AI-Life-system
-- **问题反馈**: https://github.com/77Ezra1/AI-Life-system/issues
+- **项目主页**: https://github.com/77Ezra1/Personal Chatbox
+- **问题反馈**: https://github.com/77Ezra1/Personal Chatbox/issues
 - **最新版本**: 查看 [README.md](../README.md#-版本历史)
 
 ---

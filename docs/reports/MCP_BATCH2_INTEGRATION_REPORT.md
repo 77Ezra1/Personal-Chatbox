@@ -1,4 +1,4 @@
-# AI-Life-system 第二批 MCP 服务集成报告
+# Personal Chatbox 第二批 MCP 服务集成报告
 
 **版本:** 1.0
 **日期:** 2025-10-12
@@ -8,7 +8,7 @@
 
 ## 1. 项目背景
 
-本项目旨在为 AI-Life-system 集成第二批 MCP (Model Context Protocol) 服务,扩展其 AI 代理能力。本次集成重点关注 Git、Wikipedia、Brave Search 和 GitHub 四个关键服务,并引入了完整的配置管理系统,确保 API Keys 的安全性和用户体验。
+本项目旨在为 Personal Chatbox 集成第二批 MCP (Model Context Protocol) 服务,扩展其 AI 代理能力。本次集成重点关注 Git、Wikipedia、Brave Search 和 GitHub 四个关键服务,并引入了完整的配置管理系统,确保 API Keys 的安全性和用户体验。
 
 ## 2. 集成范围
 

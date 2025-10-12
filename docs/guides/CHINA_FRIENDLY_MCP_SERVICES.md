@@ -337,7 +337,7 @@ npm start
 ### 步骤1: 备份当前配置
 
 ```bash
-cd AI-Life-system
+cd Personal Chatbox
 cp server/config.cjs server/config.cjs.backup
 ```
 
@@ -417,7 +417,7 @@ module.exports = {
 
 ```bash
 # 重启后端
-cd AI-Life-system
+cd Personal Chatbox
 node server/index.cjs
 ```
 
@@ -497,5 +497,5 @@ const logger = winston.createLogger({
 ---
 
 **最后更新**: 2025年10月12日  
-**维护者**: AI-Life-system Team
+**维护者**: Personal Chatbox Team
 

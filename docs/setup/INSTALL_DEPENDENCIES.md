@@ -93,8 +93,8 @@ const { chromium } = require('playwright-chromium');
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/77Ezra1/AI-Life-system.git
-cd AI-Life-system
+git clone https://github.com/77Ezra1/Personal Chatbox.git
+cd Personal Chatbox
 
 # 2. 安装基础依赖
 npm install

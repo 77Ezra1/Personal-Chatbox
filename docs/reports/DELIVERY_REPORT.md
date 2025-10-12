@@ -248,5 +248,5 @@ npm run dev
 **交付日期**: 2025-10-11  
 **版本**: 1.0.0  
 **状态**: ✅ 已完成并测试通过  
-**代码仓库**: https://github.com/77Ezra1/AI-Life-system
+**代码仓库**: https://github.com/77Ezra1/Personal Chatbox
 

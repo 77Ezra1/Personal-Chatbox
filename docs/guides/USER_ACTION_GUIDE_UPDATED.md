@@ -154,7 +154,7 @@
 我已经将所有修复推送到GitHub:
 
 ```bash
-cd AI-Life-system
+cd Personal Chatbox
 git pull origin main
 ```
 

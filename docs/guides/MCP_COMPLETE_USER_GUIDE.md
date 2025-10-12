@@ -1,4 +1,4 @@
-# AI-Life-system MCP 服务完整使用教程
+# Personal Chatbox MCP 服务完整使用教程
 
 **版本:** 2.0  
 **日期:** 2025-10-12  
@@ -21,7 +21,7 @@
 
 ## 1. 系统概述
 
-AI-Life-system 是一个集成了多个 MCP (Model Context Protocol) 服务的 AI 代理系统,提供了 **95个工具**,显著增强了 AI 的能力。
+Personal Chatbox 是一个集成了多个 MCP (Model Context Protocol) 服务的 AI 代理系统,提供了 **95个工具**,显著增强了 AI 的能力。
 
 ### 1.1. 已集成的服务
 
@@ -54,8 +54,8 @@ AI-Life-system 是一个集成了多个 MCP (Model Context Protocol) 服务的 A
 #### 步骤 1: 克隆项目
 
 ```bash
-git clone https://github.com/77Ezra1/AI-Life-system.git
-cd AI-Life-system
+git clone https://github.com/77Ezra1/Personal Chatbox.git
+cd Personal Chatbox
 ```
 
 #### 步骤 2: 安装依赖
@@ -128,7 +128,7 @@ Brave Search 提供实时网页搜索、新闻、图片、视频搜索功能。
 
 #### 配置步骤
 
-1. 打开 AI-Life-system 前端应用
+1. 打开 Personal Chatbox 前端应用
 2. 点击右上角的 **设置** 图标
 3. 切换到 **API Keys** 标签页
 4. 找到 **Brave Search** 服务
@@ -173,7 +173,7 @@ GitHub 服务提供仓库管理、Issue、Pull Request、代码搜索等功能�
 
 #### 配置步骤
 
-1. 打开 AI-Life-system 前端应用
+1. 打开 Personal Chatbox 前端应用
 2. 点击右上角的 **设置** 图标
 3. 切换到 **API Keys** 标签页
 4. 找到 **GitHub** 服务
@@ -284,7 +284,7 @@ AI 代理会根据您的请求自动调用相应的 MCP 服务。以下是一些
 - 调用 `search_repositories` 搜索仓库
 - 返回相关仓库列表
 
-**用户:** "读取我的仓库 AI-Life-system 的 README.md 文件"
+**用户:** "读取我的仓库 Personal Chatbox 的 README.md 文件"
 
 **AI 行为:**
 - 调用 `get_file_contents` 读取文件
@@ -505,7 +505,7 @@ curl http://localhost:3001/api/mcp/health
 ```javascript
 git: {
   // ...
-  args: ['--repository', '/home/ubuntu/AI-Life-system']  // 确保路径正确
+  args: ['--repository', '/home/ubuntu/Personal Chatbox']  // 确保路径正确
 }
 ```
 
@@ -583,7 +583,7 @@ module.exports = {
 1. **查看日志:** `tail -f server.log`
 2. **运行测试:** `node test-all-batch1-batch2.cjs`
 3. **查看文档:** 阅读本教程和集成报告
-4. **提交 Issue:** https://github.com/77Ezra1/AI-Life-system/issues
+4. **提交 Issue:** https://github.com/77Ezra1/Personal Chatbox/issues
 
 ---
 

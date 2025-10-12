@@ -1,6 +1,6 @@
 # 应用内代理网络集成方案
 
-为AI-Life-system集成代理网络,使MCP服务能够访问国外API。
+为Personal Chatbox集成代理网络,使MCP服务能够访问国外API。
 
 ---
 
@@ -874,7 +874,7 @@ import ProxyConfig from '@/components/proxy/ProxyConfig'
 ### 步骤7: 安装必要的依赖
 
 ```bash
-cd AI-Life-system
+cd Personal Chatbox
 
 # 安装代理相关依赖
 npm install https-proxy-agent socks-proxy-agent --save

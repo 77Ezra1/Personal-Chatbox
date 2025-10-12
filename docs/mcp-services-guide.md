@@ -201,8 +201,8 @@ const result = await callTool('tavily_search', {
 ## 反馈与支持
 
 如有问题或建议，请访问：
-- GitHub Issues: https://github.com/77Ezra1/AI-Life-system/issues
-- 项目文档: https://github.com/77Ezra1/AI-Life-system/docs
+- GitHub Issues: https://github.com/77Ezra1/Personal Chatbox/issues
+- 项目文档: https://github.com/77Ezra1/Personal Chatbox/docs
 
 ---
 

@@ -10,7 +10,7 @@
 
 ```bash
 # 启动后端服务
-cd AI-Life-system
+cd Personal Chatbox
 npm run server
 
 # 在另一个终端启动前端
@@ -374,7 +374,7 @@ function MyComponent() {
 使用提供的测试脚本:
 
 ```bash
-cd AI-Life-system
+cd Personal Chatbox
 node test-mcp-fixed.cjs
 ```
 

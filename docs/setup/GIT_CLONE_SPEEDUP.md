@@ -1,6 +1,6 @@
 # Git 克隆加速指南
 
-如果您在克隆 AI-Life-system 项目时遇到速度慢的问题,可以尝试以下方法。
+如果您在克隆 Personal Chatbox 项目时遇到速度慢的问题,可以尝试以下方法。
 
 ---
 
@@ -10,10 +10,10 @@
 
 ```bash
 # 只克隆最新的提交
-git clone --depth 1 https://github.com/77Ezra1/AI-Life-system.git
+git clone --depth 1 https://github.com/77Ezra1/Personal Chatbox.git
 
 # 进入项目目录
-cd AI-Life-system
+cd Personal Chatbox
 ```
 
 **优点**:
@@ -41,7 +41,7 @@ git fetch --unshallow
 
 ```bash
 # 从 Gitee 克隆
-git clone https://gitee.com/[镜像地址]/AI-Life-system.git
+git clone https://gitee.com/[镜像地址]/Personal Chatbox.git
 ```
 
 ### 2.2 使用 GitHub 代理
@@ -54,13 +54,13 @@ git clone https://gitee.com/[镜像地址]/AI-Life-system.git
 #### GitHub Proxy
 ```bash
 # 使用 ghproxy.com
-git clone https://ghproxy.com/https://github.com/77Ezra1/AI-Life-system.git
+git clone https://ghproxy.com/https://github.com/77Ezra1/Personal Chatbox.git
 ```
 
 #### Gitclone
 ```bash
 # 使用 gitclone.com
-git clone https://gitclone.com/github.com/77Ezra1/AI-Life-system.git
+git clone https://gitclone.com/github.com/77Ezra1/Personal Chatbox.git
 ```
 
 **注意**: 代理服务可能不稳定,建议优先使用其他方法。
@@ -79,7 +79,7 @@ git config --global http.proxy http://127.0.0.1:7890
 git config --global https.proxy http://127.0.0.1:7890
 
 # 克隆项目
-git clone https://github.com/77Ezra1/AI-Life-system.git
+git clone https://github.com/77Ezra1/Personal Chatbox.git
 
 # 克隆完成后取消代理
 git config --global --unset http.proxy
@@ -94,7 +94,7 @@ git config --global http.proxy socks5://127.0.0.1:7890
 git config --global https.proxy socks5://127.0.0.1:7890
 
 # 克隆项目
-git clone https://github.com/77Ezra1/AI-Life-system.git
+git clone https://github.com/77Ezra1/Personal Chatbox.git
 
 # 取消代理
 git config --global --unset http.proxy
@@ -117,7 +117,7 @@ git config --global --unset http.https://github.com.proxy
 
 最简单但不推荐的方法:
 
-1. 访问: https://github.com/77Ezra1/AI-Life-system
+1. 访问: https://github.com/77Ezra1/Personal Chatbox
 2. 点击绿色的 **Code** 按钮
 3. 选择 **Download ZIP**
 4. 下载完成后解压
@@ -156,7 +156,7 @@ cat ~/.ssh/id_ed25519.pub
 
 ```bash
 # 使用 SSH 协议克隆
-git clone git@github.com:77Ezra1/AI-Life-system.git
+git clone git@github.com:77Ezra1/Personal Chatbox.git
 ```
 
 ---
@@ -171,7 +171,7 @@ git config --global http.postBuffer 524288000  # 500MB
 git config --global core.compression 0
 
 # 克隆项目
-git clone https://github.com/77Ezra1/AI-Life-system.git
+git clone https://github.com/77Ezra1/Personal Chatbox.git
 
 # 恢复默认设置
 git config --global --unset http.postBuffer
@@ -209,7 +209,7 @@ sudo dnf install gh
 
 ```bash
 # 使用 gh 克隆
-gh repo clone 77Ezra1/AI-Life-system
+gh repo clone 77Ezra1/Personal Chatbox
 ```
 
 ---
@@ -237,7 +237,7 @@ gh repo clone 77Ezra1/AI-Life-system
 git config --global http.proxy http://127.0.0.1:7890
 
 # 2. 浅克隆
-git clone --depth 1 https://github.com/77Ezra1/AI-Life-system.git
+git clone --depth 1 https://github.com/77Ezra1/Personal Chatbox.git
 
 # 3. 取消代理
 git config --global --unset http.proxy
@@ -245,14 +245,14 @@ git config --global --unset http.proxy
 
 **方案B: 使用 GitHub Proxy**
 ```bash
-git clone --depth 1 https://ghproxy.com/https://github.com/77Ezra1/AI-Life-system.git
+git clone --depth 1 https://ghproxy.com/https://github.com/77Ezra1/Personal Chatbox.git
 ```
 
 ### 对于海外用户:
 
 **直接浅克隆即可**
 ```bash
-git clone --depth 1 https://github.com/77Ezra1/AI-Life-system.git
+git clone --depth 1 https://github.com/77Ezra1/Personal Chatbox.git
 ```
 
 ---
@@ -273,7 +273,7 @@ nslookup github.com
 
 ```bash
 # 显示详细进度
-GIT_TRACE=1 git clone https://github.com/77Ezra1/AI-Life-system.git
+GIT_TRACE=1 git clone https://github.com/77Ezra1/Personal Chatbox.git
 ```
 
 ---
@@ -285,7 +285,7 @@ GIT_TRACE=1 git clone https://github.com/77Ezra1/AI-Life-system.git
 **解决方案**:
 ```bash
 # 进入未完成的目录
-cd AI-Life-system
+cd Personal Chatbox
 
 # 继续克隆
 git fetch --all
@@ -325,7 +325,7 @@ ssh -T git@github.com
 
 ```bash
 # 1. 进入项目目录
-cd AI-Life-system
+cd Personal Chatbox
 
 # 2. 安装依赖
 npm install --legacy-peer-deps
@@ -371,7 +371,7 @@ git config --global url."git@github.com:".insteadOf "https://github.com/"
 ```bash
 # 组合使用浅克隆 + 代理
 git config --global http.proxy http://127.0.0.1:7890
-git clone --depth 1 https://github.com/77Ezra1/AI-Life-system.git
+git clone --depth 1 https://github.com/77Ezra1/Personal Chatbox.git
 git config --global --unset http.proxy
 ```
 

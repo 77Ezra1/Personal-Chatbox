@@ -49,7 +49,7 @@
 #### 步骤1: 安装依赖
 
 ```bash
-cd AI-Life-system
+cd Personal Chatbox
 npm install get-proxy-settings --save
 ```
 

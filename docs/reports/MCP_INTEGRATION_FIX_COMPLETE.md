@@ -2,7 +2,7 @@
 
 ## 修复概述
 
-本次修复成功解决了AI-Life-system项目中MCP（Model Control Protocol）服务集成的关键问题，确保DeepSeek模型能够正确调用工具并遵循正确的业务逻辑流程。
+本次修复成功解决了Personal Chatbox项目中MCP（Model Control Protocol）服务集成的关键问题，确保DeepSeek模型能够正确调用工具并遵循正确的业务逻辑流程。
 
 ## 修复的主要问题
 

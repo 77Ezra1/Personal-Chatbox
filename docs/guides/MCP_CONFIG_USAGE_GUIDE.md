@@ -59,7 +59,7 @@
 ps aux | grep "node.*server/index.cjs" | grep -v grep | awk '{print $2}' | xargs kill
 
 # 启动服务
-cd /home/ubuntu/AI-Life-system
+cd /home/ubuntu/Personal Chatbox
 nohup node server/index.cjs > /tmp/backend.log 2>&1 &
 ```
 
@@ -69,7 +69,7 @@ nohup node server/index.cjs > /tmp/backend.log 2>&1 &
 
 所有配置都保存在:
 ```
-/home/ubuntu/AI-Life-system/data/config.json
+/home/ubuntu/Personal Chatbox/data/config.json
 ```
 
 配置文件示例:
@@ -187,7 +187,7 @@ npx -y mcp-sqlite /path/to/database.db
 ## 反馈与支持
 
 如有问题或建议,请通过以下方式联系:
-- GitHub Issues: https://github.com/77Ezra1/AI-Life-system/issues
+- GitHub Issues: https://github.com/77Ezra1/Personal Chatbox/issues
 - 项目文档: 查看项目README.md
 
 ---

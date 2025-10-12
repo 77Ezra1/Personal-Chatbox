@@ -50,7 +50,7 @@ getInfo() {
     name: 'Playwright浏览器自动化',
     description: '...',
     version: '1.0.0',
-    author: 'AI-Life-system',
+    author: 'Personal Chatbox',
     tools: this.getTools()
   };
 }
@@ -66,7 +66,7 @@ getInfo() {
     enabled: this.enabled,
     loaded: this.loaded,
     version: '1.0.0',
-    author: 'AI-Life-system',
+    author: 'Personal Chatbox',
     tools: this.getTools().map(tool => ({
       name: tool.name,
       description: tool.description
@@ -113,7 +113,7 @@ getTools() {
 ### 3. 重启后端服务
 
 ```bash
-cd /home/ubuntu/AI-Life-system
+cd /home/ubuntu/Personal Chatbox
 bash start-backend.sh
 ```
 
@@ -308,7 +308,7 @@ AI: [调用 navigate_to_url] -> [调用 fill_input] -> [调用 click_element]
 ### 服务架构
 
 ```
-AI-Life-system/
+Personal Chatbox/
 ├── server/
 │   ├── config.cjs (服务配置)
 │   ├── index.cjs (服务初始化)
