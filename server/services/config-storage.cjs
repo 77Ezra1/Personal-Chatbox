@@ -163,19 +163,24 @@ class ConfigStorage {
   async load() {
     try {
       const data = await fs.readFile(this.configFile, 'utf8');
-      const encrypted = JSON.parse(data);
-      
-      // 解密敏感字段
-      this.config = this.decryptConfig(encrypted);
-      
-      console.log('[ConfigStorage] 配置加载成功');
+      let loadedConfig = JSON.parse(data);
+      loadedConfig = this.decryptConfig(loadedConfig);
+
+      // 关键修复: 将加载的配置与默认配置深度合并
+      const defaultConfig = this.getDefaultConfig();
+      const mergedServices = { ...defaultConfig.services, ...(loadedConfig.services || {}) };
+      this.config = { ...defaultConfig, ...loadedConfig, services: mergedServices };
+
+      console.log('[ConfigStorage] 配置加载并合并成功');
     } catch (error) {
       if (error.code === 'ENOENT') {
         // 文件不存在,使用默认配置
         this.config = this.getDefaultConfig();
         await this.save();
       } else {
-        throw error;
+        // 如果解析失败或文件损坏,也使用默认配置
+        console.error('[ConfigStorage] 加载或解析配置文件失败,将使用默认配置:', error);
+        this.config = this.getDefaultConfig();
       }
     }
   }
@@ -352,8 +357,18 @@ class ConfigStorage {
    * 更新服务配置
    */
   async updateService(serviceKey, serviceConfig) {
+    // 如果服务不存在,从默认配置中获取或创建新的
     if (!this.config.services[serviceKey]) {
-      throw new Error(`未知的服务: ${serviceKey}`);
+      const defaultConfig = this.getDefaultConfig();
+      if (defaultConfig.services[serviceKey]) {
+        // 从默认配置中复制
+        this.config.services[serviceKey] = { ...defaultConfig.services[serviceKey] };
+        console.log(`[ConfigStorage] 自动添加缺失的服务配置: ${serviceKey}`);
+      } else {
+        // 创建空配置
+        this.config.services[serviceKey] = {};
+        console.log(`[ConfigStorage] 创建新的服务配置: ${serviceKey}`);
+      }
     }
     
     // 更新配置
