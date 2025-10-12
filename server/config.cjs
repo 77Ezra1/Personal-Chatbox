@@ -39,7 +39,7 @@ module.exports = {
       args: [
         '-y',
         '@modelcontextprotocol/server-filesystem',
-        '/home/ubuntu/AI-Life-system' // 允许访问项目目录
+        process.cwd() // 使用当前工作目录,跨平台兼容
       ]
     },
     
@@ -55,7 +55,7 @@ module.exports = {
         '-m',
         'mcp_server_git',
         '--repository',
-        '/home/ubuntu/AI-Life-system' // Git仓库路径
+        process.cwd() // 使用当前工作目录,跨平台兼容
       ]
     },
     
@@ -86,7 +86,7 @@ module.exports = {
       args: [
         '-y',
         'mcp-sqlite',
-        '/home/ubuntu/AI-Life-system/data/app.db' // 数据库文件路径
+        require('path').join(process.cwd(), 'data', 'app.db') // 跨平台路径
       ]
     },
     
