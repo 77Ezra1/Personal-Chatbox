@@ -262,8 +262,8 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 ## 📞 联系方式
 
 - **作者**: Ezra
-- **GitHub**: https://github.com/77Ezra1/Personal Chatbox
-- **问题反馈**: https://github.com/77Ezra1/Personal Chatbox/issues
+- **GitHub**: https://github.com/77Ezra1/Personal-Chatbox
+- **问题反馈**: https://github.com/77Ezra1/Personal-Chatbox/issues
 
 ---
 
