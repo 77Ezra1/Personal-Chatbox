@@ -136,7 +136,7 @@ function initDatabase() {
       // 6. 消息表
       db.run(`
         CREATE TABLE IF NOT EXISTS messages (
-          id TEXT PRIMARY KEY,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
           conversation_id TEXT NOT NULL,
           role TEXT NOT NULL,
           content TEXT NOT NULL,
@@ -146,14 +146,7 @@ function initDatabase() {
           attachments TEXT,
           FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
         )
-      `, (err) => {
-        if (err) {
-          console.error('[DB Init] Error creating messages table:', err);
-          reject(err);
-        } else {
-          console.log('[DB Init] ✓ messages table created/verified');
-        }
-      });
+      `);
 
       // 7. 用户配置表
       db.run(`
