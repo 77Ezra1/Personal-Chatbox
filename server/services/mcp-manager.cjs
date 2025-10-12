@@ -37,9 +37,14 @@ class MCPManager extends EventEmitter {
       };
 
       // 启动子进程
-      const childProcess = spawn(command, args, {
+      // Windows 系统需要使用 shell: true 或者 .cmd 后缀
+      const isWindows = process.platform === 'win32';
+      const actualCommand = isWindows && command === 'npx' ? 'npx.cmd' : command;
+      
+      const childProcess = spawn(actualCommand, args, {
         env: processEnv,
-        stdio: ['pipe', 'pipe', 'pipe']
+        stdio: ['pipe', 'pipe', 'pipe'],
+        shell: isWindows // Windows 需要 shell
       });
 
       // 存储进程
