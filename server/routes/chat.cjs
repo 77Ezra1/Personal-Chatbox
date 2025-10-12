@@ -59,11 +59,41 @@ router.post('/', async (req, res) => {
 
     // 如果有工具,添加到请求中
     if (mcpTools.length > 0) {
-      apiParams.tools = mcpTools.map(tool => ({
-        type: tool.type,
-        function: tool.function
-      }));
+      apiParams.tools = mcpTools.map(tool => {
+        // 增强工具描述，帮助大模型更好地理解和选择工具
+        let enhancedDescription = tool.function.description || '';
+        
+        // 根据工具名称添加使用场景说明
+        if (tool.function.name.includes('wikipedia')) {
+          enhancedDescription = `[百科知识查询] ${enhancedDescription}。适用于：查询历史事件、人物传记、科学概念、地理信息等百科知识。`;
+        } else if (tool.function.name.includes('brave_search') || tool.function.name.includes('search')) {
+          enhancedDescription = `[实时网页搜索] ${enhancedDescription}。适用于：最新新闻、实时信息、产品评测、技术文档等需要搜索引擎的内容。`;
+        } else if (tool.function.name.includes('github')) {
+          enhancedDescription = `[GitHub仓库操作] ${enhancedDescription}。适用于：查询代码仓库、创建Issue、管理PR等GitHub相关操作。`;
+        } else if (tool.function.name.includes('filesystem')) {
+          enhancedDescription = `[文件系统操作] ${enhancedDescription}。适用于：读写本地文件、搜索文件、管理目录等文件操作。`;
+        } else if (tool.function.name.includes('git')) {
+          enhancedDescription = `[Git版本控制] ${enhancedDescription}。适用于：查看提交历史、分支管理、代码差异等Git操作。`;
+        } else if (tool.function.name.includes('sqlite')) {
+          enhancedDescription = `[数据库查询] ${enhancedDescription}。适用于：执行SQL查询、数据存储、数据分析等数据库操作。`;
+        } else if (tool.function.name.includes('memory')) {
+          enhancedDescription = `[记忆存储] ${enhancedDescription}。适用于：保存对话上下文、存储用户偏好、记录重要信息等。`;
+        } else if (tool.function.name.includes('sequential_thinking')) {
+          enhancedDescription = `[结构化思考] ${enhancedDescription}。适用于：复杂问题分解、逻辑推理、决策分析等需要深度思考的场景。`;
+        }
+        
+        return {
+          type: tool.type,
+          function: {
+            ...tool.function,
+            description: enhancedDescription
+          }
+        };
+      });
       apiParams.tool_choice = 'auto';
+      
+      // 记录增强后的工具描述
+      logger.info(`工具列表: ${apiParams.tools.map(t => t.function.name).join(', ')}`);
     }
 
     // 调用 DeepSeek API

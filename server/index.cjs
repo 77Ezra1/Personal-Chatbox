@@ -17,6 +17,9 @@ const MCPManager = require('./services/mcp-manager.cjs');
 // 导入配置存储
 const configStorage = require('./services/config-storage.cjs');
 
+// 导入代理辅助工具
+const { setupGlobalProxy } = require('./lib/proxy-helper.cjs');
+
 // 导入服务
 const WeatherService = require('./services/weather.cjs');
 const TimeService = require('./services/time.cjs');
@@ -66,6 +69,10 @@ async function initializeServices() {
       process.env.http_proxy = proxyUrl;
       process.env.https_proxy = proxyUrl;
       logger.info(`✅ 已应用用户配置的代理: ${proxyUrl}`);
+      
+      // 设置全局代理（为MCP服务提供代理支持）
+      await setupGlobalProxy();
+      logger.info('✅ 全局代理已设置');
     } else {
       logger.info('ℹ️  未配置代理或代理已禁用');
     }

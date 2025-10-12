@@ -64,7 +64,21 @@ class MCPManager extends EventEmitter {
         processEnv.HTTPS_PROXY = proxyUrl;
         processEnv.http_proxy = proxyUrl;
         processEnv.https_proxy = proxyUrl;
+        
+        // 添加Node.js特定的代理配置
+        processEnv.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // 允许自签名证书（开发环境）
+        
+        // 为某些MCP服务添加额外的代理配置
+        if (id === 'wikipedia' || id === 'brave_search' || id === 'github') {
+          // 这些服务需要额外的代理配置
+          processEnv.GLOBAL_AGENT_HTTP_PROXY = proxyUrl;
+          processEnv.GLOBAL_AGENT_HTTPS_PROXY = proxyUrl;
+          processEnv.GLOBAL_AGENT_NO_PROXY = 'localhost,127.0.0.1';
+        }
+        
         console.log(`[MCP Manager] ${id} 使用代理: ${proxyUrl}`);
+      } else {
+        console.log(`[MCP Manager] ${id} 未使用代理`);
       }
 
       // 启动子进程
