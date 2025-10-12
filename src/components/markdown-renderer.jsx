@@ -134,9 +134,10 @@ const MARKDOWN_COMPONENTS = {
 
 /**
  * 解析MCP工具调用标记和思考过程
- * 支持两种格式:
+ * 支持三种格式:
  * 1. MCP格式: < | tool_calls_begin | >...< | tool_calls_end | >
- * 2. DeepSeek格式: <thinking>...</thinking> 和 <tool_call>...</tool_call>
+ * 2. DeepSeek-chat格式: <thinking>...</thinking> 和 <tool_call>...</tool_call>
+ * 3. DeepSeek-reasoner格式: <reasoning>...</reasoning> 和 <answer>...</answer>
  */
 function parseMCPContent(text) {
   const parts = []
@@ -145,13 +146,22 @@ function parseMCPContent(text) {
   // 首先提取所有思考过程和工具调用内容
   let thinkingContent = ''
   
-  // 提取 <thinking> 标签内容
+  // 提取 <thinking> 标签内容 (deepseek-chat)
   const thinkingRegex = /<thinking>([\s\S]*?)<\/thinking>/gi
   let thinkingMatch
   while ((thinkingMatch = thinkingRegex.exec(text)) !== null) {
     thinkingContent += thinkingMatch[1].trim() + '\n\n'
     // 从原文中移除
     processedText = processedText.replace(thinkingMatch[0], '')
+  }
+  
+  // 提取 <reasoning> 标签内容 (deepseek-reasoner)
+  const reasoningRegex = /<reasoning>([\s\S]*?)<\/reasoning>/gi
+  let reasoningMatch
+  while ((reasoningMatch = reasoningRegex.exec(text)) !== null) {
+    thinkingContent += reasoningMatch[1].trim() + '\n\n'
+    // 从原文中移除
+    processedText = processedText.replace(reasoningMatch[0], '')
   }
   
   // 提取 <tool_call> 标签内容
@@ -162,6 +172,9 @@ function parseMCPContent(text) {
     // 从原文中移除
     processedText = processedText.replace(toolCallMatch[0], '')
   }
+  
+  // 移除 <answer> 标签但保留内容 (deepseek-reasoner)
+  processedText = processedText.replace(/<answer>([\s\S]*?)<\/answer>/gi, '$1')
   
   // 提取 MCP 格式的工具调用
   const mcpToolCallsRegex = /<\s*\|\s*tool_calls_begin\s*\|\s*>([\s\S]*?)<\s*\|\s*tool_calls_end\s*\|\s*>/g
