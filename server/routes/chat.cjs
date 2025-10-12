@@ -121,7 +121,7 @@ router.post('/', async (req, res) => {
         if (tool.function.name.includes('wikipedia')) {
           enhancedDescription = `[百科知识查询] ${enhancedDescription}。适用于：查询历史事件、人物传记、科学概念、地理信息等百科知识。`;
         } else if (tool.function.name.includes('brave_search')) {
-          enhancedDescription = `[实时网页搜索-Brave] ${enhancedDescription}。适用于：最新新闻、实时信息、产品评测、技术文档等需要搜索引擎的内容。`;
+          enhancedDescription = `[网页搜索-Brave-首选] 使用Brave搜索引擎进行高质量网络搜索。适用于：通用网页搜索、最新新闻、实时信息、产品评测、技术文档、学术资料、教程指南等所有需要搜索的场景。优势：速度快、结果准确、稳定可靠、不易被限流，支持最多20条结果。这是推荐的首选搜索工具。`;
         } else if (tool.function.name.includes('github')) {
           enhancedDescription = `[GitHub仓库操作] ${enhancedDescription}。适用于：查询代码仓库、创建Issue、管理PR等GitHub相关操作。`;
         } else if (tool.function.name.includes('filesystem')) {
@@ -143,7 +143,7 @@ router.post('/', async (req, res) => {
         } else if (tool.function.name.includes('time') || tool.function.name.includes('convert_time')) {
           enhancedDescription = `[时间查询] ${enhancedDescription}。适用于：查询当前时间、时区转换、世界时钟等时间相关操作。`;
         } else if (tool.function.name === 'search_web') {
-          enhancedDescription = `[实时网页搜索-DuckDuckGo] ${enhancedDescription}。适用于：通用网页搜索、查找资料、获取最新信息等。`;
+          enhancedDescription = `[网页搜索-DuckDuckGo-备用] 使用DuckDuckGo进行网络搜索。适用于：通用网页搜索、查找资料等。注意：此工具容易被限流导致搜索失败，建议优先使用Brave Search。仅在Brave Search不可用时使用此备用工具。`;
         } else if (tool.function.name.includes('fetch_url')) {
           enhancedDescription = `[网页内容抓取] ${enhancedDescription}。适用于：获取网页完整内容、提取文章正文、转换为Markdown格式等。`;
         } else if (tool.function.name.includes('navigate') || tool.function.name.includes('click') || tool.function.name.includes('page')) {
