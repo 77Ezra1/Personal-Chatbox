@@ -988,6 +988,29 @@ button:hover:not(:disabled),
   border-color: color-mix(in srgb, var(--primary) 20%, var(--border));
 }
 
+.thinking-process-toggle {
+  width: 100%;
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  user-select: none;
+  background: color-mix(in srgb, var(--foreground) 2%, transparent);
+  transition: background-color 0.2s ease;
+  border: none;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted-foreground);
+}
+
+.thinking-process-toggle:hover {
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+
 .thinking-process-summary {
   padding: 10px 14px;
   cursor: pointer;
