@@ -227,6 +227,31 @@ export function useModelConfigDB() {
       if (updates.apiKey !== undefined) {
         await setProviderApiKey(currentProvider, updates.apiKey)
         setCurrentApiKey(updates.apiKey)
+        
+        // 如果是DeepSeek，同步配置到后端
+        if (currentProvider === 'deepseek') {
+          try {
+            const response = await fetch('http://localhost:3001/api/config/service/deepseek', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                enabled: true,
+                apiKey: updates.apiKey,
+                model: modelName
+              }),
+            });
+            
+            if (response.ok) {
+              console.log('[useModelConfigDB] DeepSeek config synced to backend');
+            } else {
+              console.error('[useModelConfigDB] Failed to sync DeepSeek config to backend');
+            }
+          } catch (error) {
+            console.error('[useModelConfigDB] Error syncing DeepSeek config:', error);
+          }
+        }
       }
       
       // 检查模型是否存在

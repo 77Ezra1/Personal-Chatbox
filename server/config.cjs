@@ -8,7 +8,14 @@ module.exports = {
     port: process.env.PORT || 3001,
     host: process.env.HOST || 'localhost',
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+      origin: function (origin, callback) {
+        const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true
     }
   },
@@ -40,6 +47,17 @@ module.exports = {
         '-y',
         '@modelcontextprotocol/server-filesystem',
         process.cwd() // 使用当前工作目录,跨平台兼容
+      ],
+      // 动态配置支持
+      configurable: true,
+      configFields: [
+        {
+          key: 'allowedDirectories',
+          label: '允许访问的目录',
+          type: 'array',
+          default: [process.cwd()],
+          description: '文件系统服务可以访问的目录列表'
+        }
       ]
     },
     
@@ -87,6 +105,17 @@ module.exports = {
         '-y',
         'mcp-sqlite',
         require('path').join(process.cwd(), 'data', 'app.db') // 跨平台路径
+      ],
+      // 动态配置支持
+      configurable: true,
+      configFields: [
+        {
+          key: 'databasePath',
+          label: '数据库文件路径',
+          type: 'string',
+          default: require('path').join(process.cwd(), 'data', 'app.db'),
+          description: 'SQLite数据库文件的完整路径'
+        }
       ]
     },
     

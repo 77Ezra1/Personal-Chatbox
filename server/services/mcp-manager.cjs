@@ -30,7 +30,22 @@ class MCPManager extends EventEmitter {
 
     try {
       console.log(`[MCP Manager] 启动服务: ${id}`);
-      console.log(`[MCP Manager] 命令: ${command} ${args.join(' ')}`);
+      
+      // 获取用户配置的路径（如果有）
+      let finalArgs = [...args];
+      const configStorage = require('./config-storage.cjs');
+      const userConfig = configStorage.getServiceConfig(id);
+      
+      // 为SQLite和Filesystem服务应用用户配置
+      if (id === 'sqlite' && userConfig && userConfig.databasePath) {
+        console.log(`[MCP Manager] 使用自定义数据库路径: ${userConfig.databasePath}`);
+        finalArgs = ['-y', 'mcp-sqlite', userConfig.databasePath];
+      } else if (id === 'filesystem' && userConfig && userConfig.allowedDirectories && userConfig.allowedDirectories.length > 0) {
+        console.log(`[MCP Manager] 使用自定义允许目录: ${userConfig.allowedDirectories.join(', ')}`);
+        finalArgs = ['-y', '@modelcontextprotocol/server-filesystem', ...userConfig.allowedDirectories];
+      }
+      
+      console.log(`[MCP Manager] 命令: ${command} ${finalArgs.join(' ')}`);
 
       // 获取代理配置
       await this.proxyManager.initialize();
@@ -57,7 +72,7 @@ class MCPManager extends EventEmitter {
       const isWindows = process.platform === 'win32';
       const actualCommand = isWindows && command === 'npx' ? 'npx.cmd' : command;
       
-      const childProcess = spawn(actualCommand, args, {
+      const childProcess = spawn(actualCommand, finalArgs, {
         env: processEnv,
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: isWindows // Windows 需要 shell
@@ -369,6 +384,32 @@ class MCPManager extends EventEmitter {
     }
 
     return status;
+  }
+
+  /**
+   * 获取MCP服务信息（用于前端显示）
+   * @returns {Object} 服务信息
+   */
+  getInfo() {
+    return {
+      id: 'mcp',
+      name: 'MCP服务管理器',
+      description: '管理所有MCP服务',
+      enabled: true,
+      loaded: true,
+      services: Array.from(this.services.entries()).map(([serviceId, service]) => ({
+        id: serviceId,
+        name: service.config.name || serviceId,
+        description: service.config.description || '',
+        enabled: service.config.enabled !== false,
+        loaded: service.status === 'ready',
+        toolCount: service.tools.length,
+        tools: service.tools.map(t => ({
+          name: t.name,
+          description: t.description || ''
+        }))
+      }))
+    };
   }
 }
 

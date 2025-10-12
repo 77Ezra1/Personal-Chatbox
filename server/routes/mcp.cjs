@@ -24,9 +24,22 @@ function initializeRouter(serviceInstances) {
  */
 router.get('/services', (req, res, next) => {
   try {
-    const serviceList = Object.values(services)
-      .filter(service => service.getInfo) // 过滤掉没有 getInfo 方法的服务(如 mcpManager)
-      .map(service => service.getInfo());
+    const serviceList = [];
+    
+    // 获取所有常规服务
+    for (const service of Object.values(services)) {
+      if (!service.getInfo) continue;
+      
+      const info = service.getInfo();
+      
+      // 如果是MCP Manager，提取其管理的所有服务
+      if (info.id === 'mcp' && info.services) {
+        serviceList.push(...info.services);
+      } else {
+        serviceList.push(info);
+      }
+    }
+    
     res.json({
       success: true,
       services: serviceList

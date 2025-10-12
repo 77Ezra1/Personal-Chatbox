@@ -224,7 +224,8 @@ async function callDeepSeekMCP({
     }))
 
     // 调用后端 API
-    const response = await fetch('/api/chat', {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+    const response = await fetch(`${backendUrl}/api/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -290,9 +291,9 @@ async function callDeepSeekMCP({
 export async function generateAIResponse({ messages = [], modelConfig = {}, onToken, signal, systemPrompt, tools = [] }) {
   console.log('[aiClient] generateAIResponse called with modelConfig:', modelConfig)
   const {
-    provider = 'openai',
+    provider = 'deepseek',  // 修改默认为deepseek以使用MCP后端
     model,
-    apiKey,
+    apiKey = 'sk-03db8009812649359e2f83cc738861aa',  // 临时默认API Key
     temperature = 0.7,
     maxTokens = DEFAULT_MAX_TOKENS,
     deepThinking = false,

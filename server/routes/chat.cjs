@@ -67,7 +67,18 @@ router.post('/', async (req, res) => {
     }
 
     // 调用 DeepSeek API
+    logger.info(`调用 DeepSeek API，参数: ${JSON.stringify({
+      model: apiParams.model,
+      messages_count: apiParams.messages.length,
+      tools_count: apiParams.tools ? apiParams.tools.length : 0,
+      tool_choice: apiParams.tool_choice
+    })}`);
+    
     let response = await openai.chat.completions.create(apiParams);
+    
+    logger.info(`DeepSeek 响应: finish_reason=${response.choices[0].finish_reason}`);
+    logger.info(`DeepSeek 消息: ${JSON.stringify(response.choices[0].message).substring(0, 200)}...`);
+    
     let iterationCount = 0;
     const maxIterations = 10; // 最多10轮工具调用
 

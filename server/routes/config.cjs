@@ -205,7 +205,7 @@ router.post('/service/:serviceId', async (req, res, next) => {
     logger.info(`更新服务配置: ${serviceId}`);
     
     // 验证服务ID (支持两种格式: braveSearch 和 brave_search)
-    const validServices = ['braveSearch', 'brave_search', 'github', 'notion', 'gmail', 'googleCalendar', 'deepseek'];
+    const validServices = ['braveSearch', 'brave_search', 'github', 'notion', 'gmail', 'googleCalendar', 'deepseek', 'sqlite', 'filesystem'];
     if (!validServices.includes(serviceId)) {
       return res.status(400).json({
         success: false,
