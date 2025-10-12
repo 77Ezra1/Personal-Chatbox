@@ -1,0 +1,297 @@
+const { spawn } = require('child_process');
+const { EventEmitter } = require('events');
+
+/**
+ * MCP Manager - 管理所有 MCP 服务实例
+ * 负责启动、停止、调用 MCP 服务
+ */
+class MCPManager extends EventEmitter {
+  constructor() {
+    super();
+    this.services = new Map(); // 服务配置和工具列表
+    this.processes = new Map(); // 服务进程
+    this.pendingRequests = new Map(); // 待处理的请求
+    this.requestId = 1;
+  }
+
+  /**
+   * 启动 MCP 服务
+   * @param {Object} serviceConfig - 服务配置
+   */
+  async startService(serviceConfig) {
+    const { id, command, args = [], env = {}, enabled = true, autoLoad = true } = serviceConfig;
+
+    if (!enabled || !autoLoad) {
+      console.log(`[MCP Manager] 跳过服务: ${id} (enabled=${enabled}, autoLoad=${autoLoad})`);
+      return;
+    }
+
+    try {
+      console.log(`[MCP Manager] 启动服务: ${id}`);
+      console.log(`[MCP Manager] 命令: ${command} ${args.join(' ')}`);
+
+      // 合并环境变量
+      const processEnv = {
+        ...process.env,
+        ...env
+      };
+
+      // 启动子进程
+      const childProcess = spawn(command, args, {
+        env: processEnv,
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+
+      // 存储进程
+      this.processes.set(id, childProcess);
+
+      // 设置输出处理
+      let stdoutBuffer = '';
+      childProcess.stdout.on('data', (data) => {
+        stdoutBuffer += data.toString();
+        
+        // 处理完整的 JSON 行
+        const lines = stdoutBuffer.split('\n');
+        stdoutBuffer = lines.pop() || ''; // 保留不完整的行
+
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const response = JSON.parse(line);
+              this.handleResponse(id, response);
+            } catch (err) {
+              console.error(`[MCP Manager] ${id} 解析响应失败:`, line);
+            }
+          }
+        }
+      });
+
+      childProcess.stderr.on('data', (data) => {
+        console.error(`[MCP Manager] ${id} stderr:`, data.toString());
+      });
+
+      childProcess.on('error', (error) => {
+        console.error(`[MCP Manager] ${id} 进程错误:`, error);
+        this.emit('service-error', { id, error });
+      });
+
+      childProcess.on('exit', (code, signal) => {
+        console.log(`[MCP Manager] ${id} 进程退出: code=${code}, signal=${signal}`);
+        this.processes.delete(id);
+        this.services.delete(id);
+        this.emit('service-exit', { id, code, signal });
+      });
+
+      // 等待进程启动
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 获取工具列表
+      const tools = await this.listTools(id);
+      
+      // 存储服务信息
+      this.services.set(id, {
+        config: serviceConfig,
+        tools: tools || [],
+        status: 'running'
+      });
+
+      console.log(`[MCP Manager] ${id} 启动成功, 工具数量: ${tools?.length || 0}`);
+      this.emit('service-started', { id, tools });
+
+    } catch (error) {
+      console.error(`[MCP Manager] 启动服务 ${id} 失败:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 停止 MCP 服务
+   * @param {string} serviceId - 服务ID
+   */
+  async stopService(serviceId) {
+    const process = this.processes.get(serviceId);
+    if (process) {
+      process.kill();
+      this.processes.delete(serviceId);
+      this.services.delete(serviceId);
+      console.log(`[MCP Manager] 服务已停止: ${serviceId}`);
+    }
+  }
+
+  /**
+   * 停止所有服务
+   */
+  async stopAll() {
+    for (const [serviceId] of this.processes) {
+      await this.stopService(serviceId);
+    }
+  }
+
+  /**
+   * 获取服务的工具列表
+   * @param {string} serviceId - 服务ID
+   * @returns {Promise<Array>} 工具列表
+   */
+  async listTools(serviceId) {
+    try {
+      const response = await this.sendRequest(serviceId, {
+        jsonrpc: '2.0',
+        method: 'tools/list',
+        params: {}
+      });
+
+      return response.result?.tools || [];
+    } catch (error) {
+      console.error(`[MCP Manager] 获取 ${serviceId} 工具列表失败:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * 调用 MCP 工具
+   * @param {string} serviceId - 服务ID
+   * @param {string} toolName - 工具名称
+   * @param {Object} params - 工具参数
+   * @returns {Promise<any>} 工具执行结果
+   */
+  async callTool(serviceId, toolName, params) {
+    try {
+      console.log(`[MCP Manager] 调用工具: ${serviceId}.${toolName}`);
+      console.log(`[MCP Manager] 参数:`, JSON.stringify(params, null, 2));
+
+      const response = await this.sendRequest(serviceId, {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: {
+          name: toolName,
+          arguments: params
+        }
+      });
+
+      if (response.error) {
+        throw new Error(`工具调用失败: ${response.error.message}`);
+      }
+
+      console.log(`[MCP Manager] 工具返回:`, JSON.stringify(response.result, null, 2));
+      return response.result;
+
+    } catch (error) {
+      console.error(`[MCP Manager] 调用工具失败: ${serviceId}.${toolName}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 发送请求到 MCP 服务
+   * @param {string} serviceId - 服务ID
+   * @param {Object} request - MCP 请求
+   * @returns {Promise<Object>} MCP 响应
+   */
+  async sendRequest(serviceId, request) {
+    const process = this.processes.get(serviceId);
+    if (!process) {
+      throw new Error(`服务未运行: ${serviceId}`);
+    }
+
+    // 生成请求ID
+    const id = this.requestId++;
+    request.id = id;
+
+    // 创建 Promise 等待响应
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.pendingRequests.delete(id);
+        reject(new Error(`请求超时: ${serviceId}`));
+      }, 30000); // 30秒超时
+
+      this.pendingRequests.set(id, { resolve, reject, timeout });
+
+      // 发送请求
+      const requestStr = JSON.stringify(request) + '\n';
+      process.stdin.write(requestStr);
+    });
+  }
+
+  /**
+   * 处理 MCP 服务的响应
+   * @param {string} serviceId - 服务ID
+   * @param {Object} response - MCP 响应
+   */
+  handleResponse(serviceId, response) {
+    const { id } = response;
+    const pending = this.pendingRequests.get(id);
+
+    if (pending) {
+      clearTimeout(pending.timeout);
+      this.pendingRequests.delete(id);
+      pending.resolve(response);
+    }
+  }
+
+  /**
+   * 获取所有可用的工具(用于 Function Calling)
+   * @returns {Array} 所有工具列表
+   */
+  getAllTools() {
+    const allTools = [];
+
+    for (const [serviceId, service] of this.services) {
+      if (service.status !== 'running') continue;
+
+      for (const tool of service.tools) {
+        allTools.push({
+          type: 'function',
+          function: {
+            name: `${serviceId}_${tool.name}`, // 添加服务前缀
+            description: tool.description || '',
+            parameters: tool.inputSchema || {
+              type: 'object',
+              properties: {},
+              required: []
+            }
+          },
+          // 保存原始信息用于调用
+          _serviceId: serviceId,
+          _toolName: tool.name
+        });
+      }
+    }
+
+    return allTools;
+  }
+
+  /**
+   * 解析工具全名,提取服务ID和工具名
+   * @param {string} fullToolName - 完整工具名 (格式: serviceId_toolName)
+   * @returns {Object} { serviceId, toolName }
+   */
+  parseToolName(fullToolName) {
+    const parts = fullToolName.split('_');
+    const serviceId = parts[0];
+    const toolName = parts.slice(1).join('_');
+    return { serviceId, toolName };
+  }
+
+  /**
+   * 获取服务状态
+   * @returns {Array} 服务状态列表
+   */
+  getStatus() {
+    const status = [];
+
+    for (const [serviceId, service] of this.services) {
+      status.push({
+        id: serviceId,
+        name: service.config.name,
+        status: service.status,
+        toolCount: service.tools.length,
+        tools: service.tools.map(t => t.name)
+      });
+    }
+
+    return status;
+  }
+}
+
+module.exports = MCPManager;
+

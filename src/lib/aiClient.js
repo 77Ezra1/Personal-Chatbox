@@ -194,6 +194,86 @@ function buildAttachmentSummaryText(attachment, options = {}) {
 }
 
 /**
+ * 调用后端 DeepSeek MCP API
+ * @param {Object} params
+ * @param {Array} params.messages - 消息历史
+ * @param {string} params.model - 模型名称
+ * @param {number} params.temperature - 温度参数
+ * @param {number} params.maxTokens - 最大token数
+ * @param {Function} params.onToken - token回调函数
+ * @param {AbortSignal} params.signal - 中止信号
+ * @returns {Promise<Object>} 响应结果
+ */
+async function callDeepSeekMCP({
+  messages,
+  model = 'deepseek-chat',
+  temperature = 0.7,
+  maxTokens = 1024,
+  onToken,
+  signal
+}) {
+  try {
+    console.log('[callDeepSeekMCP] Calling backend MCP API')
+    console.log('[callDeepSeekMCP] Model:', model)
+    console.log('[callDeepSeekMCP] Messages:', messages.length)
+
+    // 转换消息格式
+    const formattedMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content || ''
+    }))
+
+    // 调用后端 API
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messages: formattedMessages,
+        model,
+        temperature,
+        max_tokens: maxTokens
+      }),
+      signal
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Backend API error: ${response.status} ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('[callDeepSeekMCP] Response received:', data)
+
+    // 提取最终回复
+    const finalMessage = data.choices[0]?.message
+    const content = finalMessage?.content || ''
+
+    // 如果有 onToken 回调,逐字符调用
+    if (onToken && typeof onToken === 'function') {
+      for (const char of content) {
+        onToken(char)
+        // 添加小延迟以模拟流式输出
+        await new Promise(resolve => setTimeout(resolve, 10))
+      }
+    }
+
+    // 返回结果
+    return {
+      text: content,
+      usage: data.usage,
+      reasoning: null, // DeepSeek 的思考过程在 <thinking> 标签中
+      finishReason: data.choices[0]?.finish_reason
+    }
+
+  } catch (error) {
+    console.error('[callDeepSeekMCP] Error:', error)
+    throw error
+  }
+}
+
+/**
  * Unified AI request helper.
  * @param {Object} params
  * @param {{role: string, content: string, metadata?: any}[]} params.messages Conversation history
@@ -247,24 +327,36 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
 
   const openAICompatibleConfig = OPENAI_COMPATIBLE_PROVIDER_CONFIG[provider]
   let result
-  if (openAICompatibleConfig) {
-    const endpoint = getProviderEndpoint(provider, modelConfig.endpoint)
+  
+  // ========== DeepSeek MCP 路由 ==========
+  if (provider === 'deepseek') {
+    console.log('[aiClient] DeepSeek detected, using MCP backend')
     
-    // DeepSeek 特殊处理：根据 deepThinking 和 thinkingMode 切换模型
+    // 确定目标模型
     let targetModel = model || openAICompatibleConfig.defaultModel
-    if (provider === 'deepseek') {
-      // 如果是自适应模式或强制开启模式，使用用户选择的模型（不自动切换）
-      if (thinkingMode === THINKING_MODE.ADAPTIVE || thinkingMode === THINKING_MODE.ALWAYS_ON) {
-        targetModel = model || openAICompatibleConfig.defaultModel
-      } else {
-        // 可选模式：根据用户选择切换
-        targetModel = deepThinking ? 'deepseek-reasoner' : 'deepseek-chat'
-      }
+    if (thinkingMode === THINKING_MODE.ADAPTIVE || thinkingMode === THINKING_MODE.ALWAYS_ON) {
+      targetModel = model || openAICompatibleConfig.defaultModel
+    } else {
+      targetModel = deepThinking ? 'deepseek-reasoner' : 'deepseek-chat'
     }
+    
+    // 调用后端 MCP API
+    result = await callDeepSeekMCP({
+      messages: requestMessages,
+      model: targetModel,
+      temperature,
+      maxTokens,
+      onToken,
+      signal
+    })
+  }
+  // ========== 其他服务商使用原有逻辑 ==========
+  else if (openAICompatibleConfig) {
+    const endpoint = getProviderEndpoint(provider, modelConfig.endpoint)
     
     result = await callOpenAICompatible({
       messages: requestMessages,
-      model: targetModel,
+      model: model || openAICompatibleConfig.defaultModel,
       apiKey,
       temperature,
       maxTokens,

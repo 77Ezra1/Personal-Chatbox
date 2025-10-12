@@ -8,7 +8,11 @@ const config = require('./config.cjs');
 const logger = require('./utils/logger.cjs');
 const { errorHandler } = require('./utils/errors.cjs');
 const { router: mcpRouter, initializeRouter } = require('./routes/mcp.cjs');
+const { router: chatRouter, initializeRouter: initializeChatRouter } = require('./routes/chat.cjs');
 const proxyRouter = require('./routes/proxy.cjs');
+
+// 导入 MCP Manager
+const MCPManager = require('./services/mcp-manager.cjs');
 
 // 导入服务
 const WeatherService = require('./services/weather.cjs');
@@ -37,6 +41,9 @@ app.use((req, res, next) => {
 // 服务实例
 const services = {};
 
+// MCP Manager 实例
+const mcpManager = new MCPManager();
+
 /**
  * 初始化所有服务
  */
@@ -44,7 +51,7 @@ async function initializeServices() {
   logger.info('初始化MCP服务...');
   
   try {
-    // 创建服务实例
+    // ========== 初始化原有服务 ==========
     services.weather = new WeatherService(config.services.weather);
     services.time = new TimeService(config.services.time);
     services.search = new SearchService(config.services.search); // DuckDuckGo搜索
@@ -59,24 +66,53 @@ async function initializeServices() {
     services.fetch = new FetchService(config.services.fetch);
     services.playwright = new PlaywrightBrowserService(config.services.playwright);
     
-    // 初始化自动加载的服务
+    // 初始化自动加载的原有服务
     for (const [id, service] of Object.entries(services)) {
-      // 检查服务是否启用并需要初始化
       if (service.enabled && service.initialize) {
         logger.info(`自动加载服务: ${service.name}`);
         try {
           await service.initialize();
         } catch (error) {
           logger.error(`服务${service.name}初始化失败:`, error);
-          // 继续初始化其他服务
         }
       }
     }
     
+    // ========== 初始化新的 MCP 服务 ==========
+    logger.info('启动 MCP Manager...');
+    
+    // 启动第一批 MCP 服务
+    const mcpServices = [
+      'memory',
+      'filesystem', 
+      'git',
+      'sequential_thinking',
+      'sqlite',
+      'wikipedia'
+    ];
+    
+    for (const serviceId of mcpServices) {
+      const serviceConfig = config.services[serviceId];
+      if (serviceConfig && serviceConfig.enabled && serviceConfig.autoLoad) {
+        try {
+          logger.info(`启动 MCP 服务: ${serviceConfig.name}`);
+          await mcpManager.startService(serviceConfig);
+        } catch (error) {
+          logger.error(`MCP 服务 ${serviceConfig.name} 启动失败:`, error);
+          // 继续启动其他服务
+        }
+      }
+    }
+    
+    // 将 MCP Manager 添加到 services 中
+    services.mcpManager = mcpManager;
+    
     logger.info('服务初始化完成');
+    logger.info(`MCP 服务状态:`, mcpManager.getStatus());
     
     // 初始化路由
     initializeRouter(services);
+    initializeChatRouter(services);
     
   } catch (error) {
     logger.error('服务初始化失败:', error);
@@ -86,6 +122,7 @@ async function initializeServices() {
 
 // API路由
 app.use('/api/mcp', mcpRouter);
+app.use('/api/chat', chatRouter);
 app.use('/api/proxy', proxyRouter);
 
 // 健康检查
@@ -144,11 +181,16 @@ async function start() {
 process.on('SIGINT', async () => {
   logger.info('收到SIGINT信号,正在关闭服务器...');
   
-  // 停止所有服务
+  // 停止所有原有服务
   for (const service of Object.values(services)) {
-    if (service.enabled) {
+    if (service !== mcpManager && service.enabled && service.disable) {
       service.disable();
     }
+  }
+  
+  // 停止所有 MCP 服务
+  if (mcpManager) {
+    await mcpManager.stopAll();
   }
   
   process.exit(0);
@@ -157,11 +199,16 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   logger.info('收到SIGTERM信号,正在关闭服务器...');
   
-  // 停止所有服务
+  // 停止所有原有服务
   for (const service of Object.values(services)) {
-    if (service.enabled) {
+    if (service !== mcpManager && service.enabled && service.disable) {
       service.disable();
     }
+  }
+  
+  // 停止所有 MCP 服务
+  if (mcpManager) {
+    await mcpManager.stopAll();
   }
   
   process.exit(0);
