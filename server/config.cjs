@@ -47,10 +47,10 @@ module.exports = {
     git: {
       id: 'git',
       name: 'Git版本控制',
-      enabled: false,  // 暂时禁用,需要调试
-      autoLoad: false,
+      enabled: true,  // 已启用
+      autoLoad: true,
       description: 'Git版本控制操作,支持状态查询、提交、分支管理',
-      command: 'python',
+      command: 'python3',
       args: [
         '-m',
         'mcp_server_git',
@@ -94,13 +94,45 @@ module.exports = {
     wikipedia: {
       id: 'wikipedia',
       name: 'Wikipedia维基百科',
-      enabled: false,  // 暂时禁用,需要调试
-      autoLoad: false,
+      enabled: true,  // 已启用
+      autoLoad: true,
       description: '维基百科信息查询,支持搜索、文章获取、摘要提取',
-      command: 'wikipedia-mcp',
-      args: ['--language', 'zh-hans'], // 简体中文
+      command: 'npx',
+      args: ['-y', '@shelm/wikipedia-mcp-server']
+    },
+    
+    // ========== 第二批 MCP 服务 (需要 API Key) ==========
+    
+    // Brave Search - 网页搜索
+    brave_search: {
+      id: 'brave_search',
+      name: 'Brave Search网页搜索',
+      enabled: true,
+      autoLoad: true,
+      requiresConfig: true,  // 标记需要配置
+      description: 'Brave Search API,提供网页、新闻、图片、视频搜索',
+      command: 'npx',
+      args: ['-y', '@brave/brave-search-mcp-server'],
       env: {
-        WIKIPEDIA_ACCESS_TOKEN: process.env.WIKIPEDIA_ACCESS_TOKEN || ''
+        BRAVE_API_KEY: '' // 从配置系统读取
+      }
+    },
+    
+    // GitHub - 仓库管理
+    github: {
+      id: 'github',
+      name: 'GitHub仓库管理',
+      enabled: true,
+      autoLoad: true,
+      requiresConfig: true,  // 标记需要配置
+      description: 'GitHub API集成,支持仓库管理、PR、Issue、文件操作',
+      command: 'npx',
+      args: [
+        '-y',
+        '@modelcontextprotocol/server-github'
+      ],
+      env: {
+        GITHUB_PERSONAL_ACCESS_TOKEN: '' // 从配置系统读取
       }
     },
     

@@ -14,6 +14,9 @@ const proxyRouter = require('./routes/proxy.cjs');
 // 导入 MCP Manager
 const MCPManager = require('./services/mcp-manager.cjs');
 
+// 导入配置存储
+const configStorage = require('./services/config-storage.cjs');
+
 // 导入服务
 const WeatherService = require('./services/weather.cjs');
 const TimeService = require('./services/time.cjs');
@@ -48,6 +51,10 @@ const mcpManager = new MCPManager();
  * 初始化所有服务
  */
 async function initializeServices() {
+  // 初始化配置存储
+  logger.info('初始化配置存储...');
+  await configStorage.initialize();
+  
   logger.info('初始化MCP服务...');
   
   try {
@@ -81,7 +88,7 @@ async function initializeServices() {
     // ========== 初始化新的 MCP 服务 ==========
     logger.info('启动 MCP Manager...');
     
-    // 启动第一批 MCP 服务
+    // 启动第一批 MCP 服务 (不需要 API Key)
     const mcpServices = [
       'memory',
       'filesystem', 
@@ -91,12 +98,58 @@ async function initializeServices() {
       'wikipedia'
     ];
     
+    // 启动第二批 MCP 服务 (需要 API Key,从配置系统读取)
+    const mcpServicesWithConfig = [
+      'brave_search',
+      'github'
+    ];
+    
     for (const serviceId of mcpServices) {
       const serviceConfig = config.services[serviceId];
       if (serviceConfig && serviceConfig.enabled && serviceConfig.autoLoad) {
         try {
           logger.info(`启动 MCP 服务: ${serviceConfig.name}`);
           await mcpManager.startService(serviceConfig);
+        } catch (error) {
+          logger.error(`MCP 服务 ${serviceConfig.name} 启动失败:`, error);
+          // 继续启动其他服务
+        }
+      }
+    }
+    
+    // 启动需要 API Key 的服务
+    for (const serviceId of mcpServicesWithConfig) {
+      const serviceConfig = config.services[serviceId];
+      if (serviceConfig && serviceConfig.enabled && serviceConfig.autoLoad) {
+        try {
+          // 将服务ID映射到配置存储的格式 (brave_search -> braveSearch)
+          const configServiceId = serviceId === 'brave_search' ? 'braveSearch' : serviceId;
+          
+          // 从配置存储中读取 API Key
+          const storedConfig = await configStorage.getServiceConfig(configServiceId);
+          
+          if (storedConfig && (storedConfig.apiKey || storedConfig.token)) {
+            // 将 API Key 注入到环境变量中
+            const configWithKey = { ...serviceConfig };
+            
+            // 根据服务类型设置不同的环境变量
+            if (serviceId === 'brave_search') {
+              configWithKey.env = {
+                ...configWithKey.env,
+                BRAVE_API_KEY: storedConfig.apiKey
+              };
+            } else if (serviceId === 'github') {
+              configWithKey.env = {
+                ...configWithKey.env,
+                GITHUB_PERSONAL_ACCESS_TOKEN: storedConfig.token
+              };
+            }
+            
+            logger.info(`启动 MCP 服务: ${serviceConfig.name} (使用配置的 API Key)`);
+            await mcpManager.startService(configWithKey);
+          } else {
+            logger.warn(`MCP 服务 ${serviceConfig.name} 需要配置 API Key,跳过启动`);
+          }
         } catch (error) {
           logger.error(`MCP 服务 ${serviceConfig.name} 启动失败:`, error);
           // 继续启动其他服务
@@ -124,6 +177,7 @@ async function initializeServices() {
 app.use('/api/mcp', mcpRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/proxy', proxyRouter);
+app.use('/api/config', require('./routes/config.cjs'));
 
 // 健康检查
 app.get('/health', (req, res) => {

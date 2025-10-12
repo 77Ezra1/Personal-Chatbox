@@ -90,6 +90,9 @@ class MCPManager extends EventEmitter {
       // 等待进程启动
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // 初始化 MCP 连接
+      await this.initialize(id);
+
       // 获取工具列表
       const tools = await this.listTools(id);
       
@@ -129,6 +132,49 @@ class MCPManager extends EventEmitter {
   async stopAll() {
     for (const [serviceId] of this.processes) {
       await this.stopService(serviceId);
+    }
+  }
+
+  /**
+   * 初始化 MCP 服务连接
+   * @param {string} serviceId - 服务ID
+   */
+  async initialize(serviceId) {
+    try {
+      const response = await this.sendRequest(serviceId, {
+        jsonrpc: '2.0',
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {
+            roots: {
+              listChanged: true
+            },
+            sampling: {}
+          },
+          clientInfo: {
+            name: 'ai-life-system',
+            version: '1.0.0'
+          }
+        }
+      });
+
+      console.log(`[MCP Manager] ${serviceId} 初始化成功`);
+      
+      // 发送 initialized 通知
+      const process = this.processes.get(serviceId);
+      if (process) {
+        const notification = JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'notifications/initialized'
+        }) + '\n';
+        process.stdin.write(notification);
+      }
+
+      return response.result;
+    } catch (error) {
+      console.error(`[MCP Manager] 初始化 ${serviceId} 失败:`, error);
+      throw error;
     }
   }
 
