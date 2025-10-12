@@ -168,8 +168,30 @@ class ConfigStorage {
 
       // 关键修复: 将加载的配置与默认配置深度合并
       const defaultConfig = this.getDefaultConfig();
-      const mergedServices = { ...defaultConfig.services, ...(loadedConfig.services || {}) };
-      this.config = { ...defaultConfig, ...loadedConfig, services: mergedServices };
+      
+      // 深度合并服务配置，确保每个服务都有完整的默认值
+      const mergedServices = {};
+      Object.keys(defaultConfig.services).forEach(serviceKey => {
+        mergedServices[serviceKey] = {
+          ...defaultConfig.services[serviceKey],
+          ...(loadedConfig.services?.[serviceKey] || {})
+        };
+      });
+      
+      // 同时保留加载配置中可能存在的新服务
+      if (loadedConfig.services) {
+        Object.keys(loadedConfig.services).forEach(serviceKey => {
+          if (!mergedServices[serviceKey]) {
+            mergedServices[serviceKey] = loadedConfig.services[serviceKey];
+          }
+        });
+      }
+      
+      this.config = { 
+        ...defaultConfig, 
+        ...loadedConfig, 
+        services: mergedServices 
+      };
 
       console.log('[ConfigStorage] 配置加载并合并成功');
     } catch (error) {
@@ -389,7 +411,12 @@ class ConfigStorage {
    * 获取服务配置
    */
   getServiceConfig(serviceKey) {
-    return this.config.services[serviceKey] || null;
+    // 如果配置不存在，返回默认配置
+    if (!this.config.services[serviceKey]) {
+      const defaultConfig = this.getDefaultConfig();
+      return defaultConfig.services[serviceKey] || null;
+    }
+    return this.config.services[serviceKey];
   }
 
   /**

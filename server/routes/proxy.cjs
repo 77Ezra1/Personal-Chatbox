@@ -60,12 +60,23 @@ router.get('/config', async (req, res) => {
   try {
     const { getConfigStorage } = require('../services/config-storage.cjs');
     const configStorage = getConfigStorage();
-    const proxyConfig = await configStorage.getServiceConfig('proxy') || {
-      enabled: false,
-      protocol: 'http',
-      host: '127.0.0.1',
-      port: 7890
-    };
+    
+    // 确保配置存储已初始化
+    if (!configStorage.config) {
+      await configStorage.initialize();
+    }
+    
+    let proxyConfig = configStorage.getServiceConfig('proxy');
+    
+    // 如果配置不存在，使用默认值
+    if (!proxyConfig) {
+      proxyConfig = {
+        enabled: false,
+        protocol: 'http',
+        host: '127.0.0.1',
+        port: 7890
+      };
+    }
 
     const proxyManager = getProxyManager();
     const currentProxy = await proxyManager.getProxyInfo();
@@ -77,9 +88,17 @@ router.get('/config', async (req, res) => {
     });
   } catch (error) {
     console.error('获取代理配置失败:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
+    // 即使出错也返回默认配置，避免前端崩溃
+    res.json({
+      success: true,
+      config: {
+        enabled: false,
+        protocol: 'http',
+        host: '127.0.0.1',
+        port: 7890
+      },
+      current: { enabled: false },
+      warning: '配置加载失败，使用默认配置'
     });
   }
 });
