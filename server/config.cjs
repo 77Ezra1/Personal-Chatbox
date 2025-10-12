@@ -77,8 +77,8 @@ module.exports = {
     playwright: {
       id: 'playwright',
       name: 'Playwright浏览器自动化',
-      enabled: false,  // 禁用 - 需要安装 playwright 依赖
-      autoLoad: false,
+      enabled: true,
+      autoLoad: true,
       description: '使用Playwright进行浏览器自动化操作'
     }
   },
