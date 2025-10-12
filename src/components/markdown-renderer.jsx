@@ -133,51 +133,64 @@ const MARKDOWN_COMPONENTS = {
 }
 
 /**
- * 解析MCP工具调用标记
- * 格式: < | tool_calls_begin | >< | tool_call_begin | >...< | tool_call_end | >...< | tool_calls_end | >
+ * 解析MCP工具调用标记和思考过程
+ * 支持两种格式:
+ * 1. MCP格式: < | tool_calls_begin | >...< | tool_calls_end | >
+ * 2. DeepSeek格式: <thinking>...</thinking> 和 <tool_call>...</tool_call>
  */
 function parseMCPContent(text) {
   const parts = []
-  let currentIndex = 0
+  let processedText = text
   
-  // 正则匹配 tool_calls 块
-  const toolCallsRegex = /<\s*\|\s*tool_calls_begin\s*\|\s*>([\s\S]*?)<\s*\|\s*tool_calls_end\s*\|\s*>/g
+  // 首先提取所有思考过程和工具调用内容
+  let thinkingContent = ''
   
-  let match
-  while ((match = toolCallsRegex.exec(text)) !== null) {
-    // 添加工具调用之前的内容
-    if (match.index > currentIndex) {
-      const beforeContent = text.substring(currentIndex, match.index).trim()
-      if (beforeContent) {
-        parts.push({ type: 'content', text: beforeContent })
-      }
-    }
-    
-    // 提取工具调用内容
-    const toolCallsContent = match[1]
+  // 提取 <thinking> 标签内容
+  const thinkingRegex = /<thinking>([\s\S]*?)<\/thinking>/gi
+  let thinkingMatch
+  while ((thinkingMatch = thinkingRegex.exec(text)) !== null) {
+    thinkingContent += thinkingMatch[1].trim() + '\n\n'
+    // 从原文中移除
+    processedText = processedText.replace(thinkingMatch[0], '')
+  }
+  
+  // 提取 <tool_call> 标签内容
+  const toolCallRegex = /<tool_call>([\s\S]*?)<\/tool_call>/gi
+  let toolCallMatch
+  while ((toolCallMatch = toolCallRegex.exec(text)) !== null) {
+    thinkingContent += '**工具调用:**\n```json\n' + toolCallMatch[1].trim() + '\n```\n\n'
+    // 从原文中移除
+    processedText = processedText.replace(toolCallMatch[0], '')
+  }
+  
+  // 提取 MCP 格式的工具调用
+  const mcpToolCallsRegex = /<\s*\|\s*tool_calls_begin\s*\|\s*>([\s\S]*?)<\s*\|\s*tool_calls_end\s*\|\s*>/g
+  let mcpMatch
+  while ((mcpMatch = mcpToolCallsRegex.exec(text)) !== null) {
+    const toolCallsContent = mcpMatch[1]
     
     // 解析单个工具调用
-    const toolCallRegex = /<\s*\|\s*tool_call_begin\s*\|\s*>([\s\S]*?)<\s*\|\s*tool_call_end\s*\|\s*>/g
+    const toolCallItemRegex = /<\s*\|\s*tool_call_begin\s*\|\s*>([\s\S]*?)<\s*\|\s*tool_call_end\s*\|\s*>/g
     let toolMatch
-    let thinkingContent = ''
     
-    while ((toolMatch = toolCallRegex.exec(toolCallsContent)) !== null) {
+    while ((toolMatch = toolCallItemRegex.exec(toolCallsContent)) !== null) {
       thinkingContent += toolMatch[1] + '\n\n'
     }
     
-    if (thinkingContent.trim()) {
-      parts.push({ type: 'thinking', text: thinkingContent.trim() })
-    }
-    
-    currentIndex = match.index + match[0].length
+    // 从原文中移除
+    processedText = processedText.replace(mcpMatch[0], '')
   }
   
-  // 添加剩余内容
-  if (currentIndex < text.length) {
-    const remainingContent = text.substring(currentIndex).trim()
-    if (remainingContent) {
-      parts.push({ type: 'content', text: remainingContent })
-    }
+  // 清理处理后的文本
+  processedText = processedText.trim()
+  
+  // 构建结果
+  if (thinkingContent.trim()) {
+    parts.push({ type: 'thinking', text: thinkingContent.trim() })
+  }
+  
+  if (processedText) {
+    parts.push({ type: 'content', text: processedText })
   }
   
   return parts
