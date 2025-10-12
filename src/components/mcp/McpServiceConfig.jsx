@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, Cloud, Eye, EyeOff, Copy, Check, ExternalLink, AlertCircle, Info, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMcpManager } from '@/hooks/useMcpManager'
+import { McpPathConfigDialog } from './McpPathConfig'
 import './McpServiceConfig.css'
 
 /**
@@ -161,6 +162,9 @@ function ServiceCard({
             <span className="mcp-service-icon">{getServiceIcon(server.id)}</span>
             <h5 className="mcp-service-name">{server.name}</h5>
             <ServiceInfoDialog server={server} />
+            {(server.id === 'sqlite' || server.id === 'filesystem') && (
+              <McpPathConfigDialog service={server} onSave={onSaveKey} />
+            )}
           </div>
           <p className="mcp-service-description">{server.description}</p>
           <div className="mcp-service-badges">

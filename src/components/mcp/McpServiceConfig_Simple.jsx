@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { AlertCircle, Search, Cloud, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useMcpManager } from '@/hooks/useMcpManager'
+import { McpPathConfigDialog } from './McpPathConfig'
 
 /**
  * 简化的MCP服务配置组件
@@ -79,7 +80,12 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
         <div className="flex items-center gap-3">
           <span className="text-2xl">{getServiceIcon(server.id)}</span>
           <div>
-            <h5 className="font-medium">{server.name}</h5>
+            <div className="flex items-center gap-2">
+              <h5 className="font-medium">{server.name}</h5>
+              {(server.id === 'sqlite' || server.id === 'filesystem') && (
+                <McpPathConfigDialog service={server} onSave={() => {}} />
+              )}
+            </div>
             <p className="text-sm text-gray-600">{server.description}</p>
             <div className="flex gap-2 mt-2">
               <Badge variant="secondary">免费</Badge>
