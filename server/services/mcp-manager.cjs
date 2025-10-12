@@ -271,6 +271,18 @@ class MCPManager extends EventEmitter {
    * @returns {Object} { serviceId, toolName }
    */
   parseToolName(fullToolName) {
+    // 首先尝试从工具列表中查找,使用存储的元数据
+    const allTools = this.getAllTools();
+    const tool = allTools.find(t => t.function.name === fullToolName);
+    
+    if (tool && tool._serviceId && tool._toolName) {
+      return {
+        serviceId: tool._serviceId,
+        toolName: tool._toolName
+      };
+    }
+    
+    // 如果找不到,回退到字符串分割(向后兼容)
     const parts = fullToolName.split('_');
     const serviceId = parts[0];
     const toolName = parts.slice(1).join('_');

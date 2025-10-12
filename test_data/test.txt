@@ -1,0 +1,2 @@
+Hello from MCP Filesystem Service!
+This is a test file.

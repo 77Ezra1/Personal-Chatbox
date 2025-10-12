@@ -24,7 +24,9 @@ function initializeRouter(serviceInstances) {
  */
 router.get('/services', (req, res, next) => {
   try {
-    const serviceList = Object.values(services).map(service => service.getInfo());
+    const serviceList = Object.values(services)
+      .filter(service => service.getInfo) // 过滤掉没有 getInfo 方法的服务(如 mcpManager)
+      .map(service => service.getInfo());
     res.json({
       success: true,
       services: serviceList
@@ -95,8 +97,14 @@ router.get('/tools', (req, res, next) => {
     const allTools = [];
     
     for (const service of Object.values(services)) {
-      if (service.enabled) {
+      // 处理普通服务
+      if (service.getTools && service.enabled) {
         const tools = service.getTools();
+        allTools.push(...tools);
+      }
+      // 处理 MCPManager
+      else if (service.getAllTools) {
+        const tools = service.getAllTools();
         allTools.push(...tools);
       }
     }
@@ -127,9 +135,44 @@ router.post('/call', async (req, res, next) => {
     
     // 查找拥有该工具的服务
     let targetService = null;
+    let isMCPTool = false;
     
+    // 首先检查是否是 MCP Manager 的工具
+    const mcpManager = services.mcpManager;
+    if (mcpManager && mcpManager.getAllTools) {
+      const mcpTools = mcpManager.getAllTools();
+      const mcpTool = mcpTools.find(tool => tool.function.name === toolName);
+      
+      if (mcpTool) {
+        // 这是一个 MCP 工具
+        isMCPTool = true;
+        const { serviceId, toolName: actualToolName } = mcpManager.parseToolName(toolName);
+        
+        try {
+          const result = await mcpManager.callTool(serviceId, actualToolName, parameters || {});
+          
+          // 格式化返回结果
+          return res.json({
+            success: true,
+            content: JSON.stringify(result, null, 2),
+            toolName,
+            serviceId,
+            actualToolName
+          });
+        } catch (error) {
+          logger.error(`MCP工具调用失败: ${toolName}`, error);
+          return res.json({
+            success: false,
+            error: `MCP工具调用失败: ${error.message}`,
+            details: error.stack
+          });
+        }
+      }
+    }
+    
+    // 如果不是 MCP 工具,查找原有服务的工具
     for (const service of Object.values(services)) {
-      if (!service.enabled) continue;
+      if (!service.enabled || !service.getTools) continue;
       
       const tools = service.getTools();
       const hasTool = tools.some(tool => tool.function.name === toolName);
@@ -172,7 +215,19 @@ router.get('/health', async (req, res, next) => {
     const healthChecks = {};
     
     for (const [id, service] of Object.entries(services)) {
-      healthChecks[id] = await service.healthCheck();
+      // 处理普通服务
+      if (service.healthCheck) {
+        healthChecks[id] = await service.healthCheck();
+      }
+      // 处理 MCPManager
+      else if (service.getStatus) {
+        healthChecks[id] = {
+          id: 'mcpManager',
+          name: 'MCP Manager',
+          status: 'healthy',
+          services: service.getStatus()
+        };
+      }
     }
     
     res.json({
