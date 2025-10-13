@@ -102,13 +102,11 @@
 }
 
 /* 隐藏旧的容器样式 */
-.auth-container,
-.welcome-container {
+.auth-container {
   display: none;
 }
 
-.auth-card,
-.welcome-content {
+.auth-card {
   display: none;
 }
 
