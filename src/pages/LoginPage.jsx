@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { AlertCircle, Check, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Check, ArrowLeft, Globe } from 'lucide-react';
+import { getAuthLanguage, setAuthLanguage, getAuthTranslation } from '../lib/authTranslations';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, register } = useAuth();
+  
+  // 语言状态（独立于主应用）
+  const [language, setLanguage] = useState(() => getAuthLanguage());
   
   const [step, setStep] = useState(1); // 1: email, 2: password, 3: invite code
   const [formData, setFormData] = useState({
@@ -23,6 +27,16 @@ export default function LoginPage() {
     hasNumber: false,
     hasSpecialChar: false
   });
+
+  // 切换语言
+  const toggleLanguage = () => {
+    const newLang = language === 'en' ? 'zh' : 'en';
+    setLanguage(newLang);
+    setAuthLanguage(newLang);
+  };
+
+  // 翻译函数
+  const t = (key) => getAuthTranslation(language, key);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,13 +64,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 检查邮箱是否已注册（这里需要调用API检查）
-      // 暂时模拟：如果邮箱包含'new'就当作新用户
-      const checkEmail = formData.email.toLowerCase().includes('new');
-      setIsNewUser(checkEmail);
+      // 模拟检查邮箱是否存在
+      // 在实际应用中，这里应该调用API
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 简单模拟：如果邮箱包含"new"就当作新用户
+      const isNew = formData.email.includes('new');
+      setIsNewUser(isNew);
       setStep(2);
-    } catch {
-      setError('Failed to verify email');
+    } catch (err) {
+      setError(err.message || t('errors.networkError'));
     } finally {
       setLoading(false);
     }
@@ -66,30 +83,26 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    // 如果是新用户，检查密码强度
-    if (isNewUser) {
-      const allValid = Object.values(passwordStrength).every(v => v);
-      if (!allValid) {
-        setError('Password does not meet all requirements');
-        return;
-      }
-      // 新用户需要输入邀请码
-      setStep(3);
+    // 验证密码强度
+    const allValid = Object.values(passwordStrength).every(v => v);
+    if (isNewUser && !allValid) {
+      setError(t('errors.passwordTooShort'));
       return;
     }
 
-    // 老用户直接登录
     setLoading(true);
+
     try {
-      const result = await login(formData.email, formData.password);
-      
-      if (result.success) {
-        navigate('/');
+      if (isNewUser) {
+        // 新用户注册 - 进入邀请码步骤
+        setStep(3);
       } else {
-        setError(result.error || 'Login failed');
+        // 老用户登录
+        await login(formData.email, formData.password);
+        navigate('/');
       }
-    } catch {
-      setError('Login failed, please try again');
+    } catch (err) {
+      setError(err.message || t('errors.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -101,20 +114,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await register(
-        formData.email,
-        formData.password,
-        formData.inviteCode,
-        null
-      );
-      
-      if (result.success) {
-        navigate('/');
-      } else {
-        setError(result.error || 'Registration failed');
-      }
-    } catch {
-      setError('Registration failed, please try again');
+      await register(formData.email, formData.password, formData.inviteCode);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || t('errors.registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -122,12 +125,18 @@ export default function LoginPage() {
 
   const handleBack = () => {
     setError('');
-    if (step === 2) {
-      setStep(1);
-      setFormData({ ...formData, password: '' });
-    } else if (step === 3) {
+    if (step === 3) {
       setStep(2);
-      setFormData({ ...formData, inviteCode: '' });
+    } else if (step === 2) {
+      setStep(1);
+      setFormData({ ...formData, password: '', inviteCode: '' });
+      setPasswordStrength({
+        hasLength: false,
+        hasUpperCase: false,
+        hasLowerCase: false,
+        hasNumber: false,
+        hasSpecialChar: false
+      });
     }
   };
 
@@ -137,6 +146,17 @@ export default function LoginPage() {
       <div className="auth-page-header">
         <a href="/" className="auth-logo-text">Personal Chatbox</a>
       </div>
+
+      {/* 语言切换按钮 */}
+      <button 
+        onClick={toggleLanguage}
+        className="auth-language-btn"
+        type="button"
+        title={language === 'en' ? '切换到中文' : 'Switch to English'}
+      >
+        <Globe size={20} />
+        <span>{language === 'en' ? '中文' : 'EN'}</span>
+      </button>
 
       {/* 返回按钮 */}
       {step > 1 && (
@@ -154,9 +174,9 @@ export default function LoginPage() {
           {/* 步骤1: 邮箱输入 */}
           {step === 1 && (
             <>
-              <h1 className="auth-title">Log in or sign up</h1>
+              <h1 className="auth-title">{t('loginTitle')}</h1>
               <p className="auth-subtitle">
-                You'll get smarter responses and can upload files, images, and more.
+                {t('loginSubtitle')}
               </p>
 
               {error && (
@@ -168,7 +188,7 @@ export default function LoginPage() {
 
               <form onSubmit={handleEmailSubmit} className="auth-form">
                 <div className="form-group">
-                  <label htmlFor="email">Email address</label>
+                  <label htmlFor="email">{t('emailLabel')}</label>
                   <input
                     id="email"
                     name="email"
@@ -176,7 +196,7 @@ export default function LoginPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="Email address"
+                    placeholder={t('emailPlaceholder')}
                     disabled={loading}
                     className="form-input"
                     autoComplete="email"
@@ -190,18 +210,15 @@ export default function LoginPage() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <>
-                      <span className="btn-spinner"></span>
-                      <span>Loading...</span>
-                    </>
+                    <span className="btn-spinner"></span>
                   ) : (
-                    <span>Continue</span>
+                    <span>{t('continueButton')}</span>
                   )}
                 </button>
               </form>
 
               <div className="auth-divider">
-                <span>or</span>
+                <span>{t('divider')}</span>
               </div>
 
               <div className="oauth-buttons">
@@ -216,7 +233,7 @@ export default function LoginPage() {
                     <path d="M4.405 11.9c-.2-.6-.314-1.24-.314-1.9 0-.66.114-1.3.314-1.9V5.51H1.064A9.996 9.996 0 000 10c0 1.614.386 3.14 1.064 4.49l3.34-2.59z" fill="#FBBC05"/>
                     <path d="M10 3.977c1.468 0 2.786.505 3.823 1.496l2.868-2.868C14.959.99 12.695 0 10 0 6.09 0 2.71 2.24 1.064 5.51l3.34 2.59C5.19 5.736 7.395 3.977 10 3.977z" fill="#EA4335"/>
                   </svg>
-                  <span>Continue with Google</span>
+                  <span>{t('googleButton')}</span>
                 </button>
                 
                 <button 
@@ -227,14 +244,14 @@ export default function LoginPage() {
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd"/>
                   </svg>
-                  <span>Continue with GitHub</span>
+                  <span>{t('githubButton')}</span>
                 </button>
               </div>
 
               <div className="auth-terms">
-                <a href="#" onClick={(e) => e.preventDefault()}>Terms of Use</a>
+                <a href="/terms">{t('termsOfUse')}</a>
                 <span>|</span>
-                <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>
+                <a href="/privacy">{t('privacyPolicy')}</a>
               </div>
             </>
           )}
@@ -242,9 +259,11 @@ export default function LoginPage() {
           {/* 步骤2: 密码输入 */}
           {step === 2 && (
             <>
-              <h1 className="auth-title">{isNewUser ? 'Create your account' : 'Enter your password'}</h1>
-              <p className="auth-subtitle auth-email-display">
-                {formData.email}
+              <h1 className="auth-title">
+                {isNewUser ? t('createAccountTitle') : t('enterPasswordTitle')}
+              </h1>
+              <p className="auth-subtitle">
+                <span className="auth-email-display">{formData.email}</span>
               </p>
 
               {error && (
@@ -256,7 +275,7 @@ export default function LoginPage() {
 
               <form onSubmit={handlePasswordSubmit} className="auth-form">
                 <div className="form-group">
-                  <label htmlFor="password">Password</label>
+                  <label htmlFor="password">{t('passwordLabel')}</label>
                   <input
                     id="password"
                     name="password"
@@ -264,59 +283,38 @@ export default function LoginPage() {
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Password"
+                    placeholder={t('passwordPlaceholder')}
                     disabled={loading}
                     className="form-input"
-                    autoComplete={isNewUser ? "new-password" : "current-password"}
+                    autoComplete={isNewUser ? 'new-password' : 'current-password'}
                     autoFocus
                   />
-                  
-                  {/* 密码要求（仅新用户） */}
-                  {isNewUser && formData.password && (
-                    <div className="password-requirements">
-                      <div className={`requirement ${passwordStrength.hasLength ? 'valid' : ''}`}>
-                        {passwordStrength.hasLength ? (
-                          <Check size={14} />
-                        ) : (
-                          <div className="requirement-dot"></div>
-                        )}
-                        <span>At least 8 characters</span>
-                      </div>
-                      <div className={`requirement ${passwordStrength.hasUpperCase ? 'valid' : ''}`}>
-                        {passwordStrength.hasUpperCase ? (
-                          <Check size={14} />
-                        ) : (
-                          <div className="requirement-dot"></div>
-                        )}
-                        <span>Contains uppercase letter</span>
-                      </div>
-                      <div className={`requirement ${passwordStrength.hasLowerCase ? 'valid' : ''}`}>
-                        {passwordStrength.hasLowerCase ? (
-                          <Check size={14} />
-                        ) : (
-                          <div className="requirement-dot"></div>
-                        )}
-                        <span>Contains lowercase letter</span>
-                      </div>
-                      <div className={`requirement ${passwordStrength.hasNumber ? 'valid' : ''}`}>
-                        {passwordStrength.hasNumber ? (
-                          <Check size={14} />
-                        ) : (
-                          <div className="requirement-dot"></div>
-                        )}
-                        <span>Contains number</span>
-                      </div>
-                      <div className={`requirement ${passwordStrength.hasSpecialChar ? 'valid' : ''}`}>
-                        {passwordStrength.hasSpecialChar ? (
-                          <Check size={14} />
-                        ) : (
-                          <div className="requirement-dot"></div>
-                        )}
-                        <span>Contains special character</span>
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {isNewUser && (
+                  <div className="password-requirements">
+                    <div className={`requirement ${passwordStrength.hasLength ? 'valid' : ''}`}>
+                      {passwordStrength.hasLength ? <Check size={14} /> : <div className="requirement-dot" />}
+                      <span>{t('passwordRequirements.length')}</span>
+                    </div>
+                    <div className={`requirement ${passwordStrength.hasUpperCase ? 'valid' : ''}`}>
+                      {passwordStrength.hasUpperCase ? <Check size={14} /> : <div className="requirement-dot" />}
+                      <span>{t('passwordRequirements.uppercase')}</span>
+                    </div>
+                    <div className={`requirement ${passwordStrength.hasLowerCase ? 'valid' : ''}`}>
+                      {passwordStrength.hasLowerCase ? <Check size={14} /> : <div className="requirement-dot" />}
+                      <span>{t('passwordRequirements.lowercase')}</span>
+                    </div>
+                    <div className={`requirement ${passwordStrength.hasNumber ? 'valid' : ''}`}>
+                      {passwordStrength.hasNumber ? <Check size={14} /> : <div className="requirement-dot" />}
+                      <span>{t('passwordRequirements.number')}</span>
+                    </div>
+                    <div className={`requirement ${passwordStrength.hasSpecialChar ? 'valid' : ''}`}>
+                      {passwordStrength.hasSpecialChar ? <Check size={14} /> : <div className="requirement-dot" />}
+                      <span>{t('passwordRequirements.special')}</span>
+                    </div>
+                  </div>
+                )}
 
                 <button 
                   type="submit" 
@@ -324,12 +322,9 @@ export default function LoginPage() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <>
-                      <span className="btn-spinner"></span>
-                      <span>Loading...</span>
-                    </>
+                    <span className="btn-spinner"></span>
                   ) : (
-                    <span>Continue</span>
+                    <span>{t('continueButton')}</span>
                   )}
                 </button>
               </form>
@@ -339,9 +334,9 @@ export default function LoginPage() {
           {/* 步骤3: 邀请码输入（仅新用户） */}
           {step === 3 && (
             <>
-              <h1 className="auth-title">Enter invite code</h1>
+              <h1 className="auth-title">{t('inviteCodeTitle')}</h1>
               <p className="auth-subtitle">
-                An invite code is required to create an account
+                {t('inviteCodeSubtitle')}
               </p>
 
               {error && (
@@ -353,7 +348,7 @@ export default function LoginPage() {
 
               <form onSubmit={handleInviteCodeSubmit} className="auth-form">
                 <div className="form-group">
-                  <label htmlFor="inviteCode">Invite code</label>
+                  <label htmlFor="inviteCode">{t('inviteCodeLabel')}</label>
                   <input
                     id="inviteCode"
                     name="inviteCode"
@@ -361,14 +356,14 @@ export default function LoginPage() {
                     required
                     value={formData.inviteCode}
                     onChange={handleChange}
-                    placeholder="Invite code"
+                    placeholder={t('inviteCodePlaceholder')}
                     disabled={loading}
                     className="form-input"
                     autoComplete="off"
                     autoFocus
                   />
                   <p className="form-hint">
-                    Don't have an invite code? Contact the administrator
+                    {t('inviteCodeHint')}
                   </p>
                 </div>
 
@@ -378,12 +373,9 @@ export default function LoginPage() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <>
-                      <span className="btn-spinner"></span>
-                      <span>Creating account...</span>
-                    </>
+                    <span className="btn-spinner"></span>
                   ) : (
-                    <span>Continue</span>
+                    <span>{t('continueButton')}</span>
                   )}
                 </button>
               </form>
@@ -393,4 +385,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
