@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import WelcomePage from './pages/WelcomePage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import App from './App';
 
 // 受保护的路由组件
@@ -78,11 +77,7 @@ export default function AppRouter() {
           />
           <Route 
             path="/register" 
-            element={
-              <PublicRoute>
-                <RegisterPage />
-              </PublicRoute>
-            } 
+            element={<Navigate to="/login" replace />}
           />
 
           {/* 受保护的路由 */}

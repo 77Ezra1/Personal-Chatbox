@@ -1,234 +1,234 @@
-/* 认证页面样式 - Apple Pure Minimalist Design */
+/* 认证页面样式 - OpenAI Style */
 
 .auth-page,
 .welcome-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #FFFFFF;
   padding: 20px;
   position: relative;
-  overflow: hidden;
 }
 
+/* 返回按钮 */
+.auth-back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: transparent;
+  border: none;
+  color: #6E6E80;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.auth-back-btn:hover {
+  background: #F7F7F8;
+  color: #000000;
+}
+
+/* 邮箱显示 */
+.auth-email-display {
+  font-weight: 500;
+  color: #000000;
+}
+
+/* 顶部logo */
+.auth-page-header {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+}
+
+.auth-logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000000;
+  text-decoration: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  transition: opacity 0.2s ease;
+}
+
+.auth-logo-text:hover {
+  opacity: 0.7;
+}
+
+/* 内容区域 - 完全透明无边框 */
+.auth-content {
+  width: 100%;
+  max-width: 320px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+/* 隐藏旧的容器样式 */
 .auth-container,
 .welcome-container {
-  width: 100%;
-  max-width: 400px;
-  position: relative;
-  z-index: 1;
+  display: none;
 }
 
 .auth-card,
 .welcome-content {
-  background: transparent;
-  padding: 0;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  display: none;
 }
 
-/* 宽版卡片（注册页面） */
-.auth-card-wide {
-  max-width: 440px;
-}
-
-/* Logo样式 - 极简黑白 */
+/* 隐藏旧的Logo */
 .auth-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 40px;
-  background: #000000;
-  border-radius: 50%;
-  color: white;
-  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.auth-logo:hover {
-  transform: scale(0.95);
-}
-
-.auth-logo svg {
-  width: 28px;
-  height: 28px;
+  display: none;
 }
 
 .auth-title,
 .welcome-title {
-  font-size: 28px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
+  font-size: 32px;
+  font-weight: 400;
   color: #000000;
+  margin: 0 0 8px 0;
   text-align: center;
-  letter-spacing: -0.8px;
-  line-height: 1.2;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.5px;
 }
 
 .auth-subtitle,
 .welcome-subtitle {
-  font-size: 15px;
-  color: #86868B;
-  margin: 0 0 48px 0;
+  font-size: 16px;
+  color: #6E6E80;
+  margin: 0 0 32px 0;
   text-align: center;
-  font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: -0.2px;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* 错误提示 - 极简风格 */
-.auth-error {
-  background: #000000;
-  color: #FFFFFF;
-  padding: 14px 18px;
-  border-radius: 12px;
-  margin-bottom: 32px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  letter-spacing: -0.2px;
-  line-height: 1.4;
-}
-
-.auth-error svg {
-  color: #FFFFFF;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
-
+/* 表单样式 */
 .auth-form {
-  margin-bottom: 32px;
-}
-
-/* 表单行（用于并排布局） */
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+  width: 100%;
 }
 
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  display: block;
+  font-size: 14px;
   font-weight: 500;
-  margin-bottom: 10px;
   color: #000000;
-  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
-.form-group label svg {
-  color: #86868B;
-  width: 14px;
-  height: 14px;
-}
-
-/* 输入框 - 纯黑白Apple风格 */
 .form-input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px;
   font-size: 16px;
-  border: 1.5px solid #E5E5E7;
-  border-radius: 12px;
+  border: 1px solid #C2C8D0;
+  border-radius: 6px;
   background: #FFFFFF;
   color: #000000;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', sans-serif;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   box-sizing: border-box;
-  letter-spacing: -0.3px;
-}
-
-.form-input::placeholder {
-  color: #C7C7CC;
-  letter-spacing: -0.2px;
-}
-
-.form-input:hover {
-  border-color: #D1D1D6;
 }
 
 .form-input:focus {
   outline: none;
   border-color: #000000;
-  background: #FFFFFF;
+  box-shadow: 0 0 0 1px #000000;
 }
 
 .form-input:disabled {
-  opacity: 0.4;
+  background: #F7F7F8;
+  color: #6E6E80;
   cursor: not-allowed;
-  background: #FAFAFA;
-  border-color: #E5E5E7;
+}
+
+.form-input::placeholder {
+  color: #A0A0A0;
+}
+
+.form-input:hover:not(:disabled):not(:focus) {
+  border-color: #8E8EA0;
+}
+
+.form-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.form-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.form-checkbox-label {
+  font-size: 14px;
+  color: #000000;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #F7F7F8;
 }
 
 .form-hint {
   font-size: 12px;
-  color: #86868B;
-  margin-top: 8px;
-  line-height: 1.5;
-  letter-spacing: -0.2px;
+  color: #6E6E80;
+  margin-top: 6px;
+  line-height: 1.4;
 }
 
-/* 密码强度指示器 - 极简黑白 */
+/* 密码强度指示器 */
 .password-strength {
-  margin-top: 12px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .password-strength-bar {
   flex: 1;
-  height: 2px;
-  background: #E5E5E7;
-  border-radius: 1px;
+  height: 4px;
+  background: #E5E7EB;
+  border-radius: 2px;
   overflow: hidden;
-  position: relative;
 }
 
 .password-strength-fill {
   height: 100%;
-  border-radius: 1px;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   background: #000000;
+  transition: width 0.3s ease;
 }
 
-.password-strength-text {
-  font-size: 11px;
-  font-weight: 500;
-  min-width: 24px;
-  text-align: right;
-  color: #000000;
-  letter-spacing: -0.2px;
-}
-
-/* 密码要求列表 - 极简风格 */
+/* 密码要求列表 */
 .password-requirements {
-  margin-top: 16px;
-  padding: 0;
-  background: transparent;
-  border-radius: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .requirement {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  color: #86868B;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  letter-spacing: -0.2px;
+  font-size: 13px;
+  color: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .requirement.valid {
@@ -237,68 +237,65 @@
 
 .requirement svg {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .requirement-dot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: currentColor;
   flex-shrink: 0;
   margin-left: 5px;
 }
 
-/* 按钮样式 - 纯黑白Apple风格 */
+/* 按钮样式 - OpenAI风格 */
 .auth-btn {
   width: 100%;
-  padding: 14px 24px;
+  padding: 12px;
   font-size: 16px;
   font-weight: 500;
-  border-radius: 12px;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', sans-serif;
-  letter-spacing: -0.3px;
-  position: relative;
-  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .auth-btn-primary {
   background: #000000;
   color: #FFFFFF;
+  margin-top: 16px;
+  margin-bottom: 16px;
 }
 
 .auth-btn-primary:hover:not(:disabled) {
-  background: #1C1C1E;
-  transform: translateY(-1px);
+  background: #2D2D2D;
 }
 
 .auth-btn-primary:active:not(:disabled) {
   background: #000000;
-  transform: translateY(0);
+  opacity: 0.8;
 }
 
 .auth-btn-primary:disabled {
-  opacity: 0.4;
+  opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
+  background: #6E6E80;
 }
 
-/* 按钮加载动画 */
 .btn-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-top-color: white;
+  border: 2px solid #FFFFFF;
+  border-top-color: transparent;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -307,87 +304,100 @@
   }
 }
 
-/* 分隔线 - 极简 */
+/* 分隔线 */
 .auth-divider {
-  text-align: center;
-  margin: 32px 0;
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  text-align: center;
+  margin: 16px 0;
+  color: #6E6E80;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .auth-divider::before,
 .auth-divider::after {
   content: '';
   flex: 1;
-  height: 1px;
-  background: #E5E5E7;
+  border-bottom: 1px solid #E5E7EB;
 }
 
 .auth-divider span {
-  padding: 0 16px;
-  color: #86868B;
+  padding: 0 12px;
+  text-transform: uppercase;
   font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
-  letter-spacing: -0.2px;
+  font-weight: 500;
 }
 
-/* OAuth按钮 - 纯黑白边框风格 */
+/* OAuth按钮 */
 .oauth-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
 .oauth-btn {
   width: 100%;
-  padding: 14px 20px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #C2C8D0;
   background: #FFFFFF;
   color: #000000;
-  border: 1.5px solid #E5E5E7;
-  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', sans-serif;
-  letter-spacing: -0.3px;
+  gap: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .oauth-btn:hover:not(:disabled) {
-  border-color: #D1D1D6;
-  transform: translateY(-1px);
+  background: #F7F7F8;
+  border-color: #8E8EA0;
 }
 
 .oauth-btn:active:not(:disabled) {
-  border-color: #C7C7CC;
-  transform: translateY(0);
+  background: #EDEDF0;
 }
 
 .oauth-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 .oauth-btn svg {
   flex-shrink: 0;
 }
 
-/* 底部链接 - 极简 */
+/* 错误提示 */
+.auth-error {
+  background: #000000;
+  color: #FFFFFF;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.auth-error svg {
+  flex-shrink: 0;
+}
+
+/* 底部链接 */
 .auth-footer {
   text-align: center;
-  margin-top: 32px;
-  font-size: 13px;
-  color: #86868B;
-  line-height: 1.5;
-  letter-spacing: -0.2px;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #6E6E80;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .auth-footer p {
@@ -399,281 +409,157 @@
   text-decoration: none;
   font-weight: 500;
   margin-left: 4px;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  border-bottom: 1px solid #000000;
+  transition: opacity 0.2s ease;
 }
 
 .auth-link:hover {
-  opacity: 0.6;
+  opacity: 0.7;
+}
+
+/* 条款链接 */
+.auth-terms {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.auth-terms a {
+  color: #6E6E80;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.auth-terms a:hover {
+  color: #000000;
+}
+
+.auth-terms span {
+  color: #C2C8D0;
 }
 
 /* 欢迎页面特定样式 */
-.welcome-features {
-  display: flex;
-  justify-content: space-around;
-  margin: 40px 0;
-  padding: 32px 0;
-  border-top: 1px solid #E5E5E7;
-  border-bottom: 1px solid #E5E5E7;
-}
-
-.feature-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.feature-item:hover {
-  transform: translateY(-2px);
-}
-
-.feature-icon {
-  font-size: 32px;
-}
-
-.feature-text {
-  font-size: 12px;
-  color: #86868B;
-  font-weight: 400;
-  letter-spacing: -0.2px;
-}
-
 .welcome-actions {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  margin: 32px 0;
-}
-
-.welcome-actions button {
-  flex: 1;
-}
-
-.welcome-footer {
-  text-align: center;
-  font-size: 12px;
-  color: #86868B;
   margin-top: 32px;
-  letter-spacing: -0.2px;
 }
 
-/* 深色模式适配 - 反转黑白 */
-[data-theme="dark"] .auth-page,
-[data-theme="dark"] .welcome-page {
+.welcome-btn {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.welcome-btn-primary {
   background: #000000;
+  color: #FFFFFF;
 }
 
-[data-theme="dark"] .auth-card,
-[data-theme="dark"] .welcome-content {
+.welcome-btn-primary:hover {
+  background: #2D2D2D;
+}
+
+.welcome-btn-secondary {
   background: transparent;
-}
-
-[data-theme="dark"] .auth-title,
-[data-theme="dark"] .welcome-title {
-  color: #FFFFFF;
-}
-
-[data-theme="dark"] .auth-subtitle,
-[data-theme="dark"] .welcome-subtitle {
-  color: #86868B;
-}
-
-[data-theme="dark"] .form-input {
-  background: #000000;
-  color: #FFFFFF;
-  border-color: #2C2C2E;
-}
-
-[data-theme="dark"] .form-input::placeholder {
-  color: #48484A;
-}
-
-[data-theme="dark"] .form-input:hover {
-  border-color: #3A3A3C;
-}
-
-[data-theme="dark"] .form-input:focus {
-  border-color: #FFFFFF;
-  background: #000000;
-}
-
-[data-theme="dark"] .form-input:disabled {
-  background: #0A0A0A;
-  border-color: #1C1C1E;
-}
-
-[data-theme="dark"] .password-requirements {
-  background: transparent;
-}
-
-[data-theme="dark"] .password-strength-bar {
-  background: #2C2C2E;
-}
-
-[data-theme="dark"] .password-strength-fill {
-  background: #FFFFFF;
-}
-
-[data-theme="dark"] .password-strength-text {
-  color: #FFFFFF;
-}
-
-[data-theme="dark"] .requirement {
-  color: #86868B;
-}
-
-[data-theme="dark"] .requirement.valid {
-  color: #FFFFFF;
-}
-
-[data-theme="dark"] .auth-btn-primary {
-  background: #FFFFFF;
   color: #000000;
+  border: 1px solid #C2C8D0;
 }
 
-[data-theme="dark"] .auth-btn-primary:hover:not(:disabled) {
-  background: #E5E5E7;
-}
-
-[data-theme="dark"] .auth-btn-primary:active:not(:disabled) {
-  background: #FFFFFF;
-}
-
-[data-theme="dark"] .oauth-btn {
-  background: #000000;
-  color: #FFFFFF;
-  border-color: #2C2C2E;
-}
-
-[data-theme="dark"] .oauth-btn:hover:not(:disabled) {
-  border-color: #3A3A3C;
-}
-
-[data-theme="dark"] .oauth-btn:active:not(:disabled) {
-  border-color: #48484A;
-}
-
-[data-theme="dark"] .auth-error {
-  background: #FFFFFF;
-  color: #000000;
-}
-
-[data-theme="dark"] .auth-error svg {
-  color: #000000;
-}
-
-[data-theme="dark"] .auth-divider::before,
-[data-theme="dark"] .auth-divider::after {
-  background: #2C2C2E;
-}
-
-[data-theme="dark"] .welcome-features {
-  border-top-color: #2C2C2E;
-  border-bottom-color: #2C2C2E;
-}
-
-[data-theme="dark"] .auth-link {
-  color: #FFFFFF;
-  border-bottom-color: #FFFFFF;
-}
-
-[data-theme="dark"] .form-group label {
-  color: #FFFFFF;
+.welcome-btn-secondary:hover {
+  background: #F7F7F8;
 }
 
 /* 响应式设计 */
-@media (max-width: 640px) {
-  .auth-card,
-  .welcome-content {
-    padding: 0;
-  }
-
-  .auth-card-wide {
+@media (max-width: 480px) {
+  .auth-content {
     max-width: 100%;
+    padding: 0 16px;
   }
 
   .auth-title,
   .welcome-title {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .auth-subtitle,
   .welcome-subtitle {
     font-size: 14px;
-    margin-bottom: 40px;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .password-requirements {
-    grid-template-columns: 1fr;
-  }
-
-  .auth-logo {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 32px;
-  }
-
-  .auth-logo svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  .welcome-features {
-    flex-direction: column;
-    gap: 24px;
-    padding: 24px 0;
-  }
-
-  .welcome-actions {
-    flex-direction: column;
-  }
-
-  .form-input {
-    font-size: 16px;
-  }
-
-  .auth-btn {
-    font-size: 16px;
-  }
-
-  .oauth-btn {
-    font-size: 16px;
   }
 }
 
-/* 无障碍支持 */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .auth-page,
+  .welcome-page {
+    background: #FFFFFF;
   }
-}
 
-/* 高对比度模式 */
-@media (prefers-contrast: high) {
+  .auth-title,
+  .welcome-title,
+  .form-group label,
+  .form-checkbox-label {
+    color: #000000;
+  }
+
+  .auth-subtitle,
+  .welcome-subtitle,
+  .form-hint {
+    color: #6E6E80;
+  }
+
   .form-input {
-    border-width: 2px;
+    background: #FFFFFF;
+    border-color: #C2C8D0;
+    color: #000000;
   }
 
-  .auth-btn {
-    border: 2px solid transparent;
+  .form-input:focus {
+    border-color: #000000;
+    box-shadow: 0 0 0 1px #000000;
   }
 
   .auth-btn-primary {
-    border-color: #000000;
+    background: #000000;
+    color: #FFFFFF;
+  }
+
+  .auth-btn-primary:hover:not(:disabled) {
+    background: #2D2D2D;
   }
 
   .oauth-btn {
-    border-width: 2px;
+    background: #FFFFFF;
+    border-color: #C2C8D0;
+    color: #000000;
+  }
+
+  .oauth-btn:hover:not(:disabled) {
+    background: #F7F7F8;
+  }
+
+  .auth-error {
+    background: #000000;
+    color: #FFFFFF;
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    border-color: #E5E7EB;
   }
 }
 
