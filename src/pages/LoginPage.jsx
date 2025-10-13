@@ -46,10 +46,16 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-container">
         <div className="auth-card">
-          {/* Logo */}
+          {/* Logo - 极简圆形 */}
           <div className="auth-logo">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M16 4L4 10V15C4 22 9 27.5 16 28C23 27.5 28 22 28 15V10L16 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <path 
+                d="M16 4L4 10V15C4 22 9 27.5 16 28C23 27.5 28 22 28 15V10L16 4Z" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
 
@@ -68,9 +74,7 @@ export default function LoginPage() {
           {/* 登录表单 */}
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
-              <label htmlFor="email">
-                <span>邮箱</span>
-              </label>
+              <label htmlFor="email">邮箱</label>
               <input
                 id="email"
                 name="email"
@@ -81,13 +85,12 @@ export default function LoginPage() {
                 placeholder="your@email.com"
                 disabled={loading}
                 className="form-input"
+                autoComplete="email"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">
-                <span>密码</span>
-              </label>
+              <label htmlFor="password">密码</label>
               <input
                 id="password"
                 name="password"
@@ -98,6 +101,7 @@ export default function LoginPage() {
                 placeholder="输入您的密码"
                 disabled={loading}
                 className="form-input"
+                autoComplete="current-password"
               />
             </div>
 
@@ -109,7 +113,7 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <span className="btn-spinner"></span>
-                  <span>登录中...</span>
+                  <span>登录中</span>
                 </>
               ) : (
                 <span>登录</span>

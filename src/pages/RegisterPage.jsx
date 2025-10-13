@@ -92,10 +92,16 @@ export default function RegisterPage() {
     <div className="auth-page">
       <div className="auth-container">
         <div className="auth-card auth-card-wide">
-          {/* Logo */}
+          {/* Logo - 极简圆形 */}
           <div className="auth-logo">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M16 4L4 10V15C4 22 9 27.5 16 28C23 27.5 28 22 28 15V10L16 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <path 
+                d="M16 4L4 10V15C4 22 9 27.5 16 28C23 27.5 28 22 28 15V10L16 4Z" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
 
@@ -115,9 +121,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="email">
-                  <span>邮箱</span>
-                </label>
+                <label htmlFor="email">邮箱</label>
                 <input
                   id="email"
                   name="email"
@@ -128,30 +132,28 @@ export default function RegisterPage() {
                   placeholder="your@email.com"
                   disabled={loading}
                   className="form-input"
+                  autoComplete="email"
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="username">
-                  <span>用户名（可选）</span>
-                </label>
+                <label htmlFor="username">用户名</label>
                 <input
                   id="username"
                   name="username"
                   type="text"
                   value={formData.username}
                   onChange={handleChange}
-                  placeholder="您的昵称"
+                  placeholder="可选"
                   disabled={loading}
                   className="form-input"
+                  autoComplete="username"
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">
-                <span>密码</span>
-              </label>
+              <label htmlFor="password">密码</label>
               <input
                 id="password"
                 name="password"
@@ -162,6 +164,7 @@ export default function RegisterPage() {
                 placeholder="设置您的密码"
                 disabled={loading}
                 className="form-input"
+                autoComplete="new-password"
               />
               
               {/* 密码强度指示器 */}
@@ -178,35 +181,53 @@ export default function RegisterPage() {
                 </div>
               )}
               
-              {/* 密码要求 */}
+              {/* 密码要求 - 极简风格 */}
               <div className="password-requirements">
                 <div className={`requirement ${passwordStrength.hasLength ? 'valid' : ''}`}>
-                  {passwordStrength.hasLength ? <Check size={14} /> : <div className="requirement-dot"></div>}
+                  {passwordStrength.hasLength ? (
+                    <Check size={16} />
+                  ) : (
+                    <div className="requirement-dot"></div>
+                  )}
                   <span>至少8个字符</span>
                 </div>
                 <div className={`requirement ${passwordStrength.hasUpperCase ? 'valid' : ''}`}>
-                  {passwordStrength.hasUpperCase ? <Check size={14} /> : <div className="requirement-dot"></div>}
+                  {passwordStrength.hasUpperCase ? (
+                    <Check size={16} />
+                  ) : (
+                    <div className="requirement-dot"></div>
+                  )}
                   <span>包含大写字母</span>
                 </div>
                 <div className={`requirement ${passwordStrength.hasLowerCase ? 'valid' : ''}`}>
-                  {passwordStrength.hasLowerCase ? <Check size={14} /> : <div className="requirement-dot"></div>}
+                  {passwordStrength.hasLowerCase ? (
+                    <Check size={16} />
+                  ) : (
+                    <div className="requirement-dot"></div>
+                  )}
                   <span>包含小写字母</span>
                 </div>
                 <div className={`requirement ${passwordStrength.hasNumber ? 'valid' : ''}`}>
-                  {passwordStrength.hasNumber ? <Check size={14} /> : <div className="requirement-dot"></div>}
+                  {passwordStrength.hasNumber ? (
+                    <Check size={16} />
+                  ) : (
+                    <div className="requirement-dot"></div>
+                  )}
                   <span>包含数字</span>
                 </div>
                 <div className={`requirement ${passwordStrength.hasSpecialChar ? 'valid' : ''}`}>
-                  {passwordStrength.hasSpecialChar ? <Check size={14} /> : <div className="requirement-dot"></div>}
+                  {passwordStrength.hasSpecialChar ? (
+                    <Check size={16} />
+                  ) : (
+                    <div className="requirement-dot"></div>
+                  )}
                   <span>包含特殊字符</span>
                 </div>
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword">
-                <span>确认密码</span>
-              </label>
+              <label htmlFor="confirmPassword">确认密码</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -217,13 +238,12 @@ export default function RegisterPage() {
                 placeholder="再次输入密码"
                 disabled={loading}
                 className="form-input"
+                autoComplete="new-password"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="inviteCode">
-                <span>邀请码</span>
-              </label>
+              <label htmlFor="inviteCode">邀请码</label>
               <input
                 id="inviteCode"
                 name="inviteCode"
@@ -234,6 +254,7 @@ export default function RegisterPage() {
                 placeholder="请输入邀请码"
                 disabled={loading}
                 className="form-input"
+                autoComplete="off"
               />
               <p className="form-hint">
                 没有邀请码？请联系管理员获取
@@ -248,7 +269,7 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <span className="btn-spinner"></span>
-                  <span>注册中...</span>
+                  <span>注册中</span>
                 </>
               ) : (
                 <span>注册</span>

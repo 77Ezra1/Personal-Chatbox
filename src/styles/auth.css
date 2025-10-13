@@ -1,4 +1,4 @@
-/* 认证页面样式 - Apple Minimalist Design */
+/* 认证页面样式 - Apple Pure Minimalist Design */
 
 .auth-page,
 .welcome-page {
@@ -15,106 +15,115 @@
 .auth-container,
 .welcome-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   position: relative;
   z-index: 1;
 }
 
 .auth-card,
 .welcome-content {
-  background: #FFFFFF;
-  border-radius: 18px;
-  padding: 48px 40px;
-  transition: all 0.2s ease;
+  background: transparent;
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* 宽版卡片（注册页面） */
 .auth-card-wide {
-  max-width: 480px;
+  max-width: 440px;
 }
 
-/* Logo样式 */
+/* Logo样式 - 极简黑白 */
 .auth-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 32px;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 40px;
   background: #000000;
-  border-radius: 16px;
+  border-radius: 50%;
   color: white;
-  transition: all 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .auth-logo:hover {
-  opacity: 0.9;
+  transform: scale(0.95);
+}
+
+.auth-logo svg {
+  width: 28px;
+  height: 28px;
 }
 
 .auth-title,
 .welcome-title {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 600;
   margin: 0 0 8px 0;
-  color: #1D1D1F;
+  color: #000000;
   text-align: center;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
 }
 
 .auth-subtitle,
 .welcome-subtitle {
-  font-size: 17px;
+  font-size: 15px;
   color: #86868B;
-  margin: 0 0 40px 0;
+  margin: 0 0 48px 0;
   text-align: center;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.4;
+  letter-spacing: -0.2px;
 }
 
-/* 错误提示 */
+/* 错误提示 - 极简风格 */
 .auth-error {
-  background: #F5F5F7;
-  border: 1px solid #D2D2D7;
-  color: #1D1D1F;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 24px;
-  font-size: 14px;
+  background: #000000;
+  color: #FFFFFF;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   gap: 10px;
+  letter-spacing: -0.2px;
+  line-height: 1.4;
 }
 
 .auth-error svg {
-  color: #86868B;
+  color: #FFFFFF;
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 
 .auth-form {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 /* 表单行（用于并排布局） */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
-  font-weight: 400;
-  margin-bottom: 8px;
-  color: #1D1D1F;
-  letter-spacing: -0.2px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: #000000;
+  letter-spacing: -0.3px;
 }
 
 .form-group label svg {
@@ -123,50 +132,54 @@
   height: 14px;
 }
 
-/* 输入框 - Apple风格 */
+/* 输入框 - 纯黑白Apple风格 */
 .form-input {
   width: 100%;
-  padding: 12px 14px;
-  font-size: 17px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: #F5F5F7;
-  color: #1D1D1F;
-  transition: all 0.2s ease;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 1.5px solid #E5E5E7;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #000000;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', sans-serif;
   box-sizing: border-box;
+  letter-spacing: -0.3px;
 }
 
 .form-input::placeholder {
-  color: #86868B;
+  color: #C7C7CC;
+  letter-spacing: -0.2px;
 }
 
 .form-input:hover {
-  background: #EBEBED;
+  border-color: #D1D1D6;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #0071E3;
+  border-color: #000000;
   background: #FFFFFF;
 }
 
 .form-input:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background: #F5F5F7;
+  background: #FAFAFA;
+  border-color: #E5E5E7;
 }
 
 .form-hint {
   font-size: 12px;
   color: #86868B;
-  margin-top: 6px;
-  line-height: 1.4;
+  margin-top: 8px;
+  line-height: 1.5;
+  letter-spacing: -0.2px;
 }
 
-/* 密码强度指示器 */
+/* 密码强度指示器 - 极简黑白 */
 .password-strength {
-  margin-top: 10px;
+  margin-top: 12px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -174,82 +187,85 @@
 
 .password-strength-bar {
   flex: 1;
-  height: 3px;
+  height: 2px;
   background: #E5E5E7;
-  border-radius: 2px;
+  border-radius: 1px;
   overflow: hidden;
   position: relative;
 }
 
 .password-strength-fill {
   height: 100%;
-  border-radius: 2px;
-  transition: all 0.3s ease;
-  background: #1D1D1F;
+  border-radius: 1px;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  background: #000000;
 }
 
 .password-strength-text {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 500;
   min-width: 24px;
   text-align: right;
-  color: #1D1D1F;
+  color: #000000;
+  letter-spacing: -0.2px;
 }
 
-/* 密码要求列表 */
+/* 密码要求列表 - 极简风格 */
 .password-requirements {
-  margin-top: 12px;
-  padding: 12px;
-  background: #F5F5F7;
-  border-radius: 10px;
+  margin-top: 16px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
 }
 
 .requirement {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
   color: #86868B;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  letter-spacing: -0.2px;
 }
 
 .requirement.valid {
-  color: #1D1D1F;
+  color: #000000;
 }
 
 .requirement svg {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .requirement-dot {
-  width: 14px;
-  height: 14px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  border: 1.5px solid currentColor;
+  background: currentColor;
   flex-shrink: 0;
+  margin-left: 5px;
 }
 
-/* 按钮样式 - Apple风格 */
+/* 按钮样式 - 纯黑白Apple风格 */
 .auth-btn {
   width: 100%;
-  padding: 12px 24px;
-  font-size: 17px;
-  font-weight: 400;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 500;
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  letter-spacing: -0.2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', sans-serif;
+  letter-spacing: -0.3px;
   position: relative;
   overflow: hidden;
 }
@@ -260,26 +276,29 @@
 }
 
 .auth-btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+  background: #1C1C1E;
+  transform: translateY(-1px);
 }
 
 .auth-btn-primary:active:not(:disabled) {
-  opacity: 0.8;
+  background: #000000;
+  transform: translateY(0);
 }
 
 .auth-btn-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* 按钮加载动画 */
 .btn-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.6s linear infinite;
 }
 
 @keyframes spin {
@@ -288,10 +307,10 @@
   }
 }
 
-/* 分隔线 */
+/* 分隔线 - 极简 */
 .auth-divider {
   text-align: center;
-  margin: 24px 0;
+  margin: 32px 0;
   position: relative;
   display: flex;
   align-items: center;
@@ -303,66 +322,72 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: #D2D2D7;
+  background: #E5E5E7;
 }
 
 .auth-divider span {
-  padding: 0 12px;
+  padding: 0 16px;
   color: #86868B;
   font-size: 12px;
   font-weight: 400;
   white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 
-/* OAuth按钮 */
+/* OAuth按钮 - 纯黑白边框风格 */
 .oauth-buttons {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .oauth-btn {
   width: 100%;
-  padding: 12px 20px;
+  padding: 14px 20px;
   background: #FFFFFF;
-  color: #1D1D1F;
-  border: 1px solid #D2D2D7;
+  color: #000000;
+  border: 1.5px solid #E5E5E7;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 17px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', sans-serif;
+  letter-spacing: -0.3px;
 }
 
 .oauth-btn:hover:not(:disabled) {
-  background: #F5F5F7;
+  border-color: #D1D1D6;
+  transform: translateY(-1px);
 }
 
 .oauth-btn:active:not(:disabled) {
-  background: #EBEBED;
+  border-color: #C7C7CC;
+  transform: translateY(0);
 }
 
 .oauth-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 .oauth-btn svg {
   flex-shrink: 0;
 }
 
-/* 底部链接 */
+/* 底部链接 - 极简 */
 .auth-footer {
   text-align: center;
-  margin-top: 24px;
-  font-size: 14px;
+  margin-top: 32px;
+  font-size: 13px;
   color: #86868B;
   line-height: 1.5;
+  letter-spacing: -0.2px;
 }
 
 .auth-footer p {
@@ -370,25 +395,26 @@
 }
 
 .auth-link {
-  color: #0071E3;
+  color: #000000;
   text-decoration: none;
-  font-weight: 400;
+  font-weight: 500;
   margin-left: 4px;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border-bottom: 1px solid #000000;
 }
 
 .auth-link:hover {
-  text-decoration: underline;
+  opacity: 0.6;
 }
 
 /* 欢迎页面特定样式 */
 .welcome-features {
   display: flex;
   justify-content: space-around;
-  margin: 32px 0;
-  padding: 24px 0;
-  border-top: 1px solid #D2D2D7;
-  border-bottom: 1px solid #D2D2D7;
+  margin: 40px 0;
+  padding: 32px 0;
+  border-top: 1px solid #E5E5E7;
+  border-bottom: 1px solid #E5E5E7;
 }
 
 .feature-item {
@@ -396,7 +422,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .feature-item:hover {
@@ -411,12 +437,13 @@
   font-size: 12px;
   color: #86868B;
   font-weight: 400;
+  letter-spacing: -0.2px;
 }
 
 .welcome-actions {
   display: flex;
   gap: 12px;
-  margin: 24px 0;
+  margin: 32px 0;
 }
 
 .welcome-actions button {
@@ -427,10 +454,11 @@
   text-align: center;
   font-size: 12px;
   color: #86868B;
-  margin-top: 24px;
+  margin-top: 32px;
+  letter-spacing: -0.2px;
 }
 
-/* 深色模式适配 */
+/* 深色模式适配 - 反转黑白 */
 [data-theme="dark"] .auth-page,
 [data-theme="dark"] .welcome-page {
   background: #000000;
@@ -438,12 +466,12 @@
 
 [data-theme="dark"] .auth-card,
 [data-theme="dark"] .welcome-content {
-  background: #000000;
+  background: transparent;
 }
 
 [data-theme="dark"] .auth-title,
 [data-theme="dark"] .welcome-title {
-  color: #F5F5F7;
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .auth-subtitle,
@@ -452,29 +480,31 @@
 }
 
 [data-theme="dark"] .form-input {
-  background: #1D1D1F;
-  color: #F5F5F7;
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #2C2C2E;
 }
 
 [data-theme="dark"] .form-input::placeholder {
-  color: #86868B;
+  color: #48484A;
 }
 
 [data-theme="dark"] .form-input:hover {
-  background: #2C2C2E;
+  border-color: #3A3A3C;
 }
 
 [data-theme="dark"] .form-input:focus {
-  border-color: #0A84FF;
-  background: #1D1D1F;
+  border-color: #FFFFFF;
+  background: #000000;
 }
 
 [data-theme="dark"] .form-input:disabled {
-  background: #1D1D1F;
+  background: #0A0A0A;
+  border-color: #1C1C1E;
 }
 
 [data-theme="dark"] .password-requirements {
-  background: #1D1D1F;
+  background: transparent;
 }
 
 [data-theme="dark"] .password-strength-bar {
@@ -482,11 +512,11 @@
 }
 
 [data-theme="dark"] .password-strength-fill {
-  background: #F5F5F7;
+  background: #FFFFFF;
 }
 
 [data-theme="dark"] .password-strength-text {
-  color: #F5F5F7;
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .requirement {
@@ -494,7 +524,7 @@
 }
 
 [data-theme="dark"] .requirement.valid {
-  color: #F5F5F7;
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .auth-btn-primary {
@@ -502,24 +532,35 @@
   color: #000000;
 }
 
+[data-theme="dark"] .auth-btn-primary:hover:not(:disabled) {
+  background: #E5E5E7;
+}
+
+[data-theme="dark"] .auth-btn-primary:active:not(:disabled) {
+  background: #FFFFFF;
+}
+
 [data-theme="dark"] .oauth-btn {
-  background: #1D1D1F;
-  color: #F5F5F7;
+  background: #000000;
+  color: #FFFFFF;
   border-color: #2C2C2E;
 }
 
 [data-theme="dark"] .oauth-btn:hover:not(:disabled) {
-  background: #2C2C2E;
+  border-color: #3A3A3C;
 }
 
 [data-theme="dark"] .oauth-btn:active:not(:disabled) {
-  background: #3A3A3C;
+  border-color: #48484A;
 }
 
 [data-theme="dark"] .auth-error {
-  background: #1D1D1F;
-  border-color: #2C2C2E;
-  color: #F5F5F7;
+  background: #FFFFFF;
+  color: #000000;
+}
+
+[data-theme="dark"] .auth-error svg {
+  color: #000000;
 }
 
 [data-theme="dark"] .auth-divider::before,
@@ -533,19 +574,19 @@
 }
 
 [data-theme="dark"] .auth-link {
-  color: #0A84FF;
+  color: #FFFFFF;
+  border-bottom-color: #FFFFFF;
 }
 
 [data-theme="dark"] .form-group label {
-  color: #F5F5F7;
+  color: #FFFFFF;
 }
 
 /* 响应式设计 */
 @media (max-width: 640px) {
   .auth-card,
   .welcome-content {
-    padding: 32px 24px;
-    border-radius: 16px;
+    padding: 0;
   }
 
   .auth-card-wide {
@@ -554,12 +595,13 @@
 
   .auth-title,
   .welcome-title {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .auth-subtitle,
   .welcome-subtitle {
-    font-size: 15px;
+    font-size: 14px;
+    margin-bottom: 40px;
   }
 
   .form-row {
@@ -572,18 +614,36 @@
   }
 
   .auth-logo {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 32px;
+  }
+
+  .auth-logo svg {
+    width: 24px;
+    height: 24px;
   }
 
   .welcome-features {
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
+    padding: 24px 0;
   }
 
   .welcome-actions {
     flex-direction: column;
+  }
+
+  .form-input {
+    font-size: 16px;
+  }
+
+  .auth-btn {
+    font-size: 16px;
+  }
+
+  .oauth-btn {
+    font-size: 16px;
   }
 }
 
@@ -610,6 +670,10 @@
 
   .auth-btn-primary {
     border-color: #000000;
+  }
+
+  .oauth-btn {
+    border-width: 2px;
   }
 }
 
