@@ -107,7 +107,7 @@ export function useConversationsDB() {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/user-data/conversations', {
+      const response = await fetch('/api/user-data/conversations', {
         headers: {
           'Authorization': `Bearer ${token}`
         },
@@ -155,7 +155,7 @@ export function useConversationsDB() {
     if (!isAuthenticated || !token) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/user-data/conversations', {
+      const response = await fetch('/api/user-data/conversations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -28,7 +28,7 @@ export function useDataMigration() {
   const checkMigrationStatus = async () => {
     try {
       // 检查是否是第一个用户
-      const response = await fetch('http://localhost:3001/api/user-data/is-first-user', {
+      const response = await fetch('/api/user-data/is-first-user', {
         headers: {
           'Authorization': `Bearer ${token}`
         },
@@ -85,7 +85,7 @@ export function useDataMigration() {
 
       // 迁移对话数据
       if (Object.keys(conversations).length > 0) {
-        const convResponse = await fetch('http://localhost:3001/api/user-data/conversations', {
+        const convResponse = await fetch('/api/user-data/conversations', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export function useDataMigration() {
 
       // 迁移配置数据
       if (modelConfig || systemPrompt) {
-        const configResponse = await fetch('http://localhost:3001/api/user-data/config', {
+        const configResponse = await fetch('/api/user-data/config', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

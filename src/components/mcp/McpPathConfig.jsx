@@ -29,7 +29,7 @@ export function McpPathConfigDialog({ service, onSave }) {
 
   const loadConfig = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/config/service/${service.id}`)
+      const response = await fetch(`/api/config/service/${service.id}`)
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.config) {
@@ -53,7 +53,7 @@ export function McpPathConfigDialog({ service, onSave }) {
         ? { databasePath: config.databasePath }
         : { allowedDirectories: config.allowedDirectories }
 
-      const response = await fetch(`http://localhost:3001/api/config/service/${service.id}`, {
+      const response = await fetch(`/api/config/service/${service.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(configData)

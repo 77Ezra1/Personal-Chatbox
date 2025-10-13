@@ -2,7 +2,7 @@
  * MCP后端API客户端
  */
 
-const API_BASE_URL = import.meta.env.VITE_MCP_API_URL || 'http://localhost:3001/api/mcp';
+const API_BASE_URL = '/api/mcp';
 
 /**
  * 获取所有可用服务列表

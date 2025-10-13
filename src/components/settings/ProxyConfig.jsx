@@ -18,7 +18,7 @@ const ProxyConfig = () => {
 
   const loadProxyConfig = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/proxy/config');
+      const response = await fetch('/api/proxy/config');
       const data = await response.json();
       
       if (data.success && data.config) {
@@ -38,7 +38,7 @@ const ProxyConfig = () => {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/proxy/config', {
+      const response = await fetch('/api/proxy/config', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ const ProxyConfig = () => {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/proxy/test', {
+      const response = await fetch('/api/proxy/test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ const ProxyConfig = () => {
     setMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/proxy/restart', {
+      const response = await fetch('/api/proxy/restart', {
         method: 'POST',
       });
 

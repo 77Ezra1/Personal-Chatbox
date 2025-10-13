@@ -24,7 +24,7 @@ export function ApiKeysConfig({ translate }) {
   const loadServices = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:3001/api/config/services')
+      const response = await fetch('/api/config/services')
       const data = await response.json()
       
       if (data.success) {
@@ -58,7 +58,7 @@ export function ApiKeysConfig({ translate }) {
     try {
       setSaving(true)
       
-      const response = await fetch(`http://localhost:3001/api/config/service/${serviceId}`, {
+      const response = await fetch(`/api/config/service/${serviceId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -91,7 +91,7 @@ export function ApiKeysConfig({ translate }) {
     try {
       setTesting(true)
       
-      const response = await fetch(`http://localhost:3001/api/config/service/${serviceId}/test`, {
+      const response = await fetch(`/api/config/service/${serviceId}/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -120,7 +120,7 @@ export function ApiKeysConfig({ translate }) {
     }
     
     try {
-      const response = await fetch(`http://localhost:3001/api/config/service/${serviceId}`, {
+      const response = await fetch(`/api/config/service/${serviceId}`, {
         method: 'DELETE'
       })
       

@@ -231,7 +231,7 @@ export function useModelConfigDB() {
         // 如果是DeepSeek，同步配置到后端
         if (currentProvider === 'deepseek') {
           try {
-            const response = await fetch('http://localhost:3001/api/config/service/deepseek', {
+            const response = await fetch('/api/config/service/deepseek', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

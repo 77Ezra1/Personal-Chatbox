@@ -2,7 +2,7 @@
  * 同步DeepSeek配置到后端
  */
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = '';
 
 /**
  * 同步DeepSeek配置到后端config.json

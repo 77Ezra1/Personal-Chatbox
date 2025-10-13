@@ -224,8 +224,7 @@ async function callDeepSeekMCP({
     }))
 
     // 调用后端 API
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
-    const response = await fetch(`${backendUrl}/api/chat`, {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
