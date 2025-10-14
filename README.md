@@ -44,16 +44,38 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
 
 4. **启动应用**
    ```bash
-   # 启动前端(开发模式)
-   pnpm dev
+   # 一键启动（推荐）
+   ./start.sh
    
-   # 启动后端
-   node server/index.cjs
+   # 或者分别启动
+   pnpm dev              # 启动前端(开发模式)
+   node server/index.cjs # 启动后端
    ```
 
 5. **访问应用**
    - 前端: http://localhost:5173
    - 后端: http://localhost:3001
+
+### 🚀 Git 推送脚本
+
+项目提供了便捷的 Git 推送脚本，无需每次输入 SSH 密码：
+
+1. **首次配置（必须）**
+   ```bash
+   ./setup-ssh-keychain.sh
+   ```
+   配置 macOS Keychain 记住 SSH 密码，只需运行一次
+
+2. **日常推送**
+   ```bash
+   # 快速推送（推荐）
+   ./quick-push.sh "你的提交信息"
+   
+   # 智能推送（交互式）
+   ./push-with-auth.sh
+   ```
+
+详细说明请参考: [docs/GIT_PUSH_SCRIPTS.md](docs/GIT_PUSH_SCRIPTS.md)
 
 ## 📚 使用文档
 

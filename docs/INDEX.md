@@ -48,6 +48,7 @@
 #### 高级配置
 - **[集成指南](setup/INTEGRATION_GUIDE.md)** - 系统集成说明
 - **[代理集成指南](setup/PROXY_INTEGRATION_GUIDE.md)** - HTTP/SOCKS5代理配置
+- **[Git推送脚本](GIT_PUSH_SCRIPTS.md)** - 自动化Git推送工具（无需密码）
 - **[VPN集成指南](setup/VPN_INTEGRATION_GUIDE.md)** - VPN配置方法
 
 ### 📊 技术文档
