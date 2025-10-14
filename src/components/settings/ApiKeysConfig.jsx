@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Key, Check, X, ExternalLink, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Key, Check, X, ExternalLink, Eye, EyeOff, Loader2, Shield, ShieldOff, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PasswordSetupDialog } from './PasswordSetupDialog'
+import { SecureStorage } from '@/lib/secure-storage'
 import './ApiKeysConfig.css'
 
 import { createLogger } from '../../lib/logger'
@@ -9,7 +11,7 @@ const logger = createLogger('ApiKeysConfig')
 
 /**
  * API Keys 配置组件
- * 允许用户配置各种服务的 API Keys
+ * 允许用户配置各种服务的 API Keys，支持加密存储
  */
 export function ApiKeysConfig({ translate }) {
   const [services, setServices] = useState([])
@@ -19,11 +21,191 @@ export function ApiKeysConfig({ translate }) {
   const [showPassword, setShowPassword] = useState({})
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
+  
+  // 加密相关状态
+  const [encryptionEnabled, setEncryptionEnabled] = useState(false)
+  const [isUnlocked, setIsUnlocked] = useState(false)
+  const [passwordDialog, setPasswordDialog] = useState({ open: false, mode: 'setup' })
+  const [sessionPassword, setSessionPassword] = useState(null)
+  const [secureStorage] = useState(() => new SecureStorage('api_keys_encrypted'))
+  
+  // 会话超时 (15分钟)
+  const SESSION_TIMEOUT = 15 * 60 * 1000
 
   // 加载服务配置
   useEffect(() => {
     loadServices()
+    checkEncryptionStatus()
   }, [])
+  
+  // 会话超时自动锁定
+  useEffect(() => {
+    if (!isUnlocked || !sessionPassword) return
+    
+    const timer = setTimeout(() => {
+      handleLock()
+    }, SESSION_TIMEOUT)
+    
+    return () => clearTimeout(timer)
+  }, [isUnlocked, sessionPassword])
+  
+  // 检查加密状态
+  const checkEncryptionStatus = () => {
+    const encrypted = localStorage.getItem('api_keys_encrypted')
+    const enabled = localStorage.getItem('encryption_enabled') === 'true'
+    setEncryptionEnabled(enabled)
+    setIsUnlocked(!enabled || !!sessionPassword)
+  }
+  
+  // 切换加密功能
+  const handleToggleEncryption = async (enabled) => {
+    if (enabled) {
+      // 启用加密 - 需要设置密码
+      setPasswordDialog({ open: true, mode: 'setup' })
+    } else {
+      // 禁用加密 - 需要先验证密码解密数据
+      if (encryptionEnabled) {
+        setPasswordDialog({ open: true, mode: 'verify' })
+      } else {
+        setEncryptionEnabled(false)
+        localStorage.setItem('encryption_enabled', 'false')
+      }
+    }
+  }
+  
+  // 密码确认回调
+  const handlePasswordConfirm = async (password) => {
+    const { mode } = passwordDialog
+    
+    try {
+      if (mode === 'setup') {
+        // 首次设置密码 - 加密现有数据
+        await encryptExistingData(password)
+        setEncryptionEnabled(true)
+        setIsUnlocked(true)
+        setSessionPassword(password)
+        localStorage.setItem('encryption_enabled', 'true')
+        alert('加密已启用！您的 API 密钥现在得到保护。')
+      } else if (mode === 'verify') {
+        // 验证密码 - 解锁或禁用加密
+        const valid = await verifyPassword(password)
+        if (valid) {
+          if (passwordDialog.action === 'disable') {
+            // 禁用加密 - 解密数据到明文
+            await decryptToPlaintext(password)
+            setEncryptionEnabled(false)
+            setIsUnlocked(true)
+            setSessionPassword(null)
+            localStorage.setItem('encryption_enabled', 'false')
+            alert('加密已禁用，数据已解密为明文存储。')
+          } else {
+            // 解锁访问
+            setIsUnlocked(true)
+            setSessionPassword(password)
+          }
+        } else {
+          alert('密码错误，请重试')
+        }
+      } else if (mode === 'change') {
+        // 修改密码
+        await reencryptData(sessionPassword, password)
+        setSessionPassword(password)
+        alert('密码已修改！')
+      }
+    } catch (error) {
+      logger.error('密码操作失败:', error)
+      alert('操作失败：' + error.message)
+    }
+  }
+  
+  // 加密现有明文数据
+  const encryptExistingData = async (password) => {
+    try {
+      // 查找所有明文存储的 API 密钥
+      const plaintextKeys = {}
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key.startsWith('api_key_') || key.startsWith('service_')) {
+          plaintextKeys[key] = localStorage.getItem(key)
+        }
+      }
+      
+      if (Object.keys(plaintextKeys).length > 0) {
+        // 加密保存
+        await secureStorage.save(plaintextKeys, password)
+        
+        // 删除明文数据
+        Object.keys(plaintextKeys).forEach(key => {
+          localStorage.removeItem(key)
+        })
+        
+        logger.log(`已加密 ${Object.keys(plaintextKeys).length} 个密钥`)
+      }
+    } catch (error) {
+      logger.error('加密数据失败:', error)
+      throw error
+    }
+  }
+  
+  // 验证密码
+  const verifyPassword = async (password) => {
+    try {
+      await secureStorage.load(password)
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+  
+  // 解密到明文
+  const decryptToPlaintext = async (password) => {
+    try {
+      const data = await secureStorage.load(password)
+      
+      // 恢复到明文存储
+      Object.entries(data).forEach(([key, value]) => {
+        localStorage.setItem(key, value)
+      })
+      
+      // 删除加密数据
+      secureStorage.clear()
+      
+      logger.log(`已解密 ${Object.keys(data).length} 个密钥到明文`)
+    } catch (error) {
+      logger.error('解密失败:', error)
+      throw error
+    }
+  }
+  
+  // 重新加密数据（修改密码）
+  const reencryptData = async (oldPassword, newPassword) => {
+    try {
+      // 使用旧密码解密
+      const data = await secureStorage.load(oldPassword)
+      
+      // 使用新密码加密
+      await secureStorage.save(data, newPassword)
+      
+      logger.log('密码已修改')
+    } catch (error) {
+      logger.error('重新加密失败:', error)
+      throw error
+    }
+  }
+  
+  // 锁定（清除会话密码）
+  const handleLock = () => {
+    setIsUnlocked(false)
+    setSessionPassword(null)
+    setEditingService(null)
+    setFormData({})
+    alert('会话已锁定，请重新输入密码以访问 API 密钥')
+  }
+  
+  // 解锁
+  const handleUnlock = () => {
+    setPasswordDialog({ open: true, mode: 'verify', action: 'unlock' })
+  }
 
   const loadServices = async () => {
     try {
@@ -159,16 +341,107 @@ export function ApiKeysConfig({ translate }) {
   }
 
   return (
-    <div className="api-keys-config">
-      <div className="api-keys-header">
-        <Key className="icon" />
-        <div>
-          <h2>API Keys 配置</h2>
-          <p>配置各种服务的 API Keys 和凭据</p>
+    <>
+      {/* 密码对话框 */}
+      <PasswordSetupDialog
+        open={passwordDialog.open}
+        mode={passwordDialog.mode}
+        onClose={() => setPasswordDialog({ ...passwordDialog, open: false })}
+        onConfirm={handlePasswordConfirm}
+      />
+      
+      <div className="api-keys-config">
+        <div className="api-keys-header">
+          <Key className="icon" />
+          <div>
+            <h2>API Keys 配置</h2>
+            <p>配置各种服务的 API Keys 和凭据</p>
+          </div>
         </div>
-      </div>
-
-      <div className="services-list">
+        
+        {/* 加密控制面板 */}
+        <div className="encryption-panel">
+          <div className="encryption-header">
+            {encryptionEnabled ? (
+              <Shield className="icon-enabled" size={20} />
+            ) : (
+              <ShieldOff className="icon-disabled" size={20} />
+            )}
+            <div>
+              <h3>加密保护</h3>
+              <p>
+                {encryptionEnabled
+                  ? '您的 API 密钥已使用 AES-256 加密保护'
+                  : '启用加密以保护您的 API 密钥'}
+              </p>
+            </div>
+            <label className="encryption-toggle">
+              <input
+                type="checkbox"
+                checked={encryptionEnabled}
+                onChange={(e) => handleToggleEncryption(e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+          
+          {encryptionEnabled && (
+            <div className="encryption-status">
+              {isUnlocked ? (
+                <>
+                  <div className="status-item unlocked">
+                    <Check size={16} />
+                    <span>已解锁</span>
+                  </div>
+                  <div className="encryption-actions">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLock}
+                    >
+                      <Lock size={14} />
+                      锁定
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPasswordDialog({ open: true, mode: 'change' })}
+                    >
+                      修改密码
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="status-item locked">
+                    <Lock size={16} />
+                    <span>已锁定</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleUnlock}
+                  >
+                    解锁访问
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* 锁定提示 */}
+        {encryptionEnabled && !isUnlocked ? (
+          <div className="locked-notice">
+            <Lock size={48} />
+            <h3>数据已加密保护</h3>
+            <p>您的 API 密钥已使用 AES-256-GCM 加密，请解锁以查看和编辑。</p>
+            <Button onClick={handleUnlock}>
+              <Lock size={16} />
+              解锁访问
+            </Button>
+          </div>
+        ) : (
+          <div className="services-list">
         {services.map(service => (
           <div key={service.id} className="service-card">
             <div className="service-header">
@@ -297,7 +570,9 @@ export function ApiKeysConfig({ translate }) {
           </div>
         ))}
       </div>
+        )}
     </div>
+    </>
   )
 }
 

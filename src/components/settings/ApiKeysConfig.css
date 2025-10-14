@@ -223,3 +223,151 @@
   }
 }
 
+
+
+/* 加密控制面板 */
+.encryption-panel {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.encryption-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.encryption-header .icon-enabled {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.encryption-header .icon-disabled {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.encryption-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.encryption-header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.encryption-toggle {
+  margin-left: auto;
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.encryption-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #10b981;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.encryption-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-item.unlocked {
+  color: #10b981;
+}
+
+.status-item.locked {
+  color: #f59e0b;
+}
+
+.encryption-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 锁定提示 */
+.locked-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color);
+}
+
+.locked-notice svg {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.locked-notice h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.locked-notice p {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 400px;
+}
+
