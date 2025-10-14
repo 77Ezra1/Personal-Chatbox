@@ -1,6 +1,3 @@
-import { createLogger } from '../lib/logger'
-const logger = createLogger('createLogger')
-
 /**
  * 统一日志工具
  * 开发环境显示所有日志，生产环境只显示错误
@@ -68,10 +65,18 @@ class Logger {
   error(...args) {
     logger.error(`${this._formatPrefix()} [ERROR]`, ...args);
     
-    // TODO: 未来可以发送到错误追踪服务（如 Sentry）
-    // if (window.Sentry) {
-    //   window.Sentry.captureException(args[0]);
-    // }
+    // 发送错误到 Sentry
+    if (!isDev && args[0] instanceof Error) {
+      // 动态导入避免循环依赖
+      import('./sentry').then(({ captureError }) => {
+        captureError(args[0], {
+          component: this.context,
+          additionalInfo: args.slice(1)
+        });
+      }).catch(() => {
+        // Sentry 未初始化或导入失败，忽略
+      });
+    }
   }
 
   /**
