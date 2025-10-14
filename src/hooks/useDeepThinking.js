@@ -1,13 +1,12 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { DEEP_THINKING_KEY, THINKING_MODE } from '../lib/constants'
 import { 
-
-import { createLogger } from '../lib/logger'
-const logger = createLogger('useDeepThinking')
-
   isThinkingButtonDisabled, 
   shouldEnableThinking 
 } from '../lib/modelThinkingDetector'
+import { createLogger } from '../lib/logger'
+
+const logger = createLogger('useDeepThinking')
 
 /**
  * 深度思考模式管理 Hook

@@ -2,7 +2,7 @@
  * 性能监控工具 - Web Vitals 集成
  */
 
-import { onCLS, onFID, onFCP, onLCP, onTTFB } from 'web-vitals'
+import { onCLS, onINP, onFCP, onLCP, onTTFB } from 'web-vitals'
 import { createLogger } from './logger'
 
 const logger = createLogger('Performance')
@@ -42,7 +42,7 @@ export function initPerformanceMonitoring() {
   logger.log('Initializing performance monitoring...')
   
   onCLS(sendToAnalytics)  // Cumulative Layout Shift
-  onFID(sendToAnalytics)  // First Input Delay
+  onINP(sendToAnalytics)  // Interaction to Next Paint (替代 FID)
   onFCP(sendToAnalytics)  // First Contentful Paint
   onLCP(sendToAnalytics)  // Largest Contentful Paint
   onTTFB(sendToAnalytics) // Time to First Byte

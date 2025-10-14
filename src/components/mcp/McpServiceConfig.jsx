@@ -469,14 +469,18 @@ function ServiceInfoDialog({ server }) {
               <h4 className="font-semibold mb-2">可用工具及参数</h4>
               <div className="space-y-3">
                 {features.tools.map((tool, index) => (
-                  <div key={index} className="border rounded p-3 bg-slate-50">
-                    <div className="font-mono text-sm font-medium text-blue-600 mb-1">
+                  <div key={index} className="border rounded p-3" style={{ backgroundColor: 'var(--muted)' }}>
+                    <div className="font-mono text-sm font-medium mb-1" style={{ color: 'var(--foreground)', opacity: 0.9 }}>
                       {tool.name}
                     </div>
                     <div className="text-xs text-muted-foreground mb-2">
                       {tool.description}
                     </div>
-                    <div className="bg-slate-900 text-green-400 p-2 rounded font-mono text-xs overflow-x-auto">
+                    <div className="p-2 rounded font-mono text-xs overflow-x-auto" style={{ 
+                      backgroundColor: 'var(--card)',
+                      color: 'var(--foreground)',
+                      opacity: 0.85
+                    }}>
                       {tool.params}
                     </div>
                   </div>
@@ -511,7 +515,13 @@ function ServiceInfoDialog({ server }) {
           <div>
             <h4 className="font-semibold mb-2">服务状态</h4>
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${server.isEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{
+                  backgroundColor: server.isEnabled ? 'var(--foreground)' : 'var(--muted-foreground)',
+                  opacity: server.isEnabled ? 0.9 : 0.6
+                }}
+              ></div>
               <span className="text-sm">
                 {server.isEnabled ? '已启用' : '已禁用'}
               </span>

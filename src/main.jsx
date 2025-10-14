@@ -21,7 +21,7 @@ createRoot(document.getElementById('root')).render(
           textAlign: 'center',
           fontFamily: 'system-ui, sans-serif'
         }}>
-          <h1 style={{ color: '#ef4444' }}>😔 应用遇到了问题</h1>
+          <h1 style={{ color: '#999' }}>😔 应用遇到了问题</h1>
           <p style={{ color: '#666', margin: '1rem 0' }}>
             我们已经记录了这个错误，将尽快修复。
           </p>
@@ -31,7 +31,7 @@ createRoot(document.getElementById('root')).render(
             maxWidth: '600px',
             margin: '2rem auto',
             padding: '1rem',
-            background: '#f5f5f5',
+            background: '#f0f0f0',
             borderRadius: '8px'
           }}>
             <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
@@ -55,7 +55,7 @@ createRoot(document.getElementById('root')).render(
             }}
             style={{
               padding: '0.75rem 2rem',
-              background: '#3b82f6',
+              background: '#333',
               color: 'white',
               border: 'none',
               borderRadius: '8px',

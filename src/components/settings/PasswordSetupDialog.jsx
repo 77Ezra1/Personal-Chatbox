@@ -31,9 +31,9 @@ export function PasswordSetupDialog({ open, onClose, onConfirm, mode = 'setup' }
     if (/[0-9]/.test(pwd)) score++
     if (/[^a-zA-Z0-9]/.test(pwd)) score++
 
-    if (score <= 2) return { level: 1, text: '弱', color: '#ef4444' }
-    if (score <= 4) return { level: 2, text: '中等', color: '#f59e0b' }
-    return { level: 3, text: '强', color: '#10b981' }
+    if (score <= 2) return { level: 1, text: '弱', color: '#999' }
+    if (score <= 4) return { level: 2, text: '中等', color: '#666' }
+    return { level: 3, text: '强', color: '#333' }
   }
 
   const strength = getPasswordStrength(password)

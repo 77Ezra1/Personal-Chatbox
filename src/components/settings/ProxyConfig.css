@@ -6,17 +6,17 @@
 .proxy-config h3 {
   margin-top: 0;
   margin-bottom: 10px;
-  color: #333;
+  color: var(--foreground);
 }
 
 .proxy-config .description {
-  color: #666;
+  color: var(--muted-foreground);
   margin-bottom: 20px;
   font-size: 14px;
 }
 
 .current-proxy-info {
-  background: #f5f5f5;
+  background: var(--muted);
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -26,7 +26,7 @@
   margin-top: 0;
   margin-bottom: 10px;
   font-size: 14px;
-  color: #666;
+  color: var(--muted-foreground);
 }
 
 .proxy-status {
@@ -41,27 +41,30 @@
 }
 
 .status-indicator.active {
-  color: #52c41a;
+  color: var(--foreground);
+  opacity: 0.9;
 }
 
 .status-indicator.inactive {
-  color: #999;
+  color: var(--muted-foreground);
+  opacity: 0.7;
 }
 
 .proxy-url {
   font-family: 'Courier New', monospace;
-  background: #fff;
+  background: var(--card);
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 13px;
-  color: #1890ff;
+  color: var(--foreground);
+  opacity: 0.85;
 }
 
 .config-form {
-  background: #fff;
+  background: var(--card);
   padding: 20px;
   border-radius: 8px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border);
 }
 
 .form-group {
@@ -72,7 +75,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color: var(--foreground);
   font-size: 14px;
 }
 
@@ -98,34 +101,37 @@
 .form-group select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 14px;
   transition: border-color 0.3s;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #1890ff;
+  border-color: var(--ring);
 }
 
 .form-group input:disabled,
 .form-group select:disabled {
-  background: #f5f5f5;
+  background: var(--muted);
   cursor: not-allowed;
-  color: #999;
+  color: var(--muted-foreground);
+  opacity: 0.6;
 }
 
 .form-group small {
   display: block;
   margin-top: 5px;
-  color: #999;
+  color: var(--muted-foreground);
   font-size: 12px;
 }
 
 .preview {
-  background: #f9f9f9;
+  background: var(--muted);
   padding: 12px;
   border-radius: 4px;
   margin-bottom: 20px;
@@ -133,22 +139,21 @@
 }
 
 .preview strong {
-  color: #666;
+  color: var(--foreground);
   margin-right: 10px;
 }
 
 .preview code {
-  background: #fff;
+  background: var(--card);
   padding: 4px 8px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
-  color: #1890ff;
-  border: 1px solid #e8e8e8;
 }
 
 .preview .disabled-text {
-  color: #999;
+  color: var(--muted-foreground);
   font-style: italic;
+  opacity: 0.7;
 }
 
 .message {
@@ -159,15 +164,16 @@
 }
 
 .message.success {
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
-  color: #52c41a;
+  background: color-mix(in srgb, var(--border) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  color: var(--foreground);
+  opacity: 0.9;
 }
 
 .message.error {
-  background: #fff2f0;
-  border: 1px solid #ffccc7;
-  color: #ff4d4f;
+  background: color-mix(in srgb, var(--destructive) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--destructive) 40%, transparent);
+  color: var(--destructive);
 }
 
 .button-group {
@@ -178,58 +184,41 @@
 
 .button-group button {
   padding: 10px 20px;
-  border: none;
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s;
   font-weight: 500;
+  background: var(--background);
+  color: var(--foreground);
 }
 
-.btn-test {
-  background: #1890ff;
-  color: white;
-}
-
-.btn-test:hover:not(:disabled) {
-  background: #40a9ff;
-}
-
-.btn-save {
-  background: #52c41a;
-  color: white;
-}
-
-.btn-save:hover:not(:disabled) {
-  background: #73d13d;
-}
-
+.btn-test,
+.btn-save,
 .btn-restart {
-  background: #faad14;
-  color: white;
-}
-
-.btn-restart:hover:not(:disabled) {
-  background: #ffc53d;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
 }
 
 .button-group button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .proxy-help {
   margin-top: 20px;
   padding: 15px;
-  background: #e6f7ff;
+  background: color-mix(in srgb, var(--border) 6%, transparent);
   border-radius: 8px;
-  border: 1px solid #91d5ff;
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
 }
 
 .proxy-help h4 {
   margin-top: 0;
   margin-bottom: 10px;
-  color: #0050b3;
+  color: var(--foreground);
   font-size: 14px;
 }
 
@@ -240,8 +229,8 @@
 
 .proxy-help li {
   margin-bottom: 8px;
-  color: #0050b3;
+  color: var(--foreground);
+  opacity: 0.85;
   font-size: 13px;
   line-height: 1.6;
 }
-

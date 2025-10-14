@@ -11,7 +11,13 @@
   color: var(--text-secondary);
 }
 
-.api-keys-loading .spinner {
+.api-keys.encryption-section {
+  background: color-mix(in srgb, var(--border) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}g .spinner {
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
 }
@@ -107,13 +113,15 @@
 }
 
 .status-badge.configured {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+  background: color-mix(in srgb, var(--border) 10%, transparent);
+  color: var(--foreground);
+  opacity: 0.9;
 }
 
 .status-badge.unconfigured {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: color-mix(in srgb, var(--muted-foreground) 10%, transparent);
+  color: var(--muted-foreground);
+  opacity: 0.8;
 }
 
 .service-form {
@@ -137,7 +145,8 @@
 }
 
 .form-field .required {
-  color: #ef4444;
+  color: var(--muted-foreground);
+  opacity: 0.8;
   margin-left: 4px;
 }
 
@@ -155,8 +164,8 @@
 .form-field input:focus,
 .form-field select:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 10%, transparent);
 }
 
 .input-with-toggle {
@@ -234,19 +243,15 @@
   margin-bottom: 24px;
 }
 
-.encryption-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
 .encryption-header .icon-enabled {
-  color: #10b981;
+  color: var(--foreground);
+  opacity: 0.9;
   flex-shrink: 0;
 }
 
 .encryption-header .icon-disabled {
-  color: #6b7280;
+  color: var(--muted-foreground);
+  opacity: 0.7;
   flex-shrink: 0;
 }
 
@@ -269,14 +274,6 @@
   display: inline-block;
   width: 48px;
   height: 24px;
-}
-
-.encryption-toggle input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
 .toggle-slider {
   position: absolute;
   cursor: pointer;
@@ -284,7 +281,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--muted);
   transition: 0.4s;
   border-radius: 24px;
 }
@@ -296,13 +293,22 @@
   width: 18px;
   left: 3px;
   bottom: 3px;
+  background-color: var(--background);
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--foreground);
+  opacity: 0.9;
+} bottom: 3px;
   background-color: white;
   transition: 0.4s;
   border-radius: 50%;
 }
 
 input:checked + .toggle-slider {
-  background-color: #10b981;
+  background-color: var(--foreground);
 }
 
 input:checked + .toggle-slider:before {
@@ -315,7 +321,7 @@ input:checked + .toggle-slider:before {
   justify-content: space-between;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(102, 126, 234, 0.2);
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
 
 .status-item {
@@ -323,15 +329,16 @@ input:checked + .toggle-slider:before {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  font-weight: 500;
 }
 
 .status-item.unlocked {
-  color: #10b981;
+  color: var(--foreground);
+  opacity: 0.9;
 }
 
 .status-item.locked {
-  color: #f59e0b;
+  color: var(--muted-foreground);
+  opacity: 0.8;
 }
 
 .encryption-actions {

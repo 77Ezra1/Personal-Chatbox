@@ -37,7 +37,7 @@ class Logger {
    */
   debug(...args) {
     if (isDev || this._isDebugEnabled()) {
-      logger.log(`${this._formatPrefix()} [DEBUG]`, ...args);
+      console.log(`${this._formatPrefix()} [DEBUG]`, ...args);
     }
   }
 
@@ -46,7 +46,7 @@ class Logger {
    */
   log(...args) {
     if (isDev && LOG_LEVELS.LOG >= this.minLevel) {
-      logger.log(`${this._formatPrefix()}`, ...args);
+      console.log(`${this._formatPrefix()}`, ...args);
     }
   }
 
@@ -55,7 +55,7 @@ class Logger {
    */
   warn(...args) {
     if (isDev && LOG_LEVELS.WARN >= this.minLevel) {
-      logger.warn(`${this._formatPrefix()} [WARN]`, ...args);
+      console.warn(`${this._formatPrefix()} [WARN]`, ...args);
     }
   }
 
@@ -63,7 +63,7 @@ class Logger {
    * 错误日志（始终显示）
    */
   error(...args) {
-    logger.error(`${this._formatPrefix()} [ERROR]`, ...args);
+    console.error(`${this._formatPrefix()} [ERROR]`, ...args);
     
     // 发送错误到 Sentry
     if (!isDev && args[0] instanceof Error) {

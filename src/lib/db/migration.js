@@ -34,13 +34,13 @@ import {
 } from './conversations'
 
 import {
-
-import { createLogger } from '../../lib/logger'
-const logger = createLogger('needsMigration')
-
   batchSetSettings,
   SETTING_KEYS
 } from './appSettings'
+
+import { createLogger } from '../../lib/logger'
+
+const logger = createLogger('needsMigration')
 
 const MIGRATION_FLAG_KEY = 'indexeddb_migrated'
 const BACKUP_KEY = 'localStorage_backup'

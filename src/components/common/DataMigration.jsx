@@ -75,14 +75,14 @@ export function DataMigration({ children, language = 'zh', translate }) {
         <div style={{
           width: '40px',
           height: '40px',
-          border: '4px solid #e5e7eb',
-          borderTopColor: '#3b82f6',
+          border: '4px solid #e0e0e0',
+          borderTopColor: '#333',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
         <p style={{
           fontSize: '0.875rem',
-          color: '#6b7280'
+          color: '#666'
         }}>
           {translate?.('dataMigration.migrating', 'Migrating data...')}
         </p>

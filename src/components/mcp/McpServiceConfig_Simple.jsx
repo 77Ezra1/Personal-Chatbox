@@ -59,7 +59,7 @@ export default function McpServiceConfigSimple() {
 
   if (error) {
     return (
-      <div className="p-4 flex items-center gap-2 text-red-600">
+      <div className="p-4 flex items-center gap-2" style={{ color: 'var(--destructive)' }}>
         <AlertCircle className="w-5 h-5" />
         <span>{error}</span>
       </div>
@@ -98,7 +98,10 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
   const hasApiKey = server.apiKey && server.apiKey.length > 0
 
   return (
-    <div className={`border rounded-lg p-4 ${server.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+    <div className={`border rounded-lg p-4 ${server.enabled ? 'bg-opacity-5' : 'bg-opacity-5'}`} style={{
+      backgroundColor: server.enabled ? 'color-mix(in srgb, var(--border) 8%, transparent)' : 'color-mix(in srgb, var(--muted) 8%, transparent)',
+      borderColor: server.enabled ? 'var(--border)' : 'color-mix(in srgb, var(--border) 50%, transparent)'
+    }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-2xl">{getServiceIcon(server.id)}</span>
@@ -115,7 +118,11 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
                 <>
                   <Badge variant="outline">需要配置</Badge>
                   {hasApiKey && (
-                    <Badge variant="secondary" className="text-green-700 bg-green-100">
+                    <Badge variant="secondary" style={{ 
+                      color: 'var(--foreground)', 
+                      backgroundColor: 'color-mix(in srgb, var(--border) 15%, transparent)',
+                      opacity: 0.9
+                    }}>
                       ✓ 已配置
                     </Badge>
                   )}
@@ -140,12 +147,20 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
               onChange={onToggle}
               className="sr-only"
             />
-            <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              server.enabled ? 'bg-green-600' : 'bg-gray-200'
-            }`}>
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                server.enabled ? 'translate-x-6' : 'translate-x-1'
-              }`} />
+            <div 
+              className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+              style={{
+                backgroundColor: server.enabled ? 'var(--foreground)' : 'var(--muted)',
+                opacity: server.enabled ? 0.9 : 0.7
+              }}
+            >
+              <span 
+                className="inline-block h-4 w-4 transform rounded-full transition-transform"
+                style={{
+                  backgroundColor: 'var(--background)',
+                  transform: server.enabled ? 'translateX(1.5rem)' : 'translateX(0.25rem)'
+                }}
+              />
             </div>
           </label>
         </div>

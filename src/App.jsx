@@ -24,11 +24,10 @@ import { DataMigration } from '@/components/common/DataMigration'
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
 import { readFileAsDataUrl, createAttachmentId } from '@/lib/utils'
 import { PROVIDERS } from '@/lib/constants'
-
+import { createLogger } from '@/lib/logger'
 
 import './App.css'
 
-import { createLogger } from 'lib/logger'
 const logger = createLogger('App')
 
 
