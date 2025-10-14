@@ -4,6 +4,10 @@ import { Badge } from '@/components/ui/badge'
 import { useMcpManager } from '@/hooks/useMcpManager'
 import { McpPathConfigDialog } from './McpPathConfig'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('McpServiceConfigSimple')
+
+
 /**
  * 简化的MCP服务配置组件
  */
@@ -17,7 +21,7 @@ export default function McpServiceConfigSimple() {
       
       await toggleService(serverId, newEnabled)
     } catch (err) {
-      console.error('Failed to toggle server:', err)
+      logger.error('Failed to toggle server:', err)
       alert('操作失败，请重试')
     }
   }

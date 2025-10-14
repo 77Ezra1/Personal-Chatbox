@@ -7,6 +7,10 @@ import {
 } from './constants'
 import { toNumber, cloneState } from './utils'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('sanitizeModelSettings')
+
+
 const sanitizeApiKey = (apiKey) => (
   typeof apiKey === 'string' ? apiKey : DEFAULT_MODEL_SETTINGS.apiKey
 )
@@ -63,16 +67,16 @@ export const ensureModelEntry = (state, provider, modelName, customModels = {}) 
  * 从状态构建模型配置
  */
 export const buildModelConfigFromState = (state, provider, modelName, customModels = {}) => {
-  console.log('[buildModelConfigFromState] Input:', { state, provider, modelName, customModels })
+  logger.log('[buildModelConfigFromState] Input:', { state, provider, modelName, customModels })
   const { entry, model } = ensureModelEntry(state, provider, modelName, customModels)
-  console.log('[buildModelConfigFromState] After ensureModelEntry:', { entry, model })
+  logger.log('[buildModelConfigFromState] After ensureModelEntry:', { entry, model })
   const settings = sanitizeModelSettings(entry.models[model])
   entry.models[model] = settings
   entry.activeModel = model
   entry.apiKey = sanitizeApiKey(entry.apiKey)
   state[provider] = entry
   const result = { provider, model, apiKey: entry.apiKey, ...settings }
-  console.log('[buildModelConfigFromState] Result:', result)
+  logger.log('[buildModelConfigFromState] Result:', result)
   return result
 }
 

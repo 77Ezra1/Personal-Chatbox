@@ -6,6 +6,10 @@
 import { STORES } from './schema'
 import { get, getAll, put, remove } from './index'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('SETTING_KEYS')
+
+
 /**
  * 预定义的设置键
  */
@@ -42,7 +46,7 @@ export async function getSetting(key, defaultValue = null) {
     const record = await get(STORES.APP_SETTINGS, key)
     return record ? record.value : defaultValue
   } catch (error) {
-    console.error('[DB] Failed to get setting:', key, error)
+    logger.error('[DB] Failed to get setting:', key, error)
     return defaultValue
   }
 }
@@ -57,9 +61,9 @@ export async function setSetting(key, value) {
   try {
     const record = createSettingRecord(key, value)
     await put(STORES.APP_SETTINGS, record)
-    console.log('[DB] Setting saved:', key)
+    logger.log('[DB] Setting saved:', key)
   } catch (error) {
-    console.error('[DB] Failed to set setting:', key, error)
+    logger.error('[DB] Failed to set setting:', key, error)
     throw error
   }
 }
@@ -72,9 +76,9 @@ export async function setSetting(key, value) {
 export async function deleteSetting(key) {
   try {
     await remove(STORES.APP_SETTINGS, key)
-    console.log('[DB] Setting deleted:', key)
+    logger.log('[DB] Setting deleted:', key)
   } catch (error) {
-    console.error('[DB] Failed to delete setting:', key, error)
+    logger.error('[DB] Failed to delete setting:', key, error)
     throw error
   }
 }
@@ -92,7 +96,7 @@ export async function getAllSettings() {
     })
     return settings
   } catch (error) {
-    console.error('[DB] Failed to get all settings:', error)
+    logger.error('[DB] Failed to get all settings:', error)
     return {}
   }
 }
@@ -107,9 +111,9 @@ export async function batchSetSettings(settings) {
     for (const [key, value] of Object.entries(settings)) {
       await setSetting(key, value)
     }
-    console.log('[DB] Batch settings saved:', Object.keys(settings).length)
+    logger.log('[DB] Batch settings saved:', Object.keys(settings).length)
   } catch (error) {
-    console.error('[DB] Failed to batch set settings:', error)
+    logger.error('[DB] Failed to batch set settings:', error)
     throw error
   }
 }

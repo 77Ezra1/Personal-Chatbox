@@ -28,6 +28,10 @@ import {
 import { openDatabase } from '@/lib/db'
 import { generateModelId } from '@/lib/db/schema'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useModelConfigDB')
+
+
 /**
  * 模型配置管理Hook（使用IndexedDB）
  */
@@ -61,7 +65,7 @@ export function useModelConfigDB() {
       const apiKey = await getProviderApiKey(provider)
       setCurrentApiKey(apiKey)
     } catch (error) {
-      console.error('[useModelConfigDB] Failed to load models:', error)
+      logger.error('[useModelConfigDB] Failed to load models:', error)
     } finally {
       setLoading(false)
     }
@@ -155,7 +159,7 @@ export function useModelConfigDB() {
         }
       }
     } catch (error) {
-      console.error('[useModelConfigDB] Failed to set provider:', error)
+      logger.error('[useModelConfigDB] Failed to set provider:', error)
       throw error
     }
   }, [])
@@ -176,7 +180,7 @@ export function useModelConfigDB() {
         await dbSetActiveModel(modelId)
       }
     } catch (error) {
-      console.error('[useModelConfigDB] Failed to set model:', error)
+      logger.error('[useModelConfigDB] Failed to set model:', error)
       throw error
     }
   }, [currentProvider])
@@ -194,7 +198,7 @@ export function useModelConfigDB() {
       // 检查是否已存在
       const existing = await getModelById(modelId)
       if (existing) {
-        console.log('[useModelConfigDB] Model already exists:', modelId)
+        logger.log('[useModelConfigDB] Model already exists:', modelId)
         return
       }
       
@@ -210,7 +214,7 @@ export function useModelConfigDB() {
       // 重新加载模型列表
       await loadModels()
     } catch (error) {
-      console.error('[useModelConfigDB] Failed to add custom model:', error)
+      logger.error('[useModelConfigDB] Failed to add custom model:', error)
       throw error
     }
   }, [loadModels])
@@ -244,12 +248,12 @@ export function useModelConfigDB() {
             });
             
             if (response.ok) {
-              console.log('[useModelConfigDB] DeepSeek config synced to backend');
+              logger.log('[useModelConfigDB] DeepSeek config synced to backend');
             } else {
-              console.error('[useModelConfigDB] Failed to sync DeepSeek config to backend');
+              logger.error('[useModelConfigDB] Failed to sync DeepSeek config to backend');
             }
           } catch (error) {
-            console.error('[useModelConfigDB] Error syncing DeepSeek config:', error);
+            logger.error('[useModelConfigDB] Error syncing DeepSeek config:', error);
           }
         }
       }
@@ -289,7 +293,7 @@ export function useModelConfigDB() {
       // 重新加载模型列表
       await loadModels()
     } catch (error) {
-      console.error('[useModelConfigDB] Failed to update config:', error)
+      logger.error('[useModelConfigDB] Failed to update config:', error)
       throw error
     }
   }, [currentProvider, currentModel, loadModels, setModel])
@@ -314,7 +318,7 @@ export function useModelConfigDB() {
       // 重新加载模型列表
       await loadModels()
     } catch (error) {
-      console.error('[useModelConfigDB] Failed to remove custom model:', error)
+      logger.error('[useModelConfigDB] Failed to remove custom model:', error)
       throw error
     }
   }, [currentProvider, currentModel, loadModels, setModel])

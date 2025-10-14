@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
 import { SYSTEM_PROMPT_KEY } from '../lib/constants'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useSystemPrompt')
+
+
 /**
  * 系统提示词管理 Hook
  * 支持全局提示词和指定模型提示词
@@ -22,7 +26,7 @@ export function useSystemPrompt() {
         return JSON.parse(stored)
       }
     } catch (error) {
-      console.error('Failed to load system prompt:', error)
+      logger.error('Failed to load system prompt:', error)
     }
     
     return {
@@ -38,7 +42,7 @@ export function useSystemPrompt() {
       try {
         window.localStorage.setItem(SYSTEM_PROMPT_KEY, JSON.stringify(systemPrompt))
       } catch (error) {
-        console.error('Failed to save system prompt:', error)
+        logger.error('Failed to save system prompt:', error)
       }
     }
   }, [systemPrompt])

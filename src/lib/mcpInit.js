@@ -6,6 +6,10 @@
 import { openDatabase } from './db/index.js'
 import { STORES } from './db/schema.js'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('McpInit')
+
+
 /**
  * 预置的MCP服务配置
  */
@@ -44,14 +48,14 @@ const PRESET_SERVICES = [
  */
 export async function initializeMcpServices() {
   try {
-    console.log('[MCP Init] Initializing MCP services...')
+    logger.log('[MCP Init] Initializing MCP services...')
     
     const db = await openDatabase()
     
     // 检查是否已经初始化过
     const existingServices = await getAllServices(db)
     if (existingServices.length > 0) {
-      console.log('[MCP Init] Services already initialized')
+      logger.log('[MCP Init] Services already initialized')
       return existingServices
     }
     
@@ -71,18 +75,18 @@ export async function initializeMcpServices() {
         const request = store.add(serviceData)
         request.onsuccess = () => {
           services.push(serviceData)
-          console.log(`[MCP Init] Added service: ${service.name}`)
+          logger.log(`[MCP Init] Added service: ${service.name}`)
           resolve()
         }
         request.onerror = () => reject(request.error)
       })
     }
     
-    console.log(`[MCP Init] Initialized ${services.length} services`)
+    logger.log(`[MCP Init] Initialized ${services.length} services`)
     return services
     
   } catch (error) {
-    console.error('[MCP Init] Failed to initialize services:', error)
+    logger.error('[MCP Init] Failed to initialize services:', error)
     throw error
   }
 }
@@ -109,10 +113,10 @@ export async function getEnabledServices() {
     const db = await openDatabase()
     const allServices = await getAllServices(db)
     const enabledServices = allServices.filter(service => service.isEnabled)
-    console.log('[MCP Init] Enabled services:', enabledServices)
+    logger.log('[MCP Init] Enabled services:', enabledServices)
     return enabledServices
   } catch (error) {
-    console.error('[MCP Init] Failed to get enabled services:', error)
+    logger.error('[MCP Init] Failed to get enabled services:', error)
     return []
   }
 }
@@ -136,7 +140,7 @@ export async function updateServiceStatus(serviceId, isEnabled) {
           
           const putRequest = store.put(service)
           putRequest.onsuccess = () => {
-            console.log(`[MCP Init] Updated service ${serviceId}: enabled=${isEnabled}`)
+            logger.log(`[MCP Init] Updated service ${serviceId}: enabled=${isEnabled}`)
             resolve(service)
           }
           putRequest.onerror = () => reject(putRequest.error)
@@ -147,7 +151,7 @@ export async function updateServiceStatus(serviceId, isEnabled) {
       getRequest.onerror = () => reject(getRequest.error)
     })
   } catch (error) {
-    console.error('[MCP Init] Failed to update service status:', error)
+    logger.error('[MCP Init] Failed to update service status:', error)
     throw error
   }
 }

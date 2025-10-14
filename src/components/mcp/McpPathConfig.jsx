@@ -6,6 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('McpPathConfigDialog')
+
+
 /**
  * MCP服务路径配置对话框
  * 用于配置SQLite数据库路径和Filesystem允许目录
@@ -40,7 +44,7 @@ export function McpPathConfigDialog({ service, onSave }) {
         }
       }
     } catch (err) {
-      console.error('加载配置失败:', err)
+      logger.error('加载配置失败:', err)
     }
   }
 
@@ -71,7 +75,7 @@ export function McpPathConfigDialog({ service, onSave }) {
         setError(data.error || '保存失败')
       }
     } catch (err) {
-      console.error('保存配置失败:', err)
+      logger.error('保存配置失败:', err)
       setError('保存失败，请检查网络连接')
     } finally {
       setSaving(false)

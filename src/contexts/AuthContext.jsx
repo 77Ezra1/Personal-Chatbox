@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('AuthProvider')
+
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -38,7 +42,7 @@ export function AuthProvider({ children }) {
         setUser(null);
       }
     } catch (error) {
-      console.error('Check auth failed:', error);
+      logger.error('Check auth failed:', error);
       localStorage.removeItem('auth_token');
       setToken(null);
       setUser(null);
@@ -113,7 +117,7 @@ export function AuthProvider({ children }) {
         credentials: 'include'
       });
     } catch (error) {
-      console.error('Logout failed:', error);
+      logger.error('Logout failed:', error);
     } finally {
       // 无论是否成功，都清除本地状态
       localStorage.removeItem('auth_token');

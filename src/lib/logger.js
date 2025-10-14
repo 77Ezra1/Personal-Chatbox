@@ -1,3 +1,6 @@
+import { createLogger } from '../lib/logger'
+const logger = createLogger('createLogger')
+
 /**
  * 统一日志工具
  * 开发环境显示所有日志，生产环境只显示错误
@@ -37,7 +40,7 @@ class Logger {
    */
   debug(...args) {
     if (isDev || this._isDebugEnabled()) {
-      console.log(`${this._formatPrefix()} [DEBUG]`, ...args);
+      logger.log(`${this._formatPrefix()} [DEBUG]`, ...args);
     }
   }
 
@@ -46,7 +49,7 @@ class Logger {
    */
   log(...args) {
     if (isDev && LOG_LEVELS.LOG >= this.minLevel) {
-      console.log(`${this._formatPrefix()}`, ...args);
+      logger.log(`${this._formatPrefix()}`, ...args);
     }
   }
 
@@ -55,7 +58,7 @@ class Logger {
    */
   warn(...args) {
     if (isDev && LOG_LEVELS.WARN >= this.minLevel) {
-      console.warn(`${this._formatPrefix()} [WARN]`, ...args);
+      logger.warn(`${this._formatPrefix()} [WARN]`, ...args);
     }
   }
 
@@ -63,7 +66,7 @@ class Logger {
    * 错误日志（始终显示）
    */
   error(...args) {
-    console.error(`${this._formatPrefix()} [ERROR]`, ...args);
+    logger.error(`${this._formatPrefix()} [ERROR]`, ...args);
     
     // TODO: 未来可以发送到错误追踪服务（如 Sentry）
     // if (window.Sentry) {
@@ -149,17 +152,17 @@ export const logger = defaultLogger;
 export function enableDebug() {
   try {
     localStorage.setItem('debug', 'true');
-    console.log('Debug mode enabled. Reload the page to see debug logs.');
+    logger.log('Debug mode enabled. Reload the page to see debug logs.');
   } catch (e) {
-    console.error('Failed to enable debug mode:', e);
+    logger.error('Failed to enable debug mode:', e);
   }
 }
 
 export function disableDebug() {
   try {
     localStorage.removeItem('debug');
-    console.log('Debug mode disabled.');
+    logger.log('Debug mode disabled.');
   } catch (e) {
-    console.error('Failed to disable debug mode:', e);
+    logger.error('Failed to disable debug mode:', e);
   }
 }

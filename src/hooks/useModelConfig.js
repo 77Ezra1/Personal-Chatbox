@@ -15,6 +15,10 @@ import {
 } from '../lib/modelConfig'
 import { cloneState } from '../lib/utils'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useModelConfig')
+
+
 /**
  * 模型配置管理 Hook
  * 管理提供商、模型选择和配置
@@ -55,7 +59,7 @@ export function useModelConfig() {
 
   // 当前模型配置
   const modelConfig = useMemo(() => {
-    console.log('[useModelConfig] Building config with:', {
+    logger.log('[useModelConfig] Building config with:', {
       providers: modelState.providers,
       currentProvider: modelState.currentProvider,
       currentModel: modelState.currentModel,
@@ -67,7 +71,7 @@ export function useModelConfig() {
       modelState.currentModel,
       customModels
     )
-    console.log('[useModelConfig] Built config:', result)
+    logger.log('[useModelConfig] Built config:', result)
     return result
   }, [modelState, customModels])
 

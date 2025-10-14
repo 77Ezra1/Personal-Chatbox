@@ -5,6 +5,10 @@
 
 import { DB_NAME, DB_VERSION, initSchema } from './schema.js'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('openDatabase')
+
+
 let dbInstance = null
 let dbPromise = null
 
@@ -36,25 +40,25 @@ export function openDatabase() {
     // 数据库升级（创建或更新schema）
     request.onupgradeneeded = (event) => {
       const db = event.target.result
-      console.log('[DB] Upgrading database schema...')
+      logger.log('[DB] Upgrading database schema...')
       initSchema(db)
     }
 
     // 连接成功
     request.onsuccess = (event) => {
       dbInstance = event.target.result
-      console.log('[DB] Database opened successfully')
+      logger.log('[DB] Database opened successfully')
       
       // 处理数据库意外关闭
       dbInstance.onclose = () => {
-        console.warn('[DB] Database connection closed')
+        logger.warn('[DB] Database connection closed')
         dbInstance = null
         dbPromise = null
       }
 
       // 处理版本变更
       dbInstance.onversionchange = () => {
-        console.warn('[DB] Database version changed, closing connection')
+        logger.warn('[DB] Database version changed, closing connection')
         dbInstance.close()
         dbInstance = null
         dbPromise = null
@@ -65,14 +69,14 @@ export function openDatabase() {
 
     // 连接失败
     request.onerror = (event) => {
-      console.error('[DB] Failed to open database:', event.target.error)
+      logger.error('[DB] Failed to open database:', event.target.error)
       dbPromise = null
       reject(event.target.error)
     }
 
     // 连接被阻塞
     request.onblocked = () => {
-      console.warn('[DB] Database opening blocked')
+      logger.warn('[DB] Database opening blocked')
     }
   })
 
@@ -87,7 +91,7 @@ export function closeDatabase() {
     dbInstance.close()
     dbInstance = null
     dbPromise = null
-    console.log('[DB] Database closed')
+    logger.log('[DB] Database closed')
   }
 }
 
@@ -102,17 +106,17 @@ export function deleteDatabase() {
     const request = indexedDB.deleteDatabase(DB_NAME)
 
     request.onsuccess = () => {
-      console.log('[DB] Database deleted successfully')
+      logger.log('[DB] Database deleted successfully')
       resolve()
     }
 
     request.onerror = (event) => {
-      console.error('[DB] Failed to delete database:', event.target.error)
+      logger.error('[DB] Failed to delete database:', event.target.error)
       reject(event.target.error)
     }
 
     request.onblocked = () => {
-      console.warn('[DB] Database deletion blocked')
+      logger.warn('[DB] Database deletion blocked')
     }
   })
 }
@@ -144,17 +148,17 @@ export async function transaction(storeNames, mode, callback) {
 
       // 事务错误
       tx.onerror = (event) => {
-        console.error('[DB] Transaction error:', event.target.error)
+        logger.error('[DB] Transaction error:', event.target.error)
         reject(event.target.error)
       }
 
       // 事务中止
       tx.onabort = (event) => {
-        console.error('[DB] Transaction aborted:', event.target.error)
+        logger.error('[DB] Transaction aborted:', event.target.error)
         reject(event.target.error)
       }
     } catch (error) {
-      console.error('[DB] Transaction failed:', error)
+      logger.error('[DB] Transaction failed:', error)
       reject(error)
     }
   })

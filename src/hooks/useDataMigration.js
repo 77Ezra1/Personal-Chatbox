@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useDataMigration')
+
+
 /**
  * 数据迁移Hook
  * 负责将localStorage数据迁移到数据库
@@ -58,7 +62,7 @@ export function useDataMigration() {
         await migrateData();
       }
     } catch (error) {
-      console.error('[Data Migration] Error checking status:', error);
+      logger.error('[Data Migration] Error checking status:', error);
       setMigrationStatus({
         isChecking: false,
         needsMigration: false,
@@ -132,9 +136,9 @@ export function useDataMigration() {
         needsMigration: false
       }));
 
-      console.log('[Data Migration] Migration completed successfully');
+      logger.log('[Data Migration] Migration completed successfully');
     } catch (error) {
-      console.error('[Data Migration] Error migrating data:', error);
+      logger.error('[Data Migration] Error migrating data:', error);
       setMigrationStatus(prev => ({
         ...prev,
         isMigrating: false,

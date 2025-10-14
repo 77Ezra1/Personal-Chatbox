@@ -4,6 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { AlertCircle, Check, ArrowLeft, Globe } from 'lucide-react';
 import { getAuthLanguage, setAuthLanguage, getAuthTranslation } from '../lib/authTranslations';
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('LoginPage')
+
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, register } = useAuth();
@@ -87,7 +91,7 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-      console.log('[Auth] Email check response:', data);
+      logger.log('[Auth] Email check response:', data);
       
       if (!response.ok) {
         throw new Error(data.message || t('errors.networkError'));
@@ -103,7 +107,7 @@ export default function LoginPage() {
       setIsNewUser(!data.exists);
       setStep(2);
     } catch (err) {
-      console.error('[Auth] Email submit error:', err);
+      logger.error('[Auth] Email submit error:', err);
       setError(err.message || t('errors.networkError'));
     } finally {
       setLoading(false);
@@ -130,11 +134,11 @@ export default function LoginPage() {
 
       if (isNewUser) {
         // 新用户注册 - 进入邀请码步骤
-        console.log('[Auth] New user, proceeding to invite code step');
+        logger.log('[Auth] New user, proceeding to invite code step');
         setStep(3);
       } else {
         // 老用户登录
-        console.log('[Auth] Existing user, attempting login');
+        logger.log('[Auth] Existing user, attempting login');
         const result = await login(formData.email, password);
         if (!result.success) {
           throw new Error(result.error || t('errors.loginFailed'));
@@ -142,7 +146,7 @@ export default function LoginPage() {
         navigate('/');
       }
     } catch (err) {
-      console.error('[Auth] Password submit error:', err);
+      logger.error('[Auth] Password submit error:', err);
       setError(err.message || t('errors.loginFailed'));
     } finally {
       setLoading(false);
@@ -172,7 +176,7 @@ export default function LoginPage() {
       setLoading(true);
 
       // 尝试注册
-      console.log('[Auth] Attempting registration...');
+      logger.log('[Auth] Attempting registration...');
       const result = await register(
         email.trim(),
         password,
@@ -180,14 +184,14 @@ export default function LoginPage() {
       );
 
       if (!result.success) {
-        console.error('[Auth] Registration failed:', result.error);
+        logger.error('[Auth] Registration failed:', result.error);
         throw new Error(result.error);
       }
 
-      console.log('[Auth] Registration successful');
+      logger.log('[Auth] Registration successful');
       navigate('/');
     } catch (err) {
-      console.error('[Auth] Registration error:', err);
+      logger.error('[Auth] Registration error:', err);
       setError(err.message || t('errors.registrationFailed'));
     } finally {
       setLoading(false);

@@ -1,3 +1,6 @@
+import { createLogger } from '../lib/logger'
+const logger = createLogger('McpApiClient')
+
 /**
  * MCP后端API客户端
  */
@@ -18,7 +21,7 @@ export async function getServices() {
     
     return data.services;
   } catch (error) {
-    console.error('获取服务列表失败:', error);
+    logger.error('获取服务列表失败:', error);
     throw error;
   }
 }
@@ -37,7 +40,7 @@ export async function getService(serviceId) {
     
     return data.service;
   } catch (error) {
-    console.error(`获取服务${serviceId}失败:`, error);
+    logger.error(`获取服务${serviceId}失败:`, error);
     throw error;
   }
 }
@@ -63,7 +66,7 @@ export async function toggleService(serviceId, enabled) {
     
     return data.service;
   } catch (error) {
-    console.error(`切换服务${serviceId}状态失败:`, error);
+    logger.error(`切换服务${serviceId}状态失败:`, error);
     throw error;
   }
 }
@@ -82,7 +85,7 @@ export async function getTools() {
     
     return data.tools;
   } catch (error) {
-    console.error('获取工具列表失败:', error);
+    logger.error('获取工具列表失败:', error);
     throw error;
   }
 }
@@ -109,7 +112,7 @@ export async function callTool(toolName, parameters) {
     return data;
     
   } catch (error) {
-    console.error(`调用工具${toolName}失败:`, error);
+    logger.error(`调用工具${toolName}失败:`, error);
     return {
       success: false,
       error: '网络请求失败',
@@ -132,7 +135,7 @@ export async function healthCheck() {
     
     return data;
   } catch (error) {
-    console.error('健康检查失败:', error);
+    logger.error('健康检查失败:', error);
     throw error;
   }
 }

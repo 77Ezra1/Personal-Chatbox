@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './ProxyConfig.css';
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('ProxyConfig')
+
+
 const ProxyConfig = () => {
   const [proxyEnabled, setProxyEnabled] = useState(false);
   const [proxyHost, setProxyHost] = useState('127.0.0.1');
@@ -29,7 +33,7 @@ const ProxyConfig = () => {
         setCurrentProxy(data.current);
       }
     } catch (error) {
-      console.error('加载代理配置失败:', error);
+      logger.error('加载代理配置失败:', error);
     }
   };
 

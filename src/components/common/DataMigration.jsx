@@ -7,6 +7,10 @@ import { useEffect, useState } from 'react'
 import { needsMigration, migrateData } from '@/lib/db/migration'
 import { toast } from 'sonner'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('DataMigration')
+
+
 export function DataMigration({ children, language = 'zh', translate }) {
   const [migrationStatus, setMigrationStatus] = useState('checking') // checking | migrating | done | error
   const [migrationResult, setMigrationResult] = useState(null)
@@ -16,12 +20,12 @@ export function DataMigration({ children, language = 'zh', translate }) {
       try {
         // 检查是否需要迁移
         if (!needsMigration()) {
-          console.log('[Migration] No migration needed')
+          logger.log('[Migration] No migration needed')
           setMigrationStatus('done')
           return
         }
 
-        console.log('[Migration] Starting migration...')
+        logger.log('[Migration] Starting migration...')
         setMigrationStatus('migrating')
 
         // 执行迁移
@@ -29,7 +33,7 @@ export function DataMigration({ children, language = 'zh', translate }) {
         setMigrationResult(result)
 
         if (result.success) {
-          console.log('[Migration] Migration completed successfully')
+          logger.log('[Migration] Migration completed successfully')
           setMigrationStatus('done')
           
           // 显示成功提示
@@ -39,14 +43,14 @@ export function DataMigration({ children, language = 'zh', translate }) {
           
           toast.success(message)
         } else {
-          console.error('[Migration] Migration failed:', result.errors)
+          logger.error('[Migration] Migration failed:', result.errors)
           setMigrationStatus('error')
           
           const message = translate?.('dataMigration.migrationFailed', 'Data migration failed. Please refresh the page and try again.')
           toast.error(message)
         }
       } catch (error) {
-        console.error('[Migration] Migration error:', error)
+        logger.error('[Migration] Migration error:', error)
         setMigrationStatus('error')
         
         const message = translate?.('dataMigration.migrationError', 'Data migration error. Please refresh the page and try again.')

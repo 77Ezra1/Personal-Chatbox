@@ -1,3 +1,6 @@
+import { createLogger } from '../lib/logger'
+const logger = createLogger('SyncDeepSeekConfig')
+
 /**
  * 同步DeepSeek配置到后端
  */
@@ -26,15 +29,15 @@ export async function syncDeepSeekConfigToBackend(apiKey, model = 'deepseek-chat
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[syncDeepSeekConfig] Failed to sync:', errorData);
+      logger.error('[syncDeepSeekConfig] Failed to sync:', errorData);
       return false;
     }
 
     const data = await response.json();
-    console.log('[syncDeepSeekConfig] Synced successfully:', data);
+    logger.log('[syncDeepSeekConfig] Synced successfully:', data);
     return true;
   } catch (error) {
-    console.error('[syncDeepSeekConfig] Error:', error);
+    logger.error('[syncDeepSeekConfig] Error:', error);
     return false;
   }
 }

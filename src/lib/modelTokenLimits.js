@@ -1,3 +1,6 @@
+import { createLogger } from '../lib/logger'
+const logger = createLogger('MODEL_MAX_TOKENS')
+
 /**
  * 模型最大Token数配置
  * 

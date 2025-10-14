@@ -5,6 +5,10 @@ import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { ThinkingProcess } from './ThinkingProcess'
 import { formatFileSize } from '@/lib/utils'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('MessageItem')
+
+
 /**
  * 单条消息组件
  * 显示消息内容、附件和操作按钮
@@ -23,7 +27,7 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
       await navigator.clipboard.writeText(content)
       onCopy?.()
     } catch (error) {
-      console.error('Failed to copy message:', error)
+      logger.error('Failed to copy message:', error)
       // Fallback: 创建临时文本区域
       const textArea = document.createElement('textarea')
       textArea.value = content
@@ -35,7 +39,7 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
         document.execCommand('copy')
         onCopy?.()
       } catch (fallbackError) {
-        console.error('Fallback copy also failed:', fallbackError)
+        logger.error('Fallback copy also failed:', fallbackError)
       }
       document.body.removeChild(textArea)
     }

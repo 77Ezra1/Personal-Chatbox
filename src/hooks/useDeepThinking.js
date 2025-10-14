@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { DEEP_THINKING_KEY, THINKING_MODE } from '../lib/constants'
 import { 
+
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useDeepThinking')
+
   isThinkingButtonDisabled, 
   shouldEnableThinking 
 } from '../lib/modelThinkingDetector'
@@ -69,12 +73,12 @@ export function useDeepThinking(modelConfig) {
   const toggleDeepThinking = useCallback(() => {
     // 如果按钮被禁用，不允许切换
     if (isButtonDisabled) {
-      console.warn('Deep thinking toggle is disabled for this model type')
+      logger.warn('Deep thinking toggle is disabled for this model type')
       return
     }
     
     if (!isDeepThinkingAvailable) {
-      console.warn('Deep thinking is not available for current model')
+      logger.warn('Deep thinking is not available for current model')
       return
     }
     

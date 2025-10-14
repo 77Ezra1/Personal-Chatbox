@@ -34,6 +34,10 @@ import {
 } from './conversations'
 
 import {
+
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('needsMigration')
+
   batchSetSettings,
   SETTING_KEYS
 } from './appSettings'
@@ -66,7 +70,7 @@ export function needsMigration() {
  * @returns {Promise<Object>}
  */
 export async function migrateData() {
-  console.log('[Migration] Starting data migration from localStorage to IndexedDB...')
+  logger.log('[Migration] Starting data migration from localStorage to IndexedDB...')
   
   const result = {
     success: false,
@@ -100,9 +104,9 @@ export async function migrateData() {
     localStorage.setItem(MIGRATION_FLAG_KEY, 'true')
 
     result.success = true
-    console.log('[Migration] Migration completed successfully:', result)
+    logger.log('[Migration] Migration completed successfully:', result)
   } catch (error) {
-    console.error('[Migration] Migration failed:', error)
+    logger.error('[Migration] Migration failed:', error)
     result.errors.push(error.message)
   }
 
@@ -164,7 +168,7 @@ async function migrateModels(result) {
     if (modelsToMigrate.length > 0) {
       await batchSaveModels(modelsToMigrate)
       result.migrated.models = modelsToMigrate.length
-      console.log('[Migration] Migrated models:', modelsToMigrate.length)
+      logger.log('[Migration] Migrated models:', modelsToMigrate.length)
     }
 
     // 保存当前选中的服务商和模型
@@ -175,7 +179,7 @@ async function migrateModels(result) {
       })
     }
   } catch (error) {
-    console.error('[Migration] Failed to migrate models:', error)
+    logger.error('[Migration] Failed to migrate models:', error)
     result.errors.push(`Models migration error: ${error.message}`)
   }
 }
@@ -215,9 +219,9 @@ async function migrateSystemPrompts(result) {
       }
     }
 
-    console.log('[Migration] Migrated system prompts')
+    logger.log('[Migration] Migrated system prompts')
   } catch (error) {
-    console.error('[Migration] Failed to migrate system prompts:', error)
+    logger.error('[Migration] Failed to migrate system prompts:', error)
     result.errors.push(`System prompts migration error: ${error.message}`)
   }
 }
@@ -236,9 +240,9 @@ async function migrateConversations(result) {
 
     await batchSaveConversations(conversations)
     result.migrated.conversations = conversations.length
-    console.log('[Migration] Migrated conversations:', conversations.length)
+    logger.log('[Migration] Migrated conversations:', conversations.length)
   } catch (error) {
-    console.error('[Migration] Failed to migrate conversations:', error)
+    logger.error('[Migration] Failed to migrate conversations:', error)
     result.errors.push(`Conversations migration error: ${error.message}`)
   }
 }
@@ -272,10 +276,10 @@ async function migrateAppSettings(result) {
     if (Object.keys(settings).length > 0) {
       await batchSetSettings(settings)
       result.migrated.settings = Object.keys(settings).length
-      console.log('[Migration] Migrated app settings:', Object.keys(settings).length)
+      logger.log('[Migration] Migrated app settings:', Object.keys(settings).length)
     }
   } catch (error) {
-    console.error('[Migration] Failed to migrate app settings:', error)
+    logger.error('[Migration] Failed to migrate app settings:', error)
     result.errors.push(`App settings migration error: ${error.message}`)
   }
 }
@@ -304,9 +308,9 @@ function backupLocalStorage() {
     }
 
     localStorage.setItem(BACKUP_KEY, JSON.stringify(backup))
-    console.log('[Migration] localStorage data backed up')
+    logger.log('[Migration] localStorage data backed up')
   } catch (error) {
-    console.error('[Migration] Failed to backup localStorage:', error)
+    logger.error('[Migration] Failed to backup localStorage:', error)
   }
 }
 
@@ -329,9 +333,9 @@ export function clearOldLocalStorage() {
       localStorage.removeItem(key)
     }
 
-    console.log('[Migration] Old localStorage data cleared')
+    logger.log('[Migration] Old localStorage data cleared')
   } catch (error) {
-    console.error('[Migration] Failed to clear old localStorage:', error)
+    logger.error('[Migration] Failed to clear old localStorage:', error)
   }
 }
 
@@ -342,7 +346,7 @@ export function restoreBackup() {
   try {
     const backupStr = localStorage.getItem(BACKUP_KEY)
     if (!backupStr) {
-      console.warn('[Migration] No backup found')
+      logger.warn('[Migration] No backup found')
       return false
     }
 
@@ -355,10 +359,10 @@ export function restoreBackup() {
     // 清除迁移标记，允许重新迁移
     localStorage.removeItem(MIGRATION_FLAG_KEY)
 
-    console.log('[Migration] Backup restored')
+    logger.log('[Migration] Backup restored')
     return true
   } catch (error) {
-    console.error('[Migration] Failed to restore backup:', error)
+    logger.error('[Migration] Failed to restore backup:', error)
     return false
   }
 }
@@ -368,7 +372,7 @@ export function restoreBackup() {
  */
 export function resetMigration() {
   localStorage.removeItem(MIGRATION_FLAG_KEY)
-  console.log('[Migration] Migration state reset')
+  logger.log('[Migration] Migration state reset')
 }
 
 /**
@@ -381,7 +385,7 @@ export async function hasIndexedDBData() {
     const conversations = await getAllConversations()
     return models.length > 0 || conversations.length > 0
   } catch (error) {
-    console.error('[Migration] Failed to check IndexedDB data:', error)
+    logger.error('[Migration] Failed to check IndexedDB data:', error)
     return false
   }
 }

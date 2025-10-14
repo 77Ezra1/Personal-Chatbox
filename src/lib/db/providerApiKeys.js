@@ -6,6 +6,10 @@
 import { STORES } from './schema'
 import { get, put, remove, getAll } from './index'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('ProviderApiKeys')
+
+
 /**
  * 获取服务商的API Key
  * @param {string} provider 服务商ID
@@ -16,7 +20,7 @@ export async function getProviderApiKey(provider) {
     const record = await get(STORES.PROVIDER_API_KEYS, provider)
     return record?.apiKey || ''
   } catch (error) {
-    console.error('[DB] Failed to get provider API key:', error)
+    logger.error('[DB] Failed to get provider API key:', error)
     return ''
   }
 }
@@ -36,9 +40,9 @@ export async function setProviderApiKey(provider, apiKey) {
       updatedAt: now
     }
     await put(STORES.PROVIDER_API_KEYS, record)
-    console.log('[DB] Provider API key saved:', provider)
+    logger.log('[DB] Provider API key saved:', provider)
   } catch (error) {
-    console.error('[DB] Failed to set provider API key:', error)
+    logger.error('[DB] Failed to set provider API key:', error)
     throw error
   }
 }
@@ -51,9 +55,9 @@ export async function setProviderApiKey(provider, apiKey) {
 export async function deleteProviderApiKey(provider) {
   try {
     await remove(STORES.PROVIDER_API_KEYS, provider)
-    console.log('[DB] Provider API key deleted:', provider)
+    logger.log('[DB] Provider API key deleted:', provider)
   } catch (error) {
-    console.error('[DB] Failed to delete provider API key:', error)
+    logger.error('[DB] Failed to delete provider API key:', error)
     throw error
   }
 }
@@ -71,7 +75,7 @@ export async function getAllProviderApiKeys() {
     })
     return result
   } catch (error) {
-    console.error('[DB] Failed to get all provider API keys:', error)
+    logger.error('[DB] Failed to get all provider API keys:', error)
     return {}
   }
 }

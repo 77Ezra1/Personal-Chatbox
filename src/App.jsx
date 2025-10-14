@@ -28,6 +28,10 @@ import { PROVIDERS } from '@/lib/constants'
 
 import './App.css'
 
+import { createLogger } from 'lib/logger'
+const logger = createLogger('App')
+
+
 function App() {
   // ==================== Hooks ====================
   
@@ -143,7 +147,7 @@ function App() {
     try {
       return getAllTools()
     } catch (error) {
-      console.error('[App] Failed to get MCP tools:', error)
+      logger.error('[App] Failed to get MCP tools:', error)
       return []
     }
   }, [getAllTools])
@@ -161,7 +165,7 @@ function App() {
 
     try {
       // 使用缓存的工具列表
-      console.log('[App] MCP Tools loaded:', mcpTools.length, mcpTools)
+      logger.log('[App] MCP Tools loaded:', mcpTools.length, mcpTools)
       
       const response = await generateAIResponse({
         messages,
@@ -199,7 +203,7 @@ function App() {
 
       // 检查是否有工具调用
       if (response?.tool_calls && Array.isArray(response.tool_calls) && response.tool_calls.length > 0) {
-        console.log('[App] 检测到工具调用，开始处理MCP服务请求')
+        logger.log('[App] 检测到工具调用，开始处理MCP服务请求')
         
         // 更新消息显示工具调用正在进行
         updateMessage(currentConversationId, placeholderMessage.id, () => ({
@@ -217,7 +221,7 @@ function App() {
         
         for (const toolCall of response.tool_calls) {
           try {
-            console.log('[App] Processing tool call:', toolCall)
+            logger.log('[App] Processing tool call:', toolCall)
             const args = JSON.parse(toolCall.function.arguments)
             
             // 在思考过程中记录工具调用
@@ -379,9 +383,9 @@ function App() {
         }))
       }
     } catch (error) {
-      console.error('[App] Error in regenerateAssistantReply:', error)
+      logger.error('[App] Error in regenerateAssistantReply:', error)
       if (error.name !== 'AbortError') {
-        console.error('[App] API Error details:', {
+        logger.error('[App] API Error details:', {
           message: error.message,
           stack: error.stack,
           modelConfig,

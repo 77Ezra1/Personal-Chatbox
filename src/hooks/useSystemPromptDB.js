@@ -18,6 +18,10 @@ import {
 } from '@/lib/db/modelPrompts'
 import { openDatabase } from '@/lib/db'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useSystemPromptDB')
+
+
 /**
  * 系统提示词管理Hook（使用IndexedDB）
  */
@@ -53,7 +57,7 @@ export function useSystemPromptDB() {
         prompts: promptsMap
       })
     } catch (error) {
-      console.error('[useSystemPromptDB] Failed to load system prompt:', error)
+      logger.error('[useSystemPromptDB] Failed to load system prompt:', error)
     } finally {
       setLoading(false)
     }
@@ -70,7 +74,7 @@ export function useSystemPromptDB() {
       await setSystemPromptMode(mode)
       setSystemPrompt(prev => ({ ...prev, mode }))
     } catch (error) {
-      console.error('[useSystemPromptDB] Failed to set mode:', error)
+      logger.error('[useSystemPromptDB] Failed to set mode:', error)
       throw error
     }
   }, [])
@@ -81,7 +85,7 @@ export function useSystemPromptDB() {
       await dbSetGlobalPrompt(prompt)
       setSystemPrompt(prev => ({ ...prev, prompt }))
     } catch (error) {
-      console.error('[useSystemPromptDB] Failed to set global prompt:', error)
+      logger.error('[useSystemPromptDB] Failed to set global prompt:', error)
       throw error
     }
   }, [])
@@ -98,7 +102,7 @@ export function useSystemPromptDB() {
         }
       }))
     } catch (error) {
-      console.error('[useSystemPromptDB] Failed to set model prompt:', error)
+      logger.error('[useSystemPromptDB] Failed to set model prompt:', error)
       throw error
     }
   }, [])
@@ -128,7 +132,7 @@ export function useSystemPromptDB() {
         prompts: updatedPrompts
       }))
     } catch (error) {
-      console.error('[useSystemPromptDB] Failed to batch set model prompts:', error)
+      logger.error('[useSystemPromptDB] Failed to batch set model prompts:', error)
       throw error
     }
   }, [systemPrompt.prompts])
@@ -146,7 +150,7 @@ export function useSystemPromptDB() {
         prompts: newPrompts
       }))
     } catch (error) {
-      console.error('[useSystemPromptDB] Failed to remove model prompt:', error)
+      logger.error('[useSystemPromptDB] Failed to remove model prompt:', error)
       throw error
     }
   }, [systemPrompt.prompts])

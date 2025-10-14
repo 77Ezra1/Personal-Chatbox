@@ -8,6 +8,10 @@ import { useMcpManager } from '@/hooks/useMcpManager'
 import { McpPathConfigDialog } from './McpPathConfig'
 import './McpServiceConfig.css'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('McpServiceConfig')
+
+
 /**
  * MCP 服务配置组件
  * 用于配置搜索、天气和时间等 MCP 服务
@@ -28,7 +32,7 @@ export function McpServiceConfig({ language, translate }) {
       // 调用后端API更新服务状态
       await toggleService(serverId, newEnabled)
     } catch (err) {
-      console.error('Failed to toggle server:', err)
+      logger.error('Failed to toggle server:', err)
       alert('操作失败，请重试')
     }
   }
@@ -36,11 +40,11 @@ export function McpServiceConfig({ language, translate }) {
   const handleSaveApiKey = async (serverId, apiKey) => {
     try {
       // 目前的预设服务都不需要API Key，所以这个函数暂时简化
-      console.log('API Key saved for', serverId, apiKey)
+      logger.log('API Key saved for', serverId, apiKey)
       setExpandedServer(null)
       alert('保存成功！')
     } catch (err) {
-      console.error('Failed to save API key:', err)
+      logger.error('Failed to save API key:', err)
       alert('保存失败，请重试')
     }
   }

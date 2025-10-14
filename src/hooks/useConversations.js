@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useConversations')
+
+
 const STORAGE_KEY = 'ai-chat-conversations.v1'
 
 const DEFAULT_TITLE = '新对话'
@@ -126,7 +130,7 @@ const loadStoredConversations = () => {
     }
     return conversations
   } catch (error) {
-    console.warn('[Conversations] Failed to load from localStorage', error)
+    logger.warn('[Conversations] Failed to load from localStorage', error)
     return [createConversation()]
   }
 }
@@ -146,7 +150,7 @@ export function useConversations() {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations))
     } catch (error) {
-      console.warn('[Conversations] Failed to persist to localStorage', error)
+      logger.warn('[Conversations] Failed to persist to localStorage', error)
     }
   }, [conversations])
 

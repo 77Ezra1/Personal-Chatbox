@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useConversationsDB')
+
+
 const DEFAULT_TITLE = '新对话';
 
 const createId = () => `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
@@ -145,26 +149,26 @@ export function useConversationsDB() {
 
       setLoading(false);
     } catch (error) {
-      console.error('[useConversationsDB] Error loading conversations:', error);
+      logger.error('[useConversationsDB] Error loading conversations:', error);
       setLoading(false);
     }
   }, [token, isAuthenticated]);
 
   // 保存对话到数据库
   const saveConversations = useCallback(async (conversationsToSave) => {
-    console.log('[useConversationsDB] saveConversations called:', {
+    logger.log('[useConversationsDB] saveConversations called:', {
       isAuthenticated,
       hasToken: !!token,
       conversationsCount: Object.keys(conversationsToSave || {}).length
     });
 
     if (!isAuthenticated || !token) {
-      console.warn('[useConversationsDB] Skip saving: not authenticated or no token');
+      logger.warn('[useConversationsDB] Skip saving: not authenticated or no token');
       return;
     }
 
     try {
-      console.log('[useConversationsDB] Sending save request...');
+      logger.log('[useConversationsDB] Sending save request...');
       const response = await fetch('/api/user-data/conversations', {
         method: 'POST',
         headers: {
@@ -177,13 +181,13 @@ export function useConversationsDB() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[useConversationsDB] Save failed:', response.status, errorText);
+        logger.error('[useConversationsDB] Save failed:', response.status, errorText);
         throw new Error(`保存对话失败: ${response.status}`);
       }
       
-      console.log('[useConversationsDB] Conversations saved successfully');
+      logger.log('[useConversationsDB] Conversations saved successfully');
     } catch (error) {
-      console.error('[useConversationsDB] Error saving conversations:', error);
+      logger.error('[useConversationsDB] Error saving conversations:', error);
       throw error;
     }
   }, [token, isAuthenticated]);

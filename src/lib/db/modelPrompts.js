@@ -6,6 +6,10 @@
 import { STORES, generateId } from './schema'
 import { get, getAll, put, remove, getByIndex, batch } from './index'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('ModelPrompts')
+
+
 /**
  * 创建模型提示词记录
  * @param {Object} data 数据
@@ -30,7 +34,7 @@ export async function getAllModelPrompts() {
   try {
     return await getAll(STORES.MODEL_PROMPTS)
   } catch (error) {
-    console.error('[DB] Failed to get all model prompts:', error)
+    logger.error('[DB] Failed to get all model prompts:', error)
     return []
   }
 }
@@ -45,7 +49,7 @@ export async function getModelPrompt(modelId) {
     const prompts = await getByIndex(STORES.MODEL_PROMPTS, 'modelId', modelId)
     return prompts[0] || null
   } catch (error) {
-    console.error('[DB] Failed to get model prompt:', error)
+    logger.error('[DB] Failed to get model prompt:', error)
     return null
   }
 }
@@ -66,15 +70,15 @@ export async function setModelPrompt(modelId, prompt) {
       existing.prompt = prompt
       existing.updatedAt = Date.now()
       await put(STORES.MODEL_PROMPTS, existing)
-      console.log('[DB] Model prompt updated:', modelId)
+      logger.log('[DB] Model prompt updated:', modelId)
     } else {
       // 创建新记录
       const record = createModelPromptRecord({ modelId, prompt })
       await put(STORES.MODEL_PROMPTS, record)
-      console.log('[DB] Model prompt created:', modelId)
+      logger.log('[DB] Model prompt created:', modelId)
     }
   } catch (error) {
-    console.error('[DB] Failed to set model prompt:', error)
+    logger.error('[DB] Failed to set model prompt:', error)
     throw error
   }
 }
@@ -107,9 +111,9 @@ export async function batchSetModelPrompts(modelIds, prompt) {
       await put(STORES.MODEL_PROMPTS, record)
     }
     
-    console.log('[DB] Batch model prompts set:', modelIds.length)
+    logger.log('[DB] Batch model prompts set:', modelIds.length)
   } catch (error) {
-    console.error('[DB] Failed to batch set model prompts:', error)
+    logger.error('[DB] Failed to batch set model prompts:', error)
     throw error
   }
 }
@@ -124,10 +128,10 @@ export async function deleteModelPrompt(modelId) {
     const existing = await getModelPrompt(modelId)
     if (existing) {
       await remove(STORES.MODEL_PROMPTS, existing.id)
-      console.log('[DB] Model prompt deleted:', modelId)
+      logger.log('[DB] Model prompt deleted:', modelId)
     }
   } catch (error) {
-    console.error('[DB] Failed to delete model prompt:', error)
+    logger.error('[DB] Failed to delete model prompt:', error)
     throw error
   }
 }
@@ -142,9 +146,9 @@ export async function batchDeleteModelPrompts(modelIds) {
     for (const modelId of modelIds) {
       await deleteModelPrompt(modelId)
     }
-    console.log('[DB] Batch model prompts deleted:', modelIds.length)
+    logger.log('[DB] Batch model prompts deleted:', modelIds.length)
   } catch (error) {
-    console.error('[DB] Failed to batch delete model prompts:', error)
+    logger.error('[DB] Failed to batch delete model prompts:', error)
     throw error
   }
 }
@@ -158,9 +162,9 @@ export async function clearAllModelPrompts() {
     const prompts = await getAllModelPrompts()
     const ids = prompts.map(p => p.id)
     await batch(STORES.MODEL_PROMPTS, ids, 'delete')
-    console.log('[DB] All model prompts cleared')
+    logger.log('[DB] All model prompts cleared')
   } catch (error) {
-    console.error('[DB] Failed to clear all model prompts:', error)
+    logger.error('[DB] Failed to clear all model prompts:', error)
     throw error
   }
 }
@@ -177,7 +181,7 @@ export async function getConfiguredModels() {
       prompt: p.prompt
     }))
   } catch (error) {
-    console.error('[DB] Failed to get configured models:', error)
+    logger.error('[DB] Failed to get configured models:', error)
     return []
   }
 }
@@ -192,7 +196,7 @@ export async function hasModelPrompt(modelId) {
     const prompt = await getModelPrompt(modelId)
     return !!prompt
   } catch (error) {
-    console.error('[DB] Failed to check model prompt:', error)
+    logger.error('[DB] Failed to check model prompt:', error)
     return false
   }
 }
@@ -209,7 +213,7 @@ export async function getModelPromptsStats() {
       modelIds: prompts.map(p => p.modelId)
     }
   } catch (error) {
-    console.error('[DB] Failed to get model prompts stats:', error)
+    logger.error('[DB] Failed to get model prompts stats:', error)
     return { total: 0, modelIds: [] }
   }
 }

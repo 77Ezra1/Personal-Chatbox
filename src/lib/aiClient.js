@@ -1,6 +1,10 @@
 import { PROVIDERS, THINKING_MODE } from './constants.js'
 import { shouldSendThinkingParam } from './modelThinkingDetector.js'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('extractReasoningSegments')
+
+
 // Helper function to get endpoint from PROVIDERS config or use custom endpoint
 function getProviderEndpoint(provider, customEndpoint) {
   if (customEndpoint && typeof customEndpoint === 'string') {
@@ -213,9 +217,9 @@ async function callDeepSeekMCP({
   signal
 }) {
   try {
-    console.log('[callDeepSeekMCP] Calling backend MCP API')
-    console.log('[callDeepSeekMCP] Model:', model)
-    console.log('[callDeepSeekMCP] Messages:', messages.length)
+    logger.log('[callDeepSeekMCP] Calling backend MCP API')
+    logger.log('[callDeepSeekMCP] Model:', model)
+    logger.log('[callDeepSeekMCP] Messages:', messages.length)
 
     // 转换消息格式
     const formattedMessages = messages.map(msg => ({
@@ -244,7 +248,7 @@ async function callDeepSeekMCP({
     }
 
     const data = await response.json()
-    console.log('[callDeepSeekMCP] Response received:', data)
+    logger.log('[callDeepSeekMCP] Response received:', data)
 
     // 提取最终回复
     const finalMessage = data.choices[0]?.message
@@ -268,7 +272,7 @@ async function callDeepSeekMCP({
     }
 
   } catch (error) {
-    console.error('[callDeepSeekMCP] Error:', error)
+    logger.error('[callDeepSeekMCP] Error:', error)
     throw error
   }
 }
@@ -288,7 +292,7 @@ async function callDeepSeekMCP({
  * @returns {Promise<{role: string, content: string}>}
  */
 export async function generateAIResponse({ messages = [], modelConfig = {}, onToken, signal, systemPrompt, tools = [] }) {
-  console.log('[aiClient] generateAIResponse called with modelConfig:', modelConfig)
+  logger.log('[aiClient] generateAIResponse called with modelConfig:', modelConfig)
   const {
     provider = 'deepseek',  // 修改默认为deepseek以使用MCP后端
     model,
@@ -298,7 +302,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
     deepThinking = false,
     thinkingMode = null  // 新增：思考模式
   } = modelConfig
-  console.log('[aiClient] Extracted values:', { provider, model, apiKey: apiKey ? 'present' : 'missing', temperature, maxTokens })
+  logger.log('[aiClient] Extracted values:', { provider, model, apiKey: apiKey ? 'present' : 'missing', temperature, maxTokens })
 
   if (!apiKey) {
     throw new Error('Please configure the API key for the selected provider first.')
@@ -330,7 +334,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   
   // ========== DeepSeek MCP 路由 ==========
   if (provider === 'deepseek') {
-    console.log('[aiClient] DeepSeek detected, using MCP backend')
+    logger.log('[aiClient] DeepSeek detected, using MCP backend')
     
     // 确定目标模型
     let targetModel = model || openAICompatibleConfig.defaultModel
@@ -684,7 +688,7 @@ async function callOpenAICompatible({
   }
   
   // 输出完整的请求体用于调试
-  console.log('[AI] Request body:', JSON.stringify(requestBody, null, 2))
+  logger.log('[AI] Request body:', JSON.stringify(requestBody, null, 2))
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -697,7 +701,7 @@ async function callOpenAICompatible({
   })
   if (!response.ok) {
     const errorText = await response.text()
-    console.error('[AI] API Error:', response.status, errorText)
+    logger.error('[AI] API Error:', response.status, errorText)
   }
 
   await ensureResponseOk(response)
@@ -746,7 +750,7 @@ async function callOpenAICompatible({
       return result
       
     } catch (streamError) {
-      console.warn('[AI] Stream processing failed, falling back to non-stream:', streamError.message)
+      logger.warn('[AI] Stream processing failed, falling back to non-stream:', streamError.message)
       
       // Fallback: 重新发送非流式请求
       const fallbackRequestBody = {
@@ -762,7 +766,7 @@ async function callOpenAICompatible({
         fallbackRequestBody.max_tokens = maxTokens
       }
       
-      console.log('[AI] Fallback request body:', JSON.stringify(fallbackRequestBody, null, 2))
+      logger.log('[AI] Fallback request body:', JSON.stringify(fallbackRequestBody, null, 2))
       
       const fallbackResponse = await fetch(endpoint, {
         method: 'POST',
@@ -1099,7 +1103,7 @@ async function callVolcengine({ messages, model = 'doubao-pro-32k', apiKey, temp
   const data = await response.json()
   const content = extractVolcengineText(data, true)
   if (!content) {
-    console.warn('[AI] Volcano Engine response did not include text content', data)
+    logger.warn('[AI] Volcano Engine response did not include text content', data)
   }
   const reasoning = normalizeReasoningContent(extractVolcengineReasoning(data))
   return { role: 'assistant', content, raw: data, reasoning }
@@ -1304,7 +1308,7 @@ async function safeReadResponseText(response) {
   try {
     return await response.text()
   } catch (error) {
-    console.error('Failed to read response', error)
+    logger.error('Failed to read response', error)
     return ''
   }
 }
@@ -1386,7 +1390,7 @@ async function processEventStream(readable, onEvent, options = {}) {
       const parsed = JSON.parse(dataString)
       onEvent(parsed)
     } catch (error) {
-      console.error('Failed to parse SSE payload', error, dataString)
+      logger.error('Failed to parse SSE payload', error, dataString)
     }
   }
 
@@ -1397,7 +1401,7 @@ async function processEventStream(readable, onEvent, options = {}) {
       const parsed = JSON.parse(line)
       onEvent(parsed)
     } catch (error) {
-      console.error('Failed to parse JSON stream payload', error, line)
+      logger.error('Failed to parse JSON stream payload', error, line)
     }
   }
 }

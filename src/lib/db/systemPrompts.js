@@ -6,6 +6,10 @@
 import { STORES } from './schema'
 import { get, put } from './index'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('SystemPrompts')
+
+
 const DEFAULT_PROMPT_ID = 'default'
 
 /**
@@ -36,12 +40,12 @@ export async function getSystemPromptConfig() {
     if (!config) {
       config = createSystemPromptRecord({})
       await put(STORES.SYSTEM_PROMPTS, config)
-      console.log('[DB] Created default system prompt config')
+      logger.log('[DB] Created default system prompt config')
     }
     
     return config
   } catch (error) {
-    console.error('[DB] Failed to get system prompt config:', error)
+    logger.error('[DB] Failed to get system prompt config:', error)
     // 返回默认配置
     return createSystemPromptRecord({})
   }
@@ -59,9 +63,9 @@ export async function setSystemPromptMode(mode) {
     config.updatedAt = Date.now()
     
     await put(STORES.SYSTEM_PROMPTS, config)
-    console.log('[DB] System prompt mode updated:', mode)
+    logger.log('[DB] System prompt mode updated:', mode)
   } catch (error) {
-    console.error('[DB] Failed to set system prompt mode:', error)
+    logger.error('[DB] Failed to set system prompt mode:', error)
     throw error
   }
 }
@@ -78,9 +82,9 @@ export async function setGlobalPrompt(prompt) {
     config.updatedAt = Date.now()
     
     await put(STORES.SYSTEM_PROMPTS, config)
-    console.log('[DB] Global prompt updated')
+    logger.log('[DB] Global prompt updated')
   } catch (error) {
-    console.error('[DB] Failed to set global prompt:', error)
+    logger.error('[DB] Failed to set global prompt:', error)
     throw error
   }
 }
@@ -101,9 +105,9 @@ export async function updateSystemPromptConfig(updates) {
     }
     
     await put(STORES.SYSTEM_PROMPTS, updated)
-    console.log('[DB] System prompt config updated')
+    logger.log('[DB] System prompt config updated')
   } catch (error) {
-    console.error('[DB] Failed to update system prompt config:', error)
+    logger.error('[DB] Failed to update system prompt config:', error)
     throw error
   }
 }
@@ -116,9 +120,9 @@ export async function resetSystemPromptConfig() {
   try {
     const config = createSystemPromptRecord({})
     await put(STORES.SYSTEM_PROMPTS, config)
-    console.log('[DB] System prompt config reset')
+    logger.log('[DB] System prompt config reset')
   } catch (error) {
-    console.error('[DB] Failed to reset system prompt config:', error)
+    logger.error('[DB] Failed to reset system prompt config:', error)
     throw error
   }
 }

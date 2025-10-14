@@ -12,6 +12,10 @@ import { cn } from '@/lib/utils.js'
 // 导入样式
 import 'katex/dist/katex.min.css'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('MarkdownRenderer')
+
+
 function InlineCode({ className, children, ...props }) {
   return (
     <code className={cn('markdown-code-inline', className)} {...props}>
@@ -51,7 +55,7 @@ function CodeBlock({ className, code = '', ...props }) {
       }
       setCopied(true)
     } catch (error) {
-      console.error('[Markdown] Failed to copy code', error)
+      logger.error('[Markdown] Failed to copy code', error)
       setCopied(false)
     }
   }

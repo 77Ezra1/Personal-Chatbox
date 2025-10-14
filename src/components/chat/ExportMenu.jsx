@@ -3,6 +3,10 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { exportConversation, copyConversation } from '@/lib/export'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('ExportMenu')
+
+
 /**
  * 导出菜单组件
  * 提供多种导出格式选项
@@ -16,7 +20,7 @@ export function ExportMenu({ conversation, translate, onClose }) {
       toast.success(translate?.('toasts.exportSuccess', 'Conversation exported successfully.'))
       if (onClose) onClose()
     } catch (error) {
-      console.error('Export failed:', error)
+      logger.error('Export failed:', error)
       toast.error(translate?.('toasts.exportFailed', 'Failed to export conversation.'))
     }
   }
@@ -31,7 +35,7 @@ export function ExportMenu({ conversation, translate, onClose }) {
         toast.error(translate?.('toasts.failedToCopy', 'Failed to copy message.'))
       }
     } catch (error) {
-      console.error('Copy failed:', error)
+      logger.error('Copy failed:', error)
       toast.error(translate?.('toasts.failedToCopy', 'Failed to copy message.'))
     } finally {
       setCopying(false)

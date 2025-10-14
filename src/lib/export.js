@@ -1,3 +1,6 @@
+import { createLogger } from '../lib/logger'
+const logger = createLogger('exportToMarkdown')
+
 /**
  * 对话导出工具函数
  * 支持导出为 Markdown, TXT, JSON 格式
@@ -123,7 +126,7 @@ export async function copyToClipboard(text) {
     await navigator.clipboard.writeText(text)
     return true
   } catch (error) {
-    console.error('Failed to copy to clipboard:', error)
+    logger.error('Failed to copy to clipboard:', error)
     // 降级方案
     try {
       const textarea = document.createElement('textarea')
@@ -136,7 +139,7 @@ export async function copyToClipboard(text) {
       document.body.removeChild(textarea)
       return success
     } catch (fallbackError) {
-      console.error('Fallback copy failed:', fallbackError)
+      logger.error('Fallback copy failed:', fallbackError)
       return false
     }
   }

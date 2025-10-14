@@ -6,6 +6,10 @@
 import { STORES, generateModelId, parseModelId } from './schema'
 import { get, getAll, put, remove, getByIndex } from './index'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('Models')
+
+
 /**
  * 创建模型记录
  * @param {Object} modelData 模型数据
@@ -37,7 +41,7 @@ export async function getAllModels() {
     const models = await getAll(STORES.MODELS)
     return models.sort((a, b) => a.createdAt - b.createdAt)
   } catch (error) {
-    console.error('[DB] Failed to get all models:', error)
+    logger.error('[DB] Failed to get all models:', error)
     return []
   }
 }
@@ -51,7 +55,7 @@ export async function getModelById(modelId) {
   try {
     return await get(STORES.MODELS, modelId)
   } catch (error) {
-    console.error('[DB] Failed to get model by id:', error)
+    logger.error('[DB] Failed to get model by id:', error)
     return null
   }
 }
@@ -66,7 +70,7 @@ export async function getModelsByProvider(provider) {
     const models = await getByIndex(STORES.MODELS, 'provider', provider)
     return models.sort((a, b) => a.createdAt - b.createdAt)
   } catch (error) {
-    console.error('[DB] Failed to get models by provider:', error)
+    logger.error('[DB] Failed to get models by provider:', error)
     return []
   }
 }
@@ -87,7 +91,7 @@ export async function getActiveModel(provider = null) {
     
     return activeModels[0] || null
   } catch (error) {
-    console.error('[DB] Failed to get active model:', error)
+    logger.error('[DB] Failed to get active model:', error)
     return null
   }
 }
@@ -101,10 +105,10 @@ export async function saveModel(modelData) {
   try {
     const record = createModelRecord(modelData)
     await put(STORES.MODELS, record)
-    console.log('[DB] Model saved:', record.id)
+    logger.log('[DB] Model saved:', record.id)
     return record.id
   } catch (error) {
-    console.error('[DB] Failed to save model:', error)
+    logger.error('[DB] Failed to save model:', error)
     throw error
   }
 }
@@ -131,9 +135,9 @@ export async function updateModel(modelId, updates) {
     }
 
     await put(STORES.MODELS, updated)
-    console.log('[DB] Model updated:', modelId)
+    logger.log('[DB] Model updated:', modelId)
   } catch (error) {
-    console.error('[DB] Failed to update model:', error)
+    logger.error('[DB] Failed to update model:', error)
     throw error
   }
 }
@@ -160,9 +164,9 @@ export async function setActiveModel(modelId) {
 
     // 激活当前模型
     await updateModel(modelId, { isActive: true })
-    console.log('[DB] Active model set:', modelId)
+    logger.log('[DB] Active model set:', modelId)
   } catch (error) {
-    console.error('[DB] Failed to set active model:', error)
+    logger.error('[DB] Failed to set active model:', error)
     throw error
   }
 }
@@ -175,9 +179,9 @@ export async function setActiveModel(modelId) {
 export async function deleteModel(modelId) {
   try {
     await remove(STORES.MODELS, modelId)
-    console.log('[DB] Model deleted:', modelId)
+    logger.log('[DB] Model deleted:', modelId)
   } catch (error) {
-    console.error('[DB] Failed to delete model:', error)
+    logger.error('[DB] Failed to delete model:', error)
     throw error
   }
 }
@@ -195,9 +199,9 @@ export async function batchSaveModels(modelsData) {
       await put(STORES.MODELS, record)
     }
     
-    console.log('[DB] Batch models saved:', records.length)
+    logger.log('[DB] Batch models saved:', records.length)
   } catch (error) {
-    console.error('[DB] Failed to batch save models:', error)
+    logger.error('[DB] Failed to batch save models:', error)
     throw error
   }
 }
@@ -214,7 +218,7 @@ export async function modelExists(provider, modelName) {
     const model = await getModelById(modelId)
     return !!model
   } catch (error) {
-    console.error('[DB] Failed to check model existence:', error)
+    logger.error('[DB] Failed to check model existence:', error)
     return false
   }
 }
@@ -244,7 +248,7 @@ export async function getModelsStats() {
 
     return stats
   } catch (error) {
-    console.error('[DB] Failed to get models stats:', error)
+    logger.error('[DB] Failed to get models stats:', error)
     return { total: 0, byProvider: {} }
   }
 }

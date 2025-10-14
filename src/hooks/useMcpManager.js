@@ -6,6 +6,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import * as mcpApi from '../lib/mcpApiClient'
 
+import { createLogger } from '../lib/logger'
+const logger = createLogger('useMcpManager')
+
+
 /**
  * MCP 服务管理器
  * 通过后端API管理多个 MCP 服务
@@ -21,11 +25,11 @@ export function useMcpManager() {
     try {
       setLoading(true)
       const serviceList = await mcpApi.getServices()
-      console.log('[MCP Manager] Loaded services:', serviceList)
+      logger.log('[MCP Manager] Loaded services:', serviceList)
       setServices(serviceList)
       setError(null)
     } catch (err) {
-      console.error('[MCP Manager] Failed to load services:', err)
+      logger.error('[MCP Manager] Failed to load services:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -36,10 +40,10 @@ export function useMcpManager() {
   const loadTools = useCallback(async () => {
     try {
       const toolList = await mcpApi.getTools()
-      console.log('[MCP Manager] Loaded tools:', toolList)
+      logger.log('[MCP Manager] Loaded tools:', toolList)
       setTools(toolList)
     } catch (err) {
-      console.error('[MCP Manager] Failed to load tools:', err)
+      logger.error('[MCP Manager] Failed to load tools:', err)
     }
   }, [])
 
@@ -51,20 +55,20 @@ export function useMcpManager() {
 
   // 获取所有可用工具
   const getAllTools = useCallback(() => {
-    console.log('[MCP Manager] Getting all tools:', tools)
+    logger.log('[MCP Manager] Getting all tools:', tools)
     return tools
   }, [tools])
 
   // 调用工具
   const callTool = useCallback(async (toolName, parameters) => {
-    console.log('[MCP Manager] Calling tool:', toolName, 'with params:', parameters)
+    logger.log('[MCP Manager] Calling tool:', toolName, 'with params:', parameters)
     
     try {
       const result = await mcpApi.callTool(toolName, parameters)
-      console.log('[MCP Manager] Tool result:', result)
+      logger.log('[MCP Manager] Tool result:', result)
       return result
     } catch (err) {
-      console.error('[MCP Manager] Tool call failed:', err)
+      logger.error('[MCP Manager] Tool call failed:', err)
       throw err
     }
   }, [])
@@ -77,7 +81,7 @@ export function useMcpManager() {
       await loadServices()
       await loadTools()
     } catch (err) {
-      console.error(`[MCP Manager] Failed to toggle service ${serviceId}:`, err)
+      logger.error(`[MCP Manager] Failed to toggle service ${serviceId}:`, err)
       throw err
     }
   }, [loadServices, loadTools])

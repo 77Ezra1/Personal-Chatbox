@@ -3,6 +3,10 @@ import { Key, Check, X, ExternalLink, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import './ApiKeysConfig.css'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('ApiKeysConfig')
+
+
 /**
  * API Keys 配置组件
  * 允许用户配置各种服务的 API Keys
@@ -31,7 +35,7 @@ export function ApiKeysConfig({ translate }) {
         setServices(data.services)
       }
     } catch (error) {
-      console.error('加载服务配置失败:', error)
+      logger.error('加载服务配置失败:', error)
     } finally {
       setLoading(false)
     }
@@ -80,7 +84,7 @@ export function ApiKeysConfig({ translate }) {
         alert(`保存失败: ${data.error}`)
       }
     } catch (error) {
-      console.error('保存配置失败:', error)
+      logger.error('保存配置失败:', error)
       alert('保存失败,请检查网络连接')
     } finally {
       setSaving(false)
@@ -107,7 +111,7 @@ export function ApiKeysConfig({ translate }) {
         alert(`测试失败: ${data.error}`)
       }
     } catch (error) {
-      console.error('测试失败:', error)
+      logger.error('测试失败:', error)
       alert('测试失败,请检查配置是否正确')
     } finally {
       setTesting(false)
@@ -133,7 +137,7 @@ export function ApiKeysConfig({ translate }) {
         alert(`删除失败: ${data.error}`)
       }
     } catch (error) {
-      console.error('删除配置失败:', error)
+      logger.error('删除配置失败:', error)
       alert('删除失败,请检查网络连接')
     }
   }

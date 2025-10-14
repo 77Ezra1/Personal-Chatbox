@@ -6,6 +6,10 @@
 import { STORES, generateId } from './schema'
 import { get, getAll, put, remove } from './index'
 
+import { createLogger } from '../../lib/logger'
+const logger = createLogger('Conversations')
+
+
 /**
  * 创建对话记录
  * @param {Object} data 数据
@@ -31,7 +35,7 @@ export async function getAllConversations() {
     const conversations = await getAll(STORES.CONVERSATIONS)
     return conversations.sort((a, b) => b.createdAt - a.createdAt)
   } catch (error) {
-    console.error('[DB] Failed to get all conversations:', error)
+    logger.error('[DB] Failed to get all conversations:', error)
     return []
   }
 }
@@ -45,7 +49,7 @@ export async function getConversationById(conversationId) {
   try {
     return await get(STORES.CONVERSATIONS, conversationId)
   } catch (error) {
-    console.error('[DB] Failed to get conversation by id:', error)
+    logger.error('[DB] Failed to get conversation by id:', error)
     return null
   }
 }
@@ -59,10 +63,10 @@ export async function saveConversation(conversationData) {
   try {
     const record = createConversationRecord(conversationData)
     await put(STORES.CONVERSATIONS, record)
-    console.log('[DB] Conversation saved:', record.id)
+    logger.log('[DB] Conversation saved:', record.id)
     return record.id
   } catch (error) {
-    console.error('[DB] Failed to save conversation:', error)
+    logger.error('[DB] Failed to save conversation:', error)
     throw error
   }
 }
@@ -89,9 +93,9 @@ export async function updateConversation(conversationId, updates) {
     }
 
     await put(STORES.CONVERSATIONS, updated)
-    console.log('[DB] Conversation updated:', conversationId)
+    logger.log('[DB] Conversation updated:', conversationId)
   } catch (error) {
-    console.error('[DB] Failed to update conversation:', error)
+    logger.error('[DB] Failed to update conversation:', error)
     throw error
   }
 }
@@ -104,9 +108,9 @@ export async function updateConversation(conversationId, updates) {
 export async function deleteConversation(conversationId) {
   try {
     await remove(STORES.CONVERSATIONS, conversationId)
-    console.log('[DB] Conversation deleted:', conversationId)
+    logger.log('[DB] Conversation deleted:', conversationId)
   } catch (error) {
-    console.error('[DB] Failed to delete conversation:', error)
+    logger.error('[DB] Failed to delete conversation:', error)
     throw error
   }
 }
@@ -122,9 +126,9 @@ export async function batchSaveConversations(conversationsData) {
       const record = createConversationRecord(data)
       await put(STORES.CONVERSATIONS, record)
     }
-    console.log('[DB] Batch conversations saved:', conversationsData.length)
+    logger.log('[DB] Batch conversations saved:', conversationsData.length)
   } catch (error) {
-    console.error('[DB] Failed to batch save conversations:', error)
+    logger.error('[DB] Failed to batch save conversations:', error)
     throw error
   }
 }
