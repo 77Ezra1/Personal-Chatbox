@@ -1,36 +1,29 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import WelcomePage from './pages/WelcomePage';
-import LoginPage from './pages/LoginPage';
-import App from './App';
 
-// 受保护的路由组件
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+// 懒加载页面组件
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const App = lazy(() => import('./App'));
 
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '100vh' 
-      }}>
-        <div>加载中...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/welcome" replace />;
-  }
-
-  return children;
+// 加载中组件
+function LoadingFallback() {
+  return (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '100vh',
+      fontSize: '16px',
+      color: '#666'
+    }}>
+      <div>加载中...</div>
+    </div>
+  );
 }
 
-// 公开路由组件（已登录用户访问会重定向到首页）
-function PublicRoute({ children }) {
+// 路由守卫组件
+function RouteGuard({ children, requireAuth }) {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -46,50 +39,56 @@ function PublicRoute({ children }) {
     );
   }
 
-  if (isAuthenticated) {
+  if (requireAuth && !isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!requireAuth && isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
   return children;
 }
 
+// 路由配置
+function AppRoutes() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        {/* 公开路由 */}
+        <Route 
+          path="/login" 
+          element={
+            <RouteGuard requireAuth={false}>
+              <LoginPage />
+            </RouteGuard>
+          } 
+        />
+        <Route 
+          path="/register" 
+          element={<Navigate to="/login" replace />}
+        />
+
+        {/* 受保护的路由 */}
+        <Route 
+          path="/*" 
+          element={
+            <RouteGuard requireAuth={true}>
+              <App />
+            </RouteGuard>
+          } 
+        />
+      </Routes>
+    </Suspense>
+  );
+}
+
+// 根组件
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          {/* 公开路由 */}
-          <Route 
-            path="/welcome" 
-            element={
-              <PublicRoute>
-                <WelcomePage />
-              </PublicRoute>
-            } 
-          />
-          <Route 
-            path="/login" 
-            element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            } 
-          />
-          <Route 
-            path="/register" 
-            element={<Navigate to="/login" replace />}
-          />
-
-          {/* 受保护的路由 */}
-          <Route 
-            path="/*" 
-            element={
-              <ProtectedRoute>
-                <App />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
+        <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
   );

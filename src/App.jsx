@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Toaster, toast } from 'sonner'
 
 // Hooks
@@ -136,6 +136,18 @@ function App() {
     setPendingAttachments(prev => prev.filter(att => att.id !== id))
   }, [])
 
+  // ==================== 优化: 缓存 MCP 工具列表 ====================
+  
+  // 缓存工具列表，避免每次渲染都重新获取
+  const mcpTools = useMemo(() => {
+    try {
+      return getAllTools()
+    } catch (error) {
+      console.error('[App] Failed to get MCP tools:', error)
+      return []
+    }
+  }, [getAllTools])
+
   // ==================== 消息处理 ====================
   
   const regenerateAssistantReply = useCallback(async ({ messages, placeholderMessage }) => {
@@ -148,16 +160,15 @@ function App() {
     let accumulatedReasoning = ''
 
     try {
-      // 获取 MCP 工具列表
-      const tools = getAllTools()
-      console.log('[App] MCP Tools loaded:', tools.length, tools)
+      // 使用缓存的工具列表
+      console.log('[App] MCP Tools loaded:', mcpTools.length, mcpTools)
       
       const response = await generateAIResponse({
         messages,
         modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
         signal: abortControllerRef.current.signal,
         systemPrompt,
-        tools,
+        tools: mcpTools,
         onToken: (token, fullText) => {
           if (typeof fullText === 'string') {
             accumulatedContent = fullText
@@ -401,7 +412,7 @@ function App() {
     isDeepThinking,
     updateMessage,
     translate,
-    getAllTools,
+    mcpTools,
     callTool,
     systemPrompt
   ])

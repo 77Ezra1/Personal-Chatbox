@@ -23,7 +23,18 @@ yarn-error.log*
 *.log
 logs/
 
+# 数据库文件
+data/app.db
+data/app.db-shm
+data/app.db-wal
 
 # 配置加密密钥
 data/.key
 data/config.json
+
+# 锁文件（保留 package-lock.json，忽略 pnpm-lock.yaml）
+pnpm-lock.yaml
+
+# 临时测试文件
+test-*.html
+*-demo.html

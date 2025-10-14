@@ -5,6 +5,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 const config = require('./config.cjs');
 const logger = require('./utils/logger.cjs');
 const { errorHandler } = require('./utils/errors.cjs');
@@ -37,7 +38,27 @@ const PlaywrightBrowserService = require('./services/playwright-browser.cjs');
 const app = express();
 
 // 中间件
-app.use(express.json());
+// 1. Gzip压缩 - 放在最前面以压缩所有响应
+app.use(compression({
+  // 只压缩大于1KB的响应
+  threshold: 1024,
+  // 压缩级别 (0-9, 6是平衡性能和压缩率的推荐值)
+  level: 6,
+  // 过滤函数 - 允许客户端禁用压缩
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // 使用compression的默认过滤器
+    return compression.filter(req, res);
+  }
+}));
+
+// 2. 请求体解析
+app.use(express.json({ limit: '50mb' })); // 增加请求体大小限制，支持大量对话数据
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// 3. Cookie解析
 app.use(cookieParser());
 app.use(cors({
   ...config.server.cors,
@@ -119,7 +140,7 @@ async function initializeServices() {
     // ========== 初始化新的 MCP 服务 ==========
     logger.info('启动 MCP Manager...');
     
-    // 启动第一批 MCP 服务 (不需要 API Key)
+    // 启动第一批 MCP 服务 (不需要 API Key) - 并行启动以提高速度
     const mcpServices = [
       'memory',
       'filesystem', 
@@ -135,18 +156,26 @@ async function initializeServices() {
       'github'
     ];
     
-    for (const serviceId of mcpServices) {
+    // 并行启动第一批服务
+    const startPromises = mcpServices.map(async (serviceId) => {
       const serviceConfig = config.services[serviceId];
       if (serviceConfig && serviceConfig.enabled && serviceConfig.autoLoad) {
         try {
           logger.info(`启动 MCP 服务: ${serviceConfig.name}`);
           await mcpManager.startService(serviceConfig);
+          return { serviceId, success: true };
         } catch (error) {
           logger.error(`MCP 服务 ${serviceConfig.name} 启动失败:`, error);
-          // 继续启动其他服务
+          return { serviceId, success: false, error };
         }
       }
-    }
+      return { serviceId, success: false, skipped: true };
+    });
+    
+    // 等待所有服务启动完成
+    const results = await Promise.all(startPromises);
+    const successCount = results.filter(r => r.success).length;
+    logger.info(`MCP第一批服务启动完成: ${successCount}/${mcpServices.length} 个成功`);
     
     // 启动需要 API Key 的服务
     for (const serviceId of mcpServicesWithConfig) {

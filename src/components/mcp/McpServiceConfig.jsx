@@ -144,15 +144,35 @@ function ServiceCard({
 
   const getServiceIcon = (id) => {
     const icons = {
+      // 原有服务
       weather: '🌤️',
       search: '🔍',
       time: '🕐',
       youtube: '📹',
       coincap: '💰',
-      fetch: '🌐'
+      fetch: '🌐',
+      dexscreener: '💹',
+      playwright: '🎭',
+      // 新MCP服务
+      memory: '🧠',
+      filesystem: '📁',
+      git: '🔀',
+      sequential_thinking: '💭',
+      sqlite: '🗄️',
+      wikipedia: '📚',
+      brave_search: '🔎',
+      github: '🐙',
+      puppeteer: '🎪',
+      fetch_official: '🌍',
+      google_maps: '🗺️'
     }
     return icons[id] || '🔧'
   }
+
+  // 判断服务是否需要配置
+  const requiresConfig = server.requiresConfig || (server.id === 'brave_search' || server.id === 'github')
+  const hasApiKey = server.apiKey && server.apiKey.length > 0
+  const isReady = !requiresConfig || hasApiKey
 
   return (
     <div className={`mcp-service-card ${server.enabled ? 'enabled' : ''}`}>
@@ -168,15 +188,32 @@ function ServiceCard({
           </div>
           <p className="mcp-service-description">{server.description}</p>
           <div className="mcp-service-badges">
-            <Badge variant="secondary" className="mcp-free-badge">
-              免费
-            </Badge>
-            <Badge variant="outline" className="mcp-limit-badge">
-              无需API密钥
-            </Badge>
-            <Badge variant="outline" className="mcp-lang-badge">
-              实时数据
-            </Badge>
+            {requiresConfig ? (
+              <>
+                <Badge variant="outline" className="mcp-limit-badge">
+                  需要配置
+                </Badge>
+                {hasApiKey && (
+                  <Badge variant="secondary" className="mcp-ready-badge">
+                    ✓ 已配置
+                  </Badge>
+                )}
+              </>
+            ) : (
+              <>
+                <Badge variant="secondary" className="mcp-free-badge">
+                  免费
+                </Badge>
+                <Badge variant="outline" className="mcp-limit-badge">
+                  无需配置
+                </Badge>
+              </>
+            )}
+            {server.toolCount > 0 && (
+              <Badge variant="outline" className="mcp-lang-badge">
+                {server.toolCount} 个工具
+              </Badge>
+            )}
           </div>
         </div>
         <div className="mcp-service-actions">
@@ -191,7 +228,7 @@ function ServiceCard({
         </div>
       </div>
 
-      {false && (
+      {requiresConfig && (
         <div className="mcp-service-body">
           <button
             className="mcp-expand-button"
@@ -249,14 +286,6 @@ function ServiceCard({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {server.isEnabled && (
-        <div className="mcp-service-footer">
-          <Badge variant="secondary" className="mcp-ready-badge">
-            ✓ 已就绪，无需配置
-          </Badge>
         </div>
       )}
     </div>

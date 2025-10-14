@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger.cjs');
 const { createError } = require('../utils/errors.cjs');
+const { cacheManager } = require('../utils/cache.cjs');
 
 // 服务实例存储
 let services = {};
@@ -20,10 +21,18 @@ function initializeRouter(serviceInstances) {
 
 /**
  * GET /api/mcp/services
- * 获取所有可用服务列表
+ * 获取所有可用服务列表（带缓存）
  */
 router.get('/services', (req, res, next) => {
   try {
+    // 尝试从缓存获取
+    const cacheKey = 'mcp:services:list';
+    const cached = cacheManager.get(cacheKey);
+    
+    if (cached) {
+      return res.json(cached);
+    }
+    
     const serviceList = [];
     
     // 获取所有常规服务
@@ -40,10 +49,15 @@ router.get('/services', (req, res, next) => {
       }
     }
     
-    res.json({
+    const response = {
       success: true,
       services: serviceList
-    });
+    };
+    
+    // 缓存30秒
+    cacheManager.set(cacheKey, response, 30 * 1000);
+    
+    res.json(response);
   } catch (error) {
     next(error);
   }

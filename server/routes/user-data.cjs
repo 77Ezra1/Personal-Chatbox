@@ -107,13 +107,12 @@ router.post('/conversations', authMiddleware, (req, res) => {
               // 插入消息
               if (conv.messages && conv.messages.length > 0) {
                 const messageStmt = db.prepare(
-                  `INSERT INTO messages (id, conversation_id, role, content, timestamp, metadata, status, attachments)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+                  `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, status, attachments)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)`
                 );
 
                 conv.messages.forEach(msg => {
                   messageStmt.run(
-                    msg.id,
                     conv.id,
                     msg.role,
                     msg.content,

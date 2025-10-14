@@ -1,0 +1,180 @@
+/* ========================================
+   Markdown渲染优化样式
+   ======================================== */
+
+/* 表格样式优化 */
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.markdown-table-wrapper {
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.markdown-body thead {
+  background: color-mix(in srgb, var(--muted) 30%, transparent);
+}
+
+.markdown-body th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--foreground);
+  border-bottom: 2px solid var(--border);
+}
+
+.markdown-body td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.markdown-body tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+}
+
+.markdown-body tbody tr:hover {
+  background: color-mix(in srgb, var(--muted) 15%, transparent);
+  transition: background 0.2s ease;
+}
+
+.markdown-body tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 深色模式表格优化 */
+.dark .markdown-body table {
+  border-color: var(--border);
+}
+
+.dark .markdown-body thead {
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+.dark .markdown-body th {
+  border-bottom-color: var(--border);
+}
+
+.dark .markdown-body td {
+  border-bottom-color: color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+/* LaTeX公式样式 */
+.markdown-body .katex {
+  font-size: 1.1em;
+}
+
+.markdown-body .katex-display {
+  margin: 16px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.markdown-body .katex-display > .katex {
+  text-align: center;
+}
+
+/* 深色模式LaTeX优化 */
+.dark .markdown-body .katex {
+  color: var(--foreground);
+}
+
+.dark .markdown-body .katex .mord {
+  color: var(--foreground);
+}
+
+/* 图片样式优化 */
+.markdown-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+  display: block;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+/* 代码块深色模式优化 */
+.dark .markdown-code-block {
+  background: #1e1e2e;
+  border-color: #313244;
+}
+
+.dark .markdown-code-toolbar {
+  background: #181825;
+  border-bottom: 1px solid #313244;
+}
+
+.dark .markdown-code-scroll {
+  background: #1e1e2e;
+}
+
+.dark .markdown-code-scroll pre {
+  color: #cdd6f4;
+}
+
+.dark .markdown-code-inline {
+  background: #1e1e2e;
+  border-color: #313244;
+  color: #cdd6f4;
+}
+
+/* 引用块深色模式优化 */
+.dark .markdown-blockquote {
+  border-left-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+/* 思考过程框深色模式优化 */
+.dark .thinking-process-container {
+  background: rgba(65, 72, 104, 0.15);
+  border-color: rgba(65, 72, 104, 0.3);
+}
+
+.dark .thinking-process-toggle {
+  color: var(--foreground);
+}
+
+.dark .thinking-process-toggle:hover {
+  background: rgba(65, 72, 104, 0.25);
+}
+
+.dark .thinking-process-content {
+  background: rgba(36, 40, 59, 0.3);
+}
+
+/* 平滑过渡动画 */
+.markdown-body * {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* 代码块和特殊元素不需要过渡 */
+.markdown-body pre,
+.markdown-body code,
+.markdown-code-block,
+.markdown-code-inline {
+  transition: none;
+}
+
+/* 性能优化:减少重绘 */
+.markdown-body {
+  contain: content;
+  will-change: auto;
+}
+
+.markdown-code-block {
+  contain: layout style;
+}
+

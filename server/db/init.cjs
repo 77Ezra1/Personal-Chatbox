@@ -19,6 +19,82 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
   console.log('[DB Init] Connected to database:', DB_PATH);
 });
 
+// 运行数据库迁移
+function runMigrations() {
+  return new Promise((resolve, reject) => {
+    const migrationsDir = path.join(__dirname, 'migrations');
+    
+    // 检查迁移目录是否存在
+    if (!fs.existsSync(migrationsDir)) {
+      console.log('[DB Migrations] No migrations directory found, skipping...');
+      return resolve();
+    }
+
+    // 读取所有迁移文件
+    const files = fs.readdirSync(migrationsDir)
+      .filter(f => f.endsWith('.sql'))
+      .sort();
+
+    if (files.length === 0) {
+      console.log('[DB Migrations] No migration files found');
+      return resolve();
+    }
+
+    console.log(`[DB Migrations] Found ${files.length} migration(s)`);
+
+    // 逐个执行迁移
+    let completed = 0;
+    let hasError = false;
+
+    files.forEach((file, index) => {
+      const filePath = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(filePath, 'utf8');
+      
+      // 分割SQL语句（用分号分隔）
+      const statements = sql
+        .split(';')
+        .map(s => s.trim())
+        .filter(s => s && !s.startsWith('--'));
+
+      if (statements.length === 0) {
+        completed++;
+        if (completed === files.length && !hasError) {
+          resolve();
+        }
+        return;
+      }
+
+      console.log(`[DB Migrations] Executing ${file}...`);
+
+      // 执行每条SQL语句
+      db.serialize(() => {
+        statements.forEach((statement, stmtIndex) => {
+          db.run(statement, (err) => {
+            if (err && !err.message.includes('already exists')) {
+              console.error(`[DB Migrations] Error in ${file} (statement ${stmtIndex + 1}):`, err.message);
+              if (!hasError) {
+                hasError = true;
+                reject(err);
+              }
+            }
+          });
+        });
+
+        // 标记文件完成
+        completed++;
+        if (completed === files.length) {
+          if (hasError) {
+            console.error('[DB Migrations] ❌ Migrations failed');
+          } else {
+            console.log('[DB Migrations] ✅ All migrations completed successfully');
+            resolve();
+          }
+        }
+      });
+    });
+  });
+}
+
 // 初始化数据库表
 function initDatabase() {
   return new Promise((resolve, reject) => {
@@ -189,7 +265,10 @@ function initDatabase() {
           reject(err);
         } else {
           console.log('[DB Init] ✓ invite_codes table created/verified');
-          resolve();
+          // 表创建完成后，运行迁移
+          runMigrations()
+            .then(() => resolve())
+            .catch(reject);
         }
       });
     });

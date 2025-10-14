@@ -61,18 +61,49 @@ export default function LoginPage() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     try {
-      // 模拟检查邮箱是否存在
-      // 在实际应用中，这里应该调用API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 验证邮箱
+      const email = formData.email.trim();
+      if (!email) {
+        throw new Error(t('errors.emailRequired'));
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error(t('errors.invalidEmail'));
+      }
+
+      setLoading(true);
+
+      // 调用后端API检查邮箱是否已注册
+      const response = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+      console.log('[Auth] Email check response:', data);
       
-      // 简单模拟：如果邮箱包含"new"就当作新用户
-      const isNew = formData.email.includes('new');
-      setIsNewUser(isNew);
+      if (!response.ok) {
+        throw new Error(data.message || t('errors.networkError'));
+      }
+
+      // 更新状态前同步存储email
+      setFormData(prev => ({
+        ...prev,
+        email: email
+      }));
+
+      // 根据后端返回判断是新用户还是老用户
+      setIsNewUser(!data.exists);
       setStep(2);
     } catch (err) {
+      console.error('[Auth] Email submit error:', err);
       setError(err.message || t('errors.networkError'));
     } finally {
       setLoading(false);
@@ -83,25 +114,35 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    // 验证密码强度
-    const allValid = Object.values(passwordStrength).every(v => v);
-    if (isNewUser && !allValid) {
-      setError(t('errors.passwordTooShort'));
-      return;
-    }
-
-    setLoading(true);
-
     try {
+      const password = formData.password;
+      if (!password) {
+        throw new Error(t('errors.passwordRequired'));
+      }
+
+      // 验证密码强度
+      const allValid = Object.values(passwordStrength).every(v => v);
+      if (isNewUser && !allValid) {
+        throw new Error(t('errors.passwordRequirements.summary'));
+      }
+
+      setLoading(true);
+
       if (isNewUser) {
         // 新用户注册 - 进入邀请码步骤
+        console.log('[Auth] New user, proceeding to invite code step');
         setStep(3);
       } else {
         // 老用户登录
-        await login(formData.email, formData.password);
+        console.log('[Auth] Existing user, attempting login');
+        const result = await login(formData.email, password);
+        if (!result.success) {
+          throw new Error(result.error || t('errors.loginFailed'));
+        }
         navigate('/');
       }
     } catch (err) {
+      console.error('[Auth] Password submit error:', err);
       setError(err.message || t('errors.loginFailed'));
     } finally {
       setLoading(false);
@@ -111,12 +152,42 @@ export default function LoginPage() {
   const handleInviteCodeSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     try {
-      await register(formData.email, formData.password, formData.inviteCode);
+      const { email, password, inviteCode } = formData;
+
+      // 再次验证所有字段
+      if (!email || !email.trim()) {
+        throw new Error(t('errors.emailRequired'));
+      }
+
+      if (!password) {
+        throw new Error(t('errors.passwordRequired'));
+      }
+
+      if (!inviteCode || !inviteCode.trim()) {
+        throw new Error(t('errors.inviteCodeRequired'));
+      }
+
+      setLoading(true);
+
+      // 尝试注册
+      console.log('[Auth] Attempting registration...');
+      const result = await register(
+        email.trim(),
+        password,
+        inviteCode.trim()
+      );
+
+      if (!result.success) {
+        console.error('[Auth] Registration failed:', result.error);
+        throw new Error(result.error);
+      }
+
+      console.log('[Auth] Registration successful');
       navigate('/');
     } catch (err) {
+      console.error('[Auth] Registration error:', err);
       setError(err.message || t('errors.registrationFailed'));
     } finally {
       setLoading(false);

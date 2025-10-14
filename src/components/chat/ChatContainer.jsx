@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo, useCallback } from 'react'
 import { ChatHeader } from './ChatHeader'
 import { MessageList } from './MessageList'
 import { MessageInput } from './MessageInput'
@@ -6,8 +6,10 @@ import { MessageInput } from './MessageInput'
 /**
  * 聊天容器组件
  * 组合聊天相关的所有子组件
+ * 
+ * 优化：使用 memo 避免不必要的重渲染
  */
-export function ChatContainer({
+export const ChatContainer = memo(function ChatContainer({
   conversation,
   messages,
   isGenerating,
@@ -29,14 +31,15 @@ export function ChatContainer({
 }) {
   const [showExportMenu, setShowExportMenu] = useState(false)
 
-  const toggleExportMenu = () => {
+  // 优化：使用 useCallback 缓存事件处理器
+  const toggleExportMenu = useCallback(() => {
     if (!conversation) return
     setShowExportMenu((prev) => !prev)
-  }
+  }, [conversation])
 
-  const closeExportMenu = () => {
+  const closeExportMenu = useCallback(() => {
     setShowExportMenu(false)
-  }
+  }, [])
 
   useEffect(() => {
     setShowExportMenu(false)
@@ -81,5 +84,16 @@ export function ChatContainer({
       />
     </main>
   )
-}
+}, (prevProps, nextProps) => {
+  // 自定义比较函数 - 只在这些属性变化时才重新渲染
+  return (
+    prevProps.conversation?.id === nextProps.conversation?.id &&
+    prevProps.conversation?.title === nextProps.conversation?.title &&
+    prevProps.messages === nextProps.messages &&
+    prevProps.isGenerating === nextProps.isGenerating &&
+    prevProps.isDeepThinking === nextProps.isDeepThinking &&
+    prevProps.isButtonDisabled === nextProps.isButtonDisabled &&
+    prevProps.pendingAttachments === nextProps.pendingAttachments
+  )
+})
 

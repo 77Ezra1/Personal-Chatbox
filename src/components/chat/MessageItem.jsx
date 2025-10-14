@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Copy, Edit, Trash2, RefreshCw, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
+import { ThinkingProcess } from './ThinkingProcess'
 import { formatFileSize } from '@/lib/utils'
 
 /**
@@ -85,19 +86,13 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
             isUser ? 'message-content-user' : 'message-content-ai'
           } ${status === 'error' ? 'message-error' : ''}`}
         >
-          {/* 思考过程折叠框 - 只在有 reasoning 内容且非编辑模式时展示 */}
-          {!isEditing && metadata?.deepThinking && metadata?.reasoning && (
-            <details className="thinking-process-container">
-              <summary className="thinking-process-summary">
-                <span className="thinking-icon">💭</span>
-                <span className="thinking-label">
-                  {translate('sections.thinkingProcess', '思考过程')}
-                </span>
-              </summary>
-              <div className="thinking-process-content">
-                <MarkdownRenderer content={metadata.reasoning} />
-              </div>
-            </details>
+          {/* 思考过程组件 - 使用增强版 */}
+          {!isEditing && metadata?.deepThinking && (metadata?.reasoning || status === 'loading') && (
+            <ThinkingProcess 
+              reasoning={metadata.reasoning}
+              isStreaming={status === 'loading'}
+              translate={translate}
+            />
           )}
 
           {/* 消息内容 - 正常显示 */}

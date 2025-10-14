@@ -413,5 +413,56 @@ router.get('/me', authMiddleware, (req, res) => {
   });
 });
 
+/**
+ * POST /api/auth/check-email
+ * 检查邮箱是否已注册
+ */
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing email',
+        message: '请提供邮箱地址'
+      });
+    }
+
+    // 验证邮箱格式
+    if (!validateEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email',
+        message: '邮箱格式不正确'
+      });
+    }
+
+    // 查询邮箱是否存在
+    db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()], (err, user) => {
+      if (err) {
+        console.error('[Auth] Database error:', err);
+        return res.status(500).json({
+          success: false,
+          error: 'Database error',
+          message: '服务器错误'
+        });
+      }
+
+      res.json({
+        success: true,
+        exists: !!user
+      });
+    });
+  } catch (error) {
+    console.error('[Auth] Check email error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: '服务器错误'
+    });
+  }
+});
+
 module.exports = router;
 

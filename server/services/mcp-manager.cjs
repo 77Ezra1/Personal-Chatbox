@@ -417,6 +417,9 @@ class MCPManager extends EventEmitter {
         description: service.config.description || '',
         enabled: service.config.enabled !== false,
         loaded: service.status === 'ready',
+        requiresConfig: service.config.requiresConfig || false,
+        signupUrl: service.config.signupUrl || null,
+        apiKeyPlaceholder: service.config.apiKeyPlaceholder || '输入 API Key',
         toolCount: service.tools.length,
         tools: service.tools.map(t => ({
           name: t.name,

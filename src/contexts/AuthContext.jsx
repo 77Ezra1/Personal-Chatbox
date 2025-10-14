@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || '登录失败');
+        throw data;
       }
 
       // 保存Token
@@ -89,7 +89,7 @@ export function AuthProvider({ children }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || '注册失败');
+        throw data;
       }
 
       // 保存Token

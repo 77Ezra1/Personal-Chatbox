@@ -24,12 +24,27 @@ export default function McpServiceConfigSimple() {
 
   const getServiceIcon = (id) => {
     const icons = {
+      // 原有服务
       weather: '🌤️',
       search: '🔍',
       time: '🕐',
       youtube: '📹',
       coincap: '💰',
-      fetch: '🌐'
+      fetch: '🌐',
+      dexscreener: '💹',
+      playwright: '🎭',
+      // 新MCP服务
+      memory: '🧠',
+      filesystem: '📁',
+      git: '🔀',
+      sequential_thinking: '💭',
+      sqlite: '🗄️',
+      wikipedia: '📚',
+      brave_search: '🔎',
+      github: '🐙',
+      puppeteer: '🎪',
+      fetch_official: '🌍',
+      google_maps: '🗺️'
     }
     return icons[id] || '🔧'
   }
@@ -74,6 +89,10 @@ export default function McpServiceConfigSimple() {
  * 简化的服务卡片组件
  */
 function ServiceCard({ server, onToggle, getServiceIcon }) {
+  // 判断服务是否需要配置
+  const requiresConfig = server.requiresConfig || (server.id === 'brave_search' || server.id === 'github')
+  const hasApiKey = server.apiKey && server.apiKey.length > 0
+
   return (
     <div className={`border rounded-lg p-4 ${server.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
       <div className="flex items-center justify-between">
@@ -88,9 +107,21 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
             </div>
             <p className="text-sm text-gray-600">{server.description}</p>
             <div className="flex gap-2 mt-2">
-              <Badge variant="secondary">免费</Badge>
-              <Badge variant="outline">无需API密钥</Badge>
-              <Badge variant="outline">实时数据</Badge>
+              {requiresConfig ? (
+                <>
+                  <Badge variant="outline">需要配置</Badge>
+                  {hasApiKey && (
+                    <Badge variant="secondary" className="text-green-700 bg-green-100">
+                      ✓ 已配置
+                    </Badge>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Badge variant="secondary">免费</Badge>
+                  <Badge variant="outline">无需配置</Badge>
+                </>
+              )}
               {server.tools && server.tools.length > 0 && (
                 <Badge variant="outline">{server.tools.length} 个工具</Badge>
               )}
@@ -115,14 +146,6 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
           </label>
         </div>
       </div>
-      
-      {server.enabled && server.loaded && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <Badge variant="secondary" className="text-green-700 bg-green-100">
-            ✓ 已就绪，无需配置
-          </Badge>
-        </div>
-      )}
     </div>
   )
 }
