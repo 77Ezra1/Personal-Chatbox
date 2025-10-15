@@ -46,7 +46,7 @@ export default defineConfig({
             'rehype-katex',
           ],
           // 工具库
-          'utils-vendor': ['axios', 'clsx', 'date-fns', 'uuid'],
+          'utils-vendor': ['axios', 'clsx', 'date-fns'],
         },
       },
     },

@@ -41,8 +41,8 @@ router.post('/register', async (req, res) => {
     console.log('[Auth] 验证邀请码:', inviteCode, '-> 转换为大写:', inviteCode.toUpperCase());
     const inviteCodeResult = await new Promise((resolve, reject) => {
       db.get(
-        `SELECT * FROM invite_codes 
-         WHERE code = ? AND is_active = 1 
+        `SELECT * FROM invite_codes
+         WHERE code = ? AND is_active = 1
          AND (expires_at IS NULL OR expires_at > datetime('now'))
          AND (max_uses = -1 OR used_count < max_uses)`,
         [inviteCode.toUpperCase()],
@@ -66,7 +66,7 @@ router.post('/register', async (req, res) => {
         message: '邀请码无效或已过期'
       });
     }
-    
+
     console.log('[Auth] 邀请码验证成功:', inviteCodeResult);
 
     // 验证密码强度
@@ -256,12 +256,12 @@ router.post('/login', async (req, res) => {
         if (!isValid) {
           // 登录失败，增加失败次数
           const newAttempts = (user.failed_login_attempts || 0) + 1;
-          
+
           if (newAttempts >= 5) {
             // 锁定账号15分钟
             const lockedUntil = new Date();
             lockedUntil.setMinutes(lockedUntil.getMinutes() + 15);
-            
+
             db.run(
               'UPDATE users SET failed_login_attempts = ?, is_locked = 1, locked_until = ? WHERE id = ?',
               [newAttempts, lockedUntil.toISOString(), user.id]
@@ -435,6 +435,15 @@ router.post('/check-email', async (req, res) => {
         success: false,
         error: 'Invalid email',
         message: '邮箱格式不正确'
+      });
+    }
+
+    // 数据库不可用时的降级响应（避免前端解析空响应导致 JSON 错误）
+    if (!db) {
+      return res.status(503).json({
+        success: false,
+        error: 'Service unavailable',
+        message: '本地数据库未初始化，请稍后重试或重建 sqlite3 绑定'
       });
     }
 

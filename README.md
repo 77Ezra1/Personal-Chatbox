@@ -26,7 +26,7 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
 
 1. **克隆项目**
    ```bash
-   git clone https://github.com/77Ezra1/Personal Chatbox.git
+   git clone https://github.com/77Ezra1/Personal-Chatbox.git
    cd Personal Chatbox
    ```
 
@@ -46,11 +46,24 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
    ```bash
    # 一键启动（推荐）
    ./start.sh
-   
+
    # 或者分别启动
    pnpm dev              # 启动前端(开发模式)
    node server/index.cjs # 启动后端
    ```
+
+### 🧑‍💻 编程能力（工具增强）
+
+新增以下受控工具，供大模型通过 Function Calling 自动调用：
+
+- 代码编辑：`code_editor`（fs_read_file, fs_write_file, find_replace）
+- 命令执行：`command_runner`（run_command）
+- 质量工具：`linter_formatter`（run_lint, run_format）
+- 测试运行：`test_runner`（run_tests, run_e2e）
+
+这些工具会在 `/api/chat` 会话链路中自动注册给模型（已聚合 MCP 与本地服务工具）。
+
+安全与风控：路径限定为当前工作目录；写入提供预览(diff)与文件级互斥锁；命令白名单；所有操作会追加到 `logs/audit.log` 审计日志。
 
 5. **访问应用**
    - 前端: http://localhost:5173
@@ -70,7 +83,7 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
    ```bash
    # 快速推送（推荐）
    ./quick-push.sh "你的提交信息"
-   
+
    # 智能推送（交互式）
    ./push-with-auth.sh
    ```

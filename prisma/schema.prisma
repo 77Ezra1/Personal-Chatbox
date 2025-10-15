@@ -1,0 +1,126 @@
+// Prisma schema for PostgreSQL (production). For local SQLite fallback we skip prisma db push.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model users {
+  id                    Int       @id @default(autoincrement())
+  email                 String    @unique
+  password_hash         String
+  username              String?
+  avatar_url            String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @default(now())
+  last_login_at         DateTime?
+  is_locked             Int       @default(0)
+  locked_until          DateTime?
+  failed_login_attempts Int       @default(0)
+
+  oauth_accounts        oauth_accounts[]
+  sessions              sessions[]
+  login_history         login_history[]
+  conversations         conversations[]
+  user_configs          user_configs?
+}
+
+model oauth_accounts {
+  id                Int      @id @default(autoincrement())
+  user_id           Int
+  provider          String
+  provider_user_id  String
+  provider_email    String?
+  provider_username String?
+  access_token      String?
+  refresh_token     String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_user_id])
+}
+
+model sessions {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+  ip_address String?
+  user_agent String?
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model login_history {
+  id            Int      @id @default(autoincrement())
+  user_id       Int
+  login_at      DateTime @default(now())
+  ip_address    String?
+  user_agent    String?
+  success       Int      @default(1)
+  failure_reason String?
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model conversations {
+  id         String   @id
+  user_id    Int
+  title      String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  user     users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages messages[]
+
+  @@index([user_id])
+}
+
+model messages {
+  id              Int      @id @default(autoincrement())
+  conversation_id String
+  role            String
+  content         String
+  timestamp       DateTime @default(now())
+  metadata        String?
+  status          String   @default("done")
+  attachments     String?
+
+  conversation conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id])
+}
+
+model user_configs {
+  id           Int      @id @default(autoincrement())
+  user_id      Int      @unique
+  model_config String?
+  system_prompt String?
+  api_keys     String?
+  proxy_config String?
+  mcp_config   String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model invite_codes {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  max_uses    Int      @default(1)
+  used_count  Int      @default(0)
+  description String?
+  created_at  DateTime @default(now())
+  expires_at  DateTime?
+  is_active   Int      @default(1)
+}
+
+

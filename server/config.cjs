@@ -28,7 +28,7 @@ module.exports = {
   // MCP服务配置
   services: {
     // ========== 第一批 MCP 服务 (官方) ==========
-    
+
     // Memory - 知识图谱记忆系统
     memory: {
       id: 'memory',
@@ -39,7 +39,7 @@ module.exports = {
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-memory']
     },
-    
+
     // Filesystem - 文件系统操作
     filesystem: {
       id: 'filesystem',
@@ -65,12 +65,12 @@ module.exports = {
         }
       ]
     },
-    
+
     // Git - 版本控制操作
     git: {
       id: 'git',
       name: 'Git版本控制',
-      enabled: true,  // 已启用
+      enabled: false,  // 暂时禁用：未安装 mcp_server_git（Python 模块）
       autoLoad: true,
       description: 'Git版本控制操作,支持状态查询、提交、分支管理',
       command: 'python3',
@@ -81,7 +81,7 @@ module.exports = {
         process.cwd() // 使用当前工作目录,跨平台兼容
       ]
     },
-    
+
     // Sequential Thinking - 推理增强
     sequential_thinking: {
       id: 'sequential_thinking',
@@ -95,14 +95,14 @@ module.exports = {
         DISABLE_THOUGHT_LOGGING: 'false' // 启用思考日志
       }
     },
-    
+
     // ========== 第一批 MCP 服务 (社区) ==========
-    
+
     // SQLite - 数据库操作
     sqlite: {
       id: 'sqlite',
       name: 'SQLite数据库',
-      enabled: true,
+      enabled: false, // 暂时禁用：本机缺少 sqlite3 原生绑定，待修复后再启用
       autoLoad: true,
       description: 'SQLite数据库操作,支持CRUD和自定义SQL查询',
       command: 'npx',
@@ -123,7 +123,7 @@ module.exports = {
         }
       ]
     },
-    
+
     // Wikipedia - 维基百科查询
     wikipedia: {
       id: 'wikipedia',
@@ -134,9 +134,9 @@ module.exports = {
       command: 'npx',
       args: ['-y', '@shelm/wikipedia-mcp-server']
     },
-    
+
     // ========== 第二批 MCP 服务 (需要 API Key) ==========
-    
+
     // Brave Search - 网页搜索
     brave_search: {
       id: 'brave_search',
@@ -153,7 +153,7 @@ module.exports = {
         BRAVE_API_KEY: '' // 从配置系统读取
       }
     },
-    
+
     // GitHub - 仓库管理
     github: {
       id: 'github',
@@ -173,9 +173,9 @@ module.exports = {
         GITHUB_PERSONAL_ACCESS_TOKEN: '' // 从配置系统读取
       }
     },
-    
+
     // ========== 原有服务 (保留) ==========
-    
+
     // 天气服务(保留)
     weather: {
       id: 'weather',
@@ -184,7 +184,7 @@ module.exports = {
       autoLoad: true,
       description: '获取全球天气信息'
     },
-    
+
     // 时间服务(保留)
     time: {
       id: 'time',
@@ -193,7 +193,7 @@ module.exports = {
       autoLoad: true,
       description: '获取当前时间和时区转换'
     },
-    
+
     // 搜索服务(保留 - 待第二批替换为Brave Search)
     search: {
       id: 'search',
@@ -203,7 +203,7 @@ module.exports = {
       description: '支持多个搜索引擎的网络搜索服务',
       engines: ['bing', 'duckduckgo', 'brave']
     },
-    
+
     // 网页抓取服务(保留)
     fetch: {
       id: 'fetch',
@@ -212,7 +212,7 @@ module.exports = {
       autoLoad: true,
       description: '从URL获取网页内容并转换为Markdown'
     },
-    
+
     // Playwright浏览器自动化服务(保留)
     playwright: {
       id: 'playwright',
@@ -221,9 +221,9 @@ module.exports = {
       autoLoad: true,
       description: '使用Playwright进行浏览器自动化操作'
     },
-    
+
     // ========== 第三批 MCP 服务 (新增免费服务) ==========
-    
+
     // Puppeteer - 轻量级浏览器自动化
     puppeteer: {
       id: 'puppeteer',
@@ -234,7 +234,7 @@ module.exports = {
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-puppeteer']
     },
-    
+
     // Fetch - 官方网页抓取服务
     fetch_official: {
       id: 'fetch_official',
@@ -245,7 +245,7 @@ module.exports = {
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-fetch']
     },
-    
+
     // Google Maps - 位置服务
     google_maps: {
       id: 'google_maps',
@@ -269,7 +269,7 @@ module.exports = {
         }
       ]
     },
-    
+
     // EverArt - AI图像生成
     everart: {
       id: 'everart',
@@ -293,9 +293,9 @@ module.exports = {
         }
       ]
     },
-    
+
     // ========== 第四批 MCP 服务 (高级功能) ==========
-    
+
     // Magg - 元MCP服务器(统一管理所有MCP服务)
     magg: {
       id: 'magg',
@@ -334,7 +334,7 @@ module.exports = {
         'Magg可以让AI自主搜索和安装其他MCP服务'
       ]
     },
-    
+
     // Slack - 消息通知和团队协作
     slack: {
       id: 'slack',
@@ -371,7 +371,7 @@ module.exports = {
         '免费版Slack完全可用'
       ]
     },
-    
+
     // Qdrant - 向量数据库(RAG)
     qdrant: {
       id: 'qdrant',
@@ -408,7 +408,7 @@ module.exports = {
         '用于构建RAG(检索增强生成)应用'
       ]
     },
-    
+
     // PostgreSQL - 生产级关系数据库
     postgresql: {
       id: 'postgresql',
@@ -438,9 +438,9 @@ module.exports = {
         '免费且开源,适合生产环境'
       ]
     },
-    
+
     // ========== 暂时禁用的服务 ==========
-    
+
     // YouTube字幕服务
     youtube: {
       id: 'youtube',
@@ -449,7 +449,7 @@ module.exports = {
       autoLoad: false,
       description: '获取YouTube视频的字幕和转录文本'
     },
-    
+
     // 加密货币服务
     coincap: {
       id: 'coincap',

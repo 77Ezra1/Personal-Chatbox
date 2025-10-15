@@ -33,6 +33,10 @@ const CoincapService = require('./services/coincap.cjs');
 const DexscreenerService = require('./services/dexscreener.cjs');
 const FetchService = require('./services/fetch.cjs');
 const PlaywrightBrowserService = require('./services/playwright-browser.cjs');
+const CodeEditorService = require('./services/code-editor.cjs');
+const CommandRunnerService = require('./services/command-runner.cjs');
+const LinterFormatterService = require('./services/linter-formatter.cjs');
+const TestRunnerService = require('./services/test-runner.cjs');
 
 // 创建Express应用
 const app = express();
@@ -84,7 +88,7 @@ async function initializeServices() {
   // 初始化配置存储
   logger.info('初始化配置存储...');
   await configStorage.initialize();
-  
+
   // 加载并应用代理配置
   logger.info('加载代理配置...');
   try {
@@ -96,7 +100,7 @@ async function initializeServices() {
       process.env.http_proxy = proxyUrl;
       process.env.https_proxy = proxyUrl;
       logger.info(`✅ 已应用用户配置的代理: ${proxyUrl}`);
-      
+
       // 设置全局代理（为MCP服务提供代理支持）
       await setupGlobalProxy();
       logger.info('✅ 全局代理已设置');
@@ -106,9 +110,9 @@ async function initializeServices() {
   } catch (error) {
     logger.warn('加载代理配置失败:', error.message);
   }
-  
+
   logger.info('初始化MCP服务...');
-  
+
   try {
     // ========== 初始化原有服务 ==========
     services.weather = new WeatherService(config.services.weather);
@@ -124,7 +128,11 @@ async function initializeServices() {
     });
     services.fetch = new FetchService(config.services.fetch);
     services.playwright = new PlaywrightBrowserService(config.services.playwright);
-    
+    services.code_editor = new CodeEditorService({});
+    services.command_runner = new CommandRunnerService({});
+    services.linter_formatter = new LinterFormatterService({});
+    services.test_runner = new TestRunnerService({});
+
     // 初始化自动加载的原有服务
     for (const [id, service] of Object.entries(services)) {
       if (service.enabled && service.initialize) {
@@ -136,26 +144,26 @@ async function initializeServices() {
         }
       }
     }
-    
+
     // ========== 初始化新的 MCP 服务 ==========
     logger.info('启动 MCP Manager...');
-    
+
     // 启动第一批 MCP 服务 (不需要 API Key) - 并行启动以提高速度
     const mcpServices = [
       'memory',
-      'filesystem', 
+      'filesystem',
       'git',
       'sequential_thinking',
       'sqlite',
       'wikipedia'
     ];
-    
+
     // 启动第二批 MCP 服务 (需要 API Key,从配置系统读取)
     const mcpServicesWithConfig = [
       'brave_search',
       'github'
     ];
-    
+
     // 并行启动第一批服务
     const startPromises = mcpServices.map(async (serviceId) => {
       const serviceConfig = config.services[serviceId];
@@ -171,12 +179,12 @@ async function initializeServices() {
       }
       return { serviceId, success: false, skipped: true };
     });
-    
+
     // 等待所有服务启动完成
     const results = await Promise.all(startPromises);
     const successCount = results.filter(r => r.success).length;
     logger.info(`MCP第一批服务启动完成: ${successCount}/${mcpServices.length} 个成功`);
-    
+
     // 启动需要 API Key 的服务
     for (const serviceId of mcpServicesWithConfig) {
       const serviceConfig = config.services[serviceId];
@@ -184,14 +192,14 @@ async function initializeServices() {
         try {
           // 将服务ID映射到配置存储的格式 (brave_search -> braveSearch)
           const configServiceId = serviceId === 'brave_search' ? 'braveSearch' : serviceId;
-          
+
           // 从配置存储中读取 API Key
           const storedConfig = await configStorage.getServiceConfig(configServiceId);
-          
+
           if (storedConfig && (storedConfig.apiKey || storedConfig.token)) {
             // 将 API Key 注入到环境变量中
             const configWithKey = { ...serviceConfig };
-            
+
             // 根据服务类型设置不同的环境变量
             if (serviceId === 'brave_search') {
               configWithKey.env = {
@@ -204,7 +212,7 @@ async function initializeServices() {
                 GITHUB_PERSONAL_ACCESS_TOKEN: storedConfig.token
               };
             }
-            
+
             logger.info(`启动 MCP 服务: ${serviceConfig.name} (使用配置的 API Key)`);
             await mcpManager.startService(configWithKey);
           } else {
@@ -216,17 +224,17 @@ async function initializeServices() {
         }
       }
     }
-    
+
     // 将 MCP Manager 添加到 services 中
     services.mcpManager = mcpManager;
-    
+
     logger.info('服务初始化完成');
     logger.info(`MCP 服务状态:`, mcpManager.getStatus());
-    
+
     // 初始化路由
     initializeRouter(services);
     initializeChatRouter(services);
-    
+
   } catch (error) {
     logger.error('服务初始化失败:', error);
     throw error;
@@ -274,25 +282,25 @@ async function start() {
     const { initDatabase } = require('./db/init.cjs');
     await initDatabase();
     logger.info('✅ 数据库初始化完成');
-    
+
     // 初始化服务
     await initializeServices();
-    
+
     // 启动HTTP服务器
     const port = config.server.port;
     const host = config.server.host;
-    
+
     app.listen(port, host, () => {
       logger.info(`✅ 服务器已启动: http://${host}:${port}`);
       logger.info(`✅ 已加载 ${Object.keys(services).length} 个MCP服务`);
-      
+
       // 打印启用的服务
       const enabledServices = Object.values(services)
         .filter(s => s.enabled)
         .map(s => s.name);
       logger.info(`✅ 已启用服务: ${enabledServices.join(', ')}`);
     });
-    
+
   } catch (error) {
     logger.error('服务器启动失败:', error);
     process.exit(1);
@@ -302,37 +310,37 @@ async function start() {
 // 优雅关闭
 process.on('SIGINT', async () => {
   logger.info('收到SIGINT信号,正在关闭服务器...');
-  
+
   // 停止所有原有服务
   for (const service of Object.values(services)) {
     if (service !== mcpManager && service.enabled && service.disable) {
       service.disable();
     }
   }
-  
+
   // 停止所有 MCP 服务
   if (mcpManager) {
     await mcpManager.stopAll();
   }
-  
+
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   logger.info('收到SIGTERM信号,正在关闭服务器...');
-  
+
   // 停止所有原有服务
   for (const service of Object.values(services)) {
     if (service !== mcpManager && service.enabled && service.disable) {
       service.disable();
     }
   }
-  
+
   // 停止所有 MCP 服务
   if (mcpManager) {
     await mcpManager.stopAll();
   }
-  
+
   process.exit(0);
 });
 

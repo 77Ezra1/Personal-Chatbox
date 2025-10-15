@@ -18,7 +18,7 @@ export function initSentry() {
   }
 
   const dsn = import.meta.env.VITE_SENTRY_DSN
-  
+
   if (!dsn) {
     console.warn('[Sentry] No DSN provided - Sentry disabled')
     return
@@ -27,7 +27,7 @@ export function initSentry() {
   try {
     Sentry.init({
       dsn,
-      
+
       // 集成配置
       integrations: [
         // 浏览器追踪
@@ -35,7 +35,7 @@ export function initSentry() {
           // 追踪所有路由变化
           tracePropagationTargets: ['localhost', /^https:\/\/yourserver\.io\/api/],
         }),
-        
+
         // 会话回放（错误时录制）
         Sentry.replayIntegration({
           maskAllText: true,
@@ -45,14 +45,14 @@ export function initSentry() {
 
       // 性能监控采样率
       tracesSampleRate: 0.1, // 10% 的事务进行追踪
-      
+
       // 会话回放采样率
       replaysSessionSampleRate: 0.1, // 10% 的正常会话录制
       replaysOnErrorSampleRate: 1.0,  // 100% 的错误会话录制
 
       // 环境标识
       environment: import.meta.env.MODE,
-      
+
       // 发布版本
       release: import.meta.env.VITE_APP_VERSION || 'development',
 
@@ -99,12 +99,12 @@ export function initSentry() {
         'bmi_SafeAddOnload',
         'EBCallBackMessageReceived',
         'conduitPage',
-        
+
         // 网络错误（通常是用户网络问题）
         'NetworkError',
         'Network request failed',
         'Failed to fetch',
-        
+
         // 取消的请求
         'AbortError',
         'Request aborted',
@@ -191,11 +191,11 @@ export const SentryErrorBoundary = Sentry.ErrorBoundary
  */
 export function startTransaction(name, op = 'custom') {
   if (isDev) return null
-  
-  return Sentry.startTransaction({
-    name,
-    op,
-  })
+  // 兼容 Sentry v8：使用 startInactiveSpan
+  if (typeof Sentry.startInactiveSpan === 'function') {
+    return Sentry.startInactiveSpan({ name, op })
+  }
+  return null
 }
 
 /**
@@ -203,9 +203,8 @@ export function startTransaction(name, op = 'custom') {
  */
 export function startSpan(transaction, name, op = 'custom') {
   if (!transaction) return null
-  
-  return transaction.startChild({
-    op,
-    description: name,
-  })
+  if (typeof Sentry.startInactiveSpan === 'function') {
+    return Sentry.startInactiveSpan({ name, op, parentSpan: transaction })
+  }
+  return null
 }

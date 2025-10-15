@@ -1,8 +1,31 @@
-const sqlite3 = require('sqlite3').verbose();
+const { openDb, DB_PATH } = require('./adapter.cjs');
+const { createPgDb } = require('./pg.cjs');
 const path = require('path');
 const fs = require('fs');
+// 优先使用 PostgreSQL（如果 POSTGRES_URL/DATABASE_URL 存在），否则使用本地 SQLite 驱动
+let db = null;
+if (process.env.POSTGRES_URL || process.env.DATABASE_URL) {
+  try {
+    db = createPgDb();
+  } catch (e) {
+    console.error('[DB Init] Failed to init Postgres driver:', e?.message);
+  }
+}
+if (!db) {
+  db = openDb();
+}
 
-const DB_PATH = path.join(__dirname, '../../data/app.db');
+if (!db) {
+  console.error('[DB Init] No sqlite driver available (better-sqlite3/sqlite3). Running without DB.');
+  module.exports = {
+    db: null,
+    initDatabase: async () => {
+      console.warn('[DB Init] Skipping DB init (no driver).');
+    },
+    DB_PATH
+  };
+  return;
+}
 
 // 确保data目录存在
 const dataDir = path.dirname(DB_PATH);
@@ -10,20 +33,13 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// 创建数据库连接
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error('[DB Init] Error opening database:', err);
-    process.exit(1);
-  }
-  console.log('[DB Init] Connected to database:', DB_PATH);
-});
+console.log('[DB Init] Connected to database:', db._driver === 'pg' ? 'PostgreSQL' : DB_PATH, 'driver=', db._driver || 'unknown');
 
 // 运行数据库迁移
 function runMigrations() {
   return new Promise((resolve, reject) => {
     const migrationsDir = path.join(__dirname, 'migrations');
-    
+
     // 检查迁移目录是否存在
     if (!fs.existsSync(migrationsDir)) {
       console.log('[DB Migrations] No migrations directory found, skipping...');
@@ -49,7 +65,7 @@ function runMigrations() {
     files.forEach((file, index) => {
       const filePath = path.join(migrationsDir, file);
       const sql = fs.readFileSync(filePath, 'utf8');
-      
+
       // 分割SQL语句（用分号分隔）
       const statements = sql
         .split(';')
