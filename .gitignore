@@ -38,3 +38,6 @@ pnpm-lock.yaml
 # 临时测试文件
 test-*.html
 *-demo.html
+
+# 归档文件夹
+archive/

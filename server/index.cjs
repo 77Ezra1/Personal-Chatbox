@@ -23,6 +23,9 @@ const configStorage = require('./services/config-storage.cjs');
 // 导入代理辅助工具
 const { setupGlobalProxy } = require('./lib/proxy-helper.cjs');
 
+// 导入环境验证器
+const { validateEnvOnStartup, printEnvSummary } = require('./lib/env-validator.cjs');
+
 // 导入服务
 const WeatherService = require('./services/weather.cjs');
 const TimeService = require('./services/time.cjs');
@@ -278,7 +281,12 @@ app.use(errorHandler);
  */
 async function start() {
   try {
-    // 初始化数据库
+    // 1. 验证环境变量配置
+    logger.info('验证环境配置...');
+    validateEnvOnStartup();
+    printEnvSummary();
+
+    // 2. 初始化数据库
     logger.info('初始化数据库...');
     const { initDatabase } = require('./db/init.cjs');
     await initDatabase();

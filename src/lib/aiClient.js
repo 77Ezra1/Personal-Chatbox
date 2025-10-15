@@ -296,7 +296,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   const {
     provider = 'deepseek',  // 修改默认为deepseek以使用MCP后端
     model,
-    apiKey = 'sk-03db8009812649359e2f83cc738861aa',  // 临时默认API Key
+    apiKey,  // 不再提供默认值，强制用户配置
     temperature = 0.7,
     maxTokens = DEFAULT_MAX_TOKENS,
     deepThinking = false,
@@ -305,7 +305,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   logger.log('[aiClient] Extracted values:', { provider, model, apiKey: apiKey ? 'present' : 'missing', temperature, maxTokens })
 
   if (!apiKey) {
-    throw new Error('Please configure the API key for the selected provider first.')
+    throw new Error('Please configure the API key for the selected provider first. Go to Settings > API Keys to add your key.')
   }
 
   const sanitizedMessages = sanitizeMessages(messages)

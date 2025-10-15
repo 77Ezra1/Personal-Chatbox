@@ -11,8 +11,14 @@ const logger = require('../utils/logger.cjs');
 let openai;
 try {
   const { OpenAI } = require('openai');
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+
+  if (!apiKey) {
+    logger.warn('DEEPSEEK_API_KEY not configured in environment variables. DeepSeek API will not work until configured.');
+  }
+
   openai = new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-03db8009812649359e2f83cc738861aa',
+    apiKey: apiKey || 'placeholder-key',  // 使用占位符,防止初始化失败
     baseURL: 'https://api.deepseek.com'
   });
 } catch (error) {
