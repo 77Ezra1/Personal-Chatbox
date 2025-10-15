@@ -13,7 +13,9 @@ function openDb() {
       bs3.pragma('synchronous = NORMAL');
       bs3.pragma('foreign_keys = ON');
       bs3.pragma('busy_timeout = 5000');
-    } catch (_) {}
+    } catch (e) {
+      console.warn('[DB Adapter] Warning setting PRAGMA:', e.message);
+    }
 
     // 适配到类似 sqlite3 的异步接口
     const db = {
@@ -35,12 +37,27 @@ function openDb() {
           cb && cb(err);
         }
       },
+      all(sql, params, cb) {
+        if (typeof params === 'function') { cb = params; params = []; }
+        try {
+          const rows = bs3.prepare(sql).all(...(Array.isArray(params) ? params : []));
+          cb && cb(null, rows);
+        } catch (err) {
+          cb && cb(err);
+        }
+      },
+      prepare(sql) {
+        return bs3.prepare(sql);
+      },
       serialize(fn) { try { fn && fn(); } catch (_) {} },
+      close() { bs3.close(); },
       _driver: 'better-sqlite3',
       _raw: bs3
     };
     return db;
-  } catch (_) {}
+  } catch (e) {
+    console.error('[DB Adapter] better-sqlite3 error:', e.message);
+  }
 
   // 回退到 sqlite3
   try {
@@ -53,10 +70,14 @@ function openDb() {
         db.run('PRAGMA foreign_keys=ON');
         db.run('PRAGMA busy_timeout=5000');
       });
-    } catch (_) {}
+    } catch (e) {
+      console.warn('[DB Adapter] Warning setting PRAGMA (sqlite3):', e.message);
+    }
     db._driver = 'sqlite3';
     return db;
-  } catch (_) {}
+  } catch (e) {
+    console.error('[DB Adapter] sqlite3 error:', e.message);
+  }
 
   return null;
 }

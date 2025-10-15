@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db/init.cjs');
 const { authMiddleware } = require('../middleware/auth.cjs');
+const { searchConversations, getSearchStats } = require('../services/search.cjs');
 
 /**
  * 获取用户的所有对话
@@ -237,6 +238,110 @@ router.get('/is-first-user', authMiddleware, (req, res) => {
       res.json({ isFirstUser: row.first_user_id === userId });
     }
   );
+});
+
+/**
+ * 搜索对话
+ * GET /api/user-data/conversations/search
+ * Query参数:
+ *   - q: 搜索关键词
+ *   - dateFrom: 开始日期 (YYYY-MM-DD)
+ *   - dateTo: 结束日期 (YYYY-MM-DD)
+ *   - model: 模型筛选
+ *   - sort: 排序方式 (relevance/date/messages)
+ *   - order: 排序方向 (asc/desc)
+ *   - limit: 返回数量限制
+ *   - offset: 分页偏移
+ */
+router.get('/conversations/search', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const {
+      q: query,
+      dateFrom,
+      dateTo,
+      model,
+      sort,
+      order,
+      limit,
+      offset
+    } = req.query;
+
+    console.log('[Search] 搜索参数:', {
+      query,
+      dateFrom,
+      dateTo,
+      model,
+      sort,
+      order,
+      limit,
+      offset
+    });
+
+    const filters = {
+      dateFrom,
+      dateTo,
+      model,
+      sort: sort || 'date',
+      order: order || 'desc',
+      limit: limit ? parseInt(limit) : 20,
+      offset: offset ? parseInt(offset) : 0
+    };
+
+    const results = await searchConversations(userId, query, filters);
+
+    // 为每个对话获取消息（可选，如果需要完整数据）
+    const conversationsWithMessages = await Promise.all(
+      results.map(conv => {
+        return new Promise((resolve, reject) => {
+          db.all(
+            'SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC',
+            [conv.id],
+            (err, messages) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve({
+                  ...conv,
+                  messages: messages.map(msg => ({
+                    ...msg,
+                    metadata: msg.metadata ? JSON.parse(msg.metadata) : undefined,
+                    attachments: msg.attachments ? JSON.parse(msg.attachments) : []
+                  }))
+                });
+              }
+            }
+          );
+        });
+      })
+    );
+
+    res.json({
+      conversations: conversationsWithMessages,
+      hasMore: results.length === filters.limit
+    });
+  } catch (error) {
+    console.error('[Search] 搜索失败:', error);
+    res.status(500).json({ message: '搜索失败', error: error.message });
+  }
+});
+
+/**
+ * 获取搜索统计
+ * GET /api/user-data/conversations/search/stats
+ */
+router.get('/conversations/search/stats', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { q: query, dateFrom, dateTo } = req.query;
+
+    const stats = await getSearchStats(userId, query, { dateFrom, dateTo });
+
+    res.json(stats);
+  } catch (error) {
+    console.error('[Search] 获取统计失败:', error);
+    res.status(500).json({ message: '获取统计失败', error: error.message });
+  }
 });
 
 module.exports = router;

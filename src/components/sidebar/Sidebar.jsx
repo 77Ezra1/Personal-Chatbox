@@ -1,6 +1,9 @@
+import { useState, useMemo } from 'react'
 import { Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
+import { SearchBar } from './SearchBar'
+import { AdvancedFilter } from './AdvancedFilter'
 import { useAuth } from '@/contexts/AuthContext'
 
 /**
@@ -26,6 +29,17 @@ export function Sidebar({
 }) {
   const { user, logout } = useAuth()
 
+  // 搜索相关状态
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [filters, setFilters] = useState({
+    dateFrom: null,
+    dateTo: null,
+    sort: 'date',
+    order: 'desc'
+  })
+  const [isSearching, setIsSearching] = useState(false)
+
   const handleLogout = () => {
     onShowConfirm?.({
       title: language === 'zh' ? '确认登出' : 'Confirm Logout',
@@ -40,7 +54,7 @@ export function Sidebar({
       'Are you sure you want to delete the conversation "{title}"?'
     )
     const confirmationMessage = messageTemplate.replace('{title}', title ?? '')
-    
+
     onShowConfirm?.({
       title: translate('confirms.deleteConversationTitle', 'Delete Conversation'),
       message: confirmationMessage,
@@ -60,7 +74,7 @@ export function Sidebar({
 
   const handleClearConversation = () => {
     if (!currentConversation) return
-    
+
     onShowConfirm?.({
       title: translate('confirms.clearConversationTitle', 'Clear Conversation'),
       message: translate('confirms.clearConversation', 'Are you sure you want to clear this conversation?'),
@@ -68,6 +82,85 @@ export function Sidebar({
       onConfirm: () => onClearConversation?.()
     })
   }
+
+  // 本地搜索和过滤对话
+  const filteredConversations = useMemo(() => {
+    let result = [...conversations]
+
+    // 搜索过滤
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(conv => {
+        // 搜索标题
+        if (conv.title?.toLowerCase().includes(query)) {
+          return true
+        }
+        // 搜索消息内容
+        return conv.messages?.some(msg =>
+          msg.content?.toLowerCase().includes(query)
+        )
+      })
+    }
+
+    // 日期过滤
+    if (filters.dateFrom) {
+      const fromDate = new Date(filters.dateFrom)
+      result = result.filter(conv => {
+        const convDate = new Date(conv.createdAt)
+        return convDate >= fromDate
+      })
+    }
+
+    if (filters.dateTo) {
+      const toDate = new Date(filters.dateTo)
+      toDate.setDate(toDate.getDate() + 1) // 包含当天
+      result = result.filter(conv => {
+        const convDate = new Date(conv.createdAt)
+        return convDate < toDate
+      })
+    }
+
+    // 排序
+    result.sort((a, b) => {
+      if (filters.sort === 'date') {
+        const dateA = new Date(a.createdAt || a.updatedAt)
+        const dateB = new Date(b.createdAt || b.updatedAt)
+        return filters.order === 'asc' ? dateA - dateB : dateB - dateA
+      } else if (filters.sort === 'messages') {
+        const countA = a.messages?.length || 0
+        const countB = b.messages?.length || 0
+        return filters.order === 'asc' ? countA - countB : countB - countA
+      }
+      return 0
+    })
+
+    return result
+  }, [conversations, searchQuery, filters])
+
+  // 处理搜索
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+    setIsSearching(false)
+  }
+
+  // 处理过滤器应用
+  const handleApplyFilters = () => {
+    setIsSearching(false)
+  }
+
+  // 重置过滤器
+  const handleResetFilters = () => {
+    setFilters({
+      dateFrom: null,
+      dateTo: null,
+      sort: 'date',
+      order: 'desc'
+    })
+    setSearchQuery('')
+  }
+
+  // 检查是否有激活的过滤器
+  const hasActiveFilters = filters.dateFrom || filters.dateTo
 
   return (
     <aside className="sidebar">
@@ -89,19 +182,61 @@ export function Sidebar({
         </Button>
       </div>
 
+      {/* 搜索栏 */}
+      <div className="px-3 py-2">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onSearch={handleSearch}
+          isSearching={isSearching}
+          onFilterClick={() => setShowFilterPanel(true)}
+          hasActiveFilters={hasActiveFilters}
+        />
+      </div>
+
       {/* 对话列表 */}
       <div className="conversation-list">
-        {conversations.map((conversation) => (
-          <ConversationItem
-            key={conversation.id}
-            conversation={conversation}
-            isActive={conversation.id === currentConversationId}
-            onSelect={() => onSelectConversation(conversation.id)}
-            onRename={onRenameConversation}
-            onDelete={handleDelete}
-          />
-        ))}
+        {filteredConversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              {searchQuery || hasActiveFilters
+                ? translate('messages.noSearchResults', '没有找到匹配的对话')
+                : translate('messages.noConversations', '暂无对话')}
+            </p>
+            {(searchQuery || hasActiveFilters) && (
+              <Button
+                variant="link"
+                size="sm"
+                onClick={handleResetFilters}
+                className="mt-2"
+              >
+                {translate('buttons.clearFilters', '清除筛选')}
+              </Button>
+            )}
+          </div>
+        ) : (
+          filteredConversations.map((conversation) => (
+            <ConversationItem
+              key={conversation.id}
+              conversation={conversation}
+              isActive={conversation.id === currentConversationId}
+              onSelect={() => onSelectConversation(conversation.id)}
+              onRename={onRenameConversation}
+              onDelete={handleDelete}
+            />
+          ))
+        )}
       </div>
+
+      {/* 高级过滤面板 */}
+      <AdvancedFilter
+        open={showFilterPanel}
+        onOpenChange={setShowFilterPanel}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+      />
 
       <div className="sidebar-footer">
         {/* 用户信息区域 */}

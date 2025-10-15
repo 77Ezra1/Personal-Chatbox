@@ -1,1074 +1,670 @@
-# Personal Chatbox - 功能路线图
+# Personal Chatbox 功能扩展路线图
 
-基于您的项目现状,我为您规划了一套完整的功能增强方案,从**产品、技术、用户体验**三个维度全面提升。
-
----
-
-## 📊 当前项目分析
-
-### 已有功能(优秀✅)
-
-**核心功能**:
-- ✅ 多对话管理
-- ✅ 多模型支持(OpenAI、Claude、Gemini等)
-- ✅ 深度思考模式
-- ✅ 系统提示词配置
-- ✅ MCP服务集成(18个服务)
-- ✅ 国际化支持
-- ✅ 主题切换
-- ✅ 键盘快捷键
-- ✅ 文件附件支持
-- ✅ 数据迁移
-- ✅ 用户认证(邀请码)
-
-**技术栈**:
-- ✅ React + Vite
-- ✅ Node.js后端
-- ✅ SQLite数据库
-- ✅ MCP协议集成
-
-### 缺失功能(待增强⚡)
-
-1. **用户体验**
-   - ❌ 对话历史搜索
-   - ❌ 消息收藏/标记
-   - ❌ 导出对话
-   - ❌ 语音输入/输出
-   - ❌ 实时协作
-
-2. **AI能力**
-   - ❌ RAG知识库
-   - ❌ 联网搜索增强
-   - ❌ 图像生成/理解
-   - ❌ 代码执行环境
-   - ❌ 多模态输入
-
-3. **数据管理**
-   - ❌ 云端同步
-   - ❌ 数据备份/恢复
-   - ❌ 使用统计
-   - ❌ 成本追踪
-
-4. **协作功能**
-   - ❌ 多用户支持
-   - ❌ 对话分享
-   - ❌ 团队工作区
-   - ❌ 权限管理
-
-5. **开发者工具**
-   - ❌ API接口
-   - ❌ Webhook
-   - ❌ 插件系统
-   - ❌ 自定义MCP服务
+**版本**: v5.0 规划
+**更新时间**: 2025-10-15
+**作者**: Ezra
 
 ---
 
-## 🚀 功能路线图
+## 📋 总览
 
-### 第一阶段:用户体验增强(本月)
+本路线图将功能扩展分为 **6 个阶段**，每个阶段独立可交付，按价值和技术依赖排序。
 
-#### 1.1 对话历史搜索 ⭐⭐⭐⭐⭐
+### 阶段概览
 
-**为什么重要?**
-- 用户对话越来越多,找不到历史内容
-- 这是最常用的功能之一
-
-**功能设计**:
-```
-搜索框位置: 侧边栏顶部
-搜索范围: 
-  - 对话标题
-  - 消息内容
-  - 附件文件名
-搜索选项:
-  - 按时间筛选
-  - 按模型筛选
-  - 按标签筛选
-高级功能:
-  - 正则表达式搜索
-  - 全文搜索(使用PostgreSQL)
-  - 语义搜索(使用Qdrant)
-```
-
-**技术实现**:
-```javascript
-// 基础搜索(SQLite)
-SELECT * FROM conversations 
-WHERE title LIKE '%keyword%' 
-   OR id IN (
-     SELECT conversation_id FROM messages 
-     WHERE content LIKE '%keyword%'
-   )
-ORDER BY updated_at DESC
-
-// 高级搜索(PostgreSQL全文搜索)
-SELECT * FROM conversations 
-WHERE to_tsvector('chinese', title || ' ' || content) 
-      @@ to_tsquery('chinese', 'keyword')
-
-// 语义搜索(Qdrant)
-const results = await qdrant.search({
-  collection: 'conversations',
-  query_vector: embedding(userQuery),
-  limit: 10
-})
-```
-
-**开发时间**: 4-6小时
+| 阶段 | 名称 | 核心功能 | 预计工作量 | 用户价值 |
+|------|------|---------|-----------|---------|
+| 🟢 Phase 1 | 基础增强 | 搜索、分析、快捷指令 | 2-3天 | ⭐⭐⭐⭐⭐ |
+| 🟡 Phase 2 | 智能升级 | 对话总结、模板市场 | 3-4天 | ⭐⭐⭐⭐⭐ |
+| 🔵 Phase 3 | 多模态支持 | 图片、语音、文件 | 4-5天 | ⭐⭐⭐⭐ |
+| 🟣 Phase 4 | 协作与分享 | 分享、协作、社区 | 3-4天 | ⭐⭐⭐⭐ |
+| 🟠 Phase 5 | 高级 AI | RAG、工作流、Agent | 5-7天 | ⭐⭐⭐⭐⭐ |
+| 🔴 Phase 6 | 企业级功能 | 团队、商业化、多端 | 7-10天 | ⭐⭐⭐ |
 
 ---
 
-#### 1.2 消息收藏和标签 ⭐⭐⭐⭐⭐
+## 🟢 Phase 1: 基础增强（立即可用）
 
-**为什么重要?**
-- 用户需要快速找到重要对话
-- 组织和分类对话
+**目标**: 提升现有功能的易用性和实用性
 
-**功能设计**:
+### 1.1 智能搜索与过滤 ⭐⭐⭐⭐⭐
+**价值**: 快速找到历史对话，提升效率
+
+#### 功能清单
+- [x] 全文搜索（对话标题 + 内容）
+- [x] 高级过滤器
+  - 日期范围选择
+  - 模型筛选
+  - 标签筛选
+- [x] 搜索结果高亮
+- [x] 智能排序（相关度 / 时间）
+- [x] 搜索历史记录
+
+#### 技术实现
+- 前端: 使用 Fuse.js 实现模糊搜索
+- 后端: 添加 SQLite FTS（全文搜索）支持
+- API: `GET /api/conversations/search?q=xxx&from=xxx&to=xxx&model=xxx`
+
+#### 文件修改
 ```
-收藏功能:
-  - 星标对话
-  - 置顶对话
-  - 快速访问收藏夹
+src/components/sidebar/
+  ├── SearchBar.jsx          (新增)
+  ├── AdvancedFilter.jsx     (新增)
+  └── Sidebar.jsx            (修改)
 
-标签系统:
-  - 自定义标签
-  - 颜色标记
-  - 标签过滤
-  - 标签管理
-
-智能分类:
-  - AI自动建议标签
-  - 基于内容自动分类
-```
-
-**UI设计**:
-```
-对话列表项:
-  [⭐] [标签1] [标签2] 对话标题
-  
-侧边栏:
-  📌 置顶对话
-  ⭐ 收藏夹
-  🏷️ 标签
-    - 工作 (12)
-    - 学习 (8)
-    - 代码 (15)
+server/routes/
+  └── user-data.cjs          (修改: 添加搜索接口)
 ```
 
-**数据库设计**:
+---
+
+### 1.2 对话数据分析仪表板 ⭐⭐⭐⭐⭐
+**价值**: 了解使用习惯，优化成本
+
+#### 功能清单
+- [x] 统计概览
+  - 对话总数
+  - 消息总数
+  - Token 使用量
+  - 费用估算
+- [x] 可视化图表
+  - 使用趋势折线图（每日/每周）
+  - 模型使用饼图
+  - 工具调用柱状图
+  - 时间热力图
+- [x] 数据导出（CSV/JSON）
+
+#### 技术实现
+- 组件库: Recharts（已安装）
+- 数据聚合: 后端定时任务计算统计数据
+- 缓存: Redis（可选）或内存缓存
+
+#### 文件结构
+```
+src/pages/
+  └── Analytics.jsx          (新增)
+
+src/components/analytics/
+  ├── StatsOverview.jsx      (新增)
+  ├── UsageTrendChart.jsx    (新增)
+  ├── ModelDistribution.jsx  (新增)
+  └── TimeHeatmap.jsx        (新增)
+
+server/services/
+  └── analytics.cjs          (新增)
+```
+
+---
+
+### 1.3 快捷指令（Slash Commands）⭐⭐⭐⭐
+**价值**: 提升输入效率，快速调用功能
+
+#### 功能清单
+- [x] 指令触发器（`/` 触发菜单）
+- [x] 内置指令
+  - `/summary` - 总结当前对话
+  - `/translate [语言]` - 翻译最后一条消息
+  - `/code` - 代码模式（语法高亮）
+  - `/search [关键词]` - 搜索网络
+  - `/image` - 图片分析模式
+  - `/clear` - 清空对话
+  - `/export` - 导出对话
+  - `/help` - 查看所有指令
+- [x] 自定义指令（用户可添加）
+- [x] 指令联想和自动补全
+
+#### 技术实现
+- 使用 CMDK（已安装）实现指令面板
+- 指令解析器：前端拦截 `/` 开头的输入
+- 可扩展架构：支持插件注册新指令
+
+#### 文件结构
+```
+src/components/chat/
+  ├── CommandMenu.jsx        (新增)
+  └── MessageInput.jsx       (修改)
+
+src/lib/
+  └── commands.js            (新增: 指令注册和解析)
+```
+
+---
+
+### 1.4 对话标签管理 ⭐⭐⭐⭐
+**价值**: 组织对话，快速分类
+
+#### 功能清单
+- [x] 为对话添加标签
+- [x] 标签颜色自定义
+- [x] 按标签过滤对话
+- [x] 标签管理（增删改）
+- [x] 智能标签推荐（AI 自动分类）
+
+#### 数据库修改
 ```sql
--- 标签表
+-- 新增表
 CREATE TABLE tags (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   color TEXT,
-  user_id INTEGER
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 对话标签关联表
 CREATE TABLE conversation_tags (
-  conversation_id INTEGER,
-  tag_id INTEGER,
-  PRIMARY KEY (conversation_id, tag_id)
+  conversation_id TEXT NOT NULL,
+  tag_id INTEGER NOT NULL,
+  PRIMARY KEY (conversation_id, tag_id),
+  FOREIGN KEY (conversation_id) REFERENCES conversations(id),
+  FOREIGN KEY (tag_id) REFERENCES tags(id)
+);
+```
+
+---
+
+### 1.5 邀请码管理 UI ⭐⭐⭐
+**价值**: 方便管理员管理邀请码（已有后端，补充前端）
+
+#### 功能清单
+- [x] 邀请码列表展示
+- [x] 创建新邀请码
+  - 自定义代码
+  - 设置使用次数
+  - 设置过期时间
+  - 添加描述
+- [x] 禁用/启用邀请码
+- [x] 查看邀请码使用记录
+- [x] 批量生成邀请码
+
+#### 权限设计
+- 管理员专用页面
+- 需要在 users 表添加 `role` 字段
+- 权限中间件保护 API
+
+#### 文件结构
+```
+src/pages/
+  └── AdminPanel.jsx         (新增)
+
+src/components/admin/
+  ├── InviteCodeList.jsx     (新增)
+  ├── CreateInviteCode.jsx   (新增)
+  └── InviteCodeStats.jsx    (新增)
+
+server/routes/
+  └── admin.cjs              (新增)
+```
+
+---
+
+## 🟡 Phase 2: 智能升级
+
+**目标**: 增强 AI 能力，提升对话体验
+
+### 2.1 智能对话总结 ⭐⭐⭐⭐⭐
+**价值**: 快速回顾长对话
+
+#### 功能清单
+- [x] 自动生成对话摘要
+- [x] 提取关键观点（要点列表）
+- [x] 生成思维导图（Markdown 格式）
+- [x] 总结样式选择
+  - 简洁版（3-5 句话）
+  - 详细版（分段总结）
+  - 结构化（标题 + 要点）
+- [x] 总结保存和导出
+
+#### 实现方式
+- 调用 AI API 生成总结
+- System Prompt 模板优化
+- 总结存储在 conversations 表的 `summary` 字段
+
+---
+
+### 2.2 对话模板市场 ⭐⭐⭐⭐⭐
+**价值**: 复用优质 Prompt，降低使用门槛
+
+#### 功能清单
+- [x] 模板浏览
+  - 分类（编程、写作、翻译、分析等）
+  - 搜索和过滤
+  - 热门/最新排序
+- [x] 模板详情
+  - 标题、描述、作者
+  - 使用次数、评分
+  - 示例对话
+- [x] 一键使用模板
+- [x] 收藏模板
+- [x] 创建和分享自己的模板
+- [x] 模板评分和评论
+
+#### 数据库设计
+```sql
+CREATE TABLE prompt_templates (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  category TEXT,
+  content TEXT NOT NULL, -- Prompt 内容
+  is_public INTEGER DEFAULT 0,
+  use_count INTEGER DEFAULT 0,
+  rating REAL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 对话元数据
-ALTER TABLE conversations ADD COLUMN is_starred BOOLEAN DEFAULT 0;
-ALTER TABLE conversations ADD COLUMN is_pinned BOOLEAN DEFAULT 0;
-```
+CREATE TABLE template_favorites (
+  user_id INTEGER,
+  template_id INTEGER,
+  PRIMARY KEY (user_id, template_id)
+);
 
-**开发时间**: 6-8小时
+CREATE TABLE template_ratings (
+  user_id INTEGER,
+  template_id INTEGER,
+  rating INTEGER, -- 1-5 星
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, template_id)
+);
+```
 
 ---
 
-#### 1.3 对话导出 ⭐⭐⭐⭐
+### 2.3 AI 角色预设（Personas）⭐⭐⭐⭐
+**价值**: 快速切换不同对话风格
 
-**为什么重要?**
-- 用户需要保存重要对话
-- 分享给他人
-- 备份数据
-
-**导出格式**:
-```
-支持格式:
-  - Markdown (.md)
-  - PDF (.pdf)
-  - HTML (.html)
-  - JSON (.json)
-  - 纯文本 (.txt)
-  - Word (.docx)
-
-导出选项:
-  - 单个对话
-  - 批量导出
-  - 按日期范围
-  - 按标签导出
-  - 包含/排除附件
-```
-
-**功能设计**:
-```javascript
-// 导出为Markdown
-function exportToMarkdown(conversation) {
-  let md = `# ${conversation.title}\n\n`;
-  md += `创建时间: ${conversation.created_at}\n\n`;
-  md += `---\n\n`;
-  
-  conversation.messages.forEach(msg => {
-    md += `## ${msg.role === 'user' ? '👤 用户' : '🤖 AI'}\n\n`;
-    md += `${msg.content}\n\n`;
-    if (msg.attachments) {
-      md += `**附件**: ${msg.attachments.map(a => a.name).join(', ')}\n\n`;
-    }
-  });
-  
-  return md;
-}
-
-// 导出为PDF(使用WeasyPrint或Puppeteer)
-async function exportToPDF(conversation) {
-  const html = convertToHTML(conversation);
-  const pdf = await puppeteer.createPDF(html);
-  return pdf;
-}
-```
-
-**UI设计**:
-```
-导出按钮位置: 对话设置菜单
-导出对话框:
-  ┌─────────────────────────┐
-  │ 导出对话                │
-  ├─────────────────────────┤
-  │ 格式: [Markdown ▼]     │
-  │                         │
-  │ ☑ 包含附件              │
-  │ ☑ 包含时间戳            │
-  │ ☑ 包含模型信息          │
-  │                         │
-  │ [取消]  [导出]          │
-  └─────────────────────────┘
-```
-
-**开发时间**: 4-6小时
+#### 功能清单
+- [x] 内置角色
+  - 专业顾问（正式、详细）
+  - 幽默助手（轻松、有趣）
+  - 简洁模式（直接、高效）
+  - 导师模式（教学、引导）
+  - 创意伙伴（发散思维）
+- [x] 自定义角色
+  - 名字、头像
+  - 性格描述
+  - 专业领域
+  - System Prompt 自定义
+- [x] 角色快速切换（在对话中切换）
+- [x] 角色市场（社区分享）
 
 ---
 
-#### 1.4 语音输入/输出 ⭐⭐⭐⭐
+### 2.4 对话历史版本 ⭐⭐⭐
+**价值**: 支持消息编辑和分支对话
 
-**为什么重要?**
-- 提升输入效率
-- 无障碍访问
-- 移动端友好
+#### 功能清单
+- [x] 编辑历史消息后生成新分支
+- [x] 查看和切换不同版本
+- [x] 对比不同分支的回答
+- [x] 合并分支（选择最佳回答）
 
-**功能设计**:
-```
-语音输入:
-  - 实时语音转文字(Web Speech API)
+#### 实现方式
+- 消息表添加 `parent_id` 和 `branch_id` 字段
+- 树形结构存储对话分支
+- 可视化展示分支（类似 Git 图）
+
+---
+
+## 🔵 Phase 3: 多模态支持
+
+**目标**: 支持图片、语音、文件等多种输入
+
+### 3.1 图片上传与分析 ⭐⭐⭐⭐⭐
+**价值**: 支持视觉模型（GPT-4V、Claude 3）
+
+#### 功能清单
+- [x] 图片上传（拖拽 / 点击上传）
+- [x] 图片预览和管理
+- [x] 支持多张图片
+- [x] 图片压缩（降低 API 成本）
+- [x] OCR 文字识别
+- [x] 图表分析
+- [x] 图片问答
+
+#### 技术实现
+- 文件上传：使用 Multer 中间件
+- 存储：本地文件系统 / OSS（阿里云/AWS S3）
+- 压缩：Sharp 库
+- API：OpenAI Vision API / Claude 3 API
+
+---
+
+### 3.2 语音输入与输出 ⭐⭐⭐⭐
+**价值**: 更自然的交互方式
+
+#### 功能清单
+- [x] 语音输入（STT - Speech to Text）
+  - 按住录音
   - 支持多语言
-  - 自动标点
-  - 语音命令
-
-语音输出:
-  - 文字转语音(TTS)
-  - 多种语音选择
+  - 实时转写
+- [x] 语音输出（TTS - Text to Speech）
+  - 播放 AI 回复
+  - 声音选择（多种音色）
   - 语速调节
-  - 自动播放AI回复
-```
+- [x] 连续对话模式（免按按钮）
 
-**技术实现**:
-```javascript
-// 语音输入(Web Speech API)
-const recognition = new webkitSpeechRecognition();
-recognition.lang = 'zh-CN';
-recognition.continuous = true;
-recognition.interimResults = true;
-
-recognition.onresult = (event) => {
-  const transcript = event.results[0][0].transcript;
-  setInputText(transcript);
-};
-
-// 语音输出(Web Speech API)
-const utterance = new SpeechSynthesisUtterance(text);
-utterance.lang = 'zh-CN';
-utterance.rate = 1.0;
-speechSynthesis.speak(utterance);
-
-// 高级方案:使用OpenAI Whisper API
-const transcription = await openai.audio.transcriptions.create({
-  file: audioFile,
-  model: "whisper-1",
-  language: "zh"
-});
-
-// 高级TTS:使用OpenAI TTS API
-const speech = await openai.audio.speech.create({
-  model: "tts-1",
-  voice: "alloy",
-  input: text,
-});
-```
-
-**UI设计**:
-```
-输入框:
-  ┌──────────────────────────────┐
-  │ 输入消息...           [🎤]   │
-  └──────────────────────────────┘
-  
-语音输入中:
-  ┌──────────────────────────────┐
-  │ 🔴 正在录音... [停止]        │
-  │ "你好,请帮我..."             │
-  └──────────────────────────────┘
-
-语音设置:
-  - 语音输入语言: [中文 ▼]
-  - 语音输出: [开启/关闭]
-  - 语音: [女声1 ▼]
-  - 语速: [1.0x ▼]
-```
-
-**开发时间**: 6-8小时
+#### 技术实现
+- STT：OpenAI Whisper API / 浏览器 Web Speech API
+- TTS：OpenAI TTS API / Edge TTS（免费）
+- 前端：使用 MediaRecorder API
 
 ---
 
-### 第二阶段:AI能力增强(下月)
+### 3.3 文件上传与解析 ⭐⭐⭐⭐
+**价值**: 分析文档内容
 
-#### 2.1 RAG知识库 ⭐⭐⭐⭐⭐
+#### 功能清单
+- [x] 支持文件类型
+  - PDF（解析文本）
+  - Word/Excel（解析内容）
+  - Markdown/TXT（直接读取）
+  - CSV（数据分析）
+  - 代码文件（代码审查）
+- [x] 文件内容提取
+- [x] 文件问答（基于文件内容）
+- [x] 文件总结
 
-**为什么重要?**
-- 让AI基于您的文档回答问题
-- 企业知识管理
-- 个人笔记助手
-
-**功能设计**:
-```
-知识库管理:
-  - 上传文档(PDF、Word、Markdown、TXT)
-  - 自动分块和向量化
-  - 文档管理(编辑、删除、更新)
-  - 文档分类
-
-检索增强:
-  - 自动检索相关文档
-  - 引用来源
-  - 相关性评分
-  - 混合检索(关键词+语义)
-
-支持的文档类型:
-  - PDF文档
-  - Word文档(.docx)
-  - Markdown文件
-  - 纯文本
-  - 网页(URL)
-  - 代码文件
-```
-
-**技术实现**:
-```javascript
-// 1. 文档上传和处理
-async function uploadDocument(file) {
-  // 提取文本
-  const text = await extractText(file);
-  
-  // 分块
-  const chunks = splitIntoChunks(text, {
-    chunkSize: 500,
-    overlap: 50
-  });
-  
-  // 生成向量
-  const embeddings = await Promise.all(
-    chunks.map(chunk => openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: chunk
-    }))
-  );
-  
-  // 存储到Qdrant
-  await qdrant.upsert({
-    collection: 'knowledge_base',
-    points: chunks.map((chunk, i) => ({
-      id: generateId(),
-      vector: embeddings[i],
-      payload: {
-        text: chunk,
-        source: file.name,
-        page: i
-      }
-    }))
-  });
-}
-
-// 2. RAG检索
-async function ragQuery(question) {
-  // 生成问题向量
-  const questionEmbedding = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: question
-  });
-  
-  // 检索相关文档
-  const results = await qdrant.search({
-    collection: 'knowledge_base',
-    query_vector: questionEmbedding,
-    limit: 5,
-    score_threshold: 0.7
-  });
-  
-  // 构建增强提示词
-  const context = results.map(r => r.payload.text).join('\n\n');
-  const prompt = `
-基于以下文档内容回答问题:
-
-${context}
-
-问题: ${question}
-
-请基于上述文档内容回答,并引用来源。
-  `;
-  
-  return prompt;
-}
-```
-
-**UI设计**:
-```
-知识库页面:
-  ┌─────────────────────────────────┐
-  │ 📚 知识库                       │
-  ├─────────────────────────────────┤
-  │ [上传文档] [新建文档]           │
-  │                                 │
-  │ 📄 产品文档.pdf      [编辑][删除]│
-  │    1.2MB | 15页 | 2024-10-13   │
-  │                                 │
-  │ 📄 技术规范.docx     [编辑][删除]│
-  │    850KB | 32页 | 2024-10-12   │
-  │                                 │
-  │ 📝 项目笔记.md       [编辑][删除]│
-  │    45KB | 2024-10-11            │
-  └─────────────────────────────────┘
-
-对话中启用RAG:
-  ┌──────────────────────────────┐
-  │ 💬 新对话                    │
-  │                              │
-  │ ☑ 启用知识库检索             │
-  │   知识库: [全部 ▼]          │
-  │                              │
-  │ 输入消息...                  │
-  └──────────────────────────────┘
-```
-
-**开发时间**: 12-16小时
+#### 技术实现
+- PDF：pdf-parse / pdf.js
+- Office：mammoth（Word）、xlsx（Excel）
+- 文本提取后注入到对话上下文
 
 ---
 
-#### 2.2 联网搜索增强 ⭐⭐⭐⭐⭐
+## 🟣 Phase 4: 协作与分享
 
-**为什么重要?**
-- AI可以获取最新信息
-- 实时数据查询
-- 新闻和事件
+**目标**: 支持分享和社区互动
 
-**功能设计**:
-```
-搜索集成:
-  - 自动判断是否需要搜索
-  - 多来源搜索(Brave、Google、Bing)
-  - 搜索结果摘要
-  - 引用来源链接
+### 4.1 对话分享功能 ⭐⭐⭐⭐⭐
+**价值**: 知识传播，增加用户增长
 
-搜索触发:
-  - 用户明确要求("搜索...")
-  - AI自动判断需要最新信息
-  - 手动触发搜索
-
-搜索类型:
-  - 网页搜索
-  - 新闻搜索
-  - 图片搜索
-  - 学术搜索
-```
-
-**技术实现**:
-```javascript
-// 智能搜索判断
-async function shouldSearch(question) {
-  const searchKeywords = [
-    '最新', '今天', '现在', '搜索', '查询',
-    '什么时候', '多少钱', '在哪里'
-  ];
-  
-  return searchKeywords.some(kw => question.includes(kw));
-}
-
-// 搜索增强
-async function searchEnhancedQuery(question) {
-  // 1. 执行搜索
-  const searchResults = await braveSearch.search(question, {
-    count: 5
-  });
-  
-  // 2. 提取关键信息
-  const summaries = searchResults.map(result => ({
-    title: result.title,
-    snippet: result.description,
-    url: result.url
-  }));
-  
-  // 3. 构建增强提示词
-  const prompt = `
-基于以下搜索结果回答问题:
-
-${summaries.map((s, i) => `
-[${i + 1}] ${s.title}
-${s.snippet}
-来源: ${s.url}
-`).join('\n')}
-
-问题: ${question}
-
-请基于搜索结果回答,并标注来源。
-  `;
-  
-  return prompt;
-}
-```
-
-**UI显示**:
-```
-AI回复中显示搜索结果:
-  ┌──────────────────────────────┐
-  │ 🤖 AI                        │
-  │                              │
-  │ 🔍 已搜索: "2024年AI发展"    │
-  │                              │
-  │ 根据最新信息...              │
-  │                              │
-  │ 📎 参考来源:                 │
-  │ [1] 2024 AI Report - xxx.com │
-  │ [2] AI News - yyy.com        │
-  └──────────────────────────────┘
-```
-
-**开发时间**: 8-10小时
+#### 功能清单
+- [x] 生成分享链接
+  - 公开链接（任何人可访问）
+  - 密码保护链接
+  - 过期时间设置
+- [x] 分享页面
+  - 静态快照（不可编辑）
+  - 美化展示（类似 ChatGPT Share）
+  - SEO 优化
+- [x] 分享管理
+  - 查看分享列表
+  - 撤销分享
+  - 查看访问统计
+- [x] 社交分享（Twitter、微信、复制链接）
 
 ---
 
-#### 2.3 图像生成和理解 ⭐⭐⭐⭐
+### 4.2 对话广场（社区）⭐⭐⭐⭐
+**价值**: 构建用户社区，学习优质对话
 
-**为什么重要?**
-- 多模态交互
-- 图像创作
-- 图像分析
-
-**功能设计**:
-```
-图像生成:
-  - 文字描述生成图像(DALL-E、Stable Diffusion)
-  - 风格选择
-  - 尺寸选择
-  - 批量生成
-
-图像理解:
-  - 上传图片提问
-  - 图片内容识别
-  - OCR文字提取
-  - 图片编辑建议
-```
-
-**技术实现**:
-```javascript
-// 图像生成(OpenAI DALL-E)
-async function generateImage(prompt) {
-  const response = await openai.images.generate({
-    model: "dall-e-3",
-    prompt: prompt,
-    n: 1,
-    size: "1024x1024",
-    quality: "standard"
-  });
-  
-  return response.data[0].url;
-}
-
-// 图像理解(GPT-4 Vision)
-async function analyzeImage(imageUrl, question) {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4-vision-preview",
-    messages: [{
-      role: "user",
-      content: [
-        { type: "text", text: question },
-        { type: "image_url", image_url: { url: imageUrl } }
-      ]
-    }]
-  });
-  
-  return response.choices[0].message.content;
-}
-
-// 或使用EverArt(已集成)
-async function generateWithEverArt(prompt) {
-  const result = await mcpClient.callTool('everart_generate', {
-    prompt: prompt,
-    style: 'realistic',
-    size: '1024x1024'
-  });
-  
-  return result.image_url;
-}
-```
-
-**UI设计**:
-```
-图像生成:
-  用户: "生成一张日落的图片"
-  
-  AI: 🎨 正在生成图像...
-      [生成的图片]
-      [下载] [重新生成] [编辑提示词]
-
-图像理解:
-  用户: [上传图片] "这是什么?"
-  
-  AI: 这是一张...
-      图片中包含...
-```
-
-**开发时间**: 8-10小时
+#### 功能清单
+- [x] 浏览公开分享的对话
+- [x] 分类和标签
+- [x] 搜索和过滤
+- [x] 点赞和收藏
+- [x] 评论功能
+- [x] 举报和审核
+- [x] 热门/最新排序
 
 ---
 
-#### 2.4 代码执行环境 ⭐⭐⭐⭐
+### 4.3 对话导入导出增强 ⭐⭐⭐
+**价值**: 数据迁移和备份
 
-**为什么重要?**
-- 运行代码示例
-- 数据分析
-- 自动化任务
-
-**功能设计**:
-```
-支持语言:
-  - Python
-  - JavaScript
-  - Shell
-  - SQL
-
-安全执行:
-  - 沙箱环境
-  - 资源限制
-  - 超时控制
-  - 网络隔离
-
-功能:
-  - 代码高亮
-  - 一键运行
-  - 结果显示
-  - 错误提示
-```
-
-**技术实现**:
-```javascript
-// 使用Docker沙箱执行代码
-async function executeCode(code, language) {
-  const container = await docker.createContainer({
-    Image: `${language}-sandbox`,
-    Cmd: ['run', code],
-    HostConfig: {
-      Memory: 512 * 1024 * 1024, // 512MB
-      CpuShares: 512,
-      NetworkMode: 'none'
-    }
-  });
-  
-  await container.start();
-  
-  const result = await container.wait({ timeout: 30000 });
-  const logs = await container.logs({ stdout: true, stderr: true });
-  
-  await container.remove();
-  
-  return {
-    stdout: logs.stdout,
-    stderr: logs.stderr,
-    exitCode: result.StatusCode
-  };
-}
-
-// 或使用E2B Code Interpreter MCP
-async function runPython(code) {
-  const result = await mcpClient.callTool('e2b_execute_python', {
-    code: code
-  });
-  
-  return result;
-}
-```
-
-**UI设计**:
-```
-代码块:
-  ┌──────────────────────────────┐
-  │ ```python                    │
-  │ print("Hello World")         │
-  │ ```                          │
-  │ [▶ 运行] [复制]              │
-  └──────────────────────────────┘
-
-执行结果:
-  ┌──────────────────────────────┐
-  │ 📤 输出:                     │
-  │ Hello World                  │
-  │                              │
-  │ ✅ 执行成功 (0.12s)          │
-  └──────────────────────────────┘
-```
-
-**开发时间**: 10-12小时
+#### 功能清单
+- [x] 导出格式
+  - JSON（完整数据）
+  - Markdown（可读格式）
+  - PDF（打印友好）
+  - HTML（网页格式）
+- [x] 批量导出
+- [x] 导入功能
+  - 从其他平台导入（ChatGPT、Claude）
+  - 格式自动识别
+  - 数据清洗和转换
 
 ---
 
-### 第三阶段:数据和协作(下下月)
+## 🟠 Phase 5: 高级 AI 能力
 
-#### 3.1 云端同步 ⭐⭐⭐⭐⭐
+**目标**: 构建智能 Agent 和工作流
 
-**为什么重要?**
-- 多设备访问
-- 数据安全
-- 团队协作
+### 5.1 知识库（RAG）⭐⭐⭐⭐⭐
+**价值**: 基于私有数据的问答
 
-**功能设计**:
+#### 功能清单
+- [x] 文档上传和管理
+- [x] 自动向量化（Embedding）
+- [x] 向量数据库（Chroma / Qdrant / Pinecone）
+- [x] 智能检索
+- [x] 引用来源展示
+- [x] 知识库管理（增删改）
+- [x] 多知识库支持
+
+#### 技术架构
 ```
-同步功能:
-  - 自动同步对话
-  - 增量同步
-  - 冲突解决
-  - 离线支持
-
-存储方案:
-  - 自建服务器
-  - Cloudflare R2
-  - AWS S3
-  - Google Drive
-```
-
-**技术实现**:
-```javascript
-// 同步架构
-class SyncManager {
-  async sync() {
-    // 1. 获取本地变更
-    const localChanges = await this.getLocalChanges();
-    
-    // 2. 推送到云端
-    await this.pushChanges(localChanges);
-    
-    // 3. 拉取云端变更
-    const remoteChanges = await this.pullChanges();
-    
-    // 4. 合并变更
-    await this.mergeChanges(remoteChanges);
-  }
-  
-  async resolveConflict(local, remote) {
-    // 冲突解决策略
-    if (local.updated_at > remote.updated_at) {
-      return local; // 保留本地
-    } else {
-      return remote; // 使用云端
-    }
-  }
-}
+用户上传文档 → 文本提取 → 分块（Chunking）→
+向量化（OpenAI Embeddings）→ 存储到向量数据库 →
+用户提问 → 向量检索 → 相关文档片段 → 注入 Prompt → AI 回答
 ```
 
-**开发时间**: 16-20小时
+---
+
+### 5.2 AI 工作流编排 ⭐⭐⭐⭐⭐
+**价值**: 复杂任务自动化
+
+#### 功能清单
+- [x] 可视化工作流编辑器
+  - 拖拽式节点编排
+  - 节点类型
+    - LLM 节点（调用模型）
+    - 工具节点（调用 MCP 工具）
+    - 条件节点（if-then-else）
+    - 循环节点（for/while）
+    - 变量节点（存储中间结果）
+  - 连线和数据流
+- [x] 工作流模板库
+  - 代码审查流程
+  - 文档生成流程
+  - 数据分析流程
+- [x] 工作流执行
+  - 单步调试
+  - 执行日志
+  - 错误处理
+
+#### 技术参考
+- 类似 Dify、LangFlow、Flowise
+- 使用 React Flow 实现可视化编辑器
 
 ---
 
-#### 3.2 多用户和团队工作区 ⭐⭐⭐⭐
+### 5.3 智能 Agent（自主 AI）⭐⭐⭐⭐⭐
+**价值**: AI 自主完成复杂任务
 
-**为什么重要?**
-- 团队协作
-- 知识共享
-- 权限管理
+#### 功能清单
+- [x] 任务分解
+  - 用户输入目标
+  - AI 自动拆解为子任务
+  - 生成执行计划
+- [x] 自主执行
+  - 自动选择工具
+  - 执行并验证结果
+  - 错误重试（最多 3 次）
+- [x] 进度可视化
+  - 任务树展示
+  - 实时进度更新
+  - 中间结果预览
+- [x] 人工干预
+  - 关键步骤需要确认
+  - 可随时暂停和修改
 
-**功能设计**:
+#### 实现架构
+- 基于 ReAct（Reasoning + Acting）模式
+- 使用 LangChain / AutoGPT 思想
+- 工具调用链管理
+
+---
+
+### 5.4 对话上下文优化 ⭐⭐⭐⭐
+**价值**: 更长的有效上下文
+
+#### 功能清单
+- [x] 智能压缩历史对话
+- [x] 关键信息提取和保留
+- [x] 上下文窗口管理
+- [x] 跨对话记忆（长期记忆）
+  - 基于 MCP Memory 服务
+  - 自动保存重要信息
+  - 智能回忆相关内容
+
+---
+
+## 🔴 Phase 6: 企业级功能
+
+**目标**: 支持团队和商业化
+
+### 6.1 团队协作空间 ⭐⭐⭐⭐
+**价值**: 企业和团队使用场景
+
+#### 功能清单
+- [x] 工作区（Workspace）
+  - 创建和管理工作区
+  - 邀请成员加入
+  - 成员角色管理（Owner/Admin/Member/Guest）
+- [x] 共享资源
+  - 共享对话
+  - 共享知识库
+  - 共享 Prompt 模板
+  - 共享 API Key 池
+- [x] 权限管理
+  - 精细的权限控制
+  - 资源可见性设置
+- [x] 使用量统计
+  - 团队总用量
+  - 成员用量排行
+  - 成本分摊
+
+---
+
+### 6.2 订阅和付费系统 ⭐⭐⭐
+**价值**: 项目可持续发展
+
+#### 功能清单
+- [x] 用户套餐
+  - 免费版（限制功能和配额）
+  - 专业版（个人用户）
+  - 团队版（小团队）
+  - 企业版（大型团队）
+- [x] 配额管理
+  - Token 限制
+  - 对话数限制
+  - 文件上传限制
+- [x] 支付集成
+  - Stripe（国际支付）
+  - 微信支付
+  - 支付宝
+- [x] 发票和账单
+  - 自动生成发票
+  - 账单历史查看
+  - 续费提醒
+
+---
+
+### 6.3 移动端和桌面端 ⭐⭐⭐⭐
+**价值**: 扩大用户群
+
+#### 移动端（React Native / PWA）
+- [x] iOS / Android App
+- [x] 核心功能适配
+- [x] 移动端专属 UI
+- [x] 推送通知
+- [x] 离线模式
+
+#### 桌面端（Electron）
+- [x] Windows / macOS / Linux
+- [x] 系统托盘
+- [x] 快捷键唤醒
+- [x] 本地模型支持（Ollama 集成）
+
+#### 浏览器插件
+- [x] Chrome / Edge / Firefox
+- [x] 侧边栏快速访问
+- [x] 选中文本翻译/总结
+- [x] 网页内容提取
+
+---
+
+### 6.4 高级安全功能 ⭐⭐⭐
+**价值**: 企业级安全要求
+
+#### 功能清单
+- [x] 端到端加密（E2E）
+- [x] 两步验证（2FA）
+- [x] 单点登录（SSO）
+- [x] IP 白名单
+- [x] 审计日志
+- [x] 数据备份和恢复
+- [x] GDPR 合规（数据导出和删除）
+
+---
+
+## 📊 技术债务与优化
+
+每个阶段实施时需要同步处理的技术优化：
+
+### 性能优化
+- [ ] 前端代码分割和懒加载
+- [ ] 后端 API 缓存（Redis）
+- [ ] 数据库查询优化和索引
+- [ ] 图片 CDN 加速
+- [ ] WebSocket 长连接优化
+
+### 代码质量
+- [ ] TypeScript 迁移（渐进式）
+- [ ] 单元测试覆盖率 > 80%
+- [ ] E2E 测试完善
+- [ ] 代码规范和 Lint 配置
+- [ ] 文档完善
+
+### 监控与运维
+- [ ] Sentry 错误监控（已集成，需配置）
+- [ ] 性能监控（Web Vitals）
+- [ ] 日志系统优化
+- [ ] CI/CD 流程
+- [ ] Docker 容器化部署
+
+---
+
+## 🎯 快速开始
+
+### 立即开始 Phase 1
+
+如果你想立即开始，建议从 **Phase 1.1（智能搜索）** 开始：
+
+```bash
+# 1. 阅读详细方案
+cat docs/phase1/1.1-smart-search.md
+
+# 2. 查看设计文档
+cat docs/phase1/design/search-architecture.md
+
+# 3. 开始开发
+# 我会为你生成完整的代码和实现方案
 ```
-用户系统:
-  - 用户注册/登录
-  - 个人工作区
-  - 团队工作区
-  - 角色和权限
-
-协作功能:
-  - 对话分享
-  - 评论和反馈
-  - 协作编辑
-  - 活动日志
-```
-
-**开发时间**: 20-24小时
 
 ---
 
-#### 3.3 使用统计和成本追踪 ⭐⭐⭐⭐
+## 📞 支持与反馈
 
-**为什么重要?**
-- 了解使用情况
-- 控制成本
-- 优化配置
-
-**功能设计**:
-```
-统计数据:
-  - Token使用量
-  - API调用次数
-  - 成本统计
-  - 使用趋势
-
-可视化:
-  - 图表展示
-  - 导出报表
-  - 预算警告
-```
-
-**技术实现**:
-```javascript
-// 使用统计
-class UsageTracker {
-  async trackUsage(conversation) {
-    await db.insert('usage_stats', {
-      conversation_id: conversation.id,
-      model: conversation.model,
-      input_tokens: conversation.input_tokens,
-      output_tokens: conversation.output_tokens,
-      cost: this.calculateCost(conversation),
-      timestamp: Date.now()
-    });
-  }
-  
-  async getMonthlyStats() {
-    return await db.query(`
-      SELECT 
-        model,
-        SUM(input_tokens) as total_input,
-        SUM(output_tokens) as total_output,
-        SUM(cost) as total_cost
-      FROM usage_stats
-      WHERE timestamp >= ?
-      GROUP BY model
-    `, [startOfMonth()]);
-  }
-}
-```
-
-**开发时间**: 8-10小时
+- 技术问题：参考各阶段的详细文档
+- 功能建议：提交 Issue
+- 进度跟踪：查看项目看板
 
 ---
 
-### 第四阶段:开发者生态(长期)
-
-#### 4.1 API接口 ⭐⭐⭐⭐
-
-**功能**:
-- RESTful API
-- WebSocket实时通信
-- API密钥管理
-- 速率限制
-
-**开发时间**: 12-16小时
-
----
-
-#### 4.2 插件系统 ⭐⭐⭐⭐
-
-**功能**:
-- 自定义插件
-- 插件市场
-- 插件管理
-- 热加载
-
-**开发时间**: 20-24小时
-
----
-
-#### 4.3 自定义MCP服务 ⭐⭐⭐⭐
-
-**功能**:
-- MCP服务开发工具
-- 服务模板
-- 本地测试
-- 发布分享
-
-**开发时间**: 16-20小时
-
----
-
-## 📅 推荐实施计划
-
-### 第1个月:用户体验
-
-**Week 1-2**:
-- ✅ 对话历史搜索
-- ✅ 消息收藏和标签
-
-**Week 3-4**:
-- ✅ 对话导出
-- ✅ 语音输入/输出
-
-**投入**: 20-28小时
-**价值**: 用户体验提升300%
-
-### 第2个月:AI能力
-
-**Week 1-2**:
-- ✅ RAG知识库
-- ✅ 联网搜索增强
-
-**Week 3-4**:
-- ✅ 图像生成和理解
-- ✅ 代码执行环境
-
-**投入**: 38-48小时
-**价值**: AI能力提升500%
-
-### 第3个月:数据和协作
-
-**Week 1-2**:
-- ✅ 云端同步
-
-**Week 3-4**:
-- ✅ 使用统计
-- ✅ 多用户支持(基础)
-
-**投入**: 24-30小时
-**价值**: 企业级功能
-
-### 第4个月及以后:开发者生态
-
-- ✅ API接口
-- ✅ 插件系统
-- ✅ 自定义MCP服务
-
-**投入**: 48-60小时
-**价值**: 平台化
-
----
-
-## 💡 我的最终建议
-
-### 立即实施(本周)
-
-**最高优先级**(3个功能):
-
-1. **对话历史搜索** (4-6小时)
-   - 最常用功能
-   - 立即见效
-   - 技术简单
-
-2. **消息收藏和标签** (6-8小时)
-   - 组织对话
-   - 提升效率
-   - 用户需求强
-
-3. **对话导出** (4-6小时)
-   - 数据备份
-   - 分享需求
-   - 易于实现
-
-**总投入**: 14-20小时
-**总价值**: 用户留存率+50%
-
-### 下月实施
-
-4. **RAG知识库** (12-16小时)
-   - 核心竞争力
-   - 企业级功能
-   - 您已有Qdrant
-
-5. **联网搜索增强** (8-10小时)
-   - AI能力提升
-   - 您已有Brave Search
-   - 立即可用
-
-**总投入**: 20-26小时
-**总价值**: AI能力+500%
-
----
-
-## 🎯 功能优先级矩阵
-
-| 功能 | 用户价值 | 开发成本 | 优先级 | 建议时间 |
-|------|---------|---------|--------|---------|
-| 对话搜索 | ⭐⭐⭐⭐⭐ | 低 | 🔴 最高 | 本周 |
-| 收藏标签 | ⭐⭐⭐⭐⭐ | 中 | 🔴 最高 | 本周 |
-| 对话导出 | ⭐⭐⭐⭐ | 低 | 🔴 最高 | 本周 |
-| 语音I/O | ⭐⭐⭐⭐ | 中 | 🟡 高 | 本月 |
-| RAG知识库 | ⭐⭐⭐⭐⭐ | 高 | 🟡 高 | 下月 |
-| 联网搜索 | ⭐⭐⭐⭐⭐ | 中 | 🟡 高 | 下月 |
-| 图像生成 | ⭐⭐⭐⭐ | 中 | 🟢 中 | 下月 |
-| 代码执行 | ⭐⭐⭐⭐ | 高 | 🟢 中 | 下月 |
-| 云端同步 | ⭐⭐⭐⭐⭐ | 高 | 🟢 中 | 第3月 |
-| 多用户 | ⭐⭐⭐⭐ | 高 | 🔵 低 | 第3月 |
-| API接口 | ⭐⭐⭐ | 中 | 🔵 低 | 长期 |
-| 插件系统 | ⭐⭐⭐ | 高 | 🔵 低 | 长期 |
-
----
-
-## 🎁 额外建议
-
-### 快速胜利(Quick Wins)
-
-这些功能开发成本低但用户价值高:
-
-1. **键盘快捷键增强** (2小时)
-   - Ctrl+K: 快速搜索
-   - Ctrl+N: 新对话
-   - Ctrl+/: 显示快捷键
-
-2. **Markdown渲染优化** (2小时)
-   - 代码高亮
-   - 表格美化
-   - LaTeX公式
-
-3. **深色模式优化** (2小时)
-   - 完善配色
-   - 护眼模式
-   - 自动切换
-
-4. **性能优化** (4小时)
-   - 虚拟滚动
-   - 懒加载
-   - 缓存优化
-
-**总投入**: 10小时
-**总价值**: 用户体验+30%
-
----
-
-## 📞 需要我帮您实现吗?
-
-我可以立即帮您:
-
-1. ✅ 实现对话历史搜索功能
-2. ✅ 添加消息收藏和标签系统
-3. ✅ 开发对话导出功能
-4. ✅ 创建详细的技术文档
-5. ✅ 提供完整的代码实现
-
-**选择一个,我们马上开始!** 🚀
-
-或者告诉我您最感兴趣的功能,我可以:
-- 提供详细的技术方案
-- 编写完整的代码
-- 创建UI设计稿
-- 制定实施计划
-
-随时告诉我! 💪
-
+**祝开发顺利！🚀**
