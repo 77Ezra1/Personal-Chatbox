@@ -59,26 +59,27 @@ function openDb() {
     console.error('[DB Adapter] better-sqlite3 error:', e.message);
   }
 
-  // 回退到 sqlite3
-  try {
-    const sqlite3 = require('sqlite3').verbose();
-    const db = new sqlite3.Database(DB_PATH);
-    try {
-      db.serialize(() => {
-        db.run('PRAGMA journal_mode=WAL');
-        db.run('PRAGMA synchronous=NORMAL');
-        db.run('PRAGMA foreign_keys=ON');
-        db.run('PRAGMA busy_timeout=5000');
-      });
-    } catch (e) {
-      console.warn('[DB Adapter] Warning setting PRAGMA (sqlite3):', e.message);
-    }
-    db._driver = 'sqlite3';
-    return db;
-  } catch (e) {
-    console.error('[DB Adapter] sqlite3 error:', e.message);
-  }
+  // 回退到 sqlite3 (已禁用，仅使用 better-sqlite3)
+  // try {
+  //   const sqlite3 = require('sqlite3').verbose();
+  //   const db = new sqlite3.Database(DB_PATH);
+  //   try {
+  //     db.serialize(() => {
+  //       db.run('PRAGMA journal_mode=WAL');
+  //       db.run('PRAGMA synchronous=NORMAL');
+  //       db.run('PRAGMA foreign_keys=ON');
+  //       db.run('PRAGMA busy_timeout=5000');
+  //       });
+  //   } catch (e) {
+  //     console.warn('[DB Adapter] Warning setting PRAGMA (sqlite3):', e.message);
+  //   }
+  //   db._driver = 'sqlite3';
+  //   return db;
+  // } catch (e) {
+  //   console.error('[DB Adapter] sqlite3 error:', e.message);
+  // }
 
+  console.error('[DB Adapter] No SQLite driver available!');
   return null;
 }
 

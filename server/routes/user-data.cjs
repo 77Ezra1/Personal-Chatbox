@@ -59,6 +59,8 @@ router.get('/conversations', authMiddleware, (req, res) => {
 /**
  * 保存/更新对话数据
  * POST /api/user-data/conversations
+ *
+ * 重写为同步代码以兼容 better-sqlite3
  */
 router.post('/conversations', authMiddleware, (req, res) => {
   const userId = req.user.id;
@@ -68,85 +70,111 @@ router.post('/conversations', authMiddleware, (req, res) => {
     return res.status(400).json({ message: '无效的对话数据' });
   }
 
-  // 开始事务
-  db.serialize(() => {
-    db.run('BEGIN TRANSACTION');
+  console.log('[User Data] Saving conversations for user:', userId);
+  console.log('[User Data] Conversations count:', Object.keys(conversations).length);
+
+  try {
+    // 获取 better-sqlite3 原始实例
+    const rawDb = db._raw;
+
+    if (!rawDb) {
+      console.error('[User Data] No raw database instance available');
+      return res.status(500).json({ message: '数据库连接不可用' });
+    }
+
+    // 开始事务（better-sqlite3 是同步的）
+    rawDb.prepare('BEGIN TRANSACTION').run();
 
     try {
-      // 删除用户现有的所有对话和消息
-      db.run('DELETE FROM conversations WHERE user_id = ?', [userId], (err) => {
-        if (err) {
-          console.error('[User Data] Error deleting old conversations:', err);
-          db.run('ROLLBACK');
-          return res.status(500).json({ message: '删除旧对话失败' });
-        }
+      // 1. 删除用户现有的所有对话（级联删除消息）
+      const deleteStmt = rawDb.prepare('DELETE FROM conversations WHERE user_id = ?');
+      const deleteResult = deleteStmt.run(userId);
+      console.log('[User Data] Deleted old conversations:', deleteResult.changes);
 
-        // 插入新的对话和消息
-        const conversationList = Object.values(conversations);
-        let completed = 0;
-        let hasError = false;
+      // 2. 插入新的对话和消息
+      const conversationList = Object.values(conversations);
 
-        if (conversationList.length === 0) {
-          db.run('COMMIT');
-          return res.json({ message: '对话数据已保存' });
-        }
+      if (conversationList.length === 0) {
+        rawDb.prepare('COMMIT').run();
+        console.log('[User Data] No conversations to save, committed empty transaction');
+        return res.json({ message: '对话数据已保存', count: 0 });
+      }
 
-        conversationList.forEach(conv => {
+      // 准备插入语句
+      const insertConvStmt = rawDb.prepare(
+        `INSERT INTO conversations (id, user_id, title, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)`
+      );
+
+      const insertMsgStmt = rawDb.prepare(
+        `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, status, attachments)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      );
+
+      let totalMessages = 0;
+
+      // 3. 遍历并插入每个对话
+      conversationList.forEach((conv, index) => {
+        try {
           // 插入对话
-          db.run(
-            `INSERT INTO conversations (id, user_id, title, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?)`,
-            [conv.id, userId, conv.title, conv.createdAt, conv.updatedAt],
-            function(err) {
-              if (err && !hasError) {
-                console.error('[User Data] Error inserting conversation:', err);
-                hasError = true;
-                db.run('ROLLBACK');
-                return res.status(500).json({ message: '保存对话失败' });
-              }
-
-              // 插入消息
-              if (conv.messages && conv.messages.length > 0) {
-                const messageStmt = db.prepare(
-                  `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, status, attachments)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)`
-                );
-
-                conv.messages.forEach(msg => {
-                  messageStmt.run(
-                    conv.id,
-                    msg.role,
-                    msg.content,
-                    msg.timestamp,
-                    msg.metadata ? JSON.stringify(msg.metadata) : null,
-                    msg.status || 'done',
-                    msg.attachments ? JSON.stringify(msg.attachments) : '[]'
-                  );
-                });
-
-                messageStmt.finalize();
-              }
-
-              completed++;
-              if (completed === conversationList.length && !hasError) {
-                db.run('COMMIT', (err) => {
-                  if (err) {
-                    console.error('[User Data] Error committing transaction:', err);
-                    return res.status(500).json({ message: '提交事务失败' });
-                  }
-                  res.json({ message: '对话数据已保存' });
-                });
-              }
-            }
+          insertConvStmt.run(
+            conv.id,
+            userId,
+            conv.title || '新对话',
+            conv.createdAt || new Date().toISOString(),
+            conv.updatedAt || new Date().toISOString()
           );
-        });
+
+          // 插入该对话的所有消息
+          if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
+            conv.messages.forEach(msg => {
+              insertMsgStmt.run(
+                conv.id,
+                msg.role || 'user',
+                msg.content || '',
+                msg.timestamp || new Date().toISOString(),
+                msg.metadata ? JSON.stringify(msg.metadata) : null,
+                msg.status || 'done',
+                msg.attachments ? JSON.stringify(msg.attachments) : '[]'
+              );
+              totalMessages++;
+            });
+          }
+        } catch (convError) {
+          console.error(`[User Data] Error inserting conversation ${index + 1}:`, convError);
+          throw convError; // 抛出以触发回滚
+        }
       });
-    } catch (error) {
-      console.error('[User Data] Error in transaction:', error);
-      db.run('ROLLBACK');
-      res.status(500).json({ message: '保存对话数据失败' });
+
+      // 4. 提交事务
+      rawDb.prepare('COMMIT').run();
+
+      console.log(`[User Data] ✅ Successfully saved ${conversationList.length} conversations with ${totalMessages} messages`);
+
+      return res.json({
+        message: '对话数据已保存',
+        count: conversationList.length,
+        totalMessages
+      });
+
+    } catch (innerError) {
+      // 回滚事务
+      try {
+        rawDb.prepare('ROLLBACK').run();
+        console.log('[User Data] Transaction rolled back');
+      } catch (rollbackError) {
+        console.error('[User Data] Error during rollback:', rollbackError);
+      }
+      throw innerError; // 重新抛出以被外层捕获
     }
-  });
+
+  } catch (error) {
+    console.error('[User Data] Error in conversation save transaction:', error);
+    return res.status(500).json({
+      message: '保存对话数据失败',
+      error: error.message
+    });
+  }
 });
 
 /**

@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 
@@ -20,6 +21,35 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+    },
+    // 配置中间件以服务根目录下的HTML文件
+    middlewareMode: false,
+    // 添加自定义中间件
+    async configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        // 匹配 /*.html 请求（排除index.html以保护应用入口）
+        const htmlMatch = req.url?.match(/^\/([^/]+\.html)$/)
+        if (htmlMatch) {
+          const fileName = htmlMatch[1]
+
+          // ⚠️ 保护应用入口文件，防止被AI生成的文件覆盖
+          if (fileName === 'index.html') {
+            next()
+            return
+          }
+
+          const filePath = path.join(rootDir, fileName)
+
+          // 检查文件是否存在
+          if (fs.existsSync(filePath)) {
+            const content = fs.readFileSync(filePath, 'utf-8')
+            res.setHeader('Content-Type', 'text/html')
+            res.end(content)
+            return
+          }
+        }
+        next()
+      })
     },
   },
   build: {

@@ -117,7 +117,7 @@ async function initializeServices() {
     // ========== 初始化原有服务 ==========
     services.weather = new WeatherService(config.services.weather);
     services.time = new TimeService(config.services.time);
-    services.search = new SearchService(config.services.search); // DuckDuckGo搜索
+    // services.search = new SearchService(config.services.search); // DuckDuckGo搜索 - 已由Phase 1.1搜索功能替代
     services.youtube = new YouTubeService(config.services.youtube);
     services.dexscreener = new DexscreenerService({
       id: 'dexscreener',
@@ -244,6 +244,7 @@ async function initializeServices() {
 // API路由
 app.use('/api/auth', authRouter); // 认证路由
 app.use('/api/user-data', require('./routes/user-data.cjs')); // 用户数据路由
+// app.use('/api/analytics', require('./routes/analytics.cjs')); // 数据分析路由 - 暂时禁用（数据库字段问题）
 app.use('/api/mcp', mcpRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/proxy', proxyRouter);

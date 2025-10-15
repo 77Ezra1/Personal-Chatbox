@@ -30,12 +30,12 @@ class MCPManager extends EventEmitter {
 
     try {
       console.log(`[MCP Manager] 启动服务: ${id}`);
-      
+
       // 获取用户配置的路径（如果有）
       let finalArgs = [...args];
       const configStorage = require('./config-storage.cjs');
       const userConfig = configStorage.getServiceConfig(id);
-      
+
       // 为SQLite和Filesystem服务应用用户配置
       if (id === 'sqlite' && userConfig && userConfig.databasePath) {
         console.log(`[MCP Manager] 使用自定义数据库路径: ${userConfig.databasePath}`);
@@ -44,19 +44,19 @@ class MCPManager extends EventEmitter {
         console.log(`[MCP Manager] 使用自定义允许目录: ${userConfig.allowedDirectories.join(', ')}`);
         finalArgs = ['-y', '@modelcontextprotocol/server-filesystem', ...userConfig.allowedDirectories];
       }
-      
+
       console.log(`[MCP Manager] 命令: ${command} ${finalArgs.join(' ')}`);
 
       // 获取代理配置
       await this.proxyManager.initialize();
       const proxyInfo = await this.proxyManager.getProxyInfo();
-      
+
       // 合并环境变量,包括代理配置
       const processEnv = {
         ...process.env,
         ...env
       };
-      
+
       // 如果有代理,添加代理环境变量
       if (proxyInfo.system && proxyInfo.system.enabled) {
         const proxyUrl = proxyInfo.system.url;
@@ -64,10 +64,10 @@ class MCPManager extends EventEmitter {
         processEnv.HTTPS_PROXY = proxyUrl;
         processEnv.http_proxy = proxyUrl;
         processEnv.https_proxy = proxyUrl;
-        
+
         // 添加Node.js特定的代理配置
         processEnv.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // 允许自签名证书（开发环境）
-        
+
         // 为某些MCP服务添加额外的代理配置
         if (id === 'wikipedia' || id === 'brave_search' || id === 'github') {
           // 这些服务需要额外的代理配置
@@ -75,7 +75,7 @@ class MCPManager extends EventEmitter {
           processEnv.GLOBAL_AGENT_HTTPS_PROXY = proxyUrl;
           processEnv.GLOBAL_AGENT_NO_PROXY = 'localhost,127.0.0.1';
         }
-        
+
         console.log(`[MCP Manager] ${id} 使用代理: ${proxyUrl}`);
       } else {
         console.log(`[MCP Manager] ${id} 未使用代理`);
@@ -85,7 +85,7 @@ class MCPManager extends EventEmitter {
       // Windows 系统需要使用 shell: true 或者 .cmd 后缀
       const isWindows = process.platform === 'win32';
       const actualCommand = isWindows && command === 'npx' ? 'npx.cmd' : command;
-      
+
       const childProcess = spawn(actualCommand, finalArgs, {
         env: processEnv,
         stdio: ['pipe', 'pipe', 'pipe'],
@@ -99,7 +99,7 @@ class MCPManager extends EventEmitter {
       let stdoutBuffer = '';
       childProcess.stdout.on('data', (data) => {
         stdoutBuffer += data.toString();
-        
+
         // 处理完整的 JSON 行
         const lines = stdoutBuffer.split('\n');
         stdoutBuffer = lines.pop() || ''; // 保留不完整的行
@@ -140,7 +140,7 @@ class MCPManager extends EventEmitter {
 
       // 获取工具列表
       const tools = await this.listTools(id);
-      
+
       // 存储服务信息
       this.services.set(id, {
         config: serviceConfig,
@@ -205,7 +205,7 @@ class MCPManager extends EventEmitter {
       });
 
       console.log(`[MCP Manager] ${serviceId} 初始化成功`);
-      
+
       // 发送 initialized 通知
       const process = this.processes.get(serviceId);
       if (process) {
@@ -254,6 +254,23 @@ class MCPManager extends EventEmitter {
     try {
       console.log(`[MCP Manager] 调用工具: ${serviceId}.${toolName}`);
       console.log(`[MCP Manager] 参数:`, JSON.stringify(params, null, 2));
+
+      // ⚠️ 保护关键文件不被覆盖 & 规范化HTML文件路径
+      if (serviceId === 'filesystem' && toolName === 'write_file' && params.path) {
+        const fileName = params.path.split(/[/\\]/).pop(); // 跨平台获取文件名
+
+        // 1. 保护关键文件
+        const protectedFiles = ['index.html', 'package.json', 'package-lock.json', 'pnpm-lock.yaml'];
+        if (protectedFiles.includes(fileName)) {
+          params.path = `generated-${fileName}`;
+          console.warn(`[MCP Manager] ⚠️ 文件 "${fileName}" 受保护，已重命名为 "generated-${fileName}"`);
+        }
+        // 2. 规范化HTML文件路径为相对路径（只保留文件名）
+        else if (fileName.endsWith('.html')) {
+          params.path = fileName;
+          console.log(`[MCP Manager] 📝 HTML文件路径已规范化: "${fileName}"`);
+        }
+      }
 
       const response = await this.sendRequest(serviceId, {
         jsonrpc: '2.0',
@@ -365,14 +382,14 @@ class MCPManager extends EventEmitter {
     // 首先尝试从工具列表中查找,使用存储的元数据
     const allTools = this.getAllTools();
     const tool = allTools.find(t => t.function.name === fullToolName);
-    
+
     if (tool && tool._serviceId && tool._toolName) {
       return {
         serviceId: tool._serviceId,
         toolName: tool._toolName
       };
     }
-    
+
     // 如果找不到,回退到字符串分割(向后兼容)
     const parts = fullToolName.split('_');
     const serviceId = parts[0];

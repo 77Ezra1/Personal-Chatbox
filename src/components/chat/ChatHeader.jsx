@@ -22,13 +22,13 @@ export function ChatHeader({
       <h1 className="chat-title">{title}</h1>
       <div className="chat-header-actions">
         <Button
-          variant="ghost"
+          variant={isDevMode ? 'default' : 'ghost'}
           size="sm"
           onClick={onToggleDevMode}
-          title={translate?.('tooltips.toggleDevMode', 'Toggle Dev Mode')}
+          title={isDevMode ? '关闭编程模式' : '开启编程模式'}
         >
           <Code2 className="w-4 h-4 mr-2" />
-          {isDevMode ? (translate?.('labels.devModeOn', '编程模式') || '编程模式') : (translate?.('labels.devModeOff', '普通模式') || '普通模式')}
+          编程模式
         </Button>
         <div className="chat-export-container">
           <Button

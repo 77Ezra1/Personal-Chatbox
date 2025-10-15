@@ -21,6 +21,7 @@ export function MessageInput({
   onAddAttachment,
   onRemoveAttachment,
   onToggleDeepThinking,
+  onCommandTrigger,      // 新增：指令触发回调
   translate
 }) {
   const [input, setInput] = useState('')
@@ -37,6 +38,13 @@ export function MessageInput({
   }
 
   const handleKeyDown = (e) => {
+    // 检测 / 触发指令面板
+    if (e.key === '/' && input === '' && onCommandTrigger) {
+      e.preventDefault()
+      onCommandTrigger()
+      return
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -115,7 +123,7 @@ export function MessageInput({
                 {(() => {
                   const currentLang = document.documentElement.lang === 'en' ? 'en' : 'zh'
                   const prefix = currentLang === 'zh' ? '深度思考：' : 'Deep thinking: '
-                  
+
                   // 根据思考模式显示不同的文本
                   switch (thinkingMode) {
                     case THINKING_MODE.DISABLED:

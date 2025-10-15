@@ -16,6 +16,7 @@ import { useMcpManager } from '@/hooks/useMcpManager'
 import { Sidebar } from '@/components/sidebar/Sidebar'
 import { ChatContainer } from '@/components/chat/ChatContainer'
 import { SettingsPage } from '@/components/settings/SettingsPage'
+import AnalyticsPage from '@/pages/AnalyticsPage'
 import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DataMigration } from '@/components/common/DataMigration'
@@ -101,6 +102,7 @@ function App() {
   // ==================== 本地状态 ====================
   
   const [showSettings, setShowSettings] = useState(false)
+  const [showAnalytics, setShowAnalytics] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
@@ -624,6 +626,7 @@ function App() {
           onToggleLanguage={toggleLanguage}
           onToggleTheme={toggleTheme}
           onOpenSettings={() => setShowSettings(true)}
+          onOpenAnalytics={() => setShowAnalytics(true)}
           onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
           translate={translate}
         />
@@ -680,6 +683,22 @@ function App() {
           onLanguageChange={toggleLanguage}
           translate={translate}
         />
+
+        {/* 数据分析页面 */}
+        {showAnalytics && (
+          <div className="analytics-overlay" onClick={() => setShowAnalytics(false)}>
+            <div className="analytics-modal" onClick={(e) => e.stopPropagation()}>
+              <button 
+                className="analytics-close" 
+                onClick={() => setShowAnalytics(false)}
+                aria-label="关闭分析页面"
+              >
+                ×
+              </button>
+              <AnalyticsPage />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 快捷键帮助 */}

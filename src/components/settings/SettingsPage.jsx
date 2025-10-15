@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare, Plug, Key, Wifi } from 'lucide-react'
+import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare, Plug, Key, Wifi, Keyboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfigPanel } from '../config/ConfigPanel'
 import { SystemPromptConfigNew } from '../config/SystemPromptConfigNew'
 import McpServiceConfig from '../mcp/McpServiceConfig_Simple'
 import { ApiKeysConfig } from './ApiKeysConfig'
 import ProxyConfig from './ProxyConfig'
+import { ShortcutSettings } from './ShortcutSettings'
 import './SettingsPage.css'
 
 /**
@@ -46,6 +47,7 @@ export function SettingsPage({
     { id: 'model', icon: SettingsIcon, label: translate('settings.tabs.model', 'Model Configuration') },
     { id: 'systemPrompt', icon: MessageSquare, label: translate('settings.tabs.systemPrompt', 'System Prompt') },
     { id: 'apiKeys', icon: Key, label: translate('settings.tabs.apiKeys', 'API Keys') },
+    { id: 'shortcuts', icon: Keyboard, label: translate('settings.tabs.shortcuts', 'Shortcuts') },
     { id: 'proxy', icon: Wifi, label: translate('settings.tabs.proxy', 'Proxy Settings') },
     { id: 'mcpServices', icon: Plug, label: translate('settings.tabs.mcpServices', 'MCP Services') },
     { id: 'appearance', icon: Palette, label: translate('settings.tabs.appearance', 'Appearance') },
@@ -134,6 +136,12 @@ export function SettingsPage({
                 <ApiKeysConfig
                   translate={translate}
                 />
+              </div>
+            )}
+
+            {activeTab === 'shortcuts' && (
+              <div className="settings-section">
+                <ShortcutSettings />
               </div>
             )}
 
@@ -266,9 +274,9 @@ export function SettingsPage({
                   </div>
                   <div className="about-item">
                     <strong>{translate('settings.about.repository', 'Repository')}:</strong>
-                    <a 
-                      href="https://github.com/77Ezra1/AI-Life-system" 
-                      target="_blank" 
+                    <a
+                      href="https://github.com/77Ezra1/AI-Life-system"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="about-link"
                     >

@@ -37,6 +37,10 @@ console.log('[DB Init] Connected to database:', db._driver === 'pg' ? 'PostgreSQ
 
 // 运行数据库迁移
 function runMigrations() {
+  // 临时禁用迁移 - better-sqlite3同步问题
+  console.log('[DB Migrations] Migrations disabled for better-sqlite3 compatibility');
+  return Promise.resolve();
+
   return new Promise((resolve, reject) => {
     const migrationsDir = path.join(__dirname, 'migrations');
 

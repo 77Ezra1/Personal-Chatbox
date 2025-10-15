@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User } from 'lucide-react'
+import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
 import { SearchBar } from './SearchBar'
@@ -24,10 +24,14 @@ export function Sidebar({
   onToggleLanguage,
   onToggleTheme,
   onOpenSettings,
+  onOpenAnalytics,
   onShowConfirm,
   translate
 }) {
   const { user, logout } = useAuth()
+
+  // 侧边栏折叠状态
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState('')
@@ -163,24 +167,35 @@ export function Sidebar({
   const hasActiveFilters = filters.dateFrom || filters.dateTo
 
   return (
-    <aside className="sidebar">
-      {/* 头部 */}
-      <div className="sidebar-header">
-        <h2 className="sidebar-title">
-          {translate('headings.conversation', 'Conversation')}
-        </h2>
-        <Button
-          className="new-chat-btn-header"
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            onNewConversation()
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          {translate('buttons.newConversation', 'New conversation')}
-        </Button>
-      </div>
+    <aside className={`sidebar ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      {/* 折叠/展开按钮 */}
+      <button
+        className="sidebar-toggle-btn"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        title={isCollapsed ? '展开侧边栏' : '收起侧边栏'}
+      >
+        {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+      </button>
+
+      {!isCollapsed && (
+        <>
+          {/* 头部 */}
+          <div className="sidebar-header">
+            <h2 className="sidebar-title">
+              {translate('headings.conversation', 'Conversation')}
+            </h2>
+            <Button
+              className="new-chat-btn-header"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                onNewConversation()
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              {translate('buttons.newConversation', 'New conversation')}
+            </Button>
+          </div>
 
       {/* 搜索栏 */}
       <div className="px-3 py-2">
@@ -238,6 +253,10 @@ export function Sidebar({
         onReset={handleResetFilters}
       />
 
+        </>
+      )}
+
+      {!isCollapsed && (
       <div className="sidebar-footer">
         {/* 用户信息区域 */}
         {user && (
@@ -309,6 +328,17 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={() => {
+              onOpenAnalytics?.()
+            }}
+            title="数据分析"
+          >
+            <BarChart3 className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
               onOpenSettings?.()
             }}
             title={translate('tooltips.openSettings', 'Open settings')}
@@ -317,6 +347,7 @@ export function Sidebar({
           </Button>
         </div>
       </div>
+      )}
     </aside>
   )
 }

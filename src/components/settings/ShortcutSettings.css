@@ -1,0 +1,451 @@
+/* 快捷键设置样式 */
+
+.shortcut-settings {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.shortcut-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+}
+
+.shortcut-settings-title {
+  display: flex;
+  gap: 16px;
+}
+
+.shortcut-settings-title .title-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.shortcut-settings-title h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.shortcut-settings-title .subtitle {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+/* 系统信息 */
+.shortcut-settings-info {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--muted);
+  border-radius: 8px;
+}
+
+.info-item {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.info-label {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.info-value {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+/* 分类过滤器 */
+.shortcut-settings-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background: var(--muted);
+  border-color: var(--primary);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.filter-icon {
+  font-size: 16px;
+}
+
+/* 快捷键列表 */
+.shortcut-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.shortcut-category {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.category-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.category-icon {
+  font-size: 20px;
+}
+
+.shortcut-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.shortcut-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.shortcut-item.editing {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.shortcut-item.disabled {
+  opacity: 0.5;
+}
+
+.shortcut-item.disabled:hover {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.shortcut-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shortcut-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+.shortcut-description {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.shortcut-key-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.shortcut-key {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.shortcut-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+/* 切换开关 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* 录制模式 */
+.shortcut-recording {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.shortcut-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid var(--primary);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  min-width: 200px;
+}
+
+.shortcut-input::placeholder {
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+
+.conflict-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.conflict-message.invalid {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.conflict-message.conflict {
+  background: rgba(245, 158, 11, 0.1);
+  color: rgb(245, 158, 11);
+}
+
+.conflict-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.recording-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.recording-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recording-btn.save {
+  background: rgb(34, 197, 94);
+  color: white;
+}
+
+.recording-btn.save:hover:not(:disabled) {
+  background: rgb(22, 163, 74);
+}
+
+.recording-btn.save:disabled {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+
+.recording-btn.cancel {
+  background: rgb(239, 68, 68);
+  color: white;
+}
+
+.recording-btn.cancel:hover {
+  background: rgb(220, 38, 38);
+}
+
+/* 帮助提示 */
+.shortcut-settings-help {
+  margin-top: 32px;
+  padding: 20px;
+  background: var(--muted);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary);
+}
+
+.shortcut-settings-help h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.shortcut-settings-help ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.shortcut-settings-help li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.shortcut-settings-help li:last-child {
+  margin-bottom: 0;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .shortcut-settings {
+    padding: 16px;
+  }
+
+  .shortcut-settings-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .shortcut-settings-info {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .shortcut-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .shortcut-key-container {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .shortcut-recording {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .shortcut-input {
+    width: 100%;
+  }
+
+  .shortcut-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+

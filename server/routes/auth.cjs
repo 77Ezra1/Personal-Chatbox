@@ -296,7 +296,7 @@ router.post('/login', async (req, res) => {
         }
 
         // 登录成功，重置失败次数
-        db.run('UPDATE users SET failed_login_attempts = 0, last_login_at = datetime("now") WHERE id = ?', [user.id]);
+        db.run("UPDATE users SET failed_login_attempts = 0, last_login_at = datetime('now') WHERE id = ?", [user.id]);
 
         // 生成Token
         const token = generateToken(user.id, user.email);

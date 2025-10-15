@@ -9,7 +9,7 @@ function authMiddleware(req, res, next) {
   try {
     // 提取Token
     const token = extractToken(req);
-    
+
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -20,7 +20,7 @@ function authMiddleware(req, res, next) {
 
     // 验证Token
     const decoded = verifyToken(token);
-    
+
     if (!decoded) {
       return res.status(401).json({
         success: false,
@@ -31,7 +31,7 @@ function authMiddleware(req, res, next) {
 
     // 检查Session是否存在且未过期
     db.get(
-      'SELECT * FROM sessions WHERE token = ? AND expires_at > datetime("now")',
+      "SELECT * FROM sessions WHERE token = ? AND expires_at > datetime('now')",
       [token],
       (err, session) => {
         if (err) {
@@ -97,13 +97,13 @@ function authMiddleware(req, res, next) {
  */
 function optionalAuthMiddleware(req, res, next) {
   const token = extractToken(req);
-  
+
   if (!token) {
     return next();
   }
 
   const decoded = verifyToken(token);
-  
+
   if (!decoded) {
     return next();
   }
