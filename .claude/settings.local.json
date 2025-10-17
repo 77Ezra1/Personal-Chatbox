@@ -170,7 +170,10 @@
       "Bash(NODE_ENV=development node:*)",
       "Bash(find:*)",
       "Bash(tar:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(dir:*)",
+      "Bash(export NODE_ENV=development)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
