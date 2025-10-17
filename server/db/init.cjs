@@ -1,18 +1,29 @@
-const { openDb, DB_PATH } = require('./adapter.cjs');
-const { createPgDb } = require('./pg.cjs');
+const { createDatabaseAdapter, DB_PATH, JSON_DB_PATH } = require('./unified-adapter.cjs');
 const path = require('path');
 const fs = require('fs');
-// 优先使用 PostgreSQL（如果 POSTGRES_URL/DATABASE_URL 存在），否则使用本地 SQLite 驱动
+
+// 创建统一的数据库适配器
 let db = null;
+
+// 优先使用 PostgreSQL（如果配置了）
 if (process.env.POSTGRES_URL || process.env.DATABASE_URL) {
   try {
-    db = createPgDb();
+    const { createPostgreSQLAdapter } = require('./postgres-adapter.cjs');
+    db = createPostgreSQLAdapter({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      max: parseInt(process.env.PG_POOL_MAX) || 20,
+      min: parseInt(process.env.PG_POOL_MIN) || 2
+    });
+    console.log('[DB Init] ✅ Using PostgreSQL (Production Mode)');
   } catch (e) {
-    console.error('[DB Init] Failed to init Postgres driver:', e?.message);
+    console.warn('[DB Init] PostgreSQL not available:', e?.message);
+    console.warn('[DB Init] Stack:', e?.stack);
   }
 }
+
+// 否则使用unified adapter (better-sqlite3 或 JSON)
 if (!db) {
-  db = openDb();
+  db = createDatabaseAdapter();
 }
 
 if (!db) {
@@ -33,10 +44,16 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-console.log('[DB Init] Connected to database:', db._driver === 'pg' ? 'PostgreSQL' : DB_PATH, 'driver=', db._driver || 'unknown');
+console.log('[DB Init] Connected to database:', db._driver === 'pg' || db._driver === 'postgresql' ? 'PostgreSQL' : DB_PATH, 'driver=', db._driver || 'unknown');
 
 // 运行数据库迁移
 function runMigrations() {
+  // PostgreSQL表结构已经通过migration脚本创建，跳过
+  if (db._driver === 'pg' || db._driver === 'postgresql') {
+    console.log('[DB Migrations] Skipping migrations for PostgreSQL (已通过migration脚本创建)');
+    return Promise.resolve();
+  }
+
   // 临时禁用迁移 - better-sqlite3同步问题
   console.log('[DB Migrations] Migrations disabled for better-sqlite3 compatibility');
   return Promise.resolve();
@@ -117,6 +134,12 @@ function runMigrations() {
 
 // 初始化数据库表
 function initDatabase() {
+  // 如果使用PostgreSQL，跳过表创建（已通过migration脚本创建）
+  if (db._driver === 'pg' || db._driver === 'postgresql') {
+    console.log('[DB Init] Skipping table creation for PostgreSQL (tables already created by migration script)');
+    return Promise.resolve();
+  }
+
   return new Promise((resolve, reject) => {
     db.serialize(() => {
       // 1. 用户表
@@ -285,7 +308,72 @@ function initDatabase() {
           reject(err);
         } else {
           console.log('[DB Init] ✓ invite_codes table created/verified');
-          // 表创建完成后，运行迁移
+        }
+      });
+
+      // 9. 密码保险库表
+      db.run(`
+        CREATE TABLE IF NOT EXISTS password_vault (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          username TEXT,
+          encrypted_password TEXT NOT NULL,
+          url TEXT,
+          category TEXT DEFAULT 'general',
+          notes TEXT,
+          tags TEXT,
+          favorite INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          last_accessed DATETIME,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `, (err) => {
+        if (err) {
+          console.error('[DB Init] Error creating password_vault table:', err);
+          reject(err);
+        } else {
+          console.log('[DB Init] ✓ password_vault table created/verified');
+        }
+      });
+
+      // 10. 主密码表
+      db.run(`
+        CREATE TABLE IF NOT EXISTS master_password (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          salt TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `, (err) => {
+        if (err) {
+          console.error('[DB Init] Error creating master_password table:', err);
+          reject(err);
+        } else {
+          console.log('[DB Init] ✓ master_password table created/verified');
+        }
+      });
+
+      // 11. 密码历史记录表
+      db.run(`
+        CREATE TABLE IF NOT EXISTS password_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          vault_id INTEGER NOT NULL,
+          encrypted_password TEXT NOT NULL,
+          changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (vault_id) REFERENCES password_vault(id) ON DELETE CASCADE
+        )
+      `, (err) => {
+        if (err) {
+          console.error('[DB Init] Error creating password_history table:', err);
+          reject(err);
+        } else {
+          console.log('[DB Init] ✓ password_history table created/verified');
+          // 所有表创建完成后，运行迁移
           runMigrations()
             .then(() => resolve())
             .catch(reject);

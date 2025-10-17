@@ -1,26 +1,32 @@
-# Personal Chatbox 文档索引
+# Personal Chatbox 文档索引（简版）
 
-**作者**: Ezra  
-**更新日期**: 2025-10-12
+**作者**: Ezra
+**更新日期**: 2025-10-17
 
-欢迎查阅Personal Chatbox的完整文档!本索引帮助您快速找到所需的文档。
+> 💡 **提示**: 本文档为简化版索引，完整版请查看 **[完整文档索引](DOCUMENTATION_INDEX.md)**
+
+欢迎查阅Personal Chatbox的文档！本索引提供快速导航。
 
 ---
 
-## 📚 文档分类
+## 🚀 快速开始
 
-### 🚀 新手入门
-
-如果您是第一次使用本系统,请按以下顺序阅读:
+### 新手必读（按顺序）
 
 1. **[README.md](../README.md)** - 项目概述和快速开始
 2. **[快速开始指南](guides/GETTING_STARTED.md)** - 详细的安装和配置步骤
 3. **[依赖安装指南](setup/INSTALL_DEPENDENCIES.md)** - 安装所需依赖
 4. **[完整用户指南](guides/MCP_COMPLETE_USER_GUIDE.md)** - 系统功能全面介绍
 
+---
+
+## 📚 文档分类
+
 ### 📖 用户指南
 
 #### MCP服务使用
+- **[MCP自定义配置快速开始](MCP_QUICK_START.md)** ⭐ NEW - 5分钟上手MCP自定义配置
+- **[MCP自定义配置完整指南](MCP_CUSTOM_CONFIGURATION_GUIDE.md)** ⭐ NEW - 用户自定义MCP服务详细教程
 - **[MCP服务使用指南](guides/MCP_SERVICES_GUIDE.md)** - MCP服务基础使用方法
 - **[MCP用户指南](guides/MCP_USER_GUIDE.md)** - MCP服务详细说明
 - **[MCP配置使用指南](guides/MCP_CONFIG_USAGE_GUIDE.md)** - SQLite和Filesystem服务配置
@@ -101,49 +107,57 @@
 
 ---
 
-## 🔍 按需求查找文档
+## 🎯 按需求快速查找
 
-### 我想开始使用系统
-→ [README.md](../README.md) → [快速开始指南](guides/GETTING_STARTED.md)
+| 我想... | 查看文档 |
+|--------|---------|
+| 🆕 **开始使用系统** | [README.md](../README.md) → [快速开始](guides/GETTING_STARTED.md) |
+| 📡 **了解MCP服务** | [MCP完整指南](guides/MCP_COMPLETE_USER_GUIDE.md) |
+| 📊 **使用数据分析** | [数据分析功能指南](ANALYTICS_FEATURE_GUIDE.md) |
+| 🌐 **配置代理** | [代理集成指南](setup/PROXY_INTEGRATION_GUIDE.md) |
+| 🧠 **配置深度思考** | [深度思考模型指南](DEEP_THINKING_MODELS_GUIDE.md) |
+| 🔥 **配置火山引擎** | [火山引擎配置指南](VOLCENGINE_SETUP_GUIDE.md) |
+| 🐛 **解决问题** | [MCP修复指南](reports/MCP_FIX_GUIDE.md) |
+| 🏗️ **了解架构** | [后端架构](reports/BACKEND_ARCHITECTURE.md) |
+| 💻 **贡献代码** | [重构指南](reports/REFACTORING_GUIDE.md) |
 
-### 我想了解MCP服务
-→ [MCP完整用户指南](guides/MCP_COMPLETE_USER_GUIDE.md) → [MCP服务使用指南](guides/MCP_SERVICES_GUIDE.md)
+---
 
-### 我想配置代理
-→ [代理集成指南](setup/PROXY_INTEGRATION_GUIDE.md) → [代理配置确认](guides/PROXY_CONFIG_CONFIRMATION.md)
+## 📖 完整文档
 
-### 我想选择合适的MCP服务
-→ [推荐MCP服务](guides/RECOMMENDED_MCP_SERVICES.md) → [MCP服务定价](guides/MCP_SERVICES_PRICING.md)
+想要查看所有文档的详细分类和说明？
 
-### 我想了解系统架构
-→ [后端架构](reports/BACKEND_ARCHITECTURE.md) → [数据库设计](database-design.md)
+### ➡️ [查看完整文档索引](DOCUMENTATION_INDEX.md)
 
-### 我遇到了问题
-→ [MCP修复指南](reports/MCP_FIX_GUIDE.md) → [完整用户指南-故障排查](guides/MCP_COMPLETE_USER_GUIDE.md#6-故障排查)
-
-### 我想贡献代码
-→ [重构指南](reports/REFACTORING_GUIDE.md) → [集成指南](setup/INTEGRATION_GUIDE.md)
+完整索引包含：
+- ✅ 63 个核心文档的完整列表（已精简63%）
+- ✅ 详细分类（用户指南、开发文档、技术报告等）
+- ✅ 按场景查找（新用户、开发者、优化等）
+- ✅ 所有Phase开发文档
+- ✅ 脚本工具说明
+- ✅ 清理成果统计
 
 ---
 
 ## 📝 文档维护
 
-本文档索引由 **Ezra** 维护。
+本文档索引由 **Personal Chatbox Team** 维护。
 
-如发现文档问题或有改进建议,请:
-1. 提交Issue: https://github.com/77Ezra1/Personal Chatbox/issues
-2. 提交PR: https://github.com/77Ezra1/Personal Chatbox/pulls
+如发现文档问题或有改进建议：
+1. 提交Issue: https://github.com/77Ezra1/Personal-Chatbox/issues
+2. 提交PR: https://github.com/77Ezra1/Personal-Chatbox/pulls
 
 ---
 
 ## 📌 快速链接
 
-- **项目主页**: https://github.com/77Ezra1/Personal Chatbox
-- **问题反馈**: https://github.com/77Ezra1/Personal Chatbox/issues
-- **最新版本**: 查看 [README.md](../README.md#-版本历史)
+- **项目主页**: https://github.com/77Ezra1/Personal-Chatbox
+- **问题反馈**: https://github.com/77Ezra1/Personal-Chatbox/issues
+- **完整索引**: [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
+- **最新版本**: [README.md](../README.md)
 
 ---
 
-**最后更新**: 2025-10-12  
-**文档版本**: v1.0.0
+**最后更新**: 2025-10-17
+**文档版本**: v1.1.0
 

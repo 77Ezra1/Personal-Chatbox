@@ -9,7 +9,6 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('auth_token'));
 
   // 检查用户登录状态
   useEffect(() => {
@@ -17,34 +16,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   const checkAuth = async () => {
-    const savedToken = localStorage.getItem('auth_token');
-    if (!savedToken) {
-      setLoading(false);
-      return;
-    }
-
     try {
+      // 完全依赖httpOnly cookie，不使用localStorage
+      // 浏览器会自动发送cookie
       const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${savedToken}`
-        },
         credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        setToken(savedToken);
       } else {
-        // Token无效，清除
-        localStorage.removeItem('auth_token');
-        setToken(null);
+        // Session无效或已过期
         setUser(null);
       }
     } catch (error) {
       logger.error('Check auth failed:', error);
-      localStorage.removeItem('auth_token');
-      setToken(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -68,9 +55,7 @@ export function AuthProvider({ children }) {
         throw data;
       }
 
-      // 保存Token
-      localStorage.setItem('auth_token', data.token);
-      setToken(data.token);
+      // Token通过httpOnly cookie自动保存，前端不存储
       setUser(data.user);
 
       return { success: true };
@@ -96,9 +81,7 @@ export function AuthProvider({ children }) {
         throw data;
       }
 
-      // 保存Token
-      localStorage.setItem('auth_token', data.token);
-      setToken(data.token);
+      // Token通过httpOnly cookie自动保存，前端不存储
       setUser(data.user);
 
       return { success: true };
@@ -111,28 +94,31 @@ export function AuthProvider({ children }) {
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         credentials: 'include'
       });
     } catch (error) {
       logger.error('Logout failed:', error);
     } finally {
       // 无论是否成功，都清除本地状态
-      localStorage.removeItem('auth_token');
-      setToken(null);
+      // Cookie会被服务器清除
       setUser(null);
     }
   };
 
+  const updateUserProfile = (updates) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      ...updates
+    }));
+  };
+
   const value = {
     user,
-    token,
     loading,
     login,
     register,
     logout,
+    updateUserProfile,
     isAuthenticated: !!user
   };
 

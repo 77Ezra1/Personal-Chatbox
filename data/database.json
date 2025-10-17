@@ -1,0 +1,19 @@
+{
+  "users": [],
+  "conversations": [],
+  "messages": [],
+  "invite_codes": [
+    {
+      "code": "T",
+      "max_uses": "E",
+      "description": "S",
+      "is_active": "T",
+      "id": 1,
+      "created_at": "2025-10-16T01:58:48.844Z"
+    }
+  ],
+  "sessions": [],
+  "oauth_accounts": [],
+  "login_history": [],
+  "user_configs": []
+}

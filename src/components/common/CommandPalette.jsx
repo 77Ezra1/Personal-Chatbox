@@ -11,7 +11,7 @@ const logger = createLogger('CommandPalette')
  * 快捷指令面板
  * 使用 cmdk 实现的指令选择器
  */
-export function CommandPalette({ open, onClose, onExecuteCommand, context }) {
+export function CommandPalette({ open, onClose, onExecuteCommand, context, translate }) {
   const [search, setSearch] = useState('')
   const [commands, setCommands] = useState([])
 
@@ -85,14 +85,14 @@ export function CommandPalette({ open, onClose, onExecuteCommand, context }) {
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
-        <Command label="指令面板">
+        <Command label={translate?.('commandPalette.title', 'Command Palette')}>
           {/* 搜索输入 */}
           <div className="command-search">
             <Search className="command-search-icon" size={18} />
             <Command.Input
               value={search}
               onValueChange={setSearch}
-              placeholder="输入指令名称或 / 搜索..."
+              placeholder={translate?.('commandPalette.searchPlaceholder', 'Enter command name or / to search...')}
               autoFocus
             />
             {search && (
@@ -111,8 +111,8 @@ export function CommandPalette({ open, onClose, onExecuteCommand, context }) {
               <Command.Empty>
                 <div className="command-empty">
                   <Zap size={32} opacity={0.3} />
-                  <p>未找到匹配的指令</p>
-                  <small>尝试其他关键词</small>
+                  <p>{translate?.('commandPalette.noCommandsFound', 'No matching commands found')}</p>
+                  <small>{translate?.('commandPalette.tryOtherKeywords', 'Try other keywords')}</small>
                 </div>
               </Command.Empty>
             ) : (
@@ -171,12 +171,12 @@ export function CommandPalette({ open, onClose, onExecuteCommand, context }) {
         {/* 底部提示 */}
         <div className="command-footer">
           <div className="command-footer-hint">
-            <kbd>↑↓</kbd> 导航
-            <kbd>Enter</kbd> 选择
-            <kbd>Esc</kbd> 关闭
+            <kbd>↑↓</kbd> {translate?.('commandPalette.navigation', 'Navigate')}
+            <kbd>Enter</kbd> {translate?.('commandPalette.select', 'Select')}
+            <kbd>Esc</kbd> {translate?.('commandPalette.close', 'Close')}
           </div>
           <div className="command-footer-count">
-            {commands.length} 个指令
+            {translate?.('commandPalette.commandsCount', '{count} commands').replace('{count}', commands.length)}
           </div>
         </div>
       </div>
@@ -187,7 +187,7 @@ export function CommandPalette({ open, onClose, onExecuteCommand, context }) {
 /**
  * 指令帮助对话框
  */
-export function CommandHelpDialog({ open, onClose }) {
+export function CommandHelpDialog({ open, onClose, translate }) {
   if (!open) return null
 
   const categories = Object.values(COMMAND_CATEGORIES)
@@ -197,7 +197,7 @@ export function CommandHelpDialog({ open, onClose }) {
     <div className="command-help-overlay" onClick={onClose}>
       <div className="command-help-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="command-help-header">
-          <h2>⚡ 快捷指令帮助</h2>
+          <h2>⚡ {translate?.('commandPalette.helpTitle', 'Quick Command Help')}</h2>
           <button className="command-help-close" onClick={onClose}>
             <X size={20} />
           </button>
@@ -205,15 +205,15 @@ export function CommandHelpDialog({ open, onClose }) {
 
         <div className="command-help-content">
           <div className="command-help-intro">
-            <p>使用快捷指令可以快速执行常用操作，提升使用效率。</p>
+            <p>{translate?.('commandPalette.helpIntro', 'Use quick commands to execute common operations and improve efficiency.')}</p>
             <div className="command-help-triggers">
               <div className="help-trigger-item">
                 <kbd>/</kbd>
-                <span>在输入框开头输入 / 触发指令</span>
+                <span>{translate?.('commandPalette.helpTrigger', 'Type / at the beginning of the input to trigger commands')}</span>
               </div>
               <div className="help-trigger-item">
                 <kbd>Ctrl+K</kbd>
-                <span>打开指令面板</span>
+                <span>{translate?.('commandPalette.helpShortcut', 'Open command palette')}</span>
               </div>
             </div>
           </div>
@@ -239,14 +239,14 @@ export function CommandHelpDialog({ open, onClose }) {
                       <p className="command-help-desc">{cmd.description}</p>
                       {cmd.aliases && cmd.aliases.length > 0 && (
                         <div className="command-help-aliases">
-                          别名: {cmd.aliases.map(alias => (
+                          {translate?.('commandPalette.aliases', 'Aliases')}: {cmd.aliases.map(alias => (
                             <code key={alias}>{alias}</code>
                           ))}
                         </div>
                       )}
                       {cmd.parameters && cmd.parameters.length > 0 && (
                         <div className="command-help-params">
-                          参数: {cmd.parameters.map(param => (
+                          {translate?.('commandPalette.parameters', 'Parameters')}: {cmd.parameters.map(param => (
                             <span key={param.name} className="command-help-param">
                               {param.name}
                               {param.required && <span className="required">*</span>}
@@ -257,7 +257,7 @@ export function CommandHelpDialog({ open, onClose }) {
                       )}
                       {cmd.shortcut && (
                         <div className="command-help-shortcut">
-                          快捷键: <kbd>{cmd.shortcut}</kbd>
+                          {translate?.('commandPalette.shortcut', 'Shortcut')}: <kbd>{cmd.shortcut}</kbd>
                         </div>
                       )}
                     </div>

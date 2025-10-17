@@ -414,5 +414,36 @@ function convertToCSV(data) {
   return lines.join('\n');
 }
 
+/**
+ * Stats endpoint - alias for overview
+ * GET /api/analytics/stats
+ */
+router.get('/stats', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get basic statistics
+    const conversationCount = await db.prepare(
+      'SELECT COUNT(*) as count FROM conversations WHERE user_id = ?'
+    ).get(userId);
+
+    const messageCount = await db.prepare(
+      'SELECT COUNT(*) as count FROM messages m JOIN conversations c ON m.conversation_id = c.id WHERE c.user_id = ?'
+    ).get(userId);
+
+    res.json({
+      conversationCount: conversationCount?.count || 0,
+      messageCount: messageCount?.count || 0,
+      stats: {
+        conversations: conversationCount?.count || 0,
+        messages: messageCount?.count || 0
+      }
+    });
+  } catch (error) {
+    console.error('[Analytics] Error fetching stats:', error);
+    res.status(500).json({ error: '获取统计数据失败', message: error.message });
+  }
+});
+
 module.exports = router;
 

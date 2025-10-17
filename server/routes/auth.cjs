@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db/init.cjs');
+const logger = require('../utils/logger.cjs');
 const {
   validateInviteCode,
   validatePassword,
@@ -39,24 +40,23 @@ router.post('/register', async (req, res) => {
 
     // 验证邀请码（从数据库查询）
     console.log('[Auth] 验证邀请码:', inviteCode, '-> 转换为大写:', inviteCode.toUpperCase());
-    const inviteCodeResult = await new Promise((resolve, reject) => {
-      db.get(
+    let inviteCodeResult;
+    try {
+      inviteCodeResult = await db.prepare(
         `SELECT * FROM invite_codes
-         WHERE code = ? AND is_active = 1
-         AND (expires_at IS NULL OR expires_at > datetime('now'))
-         AND (max_uses = -1 OR used_count < max_uses)`,
-        [inviteCode.toUpperCase()],
-        (err, row) => {
-          if (err) {
-            console.error('[Auth] 邀请码查询错误:', err);
-            reject(err);
-          } else {
-            console.log('[Auth] 邀请码查询结果:', row);
-            resolve(row);
-          }
-        }
-      );
-    });
+         WHERE code = ? AND is_active = true
+         AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+         AND (max_uses = -1 OR used_count < max_uses)`
+      ).get(inviteCode.toUpperCase());
+      console.log('[Auth] 邀请码查询结果:', inviteCodeResult);
+    } catch (err) {
+      console.error('[Auth] 邀请码查询错误:', err);
+      return res.status(500).json({
+        success: false,
+        error: 'Database error',
+        message: '数据库查询错误'
+      });
+    }
 
     if (!inviteCodeResult) {
       console.log('[Auth] 邀请码验证失败');
@@ -80,113 +80,95 @@ router.post('/register', async (req, res) => {
     }
 
     // 检查邮箱是否已存在
-    db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()], async (err, existingUser) => {
-      if (err) {
-        console.error('[Auth] Database error:', err);
-        return res.status(500).json({
-          success: false,
-          error: 'Database error',
-          message: '服务器错误'
-        });
+    let existingUser;
+    try {
+      existingUser = await db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
+    } catch (err) {
+      console.error('[Auth] Database error:', err);
+      return res.status(500).json({
+        success: false,
+        error: 'Database error',
+        message: '服务器错误'
+      });
+    }
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: 'Email already exists',
+        message: '该邮箱已被注册'
+      });
+    }
+
+    try {
+      // 加密密码
+      const passwordHash = await hashPassword(password);
+
+      // 创建用户
+      const result = await db.prepare(
+        `INSERT INTO users (email, password_hash, username) VALUES (?, ?, ?) RETURNING id`
+      ).run(email.toLowerCase(), passwordHash, username || null);
+
+      const userId = result.lastID || result.rows?.[0]?.id;
+
+      if (!userId) {
+        throw new Error('Failed to get user ID after registration');
       }
 
-      if (existingUser) {
-        return res.status(409).json({
-          success: false,
-          error: 'Email already exists',
-          message: '该邮箱已被注册'
-        });
-      }
+      // 生成Token
+      const token = generateToken(userId, email);
 
+      // 创建Session（有效期7天）
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      // 使用事务确保所有操作成功或全部回滚
+      await db.prepare(
+        `INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)`
+      ).run(userId, token, expiresAt.toISOString(), req.ip, req.get('user-agent'));
+
+      // 记录登录历史
+      await db.prepare(
+        `INSERT INTO login_history (user_id, ip_address, user_agent, success) VALUES (?, ?, ?, ?)`
+      ).run(userId, req.ip, req.get('user-agent'), 1);
+
+      // 更新邀请码使用次数
       try {
-        // 加密密码
-        const passwordHash = await hashPassword(password);
-
-        // 创建用户
-        db.run(
-          `INSERT INTO users (email, password_hash, username) VALUES (?, ?, ?)`,
-          [email.toLowerCase(), passwordHash, username || null],
-          function(err) {
-            if (err) {
-              console.error('[Auth] Error creating user:', err);
-              return res.status(500).json({
-                success: false,
-                error: 'Database error',
-                message: '创建用户失败'
-              });
-            }
-
-            const userId = this.lastID;
-
-            // 生成Token
-            const token = generateToken(userId, email);
-
-            // 创建Session（有效期7天）
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + 7);
-
-            db.run(
-              `INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)`,
-              [userId, token, expiresAt.toISOString(), req.ip, req.get('user-agent')],
-              (err) => {
-                if (err) {
-                  console.error('[Auth] Error creating session:', err);
-                  return res.status(500).json({
-                    success: false,
-                    error: 'Database error',
-                    message: '创建会话失败'
-                  });
-                }
-
-                // 记录登录历史
-                db.run(
-                  `INSERT INTO login_history (user_id, ip_address, user_agent, success) VALUES (?, ?, ?, 1)`,
-                  [userId, req.ip, req.get('user-agent')]
-                );
-
-                // 更新邀请码使用次数
-                db.run(
-                  `UPDATE invite_codes SET used_count = used_count + 1 WHERE code = ?`,
-                  [inviteCode.toUpperCase()],
-                  (err) => {
-                    if (err) {
-                      console.error('[Auth] Error updating invite code:', err);
-                    }
-                  }
-                );
-
-                // 设置Cookie
-                res.cookie('token', token, {
-                  httpOnly: true,
-                  secure: process.env.NODE_ENV === 'production',
-                  sameSite: 'lax',
-                  maxAge: 7 * 24 * 60 * 60 * 1000 // 7天
-                });
-
-                // 返回成功响应
-                res.json({
-                  success: true,
-                  message: '注册成功',
-                  user: {
-                    id: userId,
-                    email: email.toLowerCase(),
-                    username: username || null
-                  },
-                  token
-                });
-              }
-            );
-          }
-        );
-      } catch (error) {
-        console.error('[Auth] Error hashing password:', error);
-        return res.status(500).json({
-          success: false,
-          error: 'Internal server error',
-          message: '服务器错误'
-        });
+        await db.prepare(
+          `UPDATE invite_codes SET used_count = used_count + 1 WHERE code = ?`
+        ).run(inviteCode.toUpperCase());
+      } catch (err) {
+        logger.error('[Auth] Error updating invite code:', err);
+        // 不阻断注册流程
       }
-    });
+
+      // 设置Cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7天
+      });
+
+      // 返回成功响应
+      res.json({
+        success: true,
+        message: '注册成功',
+        user: {
+          id: userId,
+          email: email.toLowerCase(),
+          username: username || null
+        },
+        token
+      });
+    } catch (error) {
+      console.error('[Auth] Error hashing password:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: '服务器错误'
+      });
+    }
   } catch (error) {
     console.error('[Auth] Registration error:', error);
     res.status(500).json({
@@ -215,149 +197,117 @@ router.post('/login', async (req, res) => {
     }
 
     // 查找用户
-    db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()], async (err, user) => {
-      if (err) {
-        console.error('[Auth] Database error:', err);
-        return res.status(500).json({
-          success: false,
-          error: 'Database error',
-          message: '服务器错误'
-        });
-      }
+    const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
 
-      if (!user) {
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+        message: '邮箱或密码错误'
+      });
+    }
+
+    // 检查账号是否被锁定
+    if (user.is_locked && user.locked_until) {
+      const lockedUntil = new Date(user.locked_until);
+      if (lockedUntil > new Date()) {
+        const remainingMinutes = Math.ceil((lockedUntil - new Date()) / 60000);
+        return res.status(423).json({
+          success: false,
+          error: 'Account locked',
+          message: `账号已被锁定，请在${remainingMinutes}分钟后重试`
+        });
+      } else {
+        // 锁定期已过，解锁账号
+        await db.prepare('UPDATE users SET is_locked = 0, locked_until = NULL, failed_login_attempts = 0 WHERE id = ?').run(user.id);
+      }
+    }
+
+    // 验证密码
+    const isValid = await verifyPassword(password, user.password_hash);
+
+    if (!isValid) {
+      // 登录失败，增加失败次数
+      const newAttempts = (user.failed_login_attempts || 0) + 1;
+
+      if (newAttempts >= 5) {
+        // 锁定账号15分钟
+        const lockedUntil = new Date();
+        lockedUntil.setMinutes(lockedUntil.getMinutes() + 15);
+
+        await db.prepare(
+          'UPDATE users SET failed_login_attempts = ?, is_locked = 1, locked_until = ? WHERE id = ?'
+        ).run(newAttempts, lockedUntil.toISOString(), user.id);
+
+        // 记录失败的登录历史
+        await db.prepare(
+          `INSERT INTO login_history (user_id, ip_address, user_agent, success, failure_reason) VALUES (?, ?, ?, ?, ?)`
+        ).run(user.id, req.ip, req.get('user-agent'), 0, 'Account locked due to multiple failed attempts');
+
+        return res.status(423).json({
+          success: false,
+          error: 'Account locked',
+          message: '登录失败次数过多，账号已被锁定15分钟'
+        });
+      } else {
+        await db.prepare('UPDATE users SET failed_login_attempts = ? WHERE id = ?').run(newAttempts, user.id);
+
+        // 记录失败的登录历史
+        await db.prepare(
+          `INSERT INTO login_history (user_id, ip_address, user_agent, success, failure_reason) VALUES (?, ?, ?, ?, ?)`
+        ).run(user.id, req.ip, req.get('user-agent'), 0, 'Invalid password');
+
         return res.status(401).json({
           success: false,
           error: 'Invalid credentials',
-          message: '邮箱或密码错误'
+          message: `邮箱或密码错误（剩余${5 - newAttempts}次尝试机会）`
         });
       }
+    }
 
-      // 检查账号是否被锁定
-      if (user.is_locked && user.locked_until) {
-        const lockedUntil = new Date(user.locked_until);
-        if (lockedUntil > new Date()) {
-          const remainingMinutes = Math.ceil((lockedUntil - new Date()) / 60000);
-          return res.status(423).json({
-            success: false,
-            error: 'Account locked',
-            message: `账号已被锁定，请在${remainingMinutes}分钟后重试`
-          });
-        } else {
-          // 锁定期已过，解锁账号
-          db.run('UPDATE users SET is_locked = 0, locked_until = NULL, failed_login_attempts = 0 WHERE id = ?', [user.id]);
-        }
-      }
+    // 登录成功，重置失败次数
+    const now = new Date().toISOString();
+    await db.prepare("UPDATE users SET failed_login_attempts = 0, last_login_at = ? WHERE id = ?").run(now, user.id);
 
-      try {
-        // 验证密码
-        const isValid = await verifyPassword(password, user.password_hash);
+    // 生成Token
+    const token = generateToken(user.id, user.email);
 
-        if (!isValid) {
-          // 登录失败，增加失败次数
-          const newAttempts = (user.failed_login_attempts || 0) + 1;
+    // 创建Session
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
-          if (newAttempts >= 5) {
-            // 锁定账号15分钟
-            const lockedUntil = new Date();
-            lockedUntil.setMinutes(lockedUntil.getMinutes() + 15);
+    await db.prepare(
+      `INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)`
+    ).run(user.id, token, expiresAt.toISOString(), req.ip, req.get('user-agent'));
 
-            db.run(
-              'UPDATE users SET failed_login_attempts = ?, is_locked = 1, locked_until = ? WHERE id = ?',
-              [newAttempts, lockedUntil.toISOString(), user.id]
-            );
+    // 记录成功的登录历史
+    await db.prepare(
+      `INSERT INTO login_history (user_id, ip_address, user_agent, success) VALUES (?, ?, ?, ?)`
+    ).run(user.id, req.ip, req.get('user-agent'), 1);
 
-            // 记录失败的登录历史
-            db.run(
-              `INSERT INTO login_history (user_id, ip_address, user_agent, success, failure_reason) VALUES (?, ?, ?, 0, ?)`,
-              [user.id, req.ip, req.get('user-agent'), 'Account locked due to multiple failed attempts']
-            );
+    // 设置Cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
-            return res.status(423).json({
-              success: false,
-              error: 'Account locked',
-              message: '登录失败次数过多，账号已被锁定15分钟'
-            });
-          } else {
-            db.run('UPDATE users SET failed_login_attempts = ? WHERE id = ?', [newAttempts, user.id]);
-
-            // 记录失败的登录历史
-            db.run(
-              `INSERT INTO login_history (user_id, ip_address, user_agent, success, failure_reason) VALUES (?, ?, ?, 0, ?)`,
-              [user.id, req.ip, req.get('user-agent'), 'Invalid password']
-            );
-
-            return res.status(401).json({
-              success: false,
-              error: 'Invalid credentials',
-              message: `邮箱或密码错误（剩余${5 - newAttempts}次尝试机会）`
-            });
-          }
-        }
-
-        // 登录成功，重置失败次数
-        db.run("UPDATE users SET failed_login_attempts = 0, last_login_at = datetime('now') WHERE id = ?", [user.id]);
-
-        // 生成Token
-        const token = generateToken(user.id, user.email);
-
-        // 创建Session
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
-
-        db.run(
-          `INSERT INTO sessions (user_id, token, expires_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)`,
-          [user.id, token, expiresAt.toISOString(), req.ip, req.get('user-agent')],
-          (err) => {
-            if (err) {
-              console.error('[Auth] Error creating session:', err);
-              return res.status(500).json({
-                success: false,
-                error: 'Database error',
-                message: '创建会话失败'
-              });
-            }
-
-            // 记录成功的登录历史
-            db.run(
-              `INSERT INTO login_history (user_id, ip_address, user_agent, success) VALUES (?, ?, ?, 1)`,
-              [user.id, req.ip, req.get('user-agent')]
-            );
-
-            // 设置Cookie
-            res.cookie('token', token, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              maxAge: 7 * 24 * 60 * 60 * 1000
-            });
-
-            // 返回成功响应
-            res.json({
-              success: true,
-              message: '登录成功',
-              user: {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                avatar_url: user.avatar_url
-              },
-              token
-            });
-          }
-        );
-      } catch (error) {
-        console.error('[Auth] Error verifying password:', error);
-        return res.status(500).json({
-          success: false,
-          error: 'Internal server error',
-          message: '服务器错误'
-        });
-      }
+    // 返回成功响应
+    res.json({
+      success: true,
+      message: '登录成功',
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        avatar_url: user.avatar_url
+      },
+      token
     });
   } catch (error) {
-    console.error('[Auth] Login error:', error);
-    res.status(500).json({
+    logger.error('[Auth] Login error:', error);
+    return res.status(500).json({
       success: false,
       error: 'Internal server error',
       message: '服务器错误'
@@ -369,31 +319,22 @@ router.post('/login', async (req, res) => {
  * POST /api/auth/logout
  * 用户登出
  */
-router.post('/logout', authMiddleware, (req, res) => {
+router.post('/logout', authMiddleware, async (req, res) => {
   try {
     const token = req.session.token;
 
     // 删除Session
-    db.run('DELETE FROM sessions WHERE token = ?', [token], (err) => {
-      if (err) {
-        console.error('[Auth] Error deleting session:', err);
-        return res.status(500).json({
-          success: false,
-          error: 'Database error',
-          message: '登出失败'
-        });
-      }
+    await db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
 
-      // 清除Cookie
-      res.clearCookie('token');
+    // 清除Cookie
+    res.clearCookie('token');
 
-      res.json({
-        success: true,
-        message: '登出成功'
-      });
+    res.json({
+      success: true,
+      message: '登出成功'
     });
   } catch (error) {
-    console.error('[Auth] Logout error:', error);
+    logger.error('[Auth] Logout error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -448,23 +389,14 @@ router.post('/check-email', async (req, res) => {
     }
 
     // 查询邮箱是否存在
-    db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()], (err, user) => {
-      if (err) {
-        console.error('[Auth] Database error:', err);
-        return res.status(500).json({
-          success: false,
-          error: 'Database error',
-          message: '服务器错误'
-        });
-      }
+    const user = await db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
 
-      res.json({
-        success: true,
-        exists: !!user
-      });
+    res.json({
+      success: true,
+      exists: !!user
     });
   } catch (error) {
-    console.error('[Auth] Check email error:', error);
+    logger.error('[Auth] Check email error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error',

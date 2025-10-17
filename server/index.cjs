@@ -2,6 +2,9 @@
  * AI-Life-System 后端服务器
  */
 
+// 加载环境变量（必须在最前面）
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -44,7 +47,22 @@ const TestRunnerService = require('./services/test-runner.cjs');
 // 创建Express应用
 const app = express();
 
+// 导入安全中间件
+const {
+  securityHeaders,
+  authRateLimiter,
+  apiRateLimiter,
+  xssProtection,
+  securityLogger
+} = require('./middleware/security.cjs');
+
 // 中间件
+// 0. 安全头 - 最先应用
+app.use(securityHeaders);
+
+// 0.1 安全日志
+app.use(securityLogger);
+
 // 1. Gzip压缩 - 放在最前面以压缩所有响应
 app.use(compression({
   // 只压缩大于1KB的响应
@@ -64,6 +82,9 @@ app.use(compression({
 // 2. 请求体解析
 app.use(express.json({ limit: '50mb' })); // 增加请求体大小限制，支持大量对话数据
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// 2.1 XSS防护 - 在body解析后立即应用
+app.use(xssProtection);
 
 // 3. Cookie解析
 app.use(cookieParser());
@@ -244,14 +265,44 @@ async function initializeServices() {
   }
 }
 
-// API路由
-app.use('/api/auth', authRouter); // 认证路由
-app.use('/api/user-data', require('./routes/user-data.cjs')); // 用户数据路由
-// app.use('/api/analytics', require('./routes/analytics.cjs')); // 数据分析路由 - 暂时禁用（数据库字段问题）
-app.use('/api/mcp', mcpRouter);
-app.use('/api/chat', chatRouter);
-app.use('/api/proxy', proxyRouter);
-app.use('/api/config', require('./routes/config.cjs'));
+/**
+ * 注册API路由
+ */
+function registerRoutes() {
+  // 静态文件服务 - 头像
+  const path = require('path');
+  app.use('/avatars', express.static(path.join(__dirname, '../data/avatars')));
+
+  // API路由 - 认证路由需要rate limiting保护
+  app.use('/api/auth/login', authRateLimiter.middleware());
+  app.use('/api/auth/register', authRateLimiter.middleware());
+  app.use('/api/auth', authRouter); // 认证路由
+
+  // 通用API rate limiting
+  app.use('/api', apiRateLimiter.middleware());
+  app.use('/api/user-data', require('./routes/user-data.cjs')); // 用户数据路由
+  app.use('/api/profile', require('./routes/profile.cjs')); // 用户资料路由
+  app.use('/api/analytics', require('./routes/analytics.cjs')); // 数据分析路由
+  // app.use('/api/images', require('./routes/images.cjs')); // 图片上传和分析路由 - 已删除（功能已集成到chat附件系统）
+  // app.use('/api/voice', require('./routes/voice.cjs')); // 语音输入输出路由 - 已删除
+  app.use('/api/files', require('./routes/files.cjs')); // 文件上传和解析路由
+  app.use('/api/knowledge', require('./routes/knowledge.cjs')); // 知识库（RAG）路由
+  app.use('/api/personas', require('./routes/personas.cjs')); // AI 角色预设路由
+  app.use('/api/workflows', require('./routes/workflows.cjs')); // AI 工作流编排路由
+  app.use('/api/agents', require('./routes/agents.cjs')); // 智能 Agent 路由
+  // app.use('/api/context', require('./routes/context.cjs')); // 对话上下文优化路由 - 已删除
+  // app.use('/api/summary', require('./routes/summary.cjs')); // 智能对话总结路由 - 已删除
+  app.use('/api/templates', require('./routes/templateMarketplace.cjs')); // 模板市场路由
+  app.use('/api', require('./routes/importExport.cjs')); // 导入导出增强路由
+  app.use('/api/notes', require('./routes/notes.cjs')); // 笔记管理路由
+  app.use('/api/documents', require('./routes/documents.cjs')); // 文档管理路由
+  app.use('/api/password-vault', require('./routes/password-vault.cjs')); // 密码保险库路由
+  app.use('/api/mcp', mcpRouter);
+  app.use('/api/chat', chatRouter);
+  app.use('/api/proxy', proxyRouter);
+  app.use('/api/test-connection', require('./routes/test-connection.cjs')); // API连接测试路由
+  app.use('/api/config', require('./routes/config.cjs'));
+}
 
 // 健康检查
 app.get('/health', (req, res) => {
@@ -273,9 +324,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// 错误处理
-app.use(errorHandler);
-
 /**
  * 启动服务器
  */
@@ -294,6 +342,22 @@ async function start() {
 
     // 初始化服务
     await initializeServices();
+
+    // 注册路由
+    registerRoutes();
+
+    // 404 处理 - 必须在所有路由之后注册
+    app.use((req, res) => {
+      res.status(404).json({
+        error: '接口不存在',
+        path: req.originalUrl,
+        method: req.method,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // 错误处理 - 必须在最后
+    app.use(errorHandler);
 
     // 启动HTTP服务器
     const port = config.server.port;

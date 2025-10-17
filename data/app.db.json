@@ -1,0 +1,146 @@
+{
+  "users": [
+    {
+      "id": "8c25321e-7726-463b-b809-bd1c1b3d793a",
+      "email": "test@example.com",
+      "password_hash": "Test123456",
+      "username": "testuser",
+      "created_at": "2025-10-15T22:48:17.257Z",
+      "updated_at": "2025-10-15T22:48:17.258Z"
+    },
+    {
+      "id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
+      "email": "2915165979@qq.com",
+      "password_hash": "personal-chatbox-Ezra123.",
+      "username": null,
+      "created_at": "2025-10-15T22:48:54.757Z",
+      "updated_at": "2025-10-15T22:48:54.757Z"
+    },
+    {
+      "email": "p",
+      "password_hash": "g",
+      "username": "_",
+      "id": "6mmunog5u"
+    }
+  ],
+  "invite_codes": [
+    {
+      "id": "b6a9c771-76d1-4996-9dbb-143993e7f8af",
+      "code": "WELCOME2025",
+      "max_uses": 1000,
+      "used_count": "used_count + 1",
+      "description": "欢迎使用邀请码",
+      "is_active": true,
+      "created_at": "2025-10-15T22:48:07.592Z",
+      "updated_at": "2025-10-15T22:48:07.593Z"
+    },
+    {
+      "id": "6f087e87-7c78-4b7f-975d-f3a54f143e17",
+      "code": "FRIEND2025",
+      "max_uses": 1000,
+      "used_count": 0,
+      "description": "朋友邀请码",
+      "is_active": true,
+      "created_at": "2025-10-15T22:48:07.593Z",
+      "updated_at": "2025-10-15T22:48:07.593Z"
+    },
+    {
+      "id": "efedab60-c82e-446e-8c56-55441d16f63b",
+      "code": "TEAM2025",
+      "max_uses": 1000,
+      "used_count": 0,
+      "description": "团队邀请码",
+      "is_active": true,
+      "created_at": "2025-10-15T22:48:07.593Z",
+      "updated_at": "2025-10-15T22:48:07.593Z"
+    },
+    {
+      "id": "9c70fcc2-71cf-4586-933e-cb32ff81cf86",
+      "code": "VIP2025",
+      "max_uses": 1000,
+      "used_count": 2,
+      "description": "VIP邀请码",
+      "is_active": true,
+      "created_at": "2025-10-15T22:48:07.593Z",
+      "updated_at": "2025-10-15T22:48:54.759Z"
+    },
+    {
+      "id": "6b5d97f6-9819-4843-93df-520be6ed05df",
+      "code": "TEST2025",
+      "max_uses": 1000,
+      "used_count": 0,
+      "description": "测试邀请码",
+      "is_active": true,
+      "created_at": "2025-10-15T22:48:07.593Z",
+      "updated_at": "2025-10-15T22:48:07.593Z"
+    }
+  ],
+  "conversations": [],
+  "messages": [],
+  "sessions": [
+    {
+      "id": "247a1acd-eb70-4d7d-b314-f91a7af436c1",
+      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
+      "token": "token_1760568623520_0kl33w6of",
+      "expires_at": "2025-10-22T22:50:23.520Z",
+      "created_at": "2025-10-15T22:50:23.522Z",
+      "updated_at": "2025-10-15T22:50:23.522Z"
+    },
+    {
+      "id": "8d077006-0924-43ee-9652-7e35ea057acb",
+      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
+      "token": "token_1760568630991_bjszgxi9w",
+      "expires_at": "2025-10-22T22:50:30.991Z",
+      "created_at": "2025-10-15T22:50:30.991Z",
+      "updated_at": "2025-10-15T22:50:30.991Z"
+    },
+    {
+      "id": "07b115ca-5584-4114-ba2b-e5ba7ce3307b",
+      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
+      "token": "token_1760568646930_n6v9jgq62",
+      "expires_at": "2025-10-22T22:50:46.930Z",
+      "created_at": "2025-10-15T22:50:46.930Z",
+      "updated_at": "2025-10-15T22:50:46.930Z"
+    },
+    {
+      "id": "f631b2a8-1009-45f8-8f2a-4eb2a775ba2f",
+      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
+      "token": "token_1760568927818_1awmrib9m",
+      "expires_at": "2025-10-22T22:55:27.818Z",
+      "created_at": "2025-10-15T22:55:27.818Z",
+      "updated_at": "2025-10-15T22:55:27.818Z"
+    },
+    {
+      "id": "6c9b5e78-73ec-42d2-a41d-32048e607c0a",
+      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
+      "token": "token_1760569472651_vqs93m5ts",
+      "expires_at": "2025-10-22T23:04:32.651Z",
+      "created_at": "2025-10-15T23:04:32.651Z",
+      "updated_at": "2025-10-15T23:04:32.651Z"
+    },
+    {
+      "id": "69bc4709-e8a9-49e5-893f-2c407c853217",
+      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
+      "token": "token_1760572863962_4jmkqgsax",
+      "expires_at": "2025-10-23T00:01:03.963Z",
+      "created_at": "2025-10-16T00:01:03.963Z",
+      "updated_at": "2025-10-16T00:01:03.963Z"
+    },
+    {
+      "user_id": 3,
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImVtYWlsIjoicGdfc3VjY2Vzc0B0ZXN0LmNvbSIsImlhdCI6MTc2MDU3NDc3NSwiZXhwIjoxNzYxMTc5NTc1fQ.a1jUXcgT9e9ZHe2rXm8Didi4lA7vTNti1HmlgESWvq0",
+      "expires_at": "2025-10-23T00:32:55.880Z",
+      "ip_address": "127.0.0.1",
+      "user_agent": "curl/8.7.1",
+      "id": "3kvjtolqj"
+    }
+  ],
+  "login_history": [
+    {
+      "user_id": 3,
+      "ip_address": "127.0.0.1",
+      "user_agent": "curl/8.7.1",
+      "id": "2625jowmv"
+    }
+  ]
+}

@@ -3,66 +3,66 @@ const router = express.Router();
 const { db } = require('../db/init.cjs');
 const { authMiddleware } = require('../middleware/auth.cjs');
 const { searchConversations, getSearchStats } = require('../services/search.cjs');
+const { cacheMiddleware, clearUserCache } = require('../middleware/cache.cjs');
+const logger = require('../utils/logger.cjs');
+
+/**
+ * 安全的JSON解析
+ */
+function safeJSONParse(str, defaultValue = null) {
+  if (!str) return defaultValue;
+  try {
+    return JSON.parse(str);
+  } catch (err) {
+    logger.error('[User Data] JSON parse error:', err);
+    return defaultValue;
+  }
+}
 
 /**
  * 获取用户的所有对话
  * GET /api/user-data/conversations
+ * Cached for 2 minutes for better performance
  */
-router.get('/conversations', authMiddleware, (req, res) => {
+router.get('/conversations', authMiddleware, cacheMiddleware({ ttl: 120 }), async (req, res) => {
   const userId = req.user.id;
 
-  db.all(
-    'SELECT * FROM conversations WHERE user_id = ? ORDER BY updated_at DESC',
-    [userId],
-    (err, conversations) => {
-      if (err) {
-        console.error('[User Data] Error fetching conversations:', err);
-        return res.status(500).json({ message: '获取对话列表失败' });
-      }
+  try {
+    const conversations = await db.prepare(
+      'SELECT * FROM conversations WHERE user_id = ? ORDER BY updated_at DESC'
+    ).all(userId);
 
-      // 获取每个对话的消息
-      const conversationPromises = conversations.map(conv => {
-        return new Promise((resolve, reject) => {
-          db.all(
-            'SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC',
-            [conv.id],
-            (err, messages) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve({
-                  ...conv,
-                  messages: messages.map(msg => ({
-                    ...msg,
-                    metadata: msg.metadata ? JSON.parse(msg.metadata) : undefined,
-                    attachments: msg.attachments ? JSON.parse(msg.attachments) : []
-                  }))
-                });
-              }
-            }
-          );
-        });
+    // 获取每个对话的消息
+    const conversationsWithMessages = [];
+    for (const conv of conversations) {
+      const messages = await db.prepare(
+        'SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC'
+      ).all(conv.id);
+
+      conversationsWithMessages.push({
+        ...conv,
+        messages: messages.map(msg => ({
+          ...msg,
+          metadata: safeJSONParse(msg.metadata, undefined),
+          attachments: safeJSONParse(msg.attachments, [])
+        }))
       });
-
-      Promise.all(conversationPromises)
-        .then(conversationsWithMessages => {
-          res.json({ conversations: conversationsWithMessages });
-        })
-        .catch(err => {
-          console.error('[User Data] Error fetching messages:', err);
-          res.status(500).json({ message: '获取对话消息失败' });
-        });
     }
-  );
+
+    res.json({ conversations: conversationsWithMessages });
+  } catch (err) {
+    logger.error('[User Data] Error fetching conversations:', err);
+    res.status(500).json({ message: '获取对话列表失败' });
+  }
 });
 
 /**
  * 保存/更新对话数据
  * POST /api/user-data/conversations
  *
- * 重写为同步代码以兼容 better-sqlite3
+ * 改为async/await以兼容PostgreSQL
  */
-router.post('/conversations', authMiddleware, (req, res) => {
+router.post('/conversations', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const { conversations } = req.body;
 
@@ -70,106 +70,83 @@ router.post('/conversations', authMiddleware, (req, res) => {
     return res.status(400).json({ message: '无效的对话数据' });
   }
 
-  console.log('[User Data] Saving conversations for user:', userId);
-  console.log('[User Data] Conversations count:', Object.keys(conversations).length);
+  logger.info('[User Data] Saving conversations for user:', userId);
+  logger.info('[User Data] Conversations count:', Object.keys(conversations).length);
 
   try {
-    // 获取 better-sqlite3 原始实例
-    const rawDb = db._raw;
+    // 1. 删除用户现有的所有对话（级联删除消息）
+    await db.prepare('DELETE FROM conversations WHERE user_id = ?').run(userId);
+    console.log('[User Data] Deleted old conversations for user:', userId);
 
-    if (!rawDb) {
-      console.error('[User Data] No raw database instance available');
-      return res.status(500).json({ message: '数据库连接不可用' });
+    // 2. 插入新的对话和消息
+    const conversationList = Object.values(conversations);
+
+    if (conversationList.length === 0) {
+      console.log('[User Data] No conversations to save');
+      return res.json({ message: '对话数据已保存', count: 0 });
     }
 
-    // 开始事务（better-sqlite3 是同步的）
-    rawDb.prepare('BEGIN TRANSACTION').run();
+    let totalMessages = 0;
 
-    try {
-      // 1. 删除用户现有的所有对话（级联删除消息）
-      const deleteStmt = rawDb.prepare('DELETE FROM conversations WHERE user_id = ?');
-      const deleteResult = deleteStmt.run(userId);
-      console.log('[User Data] Deleted old conversations:', deleteResult.changes);
-
-      // 2. 插入新的对话和消息
-      const conversationList = Object.values(conversations);
-
-      if (conversationList.length === 0) {
-        rawDb.prepare('COMMIT').run();
-        console.log('[User Data] No conversations to save, committed empty transaction');
-        return res.json({ message: '对话数据已保存', count: 0 });
-      }
-
-      // 准备插入语句
-      const insertConvStmt = rawDb.prepare(
-        `INSERT INTO conversations (id, user_id, title, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?)`
-      );
-
-      const insertMsgStmt = rawDb.prepare(
-        `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, status, attachments)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      );
-
-      let totalMessages = 0;
-
-      // 3. 遍历并插入每个对话
-      conversationList.forEach((conv, index) => {
-        try {
-          // 插入对话
-          insertConvStmt.run(
-            conv.id,
-            userId,
-            conv.title || '新对话',
-            conv.createdAt || new Date().toISOString(),
-            conv.updatedAt || new Date().toISOString()
-          );
-
-          // 插入该对话的所有消息
-          if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
-            conv.messages.forEach(msg => {
-              insertMsgStmt.run(
-                conv.id,
-                msg.role || 'user',
-                msg.content || '',
-                msg.timestamp || new Date().toISOString(),
-                msg.metadata ? JSON.stringify(msg.metadata) : null,
-                msg.status || 'done',
-                msg.attachments ? JSON.stringify(msg.attachments) : '[]'
-              );
-              totalMessages++;
-            });
-          }
-        } catch (convError) {
-          console.error(`[User Data] Error inserting conversation ${index + 1}:`, convError);
-          throw convError; // 抛出以触发回滚
-        }
-      });
-
-      // 4. 提交事务
-      rawDb.prepare('COMMIT').run();
-
-      console.log(`[User Data] ✅ Successfully saved ${conversationList.length} conversations with ${totalMessages} messages`);
-
-      return res.json({
-        message: '对话数据已保存',
-        count: conversationList.length,
-        totalMessages
-      });
-
-    } catch (innerError) {
-      // 回滚事务
+    // 3. 遍历并插入每个对话
+    for (const [index, conv] of conversationList.entries()) {
       try {
-        rawDb.prepare('ROLLBACK').run();
-        console.log('[User Data] Transaction rolled back');
-      } catch (rollbackError) {
-        console.error('[User Data] Error during rollback:', rollbackError);
+        // 插入对话
+        await db.prepare(
+          `INSERT INTO conversations (id, user_id, title, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)`
+        ).run(
+          conv.id,
+          userId,
+          conv.title || '新对话',
+          conv.createdAt || new Date().toISOString(),
+          conv.updatedAt || new Date().toISOString()
+        );
+
+        // 插入该对话的所有消息
+        if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
+          for (const msg of conv.messages) {
+            // 验证消息内容大小
+            const content = msg.content || '';
+            if (content.length > 100000) { // 限制单条消息100KB
+              logger.warn(`[User Data] Message content too large (${content.length} bytes), truncating`);
+              continue;
+            }
+
+            await db.prepare(
+              `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, status, attachments)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`
+            ).run(
+              conv.id,
+              msg.role || 'user',
+              content,
+              msg.timestamp || new Date().toISOString(),
+              msg.metadata ? JSON.stringify(msg.metadata) : null,
+              msg.status || 'done',
+              msg.attachments ? JSON.stringify(msg.attachments) : '[]'
+            );
+            totalMessages++;
+          }
+        }
+      } catch (convError) {
+        logger.error(`[User Data] Error inserting conversation ${index + 1}:`, convError);
+        throw convError;
       }
-      throw innerError; // 重新抛出以被外层捕获
     }
+
+    logger.info(`[User Data] ✅ Successfully saved ${conversationList.length} conversations with ${totalMessages} messages`);
+
+    // Clear cache after saving conversations
+    clearUserCache(userId);
+
+    return res.json({
+      message: '对话数据已保存',
+      count: conversationList.length,
+      totalMessages
+    });
 
   } catch (error) {
-    console.error('[User Data] Error in conversation save transaction:', error);
+    logger.error('[User Data] Error in conversation save:', error);
     return res.status(500).json({
       message: '保存对话数据失败',
       error: error.message
@@ -181,91 +158,85 @@ router.post('/conversations', authMiddleware, (req, res) => {
  * 获取用户配置
  * GET /api/user-data/config
  */
-router.get('/config', authMiddleware, (req, res) => {
+router.get('/config', authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
-  db.get(
-    'SELECT * FROM user_configs WHERE user_id = ?',
-    [userId],
-    (err, config) => {
-      if (err) {
-        console.error('[User Data] Error fetching config:', err);
-        return res.status(500).json({ message: '获取配置失败' });
-      }
+  try {
+    const config = await db.prepare(
+      'SELECT * FROM user_configs WHERE user_id = ?'
+    ).get(userId);
 
-      if (!config) {
-        return res.json({ config: null });
-      }
-
-      res.json({
-        config: {
-          modelConfig: config.model_config ? JSON.parse(config.model_config) : null,
-          systemPrompt: config.system_prompt ? JSON.parse(config.system_prompt) : null,
-          apiKeys: config.api_keys ? JSON.parse(config.api_keys) : null,
-          proxyConfig: config.proxy_config ? JSON.parse(config.proxy_config) : null,
-          mcpConfig: config.mcp_config ? JSON.parse(config.mcp_config) : null
-        }
-      });
+    if (!config) {
+      return res.json({ config: null });
     }
-  );
+
+    res.json({
+      config: {
+        modelConfig: config.model_config ? JSON.parse(config.model_config) : null,
+        systemPrompt: config.system_prompt ? JSON.parse(config.system_prompt) : null,
+        apiKeys: config.api_keys ? JSON.parse(config.api_keys) : null,
+        proxyConfig: config.proxy_config ? JSON.parse(config.proxy_config) : null,
+        mcpConfig: config.mcp_config ? JSON.parse(config.mcp_config) : null
+      }
+    });
+  } catch (err) {
+    console.error('[User Data] Error fetching config:', err);
+    res.status(500).json({ message: '获取配置失败' });
+  }
 });
 
 /**
  * 保存用户配置
  * POST /api/user-data/config
  */
-router.post('/config', authMiddleware, (req, res) => {
+router.post('/config', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const { modelConfig, systemPrompt, apiKeys, proxyConfig, mcpConfig } = req.body;
 
-  db.run(
-    `INSERT INTO user_configs (user_id, model_config, system_prompt, api_keys, proxy_config, mcp_config, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-     ON CONFLICT(user_id) DO UPDATE SET
-       model_config = excluded.model_config,
-       system_prompt = excluded.system_prompt,
-       api_keys = excluded.api_keys,
-       proxy_config = excluded.proxy_config,
-       mcp_config = excluded.mcp_config,
-       updated_at = CURRENT_TIMESTAMP`,
-    [
+  try {
+    await db.prepare(
+      `INSERT INTO user_configs (user_id, model_config, system_prompt, api_keys, proxy_config, mcp_config, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(user_id) DO UPDATE SET
+         model_config = excluded.model_config,
+         system_prompt = excluded.system_prompt,
+         api_keys = excluded.api_keys,
+         proxy_config = excluded.proxy_config,
+         mcp_config = excluded.mcp_config,
+         updated_at = CURRENT_TIMESTAMP`
+    ).run(
       userId,
       modelConfig ? JSON.stringify(modelConfig) : null,
       systemPrompt ? JSON.stringify(systemPrompt) : null,
       apiKeys ? JSON.stringify(apiKeys) : null,
       proxyConfig ? JSON.stringify(proxyConfig) : null,
       mcpConfig ? JSON.stringify(mcpConfig) : null
-    ],
-    function(err) {
-      if (err) {
-        console.error('[User Data] Error saving config:', err);
-        return res.status(500).json({ message: '保存配置失败' });
-      }
+    );
 
-      res.json({ message: '配置已保存' });
-    }
-  );
+    res.json({ message: '配置已保存' });
+  } catch (err) {
+    console.error('[User Data] Error saving config:', err);
+    return res.status(500).json({ message: '保存配置失败' });
+  }
 });
 
 /**
  * 检查用户是否是第一个注册的用户
  * GET /api/user-data/is-first-user
  */
-router.get('/is-first-user', authMiddleware, (req, res) => {
+router.get('/is-first-user', authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
-  db.get(
-    'SELECT MIN(id) as first_user_id FROM users',
-    [],
-    (err, row) => {
-      if (err) {
-        console.error('[User Data] Error checking first user:', err);
-        return res.status(500).json({ message: '检查用户失败' });
-      }
+  try {
+    const row = await db.prepare(
+      'SELECT id FROM users ORDER BY created_at ASC LIMIT 1'
+    ).get();
 
-      res.json({ isFirstUser: row.first_user_id === userId });
-    }
-  );
+    res.json({ isFirstUser: row ? (row.id === userId) : true });
+  } catch (err) {
+    console.error('[User Data] Error checking first user:', err);
+    res.status(500).json({ message: '检查用户失败' });
+  }
 });
 
 /**

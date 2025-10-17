@@ -1,0 +1,163 @@
+/**
+ * LoadingFallback Styles
+ * Following v0.dev design principles: clean, minimal, modern
+ */
+
+/* Full screen loading */
+.loading-fallback-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background, #ffffff);
+  z-index: 9999;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Standard loading container */
+.loading-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  min-height: 200px;
+  gap: 1rem;
+}
+
+/* Spinner base */
+.loading-spinner {
+  position: relative;
+  display: inline-block;
+}
+
+.spinner-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--muted, #e5e7eb);
+  border-top-color: var(--primary, #3b82f6);
+  animation: spin 0.8s linear infinite;
+}
+
+/* Spinner sizes */
+.loading-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.loading-md {
+  width: 2rem;
+  height: 2rem;
+}
+
+.loading-lg {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Loading message */
+.loading-message {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted-foreground, #6b7280);
+  font-weight: 500;
+}
+
+/* Spin animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Skeleton Loader */
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    var(--muted, #e5e7eb) 25%,
+    var(--muted-foreground, #d1d5db) 50%,
+    var(--muted, #e5e7eb) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: 0.375rem;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Inline Spinner */
+.inline-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inline-spinner .spinner-circle {
+  border-width: 2px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .loading-fallback-fullscreen {
+    background: var(--background, #111827);
+  }
+
+  .loading-message {
+    color: var(--muted-foreground, #9ca3af);
+  }
+
+  .skeleton-line {
+    background: linear-gradient(
+      90deg,
+      var(--muted, #374151) 25%,
+      var(--muted-foreground, #4b5563) 50%,
+      var(--muted, #374151) 75%
+    );
+  }
+
+  .spinner-circle {
+    border-color: var(--muted, #374151);
+    border-top-color: var(--primary, #60a5fa);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .spinner-circle {
+    animation: none;
+    border-top-color: var(--primary, #3b82f6);
+    border-right-color: var(--primary, #3b82f6);
+  }
+
+  .skeleton-line {
+    animation: none;
+  }
+}

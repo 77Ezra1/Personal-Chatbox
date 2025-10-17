@@ -39,8 +39,8 @@ export function MessageList({ messages, translate, onEdit, onDelete, onRegenerat
       {messages.length === 0 ? (
         <div className="empty-state">
           <div className="welcome-message">
-            <h2>你好，我是Personal Chatbox</h2>
-            <p>希望与你聊的开心...</p>
+            <h2>{translate('chat.welcomeTitle', 'Hello, I am Personal Chatbox')}</h2>
+            <p>{translate('chat.welcomeMessage', 'Hope to have a pleasant chat with you...')}</p>
           </div>
         </div>
       ) : (

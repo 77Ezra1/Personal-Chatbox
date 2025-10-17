@@ -18,13 +18,13 @@ export const AUTH_TRANSLATIONS = {
     githubButton: 'Continue with GitHub',
     termsOfUse: 'Terms of Use',
     privacyPolicy: 'Privacy Policy',
-    
+
     // 步骤2 - 密码输入
     enterPasswordTitle: 'Enter your password',
     createAccountTitle: 'Create your account',
     passwordLabel: 'Password',
     passwordPlaceholder: 'Password',
-    
+
     // 密码强度提示
     passwordRequirements: {
       length: 'At least 8 characters',
@@ -33,14 +33,14 @@ export const AUTH_TRANSLATIONS = {
       number: 'Contains number',
       special: 'Contains special character'
     },
-    
+
     // 步骤3 - 邀请码
     inviteCodeTitle: 'Enter invite code',
     inviteCodeSubtitle: 'An invite code is required to create an account',
     inviteCodeLabel: 'Invite code',
     inviteCodePlaceholder: 'Invite code',
     inviteCodeHint: "Don't have an invite code? Contact the administrator",
-    
+
     // 错误提示
     errors: {
       invalidEmail: 'Please enter a valid email address',
@@ -50,7 +50,12 @@ export const AUTH_TRANSLATIONS = {
       inviteCodeRequired: 'Invite code is required',
       loginFailed: 'Login failed. Please check your credentials.',
       registrationFailed: 'Registration failed. Please try again.',
-      networkError: 'Network error. Please try again.'
+      networkError: 'Network error. Please try again.',
+      emailExists: 'This email is already registered.',
+      pleaseLogin: 'Please enter your password to log in.',
+      passwordRequirements: {
+        summary: 'Password must meet all requirements'
+      }
     }
   },
   zh: {
@@ -65,13 +70,13 @@ export const AUTH_TRANSLATIONS = {
     githubButton: '使用 GitHub 登录',
     termsOfUse: '使用条款',
     privacyPolicy: '隐私政策',
-    
+
     // 步骤2 - 密码输入
     enterPasswordTitle: '输入您的密码',
     createAccountTitle: '创建您的账户',
     passwordLabel: '密码',
     passwordPlaceholder: '密码',
-    
+
     // 密码强度提示
     passwordRequirements: {
       length: '至少 8 个字符',
@@ -80,14 +85,14 @@ export const AUTH_TRANSLATIONS = {
       number: '包含数字',
       special: '包含特殊字符'
     },
-    
+
     // 步骤3 - 邀请码
     inviteCodeTitle: '输入邀请码',
     inviteCodeSubtitle: '创建账户需要邀请码',
     inviteCodeLabel: '邀请码',
     inviteCodePlaceholder: '邀请码',
     inviteCodeHint: '没有邀请码？请联系管理员',
-    
+
     // 错误提示
     errors: {
       invalidEmail: '请输入有效的电子邮箱地址',
@@ -97,7 +102,12 @@ export const AUTH_TRANSLATIONS = {
       inviteCodeRequired: '邀请码不能为空',
       loginFailed: '登录失败，请检查您的凭据。',
       registrationFailed: '注册失败，请重试。',
-      networkError: '网络错误，请重试。'
+      networkError: '网络错误，请重试。',
+      emailExists: '该邮箱已被注册',
+      pleaseLogin: '请输入密码登录',
+      passwordRequirements: {
+        summary: '密码必须满足所有要求'
+      }
     }
   }
 }
@@ -126,7 +136,7 @@ export function setAuthLanguage(language) {
 export function getAuthTranslation(language, key) {
   const keys = key.split('.')
   let value = AUTH_TRANSLATIONS[language]
-  
+
   for (const k of keys) {
     if (value && typeof value === 'object') {
       value = value[k]
@@ -134,7 +144,7 @@ export function getAuthTranslation(language, key) {
       return key
     }
   }
-  
+
   return value || key
 }
 

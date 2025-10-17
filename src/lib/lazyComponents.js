@@ -76,13 +76,33 @@ export const MCPServiceConfig = lazyWithRetry(() =>
   import('../components/mcp/MCPServiceConfig')
 )
 
-// ========== 设置页面组件 ==========
+// ========== 页面组件 ==========
 export const SettingsPage = lazyWithRetry(() =>
-  import('../pages/SettingsPage')
+  import('../components/settings/SettingsPage')
 )
 
-export const WelcomePage = lazyWithRetry(() =>
-  import('../pages/WelcomePage')
+export const AnalyticsPage = lazyWithRetry(() =>
+  import('../pages/AnalyticsPage')
+)
+
+export const KnowledgeBasePage = lazyWithRetry(() =>
+  import('../pages/KnowledgeBasePage')
+)
+
+export const PersonasPage = lazyWithRetry(() =>
+  import('../pages/PersonasPage')
+)
+
+export const WorkflowsPage = lazyWithRetry(() =>
+  import('../pages/WorkflowsPage')
+)
+
+export const TemplateMarketplacePage = lazyWithRetry(() =>
+  import('../pages/TemplateMarketplacePage')
+)
+
+export const DocumentsPage = lazyWithRetry(() =>
+  import('../pages/DocumentsPage')
 )
 
 // ========== UI组件（重量级） ==========

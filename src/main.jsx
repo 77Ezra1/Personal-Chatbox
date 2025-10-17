@@ -1,10 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './styles/themes.css'
 import AppRouter from './router.jsx'
 import './styles/auth.css'
-import { initSentry, SentryErrorBoundary } from './lib/sentry'
+import { initSentry, SentryErrorBoundary } from './lib/sentry.jsx'
 import { initPerformanceMonitoring } from './lib/performance'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 // 初始化 Sentry 错误追踪
 initSentry()
@@ -14,7 +16,8 @@ initPerformanceMonitoring()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <SentryErrorBoundary
+    <ThemeProvider>
+      <SentryErrorBoundary
       fallback={({ error, resetError }) => (
         <div style={{ 
           padding: '2rem', 
@@ -72,5 +75,6 @@ createRoot(document.getElementById('root')).render(
     >
       <AppRouter />
     </SentryErrorBoundary>
+    </ThemeProvider>
   </StrictMode>,
 )

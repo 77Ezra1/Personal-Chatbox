@@ -24,7 +24,8 @@ export function SearchBar({
   onSearch,
   isSearching = false,
   onFilterClick,
-  hasActiveFilters = false
+  hasActiveFilters = false,
+  translate
 }) {
   const [searchHistory, setSearchHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -115,19 +116,21 @@ export function SearchBar({
   return (
     <div className="relative w-full">
       <div className="flex items-center gap-2">
-        {/* 搜索输入框 */}
+        {/* 搜索输入框 - 优化为现代设计 */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground
+                           transition-colors duration-200" />
           <Input
             ref={inputRef}
             type="text"
-            placeholder="搜索对话... (⌘K)"
+            placeholder={translate?.('sidebar.searchHistory', 'Search History...') + ' (⌘K)'}
             value={value}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => value && setShowHistory(true)}
             onBlur={() => setTimeout(() => setShowHistory(false), 200)}
-            className="pl-9 pr-9"
+            className="pl-9 pr-9 h-10 rounded-lg border-border bg-card/50 backdrop-blur-sm
+                     transition-all duration-200 focus:ring-2 focus:ring-primary/20"
             disabled={isSearching}
           />
           {value && (
@@ -135,61 +138,69 @@ export function SearchBar({
               variant="ghost"
               size="icon"
               onClick={handleClear}
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md
+                       hover:bg-accent hover:scale-105 transition-all duration-200"
             >
               <X className="h-4 w-4" />
             </Button>
           )}
         </div>
 
-        {/* 过滤器按钮 */}
+        {/* 过滤器按钮 - 增强视觉效果 */}
         <Button
           variant={hasActiveFilters ? "default" : "outline"}
           size="icon"
           onClick={onFilterClick}
-          className="shrink-0"
-          title="高级过滤"
+          className={`shrink-0 h-10 w-10 rounded-lg transition-all duration-200
+                    ${hasActiveFilters ? 'shadow-md' : 'hover:bg-accent'}`}
+          title={translate?.('advancedFilter.title', 'Advanced Filter')}
         >
           <Filter className="h-4 w-4" />
           {hasActiveFilters && (
-            <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
+            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary
+                           ring-2 ring-background animate-pulse" />
           )}
         </Button>
       </div>
 
-      {/* 搜索历史下拉 */}
+      {/* 搜索历史下拉 - 优化为现代卡片设计 */}
       {showHistory && searchHistory.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background border border-border
+                      rounded-xl shadow-xl z-50 overflow-hidden backdrop-blur-sm
+                      animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>搜索历史</span>
+              <span>{translate?.('sidebar.searchHistory', 'Search History...')}</span>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={clearHistory}
-              className="h-6 text-xs"
+              className="h-7 text-xs hover:bg-destructive/10 hover:text-destructive
+                       transition-all duration-200"
             >
-              清空
+              {translate?.('sidebar.clearHistory', 'Clear History')}
             </Button>
           </div>
-          <div className="max-h-48 overflow-y-auto">
+          <div className="max-h-48 overflow-y-auto py-1">
             {searchHistory.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between px-3 py-2 hover:bg-accent cursor-pointer group"
+                className="flex items-center justify-between px-4 py-2.5 hover:bg-accent/70
+                         cursor-pointer group transition-all duration-200 mx-2 rounded-lg"
                 onClick={() => {
                   onChange(item);
                   handleSearch(item);
                 }}
               >
-                <span className="text-sm truncate flex-1">{item}</span>
+                <span className="text-sm truncate flex-1 font-medium">{item}</span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={(e) => removeHistoryItem(item, e)}
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-all duration-200
+                           hover:bg-destructive/10 hover:text-destructive rounded-md"
                 >
                   <X className="h-3 w-3" />
                 </Button>

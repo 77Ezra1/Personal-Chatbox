@@ -29,155 +29,327 @@
 }
 
 :root {
+  /* v0.dev 风格配色方案 */
   --radius: 12px;
-  --background: #FFFFFF;
-  --foreground: #1F2430;
-  --card: #FFFFFF;
-  --card-foreground: #1F2430;
-  --popover: #FFFFFF;
-  --popover-foreground: #1F2430;
-  --primary: #FFFFFF;
-  --primary-foreground: #1F2430;
-  --secondary: #FFFFFF;
-  --secondary-foreground: #1F2430;
-  --muted: #FFFFFF;
-  --muted-foreground: #5F6B8C;
-  --accent: #FFFFFF;
-  --accent-foreground: #1F2430;
-  --destructive: #FF5F57;
-  --border: #EFEFEF;
-  --input: #E8EAF2;
-  --ring: #EFEFEF;
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #1F2430;
-  --sidebar-border: rgba(0, 0, 0, 0.06);
+
+  /* 背景层次 */
+  --background: hsl(0, 0%, 100%);
+  --background-secondary: hsl(0, 0%, 98%);
+  --background-tertiary: hsl(0, 0%, 96%);
+
+  /* 前景色 */
+  --foreground: hsl(240, 10%, 3.9%);
+  --foreground-secondary: hsl(240, 5%, 26%);
+  --foreground-tertiary: hsl(240, 4%, 46%);
+
+  /* 卡片和表面 */
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(240, 10%, 3.9%);
+
+  /* 弹出层 */
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(240, 10%, 3.9%);
+
+  /* 主色调 - v0.dev 的黑色强调 */
+  --primary: hsl(240, 6%, 10%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --primary-hover: hsl(240, 6%, 16%);
+
+  /* 次要色 */
+  --secondary: hsl(240, 5%, 96%);
+  --secondary-foreground: hsl(240, 6%, 10%);
+  --secondary-hover: hsl(240, 5%, 92%);
+
+  /* 静音色 */
+  --muted: hsl(240, 5%, 96%);
+  --muted-foreground: hsl(240, 4%, 46%);
+
+  /* 强调色 */
+  --accent: hsl(240, 5%, 96%);
+  --accent-foreground: hsl(240, 6%, 10%);
+
+  /* 破坏性操作 */
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+
+  /* 边框 */
+  --border: hsl(240, 6%, 90%);
+  --border-secondary: hsl(240, 6%, 94%);
+
+  /* 输入框 */
+  --input: hsl(240, 6%, 90%);
+  --input-focus: hsl(240, 6%, 10%);
+
+  /* 聚焦环 */
+  --ring: hsl(240, 6%, 10%);
+
+  /* 侧边栏 */
+  --sidebar: hsl(0, 0%, 100%);
+  --sidebar-foreground: hsl(240, 10%, 3.9%);
+  --sidebar-border: hsl(240, 6%, 94%);
+
+  /* 阴影系统 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
 }
 
 .dark {
-  --background: #1a1b26;
-  --foreground: #c0caf5;
-  --card: #24283b;
-  --card-foreground: #c0caf5;
-  --popover: #24283b;
-  --popover-foreground: #c0caf5;
-  --primary: #9aa5ce;
-  --primary-foreground: #1a1b26;
-  --secondary: #414868;
-  --secondary-foreground: #c0caf5;
-  --muted: #414868;
-  --muted-foreground: #9aa5ce;
-  --accent: #414868;
-  --accent-foreground: #c0caf5;
-  --destructive: #d4d4d8;
-  --border: #414868;
-  --input: #414868;
-  --ring: #9aa5ce;
-  --sidebar: #1f2335;
-  --sidebar-foreground: #c0caf5;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
+  /* v0.dev 暗色模式 */
+  --background: hsl(240, 10%, 3.9%);
+  --background-secondary: hsl(240, 8%, 8%);
+  --background-tertiary: hsl(240, 8%, 12%);
+
+  --foreground: hsl(0, 0%, 98%);
+  --foreground-secondary: hsl(240, 5%, 84%);
+  --foreground-tertiary: hsl(240, 5%, 64%);
+
+  --card: hsl(240, 8%, 8%);
+  --card-foreground: hsl(0, 0%, 98%);
+
+  --popover: hsl(240, 8%, 8%);
+  --popover-foreground: hsl(0, 0%, 98%);
+
+  --primary: hsl(0, 0%, 98%);
+  --primary-foreground: hsl(240, 6%, 10%);
+  --primary-hover: hsl(0, 0%, 90%);
+
+  --secondary: hsl(240, 8%, 14%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --secondary-hover: hsl(240, 8%, 18%);
+
+  --muted: hsl(240, 8%, 14%);
+  --muted-foreground: hsl(240, 5%, 64%);
+
+  --accent: hsl(240, 8%, 14%);
+  --accent-foreground: hsl(0, 0%, 98%);
+
+  --destructive: hsl(0, 62%, 50%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+
+  --border: hsl(240, 8%, 18%);
+  --border-secondary: hsl(240, 8%, 14%);
+
+  --input: hsl(240, 8%, 18%);
+  --input-focus: hsl(0, 0%, 98%);
+
+  --ring: hsl(0, 0%, 98%);
+
+  --sidebar: hsl(240, 8%, 6%);
+  --sidebar-foreground: hsl(0, 0%, 98%);
+  --sidebar-border: hsl(240, 8%, 14%);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    box-sizing: border-box;
   }
+
   *:focus-visible {
-    outline: 2px solid rgba(31, 36, 48, 0.45);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
+    transition: outline-offset 0.2s ease;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'PingFang SC', 'HarmonyOS Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* 全局滚动条样式 - v0.dev 风格 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
   }
 }
 
+/* v0.dev 风格主容器 */
 .app-container {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  backdrop-filter: blur(0.5px);
+  background: var(--background);
 }
 
+/* v0.dev 风格侧边栏 */
 .sidebar {
-  flex: 0 0 260px;
-  width: 260px;
+  flex: 0 0 280px;
+  width: 280px;
   background: var(--sidebar);
-  backdrop-filter: blur(0);
-  -webkit-backdrop-filter: blur(0);
   border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: none;
   position: relative;
+  overflow: hidden;
 }
 
 .sidebar-collapsed {
-  flex: 0 0 48px;
-  width: 48px;
-  min-width: 48px;
+  flex: 0 0 60px;
+  width: 60px;
+  min-width: 60px;
 }
 
+/* 侧边栏切换按钮 */
 .sidebar-toggle-btn {
   position: absolute;
-  top: 16px;
+  top: 20px;
   right: -14px;
   z-index: 10;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--card);
+  background: var(--background);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--foreground);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .sidebar-toggle-btn:hover {
   background: var(--primary);
   color: var(--primary-foreground);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.sidebar-toggle-btn:active {
+  transform: scale(0.95);
 }
 
 .sidebar-collapsed .sidebar-toggle-btn {
-  right: 10px;
+  right: 16px;
 }
 
+/* 侧边栏头部 */
 .sidebar-header {
-  padding: 20px 20px 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border-secondary);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 12px;
 }
 
-.new-chat-btn {
-  width: 100%;
-  justify-content: flex-start;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-radius: 12px;
-  padding: 14px 18px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: none;
+/* 内联折叠按钮 */
+.sidebar-toggle-btn-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--foreground);
+  flex-shrink: 0;
 }
 
-.new-chat-btn:hover {
-  transform: translateY(-2px);
+.sidebar-toggle-btn-inline:hover {
+  background: var(--accent);
+  border-color: var(--accent-foreground);
+  transform: scale(1.05);
+}
+
+.sidebar-toggle-btn-inline:active {
+  transform: scale(0.95);
+}
+
+/* 折叠状态的展开按钮 */
+.sidebar-toggle-btn-collapsed {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--foreground);
+  box-shadow: var(--shadow-md);
+}
+
+.sidebar-toggle-btn-collapsed:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.sidebar-toggle-btn-collapsed:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+/* 新对话按钮 - v0.dev 风格 */
+.new-chat-btn {
+  width: 100%;
+  justify-content: center;
+  gap: 8px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  box-shadow: var(--shadow-sm);
+  letter-spacing: -0.01em;
+}
+
+.new-chat-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.new-chat-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
   box-shadow: none;
 }
 
 .new-chat-btn-header {
-  width: 100%;
+  flex: 1;
   justify-content: flex-start;
   background: var(--primary);
   color: var(--primary-foreground);
@@ -211,26 +383,25 @@
 }
 
 .sidebar-footer-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
 }
 
 .sidebar-footer-tools {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  justify-content: space-between;
 }
 
 .sidebar-clear-all-button {
   justify-content: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 8px 10px;
-  grid-column: 1 / -1;
+  padding: 10px 12px;
   width: 100%;
 }
 
@@ -242,8 +413,8 @@
 
 .sidebar-language-button {
   justify-content: center;
-  padding: 8px 10px;
-  width: 100%;
+  padding: 8px 12px;
+  gap: 6px;
 }
 
 .sidebar-language-label {
@@ -864,6 +1035,9 @@ button:hover:not(:disabled),
   padding: 0;
   margin-right: auto;
   color: var(--foreground);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 
@@ -1487,15 +1661,17 @@ button:hover:not(:disabled),
 
 .message-input-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* 防止按钮换行 */
   align-items: center;
   gap: 8px;
 }
 
 .message-input-toolbar-button {
+  flex-shrink: 0; /* 防止按钮被压缩 */
   border-radius: 10px;
   color: var(--muted-foreground);
   transition: color 0.2s ease, transform 0.2s ease;
+  white-space: nowrap; /* 防止文本换行 */
 }
 
 .message-input-toolbar-button:hover:not(:disabled) {
@@ -1558,6 +1734,15 @@ button:hover:not(:disabled),
   .message-input-send {
     padding: 10px 16px;
     min-width: auto; /* 移除宽度限制 */
+  }
+
+  .message-input-toolbar {
+    gap: 4px; /* 小屏幕上减小间距 */
+  }
+
+  .message-input-toolbar-button {
+    padding: 0 6px; /* 小屏幕上减小内边距 */
+    font-size: 12px; /* 小屏幕上减小字体 */
   }
 
   /* 小屏幕上减少消息容器的 padding */
@@ -2333,11 +2518,15 @@ button:hover:not(:disabled),
 
 
 
-/* Sidebar footer按钮网格布局优化 */
-.sidebar-footer-actions > button[size="icon"] {
-  width: 100%;
+/* Sidebar footer按钮布局优化 */
+.sidebar-footer-tools > button[size="icon"] {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 8px;
 }
 
 
@@ -3695,5 +3884,71 @@ button:hover:not(:disabled),
 .analytics-close:hover {
   background: var(--accent);
   transform: scale(1.1);
+}
+
+/* ========================================
+   Sidebar Layout Improvements
+   ======================================== */
+
+/* Navigation menu spacing */
+nav.px-3 {
+  padding-bottom: 12px !important;
+}
+
+nav.space-y-1 > a {
+  margin-bottom: 4px;
+}
+
+/* Ensure proper spacing between sidebar sections */
+.sidebar-header {
+  margin-bottom: 0;
+}
+
+/* Search bar container spacing */
+.sidebar > div.px-3.py-2:has(.search-bar) {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Conversation list proper scrolling */
+.conversation-list {
+  min-height: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Footer tools icon buttons */
+.sidebar-footer-tools button[size="icon"] {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+}
+
+/* Language button specific sizing */
+.sidebar-language-button {
+  min-width: auto;
+  flex-shrink: 0;
+}
+
+/* Ensure footer stays at bottom */
+.sidebar-footer {
+  flex-shrink: 0;
+}
+
+/* User info section spacing */
+.sidebar-user-info {
+  margin-bottom: 12px;
+}
+
+/* Clear all button full width */
+.sidebar-clear-all-button {
+  display: flex;
+  width: 100%;
+}
+
+/* Footer tools row - ensure horizontal layout */
+.sidebar-footer-tools {
+  flex-wrap: nowrap;
+  width: 100%;
 }
 

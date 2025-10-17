@@ -1,18 +1,32 @@
-/* 全局样式 - 隐藏滚动条但保留滚动功能 */
+/* v0.dev 风格UI改进 */
+@import './styles/v0-ui-improvements.css';
 
-/* 隐藏所有元素的滚动条（Webkit浏览器：Chrome、Safari、Edge） */
+/* 全局样式 - v0.dev 风格滚动条（可选显示） */
+
+/* v0.dev 风格滚动条 - 更优雅的显示方式 */
 *::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+  height: 8px;
 }
 
-/* 隐藏所有元素的滚动条（Firefox） */
-* {
-  scrollbar-width: none;
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* 隐藏所有元素的滚动条（IE和旧版Edge） */
+*::-webkit-scrollbar-thumb {
+  background: var(--border, #e5e7eb);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground, #9ca3af);
+}
+
+/* Firefox */
 * {
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, #e5e7eb) transparent;
 }
 
 /* 确保所有textarea使用滑动式布局，不撑开页面 */

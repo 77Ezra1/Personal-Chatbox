@@ -4,94 +4,73 @@
 
 const fs = require('fs');
 const path = require('path');
-const { openDb, DB_PATH } = require('./adapter.cjs');
+const BetterSqlite3 = require('better-sqlite3');
 
-// 打开数据库连接
-const db = openDb();
+const DB_PATH = path.join(__dirname, '../../data/app.db');
 
-if (!db) {
-  console.error('❌ 错误: 无法打开数据库');
-  console.error('   请确保已安装 better-sqlite3 或 sqlite3:');
-  console.error('   npm install better-sqlite3');
-  process.exit(1);
+// 直接使用 better-sqlite3
+const db = new BetterSqlite3(DB_PATH);
+
+// 设置 PRAGMA
+try {
+  db.pragma('journal_mode = WAL');
+  db.pragma('synchronous = NORMAL');
+  db.pragma('foreign_keys = ON');
+  db.pragma('busy_timeout = 5000');
+} catch (e) {
+  console.warn('[DB Migration] Warning setting PRAGMA:', e.message);
 }
 
 console.log(`✅ 数据库连接成功: ${DB_PATH}`);
-console.log(`   驱动: ${db._driver}\n`);
+console.log(`   驱动: better-sqlite3\n`);
 
 // 创建迁移历史表
 const createMigrationsTable = () => {
-  return new Promise((resolve, reject) => {
-    db.run(`
+  try {
+    db.exec(`
       CREATE TABLE IF NOT EXISTS migrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         version TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
         executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+    `);
+  } catch (err) {
+    throw err;
+  }
 };
 
 // 获取已执行的迁移
 const getExecutedMigrations = () => {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT version FROM migrations ORDER BY version', (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows.map(row => row.version));
-    });
-  });
+  try {
+    const rows = db.prepare('SELECT version FROM migrations ORDER BY version').all();
+    return rows.map(row => row.version);
+  } catch (err) {
+    throw err;
+  }
 };
 
 // 记录迁移执行
 const recordMigration = (version, name) => {
-  return new Promise((resolve, reject) => {
-    db.run(
-      'INSERT INTO migrations (version, name) VALUES (?, ?)',
-      [version, name],
-      (err) => {
-        if (err) reject(err);
-        else resolve();
-      }
-    );
-  });
+  try {
+    db.prepare('INSERT INTO migrations (version, name) VALUES (?, ?)').run(version, name);
+  } catch (err) {
+    throw err;
+  }
 };
 
 // 执行 SQL 文件
 const executeSqlFile = (filePath) => {
-  return new Promise((resolve, reject) => {
+  try {
     const sql = fs.readFileSync(filePath, 'utf-8');
 
-    // 分割多个 SQL 语句
-    const statements = sql
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s && !s.startsWith('--'));
-
-    // 使用事务执行
-    db.serialize(() => {
-      db.run('BEGIN TRANSACTION');
-
-      try {
-        statements.forEach(statement => {
-          if (statement) {
-            db.run(statement);
-          }
-        });
-
-        db.run('COMMIT', (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      } catch (error) {
-        db.run('ROLLBACK');
-        reject(error);
-      }
-    });
-  });
+    // 直接执行整个 SQL 文件
+    db.exec(sql);
+  } catch (error) {
+    if (!error.message.includes('already exists')) {
+      throw error;
+    }
+  }
 };
 
 // 运行所有待执行的迁移
@@ -103,7 +82,7 @@ const runMigrations = async () => {
     createMigrationsTable();
 
     // 获取已执行的迁移
-    const executed = await getExecutedMigrations();
+    const executed = getExecutedMigrations();
     console.log(`已执行的迁移: ${executed.length} 个\n`);
 
     // 读取迁移文件夹
@@ -143,8 +122,8 @@ const runMigrations = async () => {
       const filePath = path.join(migrationsDir, file);
 
       try {
-        await executeSqlFile(filePath);
-        await recordMigration(version, file);
+        executeSqlFile(filePath);
+        recordMigration(version, file);
         console.log(`✅ 迁移成功: ${file}\n`);
         newMigrations++;
       } catch (error) {

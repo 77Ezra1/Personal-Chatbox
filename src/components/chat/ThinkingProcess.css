@@ -161,13 +161,50 @@
   }
 }
 
-.thinking-steps-count {
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--primary) 15%, transparent);
+/* 统计信息容器 */
+.thinking-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.thinking-stat-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
   color: var(--primary);
   font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.thinking-stat-badge:hover {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  transform: translateY(-1px);
+}
+
+.streaming-badge {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--primary) 15%, transparent),
+    color-mix(in srgb, var(--primary) 25%, transparent),
+    color-mix(in srgb, var(--primary) 15%, transparent)
+  );
+  background-size: 200% 100%;
+  animation: shimmer-badge 2s ease infinite;
+}
+
+@keyframes shimmer-badge {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .thinking-process-toggle-icon {

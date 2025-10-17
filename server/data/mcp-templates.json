@@ -1,0 +1,600 @@
+{
+  "templates": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "category": "development",
+      "description": "连接到GitHub的REST API，可以管理仓库、Issues、Pull Requests、Commits等。支持读取代码、创建分支、管理工作流等操作。",
+      "icon": "🔧",
+      "official": true,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      },
+      "features": [
+        "仓库管理",
+        "Issue管理",
+        "Pull Request操作",
+        "代码搜索",
+        "分支管理",
+        "Workflow触发"
+      ],
+      "setupInstructions": {
+        "zh": "1. 访问 https://github.com/settings/tokens 创建Personal Access Token\n2. 需要的权限: repo, workflow, read:org\n3. 将Token填入GITHUB_PERSONAL_ACCESS_TOKEN环境变量",
+        "en": "1. Visit https://github.com/settings/tokens to create Personal Access Token\n2. Required scopes: repo, workflow, read:org\n3. Fill the token in GITHUB_PERSONAL_ACCESS_TOKEN environment variable"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/github"
+    },
+    {
+      "id": "filesystem",
+      "name": "Filesystem",
+      "category": "system",
+      "description": "提供安全的文件系统操作能力，支持读取、写入、编辑、移动、搜索文件等。具有路径验证和访问控制功能，确保只能访问指定目录。",
+      "icon": "📁",
+      "official": true,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
+      "features": [
+        "文件读写",
+        "目录管理",
+        "文件搜索",
+        "路径验证",
+        "安全控制"
+      ],
+      "setupInstructions": {
+        "zh": "1. 将 /path/to/allowed/directory 替换为你想要AI访问的目录路径\n2. 建议使用绝对路径\n3. AI只能访问该目录及其子目录",
+        "en": "1. Replace /path/to/allowed/directory with the directory you want AI to access\n2. Absolute path is recommended\n3. AI can only access this directory and its subdirectories"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem"
+    },
+    {
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "category": "database",
+      "description": "连接PostgreSQL数据库，支持执行SQL查询、管理表结构、数据分析等。提供安全的数据库访问接口，支持复杂查询和数据可视化。",
+      "icon": "🐘",
+      "official": true,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://user:password@localhost/dbname"],
+      "features": [
+        "SQL查询",
+        "表结构管理",
+        "数据分析",
+        "安全访问",
+        "事务支持"
+      ],
+      "setupInstructions": {
+        "zh": "1. 准备PostgreSQL数据库连接字符串\n2. 格式: postgresql://用户名:密码@主机:端口/数据库名\n3. 确保数据库用户有足够权限",
+        "en": "1. Prepare PostgreSQL connection string\n2. Format: postgresql://username:password@host:port/database\n3. Ensure the database user has sufficient permissions"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres"
+    },
+    {
+      "id": "puppeteer",
+      "name": "Puppeteer",
+      "category": "automation",
+      "description": "浏览器自动化工具，可以控制Chrome/Chromium进行网页截图、PDF生成、表单填写、页面导航、元素交互等操作。适合网页测试和数据抓取。",
+      "icon": "🎭",
+      "official": true,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "features": [
+        "网页截图",
+        "PDF生成",
+        "表单自动化",
+        "页面导航",
+        "元素交互",
+        "网络监控"
+      ],
+      "setupInstructions": {
+        "zh": "1. 无需额外配置\n2. 首次运行会自动下载Chromium\n3. 需要足够的系统资源运行浏览器",
+        "en": "1. No additional configuration required\n2. Chromium will be downloaded automatically on first run\n3. Sufficient system resources required to run browser"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer"
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "category": "communication",
+      "description": "集成Slack工作空间，可以发送消息、管理频道、读取历史记录、上传文件、管理用户等。适合团队协作和通知自动化。",
+      "icon": "💬",
+      "official": true,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "",
+        "SLACK_TEAM_ID": ""
+      },
+      "features": [
+        "发送消息",
+        "频道管理",
+        "历史记录",
+        "文件上传",
+        "用户管理"
+      ],
+      "setupInstructions": {
+        "zh": "1. 访问 https://api.slack.com/apps 创建Slack App\n2. 添加Bot Token Scopes: channels:read, chat:write, files:write\n3. 安装App到工作空间并获取Bot Token",
+        "en": "1. Visit https://api.slack.com/apps to create Slack App\n2. Add Bot Token Scopes: channels:read, chat:write, files:write\n3. Install App to workspace and get Bot Token"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/slack"
+    },
+    {
+      "id": "google-drive",
+      "name": "Google Drive",
+      "category": "storage",
+      "description": "访问Google Drive云存储，支持文件上传下载、文件夹管理、共享设置、搜索文件等。可以读取Docs、Sheets、Slides等Google文档。",
+      "icon": "☁️",
+      "official": true,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gdrive"],
+      "env": {
+        "GDRIVE_CLIENT_ID": "",
+        "GDRIVE_CLIENT_SECRET": "",
+        "GDRIVE_REFRESH_TOKEN": ""
+      },
+      "features": [
+        "文件上传下载",
+        "文件夹管理",
+        "共享设置",
+        "文件搜索",
+        "Google文档读取"
+      ],
+      "setupInstructions": {
+        "zh": "1. 在Google Cloud Console创建OAuth 2.0凭据\n2. 启用Google Drive API\n3. 获取Client ID、Client Secret和Refresh Token",
+        "en": "1. Create OAuth 2.0 credentials in Google Cloud Console\n2. Enable Google Drive API\n3. Get Client ID, Client Secret and Refresh Token"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/gdrive"
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "category": "development",
+      "description": "Git版本控制工具，可以读取、搜索、操作Git仓库。支持查看提交历史、分支管理、文件差异、日志分析等操作。",
+      "icon": "🔀",
+      "official": true,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"],
+      "features": [
+        "提交历史",
+        "分支管理",
+        "文件差异",
+        "日志分析",
+        "仓库状态"
+      ],
+      "setupInstructions": {
+        "zh": "1. 确保系统已安装Git\n2. 配置好Git用户信息\n3. 无需额外环境变量",
+        "en": "1. Ensure Git is installed on the system\n2. Configure Git user information\n3. No additional environment variables required"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/git"
+    },
+    {
+      "id": "sqlite",
+      "name": "SQLite",
+      "category": "database",
+      "description": "轻量级数据库访问工具，支持SQLite数据库的查询、分析、可视化。适合本地数据存储和小型应用。",
+      "icon": "🗄️",
+      "official": true,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "/path/to/database.db"],
+      "features": [
+        "SQL查询",
+        "数据分析",
+        "表结构查看",
+        "轻量级",
+        "无需服务器"
+      ],
+      "setupInstructions": {
+        "zh": "1. 将 /path/to/database.db 替换为你的SQLite数据库文件路径\n2. 确保文件路径可访问",
+        "en": "1. Replace /path/to/database.db with your SQLite database file path\n2. Ensure the file path is accessible"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite"
+    },
+    {
+      "id": "fetch",
+      "name": "Fetch",
+      "category": "network",
+      "description": "网页内容抓取工具，可以获取网页HTML、提取文本、解析结构化数据。支持多种网页格式和编码。",
+      "icon": "🌐",
+      "official": true,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "features": [
+        "网页抓取",
+        "HTML解析",
+        "文本提取",
+        "编码处理"
+      ],
+      "setupInstructions": {
+        "zh": "1. 无需配置即可使用\n2. 遵守网站robots.txt规则\n3. 注意请求频率限制",
+        "en": "1. Ready to use without configuration\n2. Respect website robots.txt rules\n3. Be mindful of request rate limits"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch"
+    },
+    {
+      "id": "brave-search",
+      "name": "Brave Search",
+      "category": "search",
+      "description": "Brave搜索引擎API，提供隐私保护的网页搜索能力。支持网页搜索、新闻搜索、图片搜索等。",
+      "icon": "🔍",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": ""
+      },
+      "features": [
+        "网页搜索",
+        "新闻搜索",
+        "图片搜索",
+        "隐私保护"
+      ],
+      "setupInstructions": {
+        "zh": "1. 访问 https://brave.com/search/api/ 注册账号\n2. 创建API Key\n3. 填入BRAVE_API_KEY环境变量",
+        "en": "1. Visit https://brave.com/search/api/ to register\n2. Create API Key\n3. Fill in BRAVE_API_KEY environment variable"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search"
+    },
+    {
+      "id": "mongodb",
+      "name": "MongoDB",
+      "category": "database",
+      "description": "MongoDB数据库连接器，支持NoSQL数据库操作、文档查询、聚合分析、索引管理等。适合非结构化数据存储。",
+      "icon": "🍃",
+      "official": false,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-mongodb", "mongodb://localhost:27017"],
+      "env": {
+        "MONGODB_URI": ""
+      },
+      "features": [
+        "文档查询",
+        "聚合分析",
+        "索引管理",
+        "集合操作"
+      ],
+      "setupInstructions": {
+        "zh": "1. 准备MongoDB连接字符串\n2. 格式: mongodb://用户名:密码@主机:端口/数据库\n3. 或使用Atlas: mongodb+srv://...",
+        "en": "1. Prepare MongoDB connection string\n2. Format: mongodb://username:password@host:port/database\n3. Or use Atlas: mongodb+srv://..."
+      },
+      "documentation": "https://github.com/mongodb/mcp-server-mongodb"
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "category": "devops",
+      "description": "Docker容器管理工具，可以列出、启动、停止容器，查看日志，管理镜像，执行容器命令等。",
+      "icon": "🐳",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "mcp-server-docker"],
+      "features": [
+        "容器管理",
+        "镜像操作",
+        "日志查看",
+        "命令执行"
+      ],
+      "setupInstructions": {
+        "zh": "1. 确保系统已安装Docker\n2. Docker daemon需要运行中\n3. 确保有Docker访问权限",
+        "en": "1. Ensure Docker is installed\n2. Docker daemon must be running\n3. Ensure you have Docker access permissions"
+      },
+      "documentation": "https://github.com/ckreiling/mcp-server-docker"
+    },
+    {
+      "id": "aws",
+      "name": "AWS",
+      "category": "cloud",
+      "description": "亚马逊云服务集成，可以管理EC2实例、S3存储、Lambda函数等AWS资源。遵循AWS最佳实践。",
+      "icon": "☁️",
+      "official": false,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-aws"],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "",
+        "AWS_SECRET_ACCESS_KEY": "",
+        "AWS_REGION": "us-east-1"
+      },
+      "features": [
+        "EC2管理",
+        "S3存储",
+        "Lambda函数",
+        "资源监控"
+      ],
+      "setupInstructions": {
+        "zh": "1. 在AWS IAM创建访问密钥\n2. 配置适当的权限策略\n3. 填入访问密钥和区域信息",
+        "en": "1. Create access keys in AWS IAM\n2. Configure appropriate permission policies\n3. Fill in access keys and region information"
+      },
+      "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/aws"
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "category": "productivity",
+      "description": "Notion工作空间集成，可以读取、创建、更新页面和数据库。支持块操作、数据库查询、页面结构管理等。",
+      "icon": "📝",
+      "official": false,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "@notionhq/mcp-server-notion"],
+      "env": {
+        "NOTION_API_KEY": ""
+      },
+      "features": [
+        "页面管理",
+        "数据库操作",
+        "块编辑",
+        "搜索功能"
+      ],
+      "setupInstructions": {
+        "zh": "1. 访问 https://www.notion.so/my-integrations 创建集成\n2. 获取Internal Integration Token\n3. 将Token授权给需要访问的页面",
+        "en": "1. Visit https://www.notion.so/my-integrations to create integration\n2. Get Internal Integration Token\n3. Share token with pages you want to access"
+      },
+      "documentation": "https://developers.notion.com/"
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "category": "design",
+      "description": "Figma设计工具集成，可以读取设计文件、获取组件信息、导出资源。支持设计到代码的工作流。",
+      "icon": "🎨",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "mcp-server-figma"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": ""
+      },
+      "features": [
+        "设计文件读取",
+        "组件信息",
+        "资源导出",
+        "设计规范"
+      ],
+      "setupInstructions": {
+        "zh": "1. 在Figma账户设置中生成Personal Access Token\n2. 填入FIGMA_ACCESS_TOKEN环境变量",
+        "en": "1. Generate Personal Access Token in Figma account settings\n2. Fill in FIGMA_ACCESS_TOKEN environment variable"
+      },
+      "documentation": "https://www.figma.com/developers/api"
+    },
+    {
+      "id": "sentry",
+      "name": "Sentry",
+      "category": "monitoring",
+      "description": "Sentry错误监控集成，可以查看错误报告、性能数据、发布信息。帮助调试生产环境问题。",
+      "icon": "🐛",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server"],
+      "env": {
+        "SENTRY_AUTH_TOKEN": "",
+        "SENTRY_ORG": ""
+      },
+      "features": [
+        "错误报告",
+        "性能监控",
+        "发布追踪",
+        "问题分析"
+      ],
+      "setupInstructions": {
+        "zh": "1. 在Sentry创建Auth Token\n2. 填入组织名称和Token\n3. 需要适当的权限: project:read, event:read",
+        "en": "1. Create Auth Token in Sentry\n2. Fill in organization name and token\n3. Required permissions: project:read, event:read"
+      },
+      "documentation": "https://docs.sentry.io/"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "category": "payment",
+      "description": "Stripe支付平台集成，可以管理客户、订阅、支付、退款等。支持完整的支付工作流。",
+      "icon": "💳",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "mcp-server-stripe"],
+      "env": {
+        "STRIPE_SECRET_KEY": ""
+      },
+      "features": [
+        "支付处理",
+        "订阅管理",
+        "客户管理",
+        "退款操作"
+      ],
+      "setupInstructions": {
+        "zh": "1. 登录Stripe Dashboard\n2. 获取Secret Key (sk_开头)\n3. 测试环境使用test key，生产环境使用live key",
+        "en": "1. Login to Stripe Dashboard\n2. Get Secret Key (starts with sk_)\n3. Use test key for testing, live key for production"
+      },
+      "documentation": "https://stripe.com/docs/api"
+    },
+    {
+      "id": "linear",
+      "name": "Linear",
+      "category": "productivity",
+      "description": "Linear项目管理工具集成，可以创建、更新、查询Issues，管理项目和团队工作流。",
+      "icon": "⚡",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "mcp-server-linear"],
+      "env": {
+        "LINEAR_API_KEY": ""
+      },
+      "features": [
+        "Issue管理",
+        "项目追踪",
+        "工作流管理",
+        "团队协作"
+      ],
+      "setupInstructions": {
+        "zh": "1. 在Linear设置中创建API Key\n2. 填入LINEAR_API_KEY环境变量",
+        "en": "1. Create API Key in Linear settings\n2. Fill in LINEAR_API_KEY environment variable"
+      },
+      "documentation": "https://developers.linear.app/"
+    },
+    {
+      "id": "zapier",
+      "name": "Zapier",
+      "category": "automation",
+      "description": "Zapier自动化平台，连接8000+应用。可以触发Zap、读取数据、创建自动化工作流。",
+      "icon": "⚙️",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "mcp-server-zapier"],
+      "env": {
+        "ZAPIER_API_KEY": ""
+      },
+      "features": [
+        "工作流自动化",
+        "多应用集成",
+        "触发器管理",
+        "数据传输"
+      ],
+      "setupInstructions": {
+        "zh": "1. 访问 https://zapier.com/app/settings/api 获取API Key\n2. 填入ZAPIER_API_KEY环境变量",
+        "en": "1. Visit https://zapier.com/app/settings/api to get API Key\n2. Fill in ZAPIER_API_KEY environment variable"
+      },
+      "documentation": "https://zapier.com/developer"
+    },
+    {
+      "id": "jira",
+      "name": "Jira",
+      "category": "productivity",
+      "description": "Atlassian Jira项目管理工具，可以管理Issues、Sprints、看板。支持敏捷开发工作流。",
+      "icon": "📋",
+      "official": false,
+      "popularity": "high",
+      "command": "npx",
+      "args": ["-y", "mcp-server-jira"],
+      "env": {
+        "JIRA_URL": "",
+        "JIRA_USERNAME": "",
+        "JIRA_API_TOKEN": ""
+      },
+      "features": [
+        "Issue管理",
+        "Sprint管理",
+        "看板操作",
+        "敏捷工作流"
+      ],
+      "setupInstructions": {
+        "zh": "1. 在Atlassian账户设置中创建API Token\n2. 填入Jira实例URL、用户名和Token",
+        "en": "1. Create API Token in Atlassian account settings\n2. Fill in Jira instance URL, username and token"
+      },
+      "documentation": "https://developer.atlassian.com/cloud/jira/platform/"
+    },
+    {
+      "id": "confluence",
+      "name": "Confluence",
+      "category": "productivity",
+      "description": "Atlassian Confluence文档协作工具，可以创建、编辑、搜索页面和空间。",
+      "icon": "📚",
+      "official": false,
+      "popularity": "medium",
+      "command": "npx",
+      "args": ["-y", "mcp-server-confluence"],
+      "env": {
+        "CONFLUENCE_URL": "",
+        "CONFLUENCE_USERNAME": "",
+        "CONFLUENCE_API_TOKEN": ""
+      },
+      "features": [
+        "页面管理",
+        "空间管理",
+        "内容搜索",
+        "协作编辑"
+      ],
+      "setupInstructions": {
+        "zh": "1. 在Atlassian账户设置中创建API Token\n2. 填入Confluence实例URL、用户名和Token",
+        "en": "1. Create API Token in Atlassian account settings\n2. Fill in Confluence instance URL, username and token"
+      },
+      "documentation": "https://developer.atlassian.com/cloud/confluence/"
+    }
+  ],
+  "categories": {
+    "development": {
+      "name": "开发工具",
+      "icon": "💻",
+      "description": "代码管理、版本控制、开发流程相关工具"
+    },
+    "database": {
+      "name": "数据库",
+      "icon": "🗄️",
+      "description": "各类数据库连接和管理工具"
+    },
+    "cloud": {
+      "name": "云服务",
+      "icon": "☁️",
+      "description": "云平台和云存储服务"
+    },
+    "automation": {
+      "name": "自动化",
+      "icon": "🤖",
+      "description": "工作流自动化和浏览器控制"
+    },
+    "communication": {
+      "name": "通讯协作",
+      "icon": "💬",
+      "description": "团队沟通和协作工具"
+    },
+    "productivity": {
+      "name": "生产力",
+      "icon": "📝",
+      "description": "项目管理、文档协作、笔记工具"
+    },
+    "storage": {
+      "name": "存储",
+      "icon": "📦",
+      "description": "云存储和文件管理"
+    },
+    "monitoring": {
+      "name": "监控",
+      "icon": "📊",
+      "description": "错误追踪和性能监控"
+    },
+    "payment": {
+      "name": "支付",
+      "icon": "💰",
+      "description": "支付处理和订阅管理"
+    },
+    "design": {
+      "name": "设计",
+      "icon": "🎨",
+      "description": "设计工具和资源管理"
+    },
+    "system": {
+      "name": "系统",
+      "icon": "⚙️",
+      "description": "文件系统和系统级操作"
+    },
+    "network": {
+      "name": "网络",
+      "icon": "🌐",
+      "description": "网页抓取和网络请求"
+    },
+    "search": {
+      "name": "搜索",
+      "icon": "🔍",
+      "description": "搜索引擎和信息检索"
+    },
+    "devops": {
+      "name": "DevOps",
+      "icon": "🔧",
+      "description": "容器管理和部署工具"
+    }
+  }
+}

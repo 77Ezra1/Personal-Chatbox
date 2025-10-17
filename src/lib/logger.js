@@ -68,7 +68,7 @@ class Logger {
     // 发送错误到 Sentry
     if (!isDev && args[0] instanceof Error) {
       // 动态导入避免循环依赖
-      import('./sentry').then(({ captureError }) => {
+      import('./sentry.jsx').then(({ captureError }) => {
         captureError(args[0], {
           component: this.context,
           additionalInfo: args.slice(1)

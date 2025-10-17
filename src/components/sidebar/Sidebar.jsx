@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
-import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen, Bot, Workflow, Brain, FileText, Store, MessageSquare, BookOpen, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
 import { SearchBar } from './SearchBar'
@@ -29,9 +30,21 @@ export function Sidebar({
   translate
 }) {
   const { user, logout } = useAuth()
+  const location = useLocation()
 
   // 侧边栏折叠状态
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  // 导航菜单项
+  const navigationItems = [
+    { path: '/', icon: MessageSquare, label: translate('sidebar.chat', 'Chat') },
+    { path: '/agents', icon: Bot, label: translate('sidebar.agents', 'AI Agents'), badge: 'New' },
+    { path: '/workflows', icon: Workflow, label: translate('sidebar.workflows', 'Workflows'), badge: 'New' },
+    { path: '/notes', icon: FileText, label: translate('sidebar.notes', 'Notes'), badge: 'New' },
+    { path: '/documents', icon: BookOpen, label: translate('sidebar.documents', 'Documents'), badge: 'New' },
+    { path: '/password-vault', icon: Lock, label: translate('sidebar.passwordVault', 'Password Vault'), badge: 'New' },
+    { path: '/knowledge', icon: Brain, label: translate('sidebar.knowledge', 'Knowledge'), badge: 'Beta' },
+  ]
 
   // 搜索相关状态
   const [searchQuery, setSearchQuery] = useState('')
@@ -46,8 +59,8 @@ export function Sidebar({
 
   const handleLogout = () => {
     onShowConfirm?.({
-      title: language === 'zh' ? '确认登出' : 'Confirm Logout',
-      message: language === 'zh' ? '确定要退出登录吗?' : 'Are you sure you want to logout?',
+      title: translate('sidebar.logout', 'Logout'),
+      message: translate('sidebar.logoutConfirm', 'Are you sure you want to logout?'),
       variant: 'default',
       onConfirm: () => logout()
     })
@@ -168,22 +181,21 @@ export function Sidebar({
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* 折叠/展开按钮 */}
-      <button
-        className="sidebar-toggle-btn"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        title={isCollapsed ? '展开侧边栏' : '收起侧边栏'}
-      >
-        {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
-      </button>
+      {/* 折叠状态的展开按钮 */}
+      {isCollapsed && (
+        <button
+          className="sidebar-toggle-btn-collapsed"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={translate('sidebar.expandSidebar', 'Expand Sidebar')}
+        >
+          <PanelLeftOpen size={20} />
+        </button>
+      )}
 
       {!isCollapsed && (
         <>
-          {/* 头部 */}
+          {/* 头部 - 新建对话和折叠按钮 */}
           <div className="sidebar-header">
-            <h2 className="sidebar-title">
-              {translate('headings.conversation', 'Conversation')}
-            </h2>
             <Button
               className="new-chat-btn-header"
               variant="secondary"
@@ -195,7 +207,47 @@ export function Sidebar({
               <Plus className="w-4 h-4" />
               {translate('buttons.newConversation', 'New conversation')}
             </Button>
+
+            {/* 折叠/展开按钮 */}
+            <button
+              className="sidebar-toggle-btn-inline"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              title={translate('sidebar.collapseSidebar', 'Collapse Sidebar')}
+            >
+              <PanelLeftClose size={20} />
+            </button>
           </div>
+
+          {/* 导航菜单 */}
+          <nav className="px-3 py-2 space-y-1 border-b border-border/40 mb-2">
+            {navigationItems.map((item) => {
+              const Icon = item.icon
+              const isActive = location.pathname === item.path
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors relative
+                    ${isActive
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    }`}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold
+                      ${item.badge === 'New'
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                      }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
 
       {/* 搜索栏 */}
       <div className="px-3 py-2">
@@ -206,6 +258,7 @@ export function Sidebar({
           isSearching={isSearching}
           onFilterClick={() => setShowFilterPanel(true)}
           hasActiveFilters={hasActiveFilters}
+          translate={translate}
         />
       </div>
 
@@ -215,8 +268,8 @@ export function Sidebar({
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
             <p className="text-sm text-muted-foreground">
               {searchQuery || hasActiveFilters
-                ? translate('messages.noSearchResults', '没有找到匹配的对话')
-                : translate('messages.noConversations', '暂无对话')}
+                ? translate('sidebar.noSearchResults', 'No matching conversations found')
+                : translate('sidebar.noConversations', 'No conversations yet')}
             </p>
             {(searchQuery || hasActiveFilters) && (
               <Button
@@ -225,7 +278,7 @@ export function Sidebar({
                 onClick={handleResetFilters}
                 className="mt-2"
               >
-                {translate('buttons.clearFilters', '清除筛选')}
+                {translate('sidebar.clearFilters', 'Clear Filters')}
               </Button>
             )}
           </div>
@@ -251,6 +304,7 @@ export function Sidebar({
         onFiltersChange={setFilters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
+        translate={translate}
       />
 
         </>
@@ -258,29 +312,8 @@ export function Sidebar({
 
       {!isCollapsed && (
       <div className="sidebar-footer">
-        {/* 用户信息区域 */}
-        {user && (
-          <div className="sidebar-user-info">
-            <div className="user-info-content">
-              <User className="w-4 h-4" />
-              <div className="user-details">
-                <div className="user-name">{user.username || user.email}</div>
-                <div className="user-email">{user.email}</div>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              title={language === 'zh' ? '登出' : 'Logout'}
-              className="logout-button"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-
         <div className="sidebar-footer-actions">
+          {/* Clear All Button */}
           <Button
             variant="ghost"
             size="sm"
@@ -292,59 +325,62 @@ export function Sidebar({
             <span>{translate('tooltips.clearAllConversations', 'Clear all conversations')}</span>
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="sidebar-language-button"
-            onClick={() => {
-              onToggleLanguage?.()
-            }}
-            title={translate('tooltips.toggleLanguage', 'Toggle language')}
-          >
-            <Languages className="w-4 h-4" />
-            <span className="sidebar-language-label">
-              {language === 'en'
-                ? translate('toggles.languageShortChinese', '中文')
-                : translate('toggles.languageShortEnglish', 'EN')}
-            </span>
-          </Button>
+          {/* Action Buttons Row */}
+          <div className="sidebar-footer-tools">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="sidebar-language-button"
+              onClick={() => {
+                onToggleLanguage?.()
+              }}
+              title={translate('tooltips.toggleLanguage', 'Toggle language')}
+            >
+              <Languages className="w-4 h-4" />
+              <span className="sidebar-language-label">
+                {language === 'en'
+                  ? translate('toggles.languageShortChinese', '中文')
+                  : translate('toggles.languageShortEnglish', 'EN')}
+              </span>
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              onToggleTheme?.()
-            }}
-            title={translate('tooltips.toggleTheme', 'Toggle theme')}
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                onToggleTheme?.()
+              }}
+              title={translate('tooltips.toggleTheme', 'Toggle theme')}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              onOpenAnalytics?.()
-            }}
-            title="数据分析"
-          >
-            <BarChart3 className="w-4 h-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                onOpenAnalytics?.()
+              }}
+              title={translate('sidebar.analytics', 'Analytics')}
+            >
+              <BarChart3 className="w-4 h-4" />
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              onOpenSettings?.()
-            }}
-            title={translate('tooltips.openSettings', 'Open settings')}
-          >
-            <Settings className="w-4 h-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                onOpenSettings?.()
+              }}
+              title={translate('tooltips.openSettings', 'Open settings')}
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
       )}

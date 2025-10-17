@@ -6,23 +6,43 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger.cjs');
+const ConfigManager = require('../services/configManager.cjs');
 
-// OpenAI 客户端(用于 DeepSeek API)
-let openai;
-try {
-  const { OpenAI } = require('openai');
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+// 配置管理器实例
+const configManager = new ConfigManager();
 
-  if (!apiKey) {
-    logger.warn('DEEPSEEK_API_KEY not configured in environment variables. DeepSeek API will not work until configured.');
+// OpenAI SDK
+const { OpenAI } = require('openai');
+
+/**
+ * 创建 OpenAI 客户端实例
+ * 优先使用用户配置的 API key，其次使用环境变量
+ */
+async function createOpenAIClient() {
+  try {
+    // 1. 先尝试获取用户配置的 API key
+    let apiKey = await configManager.getApiKey('deepseek');
+
+    // 2. 如果用户没有配置，使用环境变量
+    if (!apiKey) {
+      apiKey = process.env.DEEPSEEK_API_KEY;
+      if (!apiKey) {
+        logger.warn('未配置 DeepSeek API key，请在设置中配置或设置 DEEPSEEK_API_KEY 环境变量');
+        throw new Error('DeepSeek API key 未配置');
+      }
+      logger.info('使用环境变量中的 DeepSeek API key');
+    } else {
+      logger.info('使用用户配置的 DeepSeek API key');
+    }
+
+    return new OpenAI({
+      apiKey: apiKey,
+      baseURL: 'https://api.deepseek.com'
+    });
+  } catch (error) {
+    logger.error('创建 OpenAI 客户端失败:', error);
+    throw error;
   }
-
-  openai = new OpenAI({
-    apiKey: apiKey || 'placeholder-key',  // 使用占位符,防止初始化失败
-    baseURL: 'https://api.deepseek.com'
-  });
-} catch (error) {
-  logger.error('OpenAI 客户端初始化失败:', error);
 }
 
 // MCP Manager 实例(由 initializeRouter 设置)
@@ -71,7 +91,7 @@ function initializeRouter(services) {
  */
 router.post('/', async (req, res) => {
   try {
-    const { messages, model = 'deepseek-chat', stream = false } = req.body;
+    let { messages, model = 'deepseek-chat', stream = false } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({
@@ -170,19 +190,110 @@ router.post('/', async (req, res) => {
       logger.info(`工具列表: ${apiParams.tools.map(t => t.function.name).join(', ')}`);
     }
 
-    // 调用 DeepSeek API
+    // 创建 OpenAI 客户端（使用用户配置的 API key）
+    const openai = await createOpenAIClient();
+
+    // 调用 DeepSeek API（第一次调用不使用流式，因为可能有工具调用）
     logger.info(`调用 DeepSeek API，参数: ${JSON.stringify({
       model: apiParams.model,
       messages_count: apiParams.messages.length,
       tools_count: apiParams.tools ? apiParams.tools.length : 0,
-      tool_choice: apiParams.tool_choice
+      tool_choice: apiParams.tool_choice,
+      stream: false  // 第一次调用总是非流式
     })}`);
-    
+
+    // 如果是流式请求，设置响应头并处理流式响应（无工具调用的场景）
+    if (stream) {
+      // 设置 SSE 响应头
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      // 启用流式请求
+      apiParams.stream = true;
+    }
+
     let response = await openai.chat.completions.create(apiParams);
-    
+
+    // ============ 流式响应处理 ============
+    if (stream && response[Symbol.asyncIterator]) {
+      logger.info('开始流式传输（无工具调用）');
+
+      try {
+        let chunkCount = 0;
+        let fullContent = '';
+        let fullReasoning = '';
+
+        for await (const chunk of response) {
+          chunkCount++;
+          const delta = chunk.choices[0]?.delta;
+
+          // 处理思考内容（reasoning_content）
+          if (delta?.reasoning_content) {
+            fullReasoning += delta.reasoning_content;
+            // 发送思考内容增量
+            const payload = JSON.stringify({
+              type: 'reasoning',
+              content: delta.reasoning_content,
+              fullReasoning: fullReasoning
+            });
+            res.write(`data: ${payload}\n\n`);
+
+            if (chunkCount <= 3) {
+              logger.info(`发送reasoning chunk #${chunkCount}: ${delta.reasoning_content.substring(0, 20)}...`);
+            }
+          }
+
+          // 处理回答内容（content）
+          if (delta?.content) {
+            fullContent += delta.content;
+            // 发送内容增量
+            const payload = JSON.stringify({
+              type: 'content',
+              content: delta.content,
+              fullContent: fullContent
+            });
+            res.write(`data: ${payload}\n\n`);
+
+            if (chunkCount <= 3) {
+              logger.info(`发送content chunk #${chunkCount}: ${delta.content.substring(0, 20)}...`);
+            }
+          }
+
+          // 检查是否完成
+          if (chunk.choices[0]?.finish_reason) {
+            logger.info(`流式传输完成: ${chunk.choices[0].finish_reason}, 总chunks: ${chunkCount}`);
+            logger.info(`总内容长度: ${fullContent.length}, 思考长度: ${fullReasoning.length}`);
+
+            res.write(`data: ${JSON.stringify({
+              type: 'done',
+              finish_reason: chunk.choices[0].finish_reason,
+              fullContent: fullContent,
+              fullReasoning: fullReasoning
+            })}\n\n`);
+          }
+        }
+
+        res.write('data: [DONE]\n\n');
+        res.end();
+        logger.info(`流式传输结束，共发送 ${chunkCount} 个chunks`);
+        return;
+
+      } catch (streamError) {
+        logger.error('流式传输错误:', streamError);
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          error: streamError.message
+        })}\n\n`);
+        res.end();
+        return;
+      }
+    }
+
+    // ============ 非流式响应处理 ============
     logger.info(`DeepSeek 响应: finish_reason=${response.choices[0].finish_reason}`);
     logger.info(`DeepSeek 消息: ${JSON.stringify(response.choices[0].message).substring(0, 200)}...`);
-    
+
     let iterationCount = 0;
     const maxIterations = 10; // 最多10轮工具调用
 
@@ -257,8 +368,88 @@ router.post('/', async (req, res) => {
       // 添加工具结果到消息历史
       apiParams.messages.push(...toolResults);
 
-      // 再次调用 API,让模型处理工具结果
+      // 再次调用 API,让模型处理工具结果（使用流式输出）
+      if (stream) {
+        apiParams.stream = true;
+      }
+
       response = await openai.chat.completions.create(apiParams);
+
+      // 如果启用了流式输出，处理流式响应
+      if (stream && response[Symbol.asyncIterator]) {
+        logger.info('工具调用完成，开始流式输出最终回复');
+
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        let chunkCount = 0;
+        let fullContent = '';
+        let fullReasoning = '';
+
+        try {
+          for await (const chunk of response) {
+            chunkCount++;
+            const delta = chunk.choices[0]?.delta;
+
+            // 处理思考内容
+            if (delta?.reasoning_content) {
+              fullReasoning += delta.reasoning_content;
+              const payload = JSON.stringify({
+                type: 'reasoning',
+                content: delta.reasoning_content,
+                fullReasoning: fullReasoning
+              });
+              res.write(`data: ${payload}\n\n`);
+
+              if (chunkCount <= 3) {
+                logger.info(`[工具后流式] Reasoning #${chunkCount}: ${delta.reasoning_content.substring(0, 20)}...`);
+              }
+            }
+
+            // 处理回答内容
+            if (delta?.content) {
+              fullContent += delta.content;
+              const payload = JSON.stringify({
+                type: 'content',
+                content: delta.content,
+                fullContent: fullContent
+              });
+              res.write(`data: ${payload}\n\n`);
+
+              if (chunkCount <= 3) {
+                logger.info(`[工具后流式] Content #${chunkCount}: ${delta.content.substring(0, 20)}...`);
+              }
+            }
+
+            if (chunk.choices[0]?.finish_reason) {
+              logger.info(`工具后流式传输完成: ${chunk.choices[0].finish_reason}, 总chunks: ${chunkCount}`);
+              logger.info(`总内容长度: ${fullContent.length}, 思考长度: ${fullReasoning.length}`);
+
+              res.write(`data: ${JSON.stringify({
+                type: 'done',
+                finish_reason: chunk.choices[0].finish_reason,
+                fullContent: fullContent,
+                fullReasoning: fullReasoning
+              })}\n\n`);
+            }
+          }
+
+          res.write('data: [DONE]\n\n');
+          res.end();
+          logger.info(`工具后流式传输结束，共发送 ${chunkCount} 个chunks`);
+          return;
+
+        } catch (streamError) {
+          logger.error('工具后流式传输错误:', streamError);
+          res.write(`data: ${JSON.stringify({
+            type: 'error',
+            error: streamError.message
+          })}\n\n`);
+          res.end();
+          return;
+        }
+      }
     }
 
     // 检查是否达到最大迭代次数
@@ -266,7 +457,7 @@ router.post('/', async (req, res) => {
       logger.warn(`达到最大工具调用迭代次数: ${maxIterations}`);
     }
 
-    // 返回最终响应
+    // 如果没有工具调用或用户未请求流式输出，返回JSON响应
     res.json({
       id: response.id,
       model: response.model,

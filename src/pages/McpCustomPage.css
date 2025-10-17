@@ -1,0 +1,405 @@
+/**
+ * MCP自定义配置页面样式
+ * 采用v0.dev设计风格
+ */
+
+/* 页面容器 */
+.mcp-custom-page {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--background);
+}
+
+/* 页面头部 */
+.mcp-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 24px;
+}
+
+.mcp-page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.mcp-page-subtitle {
+  font-size: 16px;
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* 标签页 */
+.mcp-tabs {
+  width: 100%;
+}
+
+.mcp-tabs-list {
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mcp-tab-content {
+  margin-top: 24px;
+}
+
+/* 搜索和过滤 */
+.mcp-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.mcp-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.mcp-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.mcp-search-input {
+  padding-left: 40px;
+}
+
+.mcp-category-select {
+  min-width: 200px;
+}
+
+/* 卡片网格 */
+.mcp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 卡片样式 */
+.mcp-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mcp-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--secondary);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.mcp-card:hover {
+  border-color: var(--input-focus);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.mcp-card:hover::before {
+  opacity: 0.5;
+}
+
+.mcp-card-enabled {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 3%, var(--card));
+}
+
+/* 卡片头部 */
+.mcp-card-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+}
+
+.mcp-card-icon {
+  font-size: 40px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mcp-card-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcp-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.mcp-card-description {
+  font-size: 14px;
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mcp-card-status {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.mcp-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+/* 徽章 */
+.mcp-card-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* 功能标签 */
+.mcp-card-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.mcp-feature-tag {
+  font-size: 13px;
+  padding: 6px 12px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.mcp-feature-more {
+  font-size: 13px;
+  padding: 6px 12px;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+/* 卡片操作 */
+.mcp-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.mcp-add-btn {
+  flex: 1;
+}
+
+/* 空状态 */
+.mcp-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+
+/* 加载状态 */
+.mcp-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  font-size: 16px;
+  color: var(--muted-foreground);
+}
+
+/* 对话框样式 */
+.mcp-dialog {
+  max-width: 600px;
+}
+
+.mcp-dialog .space-y-4 > * + * {
+  margin-top: 16px;
+}
+
+.mcp-dialog .space-y-6 > * + * {
+  margin-top: 24px;
+}
+
+.mcp-dialog h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.mcp-dialog label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--foreground);
+}
+
+.mcp-dialog .grid {
+  display: grid;
+}
+
+.mcp-dialog .grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.mcp-dialog .gap-2 {
+  gap: 8px;
+}
+
+.mcp-dialog .gap-4 {
+  gap: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .mcp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .mcp-custom-page {
+    padding: 20px;
+  }
+
+  .mcp-page-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .mcp-page-title {
+    font-size: 24px;
+  }
+
+  .mcp-filters {
+    flex-direction: column;
+  }
+
+  .mcp-search-box {
+    min-width: auto;
+  }
+
+  .mcp-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .mcp-card {
+    padding: 20px;
+  }
+}
+
+/* 暗色模式优化 */
+.dark .mcp-card {
+  border-color: var(--border);
+}
+
+.dark .mcp-card:hover {
+  border-color: var(--input-focus);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dark .mcp-card-enabled {
+  background: color-mix(in srgb, var(--primary) 5%, var(--card));
+}
+
+.dark .mcp-feature-tag {
+  background: var(--secondary);
+  border-color: var(--border);
+}
+
+/* 动画 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 过渡效果 */
+.mcp-card,
+.mcp-card-actions button,
+.mcp-feature-tag {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 滚动条样式 */
+.mcp-dialog::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mcp-dialog::-webkit-scrollbar-track {
+  background: var(--secondary);
+  border-radius: 4px;
+}
+
+.mcp-dialog::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+.mcp-dialog::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}

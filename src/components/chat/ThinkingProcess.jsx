@@ -7,14 +7,24 @@ import './ThinkingProcess.css'
  * 思考过程组件 - 优化版
  * 提供更好的思考过程可视化和交互体验
  */
-export function ThinkingProcess({ 
-  reasoning, 
+export function ThinkingProcess({
+  reasoning,
   isStreaming = false,
-  translate = (key, fallback) => fallback 
+  translate = (key, fallback) => fallback
 }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true) // 默认展开,更好的用户体验
   const [displayedContent, setDisplayedContent] = useState('')
   const [showCursor, setShowCursor] = useState(true)
+
+  // 计算思考统计信息
+  const stats = useMemo(() => {
+    if (!reasoning) return { chars: 0, words: 0, lines: 0 }
+    return {
+      chars: reasoning.length,
+      words: reasoning.split(/\s+/).filter(Boolean).length,
+      lines: reasoning.split('\n').filter(line => line.trim()).length
+    }
+  }, [reasoning])
 
   // 解析思考步骤
   const thinkingSteps = useMemo(() => {
@@ -95,9 +105,24 @@ export function ThinkingProcess({
               : translate('sections.thinkingProcess', '思考过程')
             }
           </span>
-          {!isStreaming && hasMultipleSteps && (
-            <span className="thinking-steps-count">
-              {thinkingSteps.length} {translate('labels.steps', '步骤')}
+          {!isStreaming && (
+            <div className="thinking-stats">
+              {hasMultipleSteps && (
+                <span className="thinking-stat-badge">
+                  {thinkingSteps.length} {translate('labels.steps', '步骤')}
+                </span>
+              )}
+              <span className="thinking-stat-badge">
+                {stats.words} {translate('labels.words', '词')}
+              </span>
+              <span className="thinking-stat-badge">
+                {stats.lines} {translate('labels.lines', '行')}
+              </span>
+            </div>
+          )}
+          {isStreaming && (
+            <span className="thinking-stat-badge streaming-badge">
+              {translate('labels.processing', '处理中')} <Loader2 className="w-3 h-3 animate-spin inline-block ml-1" />
             </span>
           )}
         </div>

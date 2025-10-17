@@ -227,6 +227,9 @@ async function callDeepSeekMCP({
       content: msg.content || ''
     }))
 
+    // 判断是否使用流式输出
+    const useStream = !!onToken
+
     // 调用后端 API
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -237,7 +240,8 @@ async function callDeepSeekMCP({
         messages: formattedMessages,
         model,
         temperature,
-        max_tokens: maxTokens
+        max_tokens: maxTokens,
+        stream: useStream  // 启用流式输出
       }),
       signal
     })
@@ -247,6 +251,114 @@ async function callDeepSeekMCP({
       throw new Error(`Backend API error: ${response.status} ${errorText}`)
     }
 
+    // 调试信息
+    const contentType = response.headers.get('content-type')
+    console.log('[DEBUG] useStream:', useStream)
+    console.log('[DEBUG] response.body:', !!response.body)
+    console.log('[DEBUG] Content-Type:', contentType)
+
+    // ============ 流式响应处理 ============
+    if (useStream && response.body) {
+      console.log('[callDeepSeekMCP] 开始处理流式响应')
+      logger.log('[callDeepSeekMCP] Processing stream response')
+
+      let fullContent = ''
+      let fullReasoning = ''
+      let chunkCount = 0
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+
+          if (done) {
+            logger.log('[callDeepSeekMCP] Stream reading complete')
+            break
+          }
+
+          buffer += decoder.decode(value, { stream: true })
+
+          // 处理SSE消息
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || '' // 保留最后一个不完整的行
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim()
+
+              if (data === '[DONE]') {
+                logger.log('[callDeepSeekMCP] Stream complete signal received')
+                break
+              }
+
+              try {
+                const parsed = JSON.parse(data)
+
+                // 处理思考内容
+                if (parsed.type === 'reasoning' && parsed.content) {
+                  fullReasoning += parsed.content
+
+                  if (chunkCount <= 5) {
+                    console.log(`[REASONING #${chunkCount}] 接收:`, parsed.content.substring(0, 20))
+                    logger.log(`[callDeepSeekMCP] Reasoning #${chunkCount}: ${parsed.content.substring(0, 20)}...`)
+                  }
+
+                  // 调用onToken传递reasoning更新
+                  // 这里使用特殊格式让前端知道这是reasoning
+                  onToken('', fullContent, fullReasoning)
+                }
+
+                // 处理回答内容
+                if (parsed.type === 'content' && parsed.content) {
+                  chunkCount++
+                  fullContent += parsed.content
+
+                  if (chunkCount <= 5) {
+                    console.log(`[CONTENT #${chunkCount}] 接收:`, parsed.content.substring(0, 20))
+                    logger.log(`[callDeepSeekMCP] Content #${chunkCount}: ${parsed.content.substring(0, 20)}...`)
+                  }
+
+                  // 调用onToken更新UI
+                  console.log(`[CONTENT #${chunkCount}] 调用 onToken, fullContent长度:`, fullContent.length)
+                  onToken(parsed.content, fullContent, fullReasoning)
+                }
+
+                if (parsed.type === 'done') {
+                  logger.log(`[callDeepSeekMCP] Stream done: ${parsed.finish_reason}, total chunks: ${chunkCount}`)
+                  logger.log(`[callDeepSeekMCP] Final content: ${fullContent.length}, reasoning: ${fullReasoning.length}`)
+                }
+
+                if (parsed.type === 'error') {
+                  throw new Error(parsed.error)
+                }
+              } catch (parseError) {
+                if (parseError.message !== 'Unexpected end of JSON input') {
+                  logger.error('[callDeepSeekMCP] Parse error:', parseError, 'data:', data)
+                }
+              }
+            }
+          }
+        }
+
+        logger.log(`[callDeepSeekMCP] Final content length: ${fullContent.length}, reasoning length: ${fullReasoning.length}, chunks: ${chunkCount}`)
+
+        return {
+          role: 'assistant',
+          content: fullContent,
+          text: fullContent,
+          reasoning: fullReasoning || null,
+          finishReason: 'stop'
+        }
+
+      } catch (streamError) {
+        logger.error('[callDeepSeekMCP] Stream error:', streamError)
+        throw streamError
+      }
+    }
+
+    // ============ 非流式响应处理 ============
     const data = await response.json()
     logger.log('[callDeepSeekMCP] Response received:', data)
 
@@ -254,20 +366,13 @@ async function callDeepSeekMCP({
     const finalMessage = data.choices[0]?.message
     const content = finalMessage?.content || ''
 
-    // 如果有 onToken 回调,逐字符调用
-    if (onToken && typeof onToken === 'function') {
-      for (const char of content) {
-        onToken(char)
-        // 添加小延迟以模拟流式输出
-        await new Promise(resolve => setTimeout(resolve, 10))
-      }
-    }
-
     // 返回结果
     return {
+      role: 'assistant',
       text: content,
+      content: content,
       usage: data.usage,
-      reasoning: null, // DeepSeek 的思考过程在 <thinking> 标签中
+      reasoning: null,
       finishReason: data.choices[0]?.finish_reason
     }
 

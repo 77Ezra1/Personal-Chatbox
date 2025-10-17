@@ -25,10 +25,10 @@ export function ChatHeader({
           variant={isDevMode ? 'default' : 'ghost'}
           size="sm"
           onClick={onToggleDevMode}
-          title={isDevMode ? '关闭编程模式' : '开启编程模式'}
+          title={isDevMode ? translate?.('chat.disableProgrammingMode', 'Disable Programming Mode') : translate?.('chat.enableProgrammingMode', 'Enable Programming Mode')}
         >
           <Code2 className="w-4 h-4 mr-2" />
-          编程模式
+          {translate?.('chat.programmingMode', 'Programming Mode')}
         </Button>
         <div className="chat-export-container">
           <Button

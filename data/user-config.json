@@ -1,0 +1,17 @@
+{
+  "openai": {
+    "apiKey": "",
+    "enabled": false,
+    "model": "gpt-3.5-turbo"
+  },
+  "deepseek": {
+    "apiKey": "sk-03db8009812649359e2f83cc738861aa",
+    "enabled": true,
+    "model": "deepseek-chat"
+  },
+  "settings": {
+    "theme": "light",
+    "language": "zh",
+    "autoSave": true
+  }
+}

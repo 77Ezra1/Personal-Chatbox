@@ -11,10 +11,10 @@ const logger = createLogger('LoginPage')
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, register } = useAuth();
-  
+
   // 语言状态（独立于主应用）
   const [language, setLanguage] = useState(() => getAuthLanguage());
-  
+
   const [step, setStep] = useState(1); // 1: email, 2: password, 3: invite code
   const [formData, setFormData] = useState({
     email: '',
@@ -92,7 +92,7 @@ export default function LoginPage() {
 
       const data = await response.json();
       logger.log('[Auth] Email check response:', data);
-      
+
       if (!response.ok) {
         throw new Error(data.message || t('errors.networkError'));
       }
@@ -185,6 +185,16 @@ export default function LoginPage() {
 
       if (!result.success) {
         logger.error('[Auth] Registration failed:', result.error);
+
+        // 如果是邮箱已存在错误，提供更友好的处理
+        if (result.error && (result.error.includes('已被注册') || result.error.includes('already exists'))) {
+          // 邮箱已存在，重置到登录流程
+          setIsNewUser(false);
+          setStep(2);
+          setFormData({ ...formData, inviteCode: '' });
+          throw new Error(t('errors.emailExists') + ' ' + t('errors.pleaseLogin'));
+        }
+
         throw new Error(result.error);
       }
 
@@ -223,7 +233,7 @@ export default function LoginPage() {
       </div>
 
       {/* 语言切换按钮 */}
-      <button 
+      <button
         onClick={toggleLanguage}
         className="auth-language-btn"
         type="button"
@@ -235,7 +245,7 @@ export default function LoginPage() {
 
       {/* 返回按钮 */}
       {step > 1 && (
-        <button 
+        <button
           onClick={handleBack}
           className="auth-back-btn"
           type="button"
@@ -279,8 +289,8 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="auth-btn auth-btn-primary"
                   disabled={loading}
                 >
@@ -297,7 +307,7 @@ export default function LoginPage() {
               </div>
 
               <div className="oauth-buttons">
-                <button 
+                <button
                   className="oauth-btn oauth-btn-google"
                   onClick={() => alert('Google登录功能开发中')}
                   disabled
@@ -310,8 +320,8 @@ export default function LoginPage() {
                   </svg>
                   <span>{t('googleButton')}</span>
                 </button>
-                
-                <button 
+
+                <button
                   className="oauth-btn oauth-btn-github"
                   onClick={() => alert('GitHub登录功能开发中')}
                   disabled
@@ -391,8 +401,8 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="auth-btn auth-btn-primary"
                   disabled={loading}
                 >
@@ -409,6 +419,11 @@ export default function LoginPage() {
           {/* 步骤3: 邀请码输入（仅新用户） */}
           {step === 3 && (
             <>
+              {/* 返回按钮 */}
+              <button onClick={handleBack} className="auth-back-btn">
+                <ArrowLeft size={20} />
+              </button>
+
               <h1 className="auth-title">{t('inviteCodeTitle')}</h1>
               <p className="auth-subtitle">
                 {t('inviteCodeSubtitle')}
@@ -442,8 +457,8 @@ export default function LoginPage() {
                   </p>
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="auth-btn auth-btn-primary"
                   disabled={loading}
                 >

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Send, CircleStop, Paperclip, ImagePlus, BrainCircuit } from 'lucide-react'
+import { Send, CircleStop, Paperclip, BrainCircuit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AttachmentPreview } from './AttachmentPreview'
 import { THINKING_MODE } from '@/lib/constants'
@@ -27,7 +27,6 @@ export function MessageInput({
   const [input, setInput] = useState('')
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
-  const imageInputRef = useRef(null)
 
   const handleSend = () => {
     if (!input.trim() && pendingAttachments.length === 0) return
@@ -86,21 +85,9 @@ export function MessageInput({
               className="message-input-toolbar-button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isGenerating}
-              title={translate('tooltips.uploadAttachment', 'Upload attachment')}
+              title={translate('tooltips.uploadAttachment', 'Upload attachment (images & files)')}
             >
               <Paperclip className="w-4 h-4" />
-            </Button>
-
-            {/* 添加图片 */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="message-input-toolbar-button"
-              onClick={() => imageInputRef.current?.click()}
-              disabled={isGenerating}
-              title={translate('tooltips.addImage', 'Insert image')}
-            >
-              <ImagePlus className="w-4 h-4" />
             </Button>
 
             {/* 深度思考切换 */}
@@ -184,13 +171,6 @@ export function MessageInput({
       <input
         ref={fileInputRef}
         type="file"
-        style={{ display: 'none' }}
-        onChange={handleFileSelect}
-      />
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/*"
         style={{ display: 'none' }}
         onChange={handleFileSelect}
       />

@@ -42,7 +42,8 @@ export function AdvancedFilter({
   filters,
   onFiltersChange,
   onApply,
-  onReset
+  onReset,
+  translate
 }) {
   const [localFilters, setLocalFilters] = useState(filters);
 
@@ -85,22 +86,22 @@ export function AdvancedFilter({
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <SlidersHorizontal className="h-5 w-5" />
-            高级过滤
+            {translate?.('advancedFilter.title', 'Advanced Filter')}
           </SheetTitle>
           <SheetDescription>
-            使用高级过滤器精确搜索对话
+            {translate?.('advancedFilter.description', 'Use advanced filters to precisely search conversations')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="py-6 space-y-6">
           {/* 日期范围 */}
           <div className="space-y-4">
-            <Label className="text-base font-semibold">日期范围</Label>
+            <Label className="text-base font-semibold">{translate?.('advancedFilter.dateRange', 'Date Range')}</Label>
 
             <div className="grid grid-cols-2 gap-4">
               {/* 开始日期 */}
               <div className="space-y-2">
-                <Label htmlFor="date-from">开始日期</Label>
+                <Label htmlFor="date-from">{translate?.('advancedFilter.from', 'From')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -112,7 +113,7 @@ export function AdvancedFilter({
                       {localFilters.dateFrom ? (
                         format(new Date(localFilters.dateFrom), 'PPP', { locale: zhCN })
                       ) : (
-                        <span>选择日期</span>
+                        <span>{translate?.('advancedFilter.selectDate', 'Select date')}</span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -129,7 +130,7 @@ export function AdvancedFilter({
 
               {/* 结束日期 */}
               <div className="space-y-2">
-                <Label htmlFor="date-to">结束日期</Label>
+                <Label htmlFor="date-to">{translate?.('advancedFilter.to', 'To')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -141,7 +142,7 @@ export function AdvancedFilter({
                       {localFilters.dateTo ? (
                         format(new Date(localFilters.dateTo), 'PPP', { locale: zhCN })
                       ) : (
-                        <span>选择日期</span>
+                        <span>{translate?.('advancedFilter.selectDate', 'Select date')}</span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -172,7 +173,7 @@ export function AdvancedFilter({
                   updateFilter('dateTo', today.toISOString().split('T')[0]);
                 }}
               >
-                今天
+                {translate?.('advancedFilter.today', 'Today')}
               </Button>
               <Button
                 variant="outline"
@@ -185,7 +186,7 @@ export function AdvancedFilter({
                   updateFilter('dateTo', today.toISOString().split('T')[0]);
                 }}
               >
-                最近7天
+                {translate?.('advancedFilter.last7Days', 'Last 7 Days')}
               </Button>
               <Button
                 variant="outline"
@@ -198,7 +199,7 @@ export function AdvancedFilter({
                   updateFilter('dateTo', today.toISOString().split('T')[0]);
                 }}
               >
-                最近30天
+                {translate?.('advancedFilter.last30Days', 'Last 30 Days')}
               </Button>
               <Button
                 variant="outline"
@@ -208,19 +209,19 @@ export function AdvancedFilter({
                   updateFilter('dateTo', null);
                 }}
               >
-                清除日期
+                {translate?.('advancedFilter.clearDate', 'Clear Date')}
               </Button>
             </div>
           </div>
 
           {/* 排序选项 */}
           <div className="space-y-4">
-            <Label className="text-base font-semibold">排序选项</Label>
+            <Label className="text-base font-semibold">{translate?.('advancedFilter.sortOptions', 'Sort Options')}</Label>
 
             <div className="grid grid-cols-2 gap-4">
               {/* 排序方式 */}
               <div className="space-y-2">
-                <Label htmlFor="sort">排序方式</Label>
+                <Label htmlFor="sort">{translate?.('advancedFilter.sortBy', 'Sort By')}</Label>
                 <Select
                   value={localFilters.sort}
                   onValueChange={(value) => updateFilter('sort', value)}
@@ -229,16 +230,16 @@ export function AdvancedFilter({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="date">按时间</SelectItem>
-                    <SelectItem value="relevance">按相关度</SelectItem>
-                    <SelectItem value="messages">按消息数</SelectItem>
+                    <SelectItem value="date">{translate?.('advancedFilter.byDate', 'By Date')}</SelectItem>
+                    <SelectItem value="relevance">{translate?.('advancedFilter.byRelevance', 'By Relevance')}</SelectItem>
+                    <SelectItem value="messages">{translate?.('advancedFilter.byMessages', 'By Messages')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* 排序方向 */}
               <div className="space-y-2">
-                <Label htmlFor="order">排序方向</Label>
+                <Label htmlFor="order">{translate?.('advancedFilter.sortDirection', 'Sort Direction')}</Label>
                 <Select
                   value={localFilters.order}
                   onValueChange={(value) => updateFilter('order', value)}
@@ -247,8 +248,8 @@ export function AdvancedFilter({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="desc">降序</SelectItem>
-                    <SelectItem value="asc">升序</SelectItem>
+                    <SelectItem value="desc">{translate?.('advancedFilter.descending', 'Descending')}</SelectItem>
+                    <SelectItem value="asc">{translate?.('advancedFilter.ascending', 'Ascending')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -260,13 +261,13 @@ export function AdvancedFilter({
             <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
               <p className="text-sm text-primary">
                 {localFilters.dateFrom && localFilters.dateTo && (
-                  <>已设置日期范围过滤</>
+                  <>{translate?.('advancedFilter.dateRangeSet', 'Date range filter set')}</>
                 )}
                 {localFilters.dateFrom && !localFilters.dateTo && (
-                  <>已设置开始日期过滤</>
+                  <>{translate?.('advancedFilter.startDateSet', 'Start date filter set')}</>
                 )}
                 {!localFilters.dateFrom && localFilters.dateTo && (
-                  <>已设置结束日期过滤</>
+                  <>{translate?.('advancedFilter.endDateSet', 'End date filter set')}</>
                 )}
               </p>
             </div>
@@ -280,10 +281,10 @@ export function AdvancedFilter({
             className="flex items-center gap-2"
           >
             <RotateCcw className="h-4 w-4" />
-            重置
+            {translate?.('advancedFilter.reset', 'Reset')}
           </Button>
           <Button onClick={handleApply}>
-            应用过滤
+            {translate?.('advancedFilter.apply', 'Apply Filter')}
           </Button>
         </SheetFooter>
       </SheetContent>

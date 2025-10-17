@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useMemo, memo } from 'react'
+import { useState, useRef, useCallback, useMemo, memo, lazy, Suspense } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster, toast } from 'sonner'
 
 // Hooks
@@ -20,6 +21,14 @@ import AnalyticsPage from '@/pages/AnalyticsPage'
 import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DataMigration } from '@/components/common/DataMigration'
+
+// Lazy load pages for better performance
+const AgentsPage = lazy(() => import('@/pages/AgentsPage'))
+const WorkflowsPage = lazy(() => import('@/pages/WorkflowsPage'))
+const NotesPage = lazy(() => import('@/pages/NotesPage'))
+const DocumentsPage = lazy(() => import('@/pages/DocumentsPage'))
+const PasswordVaultPage = lazy(() => import('@/pages/PasswordVaultPage'))
+const McpCustomPage = lazy(() => import('@/pages/McpCustomPage'))
 
 // Utils
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
@@ -174,23 +183,30 @@ function App() {
         signal: abortControllerRef.current.signal,
         systemPrompt,
         tools: mcpTools,
-        onToken: (token, fullText) => {
+        onToken: (token, fullText, reasoning) => {
+          // 更新内容
           if (typeof fullText === 'string') {
             accumulatedContent = fullText
           } else if (typeof token === 'string') {
             accumulatedContent += token
           }
-          
+
+          // 更新reasoning
+          if (reasoning) {
+            accumulatedReasoning = reasoning
+          }
+
           // 在流式输出时，如果开启深度思考模式，实时提取并分离reasoning和answer
           let displayContent = accumulatedContent
-          if (isDeepThinking && accumulatedContent) {
+          if (isDeepThinking && accumulatedContent && !reasoning) {
+            // 只有在后端没有直接提供reasoning时才从content中提取
             const segments = extractReasoningSegments(accumulatedContent)
             if (segments) {
               displayContent = segments.answer
               accumulatedReasoning = segments.reasoning
             }
           }
-          
+
           updateMessage(currentConversationId, placeholderMessage.id, () => ({
             content: displayContent,
             status: 'loading',
@@ -300,18 +316,24 @@ function App() {
           signal: abortControllerRef.current.signal,
           systemPrompt,
           tools: [], // 不允许再次调用工具，强制基于现有结果回复
-          onToken: (token, fullText) => {
+          onToken: (token, fullText, reasoning) => {
+            // 更新内容
             if (typeof fullText === 'string') {
               accumulatedContent = fullText
             } else if (typeof token === 'string') {
               accumulatedContent += token
             }
-            
+
             let displayContent = accumulatedContent
             let currentReasoning = toolCallReasoning
-            
-            // 提取新的推理内容
-            if (accumulatedContent) {
+
+            // 如果后端直接提供reasoning,使用它
+            if (reasoning) {
+              currentReasoning = toolCallReasoning + '\n\n' + reasoning
+            }
+
+            // 如果没有直接提供reasoning,从content中提取
+            if (!reasoning && accumulatedContent) {
               const segments = extractReasoningSegments(accumulatedContent)
               if (segments) {
                 displayContent = segments.answer
@@ -607,122 +629,154 @@ function App() {
 
   return (
     <DataMigration language={language} translate={translate}>
-      {/* Toast 通知 */}
-      <Toaster position="top-center" />
+        {/* Toast 通知 */}
+        <Toaster position="top-center" />
 
-      <div className={`app-container ${theme}`}>
-        {/* 侧边栏 */}
-        <Sidebar
-          conversations={conversationList}
-          currentConversationId={currentConversationId}
-          onSelectConversation={selectConversation}
-          onNewConversation={handleNewConversation}
-          onRenameConversation={renameConversation}
-          onDeleteConversation={removeConversation}
-          onClearAll={clearAllConversations}
-          language={language}
-          theme={theme}
-          currentConversation={currentConversation}
-          onToggleLanguage={toggleLanguage}
-          onToggleTheme={toggleTheme}
-          onOpenSettings={() => setShowSettings(true)}
-          onOpenAnalytics={() => setShowAnalytics(true)}
-          onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
-          translate={translate}
-        />
+        <div className={`app-container ${theme}`}>
+          {/* 侧边栏 */}
+          <Sidebar
+            conversations={conversationList}
+            currentConversationId={currentConversationId}
+            onSelectConversation={selectConversation}
+            onNewConversation={handleNewConversation}
+            onRenameConversation={renameConversation}
+            onDeleteConversation={removeConversation}
+            onClearAll={clearAllConversations}
+            language={language}
+            theme={theme}
+            currentConversation={currentConversation}
+            onToggleLanguage={toggleLanguage}
+            onToggleTheme={toggleTheme}
+            onOpenSettings={() => setShowSettings(true)}
+            onOpenAnalytics={() => setShowAnalytics(true)}
+            onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
+            translate={translate}
+          />
 
-        {/* 聊天区域 */}
-        <ChatContainer
-          conversation={currentConversation}
-          messages={currentConversation?.messages || []}
-          isGenerating={isGenerating}
-          pendingAttachments={pendingAttachments}
-          isDeepThinking={isDeepThinking}
-          isDeepThinkingAvailable={isDeepThinkingAvailable}
-          isButtonDisabled={isButtonDisabled}              // 新增
-          thinkingMode={thinkingMode}                      // 新增
-          onSendMessage={handleSendMessage}
-          onStopGeneration={handleStopGeneration}
-          onAddAttachment={handleAddAttachment}
-          onRemoveAttachment={handleRemoveAttachment}
-          onToggleDeepThinking={toggleDeepThinking}
-          onEditMessage={handleEditMessage}
-          onDeleteMessage={handleDeleteMessage}
-          onRegenerateMessage={handleRegenerateMessage}
-          onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
-          translate={translate}
-        />
-
-        {/* 设置页面 */}
-        <SettingsPage
-          isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
-          modelConfig={modelConfig}
-          currentProvider={currentProvider}
-          currentModel={currentModel}
-          providerModels={currentProviderModels}
-          customModels={customModels}
-          models={models}
-          onProviderChange={setProvider}
-          onModelChange={setModel}
-          onRemoveModel={handleRemoveModel}
-          onSaveConfig={handleSaveConfig}
-          systemPrompt={systemPrompt}
-          onSystemPromptModeChange={setSystemPromptMode}
-          onSystemPromptGlobalChange={setGlobalPrompt}
-          onSystemPromptModelChange={(modelKeys, prompt, newPrompts) => {
-            if (newPrompts) {
-              setModelPrompts([], '', newPrompts)
-            } else {
-              setModelPrompts(modelKeys, prompt)
-            }
-          }}
-          theme={theme}
-          onThemeChange={toggleTheme}
-          language={language}
-          onLanguageChange={toggleLanguage}
-          translate={translate}
-        />
-
-        {/* 数据分析页面 */}
-        {showAnalytics && (
-          <div className="analytics-overlay" onClick={() => setShowAnalytics(false)}>
-            <div className="analytics-modal" onClick={(e) => e.stopPropagation()}>
-              <button 
-                className="analytics-close" 
-                onClick={() => setShowAnalytics(false)}
-                aria-label="关闭分析页面"
-              >
-                ×
-              </button>
-              <AnalyticsPage />
+          {/* 主内容区 - 使用路由 */}
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-screen">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          </div>
-        )}
-      </div>
+          }>
+            <Routes>
+              {/* 聊天主页 */}
+              <Route path="/" element={
+                <ChatContainer
+                  conversation={currentConversation}
+                  messages={currentConversation?.messages || []}
+                  isGenerating={isGenerating}
+                  pendingAttachments={pendingAttachments}
+                  isDeepThinking={isDeepThinking}
+                  isDeepThinkingAvailable={isDeepThinkingAvailable}
+                  isButtonDisabled={isButtonDisabled}
+                  thinkingMode={thinkingMode}
+                  onSendMessage={handleSendMessage}
+                  onStopGeneration={handleStopGeneration}
+                  onAddAttachment={handleAddAttachment}
+                  onRemoveAttachment={handleRemoveAttachment}
+                  onToggleDeepThinking={toggleDeepThinking}
+                  onEditMessage={handleEditMessage}
+                  onDeleteMessage={handleDeleteMessage}
+                  onRegenerateMessage={handleRegenerateMessage}
+                  onShowConfirm={(config) => setConfirmDialog({ ...config, isOpen: true })}
+                  translate={translate}
+                />
+              } />
 
-      {/* 快捷键帮助 */}
-      {showShortcuts && (
-        <ShortcutsDialog
-          shortcuts={DEFAULT_SHORTCUTS}
-          onClose={() => setShowShortcuts(false)}
+              {/* Agent 管理页面 */}
+              <Route path="/agents" element={<AgentsPage />} />
+
+              {/* Workflow 管理页面 */}
+              <Route path="/workflows" element={<WorkflowsPage />} />
+
+              {/* 笔记管理页面 */}
+              <Route path="/notes" element={<NotesPage />} />
+
+              {/* 文档管理页面 */}
+              <Route path="/documents" element={<DocumentsPage />} />
+
+              {/* 密码保险库页面 */}
+              <Route path="/password-vault" element={<PasswordVaultPage />} />
+
+              {/* MCP自定义配置页面 */}
+              <Route path="/mcp-custom" element={<McpCustomPage />} />
+
+              {/* 默认重定向 */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+
+          {/* 设置页面 */}
+          <SettingsPage
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+            modelConfig={modelConfig}
+            currentProvider={currentProvider}
+            currentModel={currentModel}
+            providerModels={currentProviderModels}
+            customModels={customModels}
+            models={models}
+            onProviderChange={setProvider}
+            onModelChange={setModel}
+            onRemoveModel={handleRemoveModel}
+            onSaveConfig={handleSaveConfig}
+            systemPrompt={systemPrompt}
+            onSystemPromptModeChange={setSystemPromptMode}
+            onSystemPromptGlobalChange={setGlobalPrompt}
+            onSystemPromptModelChange={(modelKeys, prompt, newPrompts) => {
+              if (newPrompts) {
+                setModelPrompts([], '', newPrompts)
+              } else {
+                setModelPrompts(modelKeys, prompt)
+              }
+            }}
+            theme={theme}
+            onThemeChange={toggleTheme}
+            language={language}
+            onLanguageChange={toggleLanguage}
+            translate={translate}
+          />
+
+          {/* 数据分析页面 */}
+          {showAnalytics && (
+            <div className="analytics-overlay" onClick={() => setShowAnalytics(false)}>
+              <div className="analytics-modal" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="analytics-close"
+                  onClick={() => setShowAnalytics(false)}
+                  aria-label="关闭分析页面"
+                >
+                  ×
+                </button>
+                <AnalyticsPage />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 快捷键帮助 */}
+        {showShortcuts && (
+          <ShortcutsDialog
+            shortcuts={DEFAULT_SHORTCUTS}
+            onClose={() => setShowShortcuts(false)}
+            translate={translate}
+          />
+        )}
+
+        {/* 确认对话框 */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          variant={confirmDialog.variant}
+          confirmText={confirmDialog.confirmText}
+          cancelText={confirmDialog.cancelText}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
           translate={translate}
         />
-      )}
-
-      {/* 确认对话框 */}
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        variant={confirmDialog.variant}
-        confirmText={confirmDialog.confirmText}
-        cancelText={confirmDialog.cancelText}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-        translate={translate}
-      />
-    </DataMigration>
+      </DataMigration>
   )
 }
 
