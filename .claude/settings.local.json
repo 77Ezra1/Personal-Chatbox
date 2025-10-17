@@ -150,7 +150,9 @@
       "Bash(./test-all-features.sh:*)",
       "Bash(TERM=xterm ./test-all-features.sh:*)",
       "Bash(PGPASSWORD=chatbox2025 psql:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: optimize notes and documents features with PostgreSQL compatibility\n\n## 新功能\n- ✨ 完整的笔记管理功能（Notes）\n  - 创建、编辑、删除、搜索笔记\n  - 分类和标签管理\n  - 收藏和归档支持\n  - 导入导出功能\n  \n- ✨ 文档管理功能（Documents）\n  - 文档的增删改查\n  - 分类和标签系统\n  - 访问计数和统计\n  - 列表和卡片视图切换\n\n## 优化改进\n- 🔧 PostgreSQL适配器优化\n  - 添加 datetime(''now'') → CURRENT_TIMESTAMP 自动转换\n  - 增强SQL执行日志便于调试\n  - 改进错误处理\n\n- 📝 完整的测试套件\n  - 自动化测试脚本 (test-notes-documents.cjs)\n  - 31个测试用例覆盖所有CRUD操作\n  - 详细的测试报告 (NOTES_DOCUMENTS_TEST_REPORT.md)\n\n- 📚 文档更新\n  - 笔记功能文档 (docs/NOTES_FEATURE.md)\n  - 文档管理文档 (docs/DOCUMENTS_FEATURE.md)\n  - PostgreSQL兼容性问题和解决方案\n\n## 技术债务\n- ⚠️ PostgreSQL兼容性待修复\n  - INSERT RETURNING 支持\n  - Boolean类型比较\n  - 全文搜索语法转换\n\n## 文件变更\n- 新增: 笔记和文档的完整前后端实现\n- 优化: PostgreSQL数据库适配器\n- 测试: 完整的功能测试脚本\n- 文档: 详细的功能说明和测试报告\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
