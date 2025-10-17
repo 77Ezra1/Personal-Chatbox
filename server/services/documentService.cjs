@@ -127,11 +127,25 @@ async function createDocument(userId, documentData) {
 
   // 确保分类存在
   if (category && category !== 'uncategorized') {
-    await db.run(
-      `INSERT OR IGNORE INTO document_categories (user_id, name)
-       VALUES (?, ?)`,
-      [userId, category]
-    );
+    // 检测数据库类型
+    const isPostgreSQL = db._driver === 'postgresql';
+
+    if (isPostgreSQL) {
+      // PostgreSQL: 使用 ON CONFLICT DO NOTHING
+      await db.run(
+        `INSERT INTO document_categories (user_id, name)
+         VALUES (?, ?)
+         ON CONFLICT (user_id, name) DO NOTHING`,
+        [userId, category]
+      );
+    } else {
+      // SQLite: 使用 INSERT OR IGNORE
+      await db.run(
+        `INSERT OR IGNORE INTO document_categories (user_id, name)
+         VALUES (?, ?)`,
+        [userId, category]
+      );
+    }
   }
 
   return getDocumentById(userId, documentId);
@@ -180,11 +194,25 @@ async function updateDocument(userId, documentId, updates) {
 
     // 确保分类存在
     if (category !== 'uncategorized') {
-      await db.run(
-        `INSERT OR IGNORE INTO document_categories (user_id, name)
-         VALUES (?, ?)`,
-        [userId, category]
-      );
+      // 检测数据库类型
+      const isPostgreSQL = db._driver === 'postgresql';
+
+      if (isPostgreSQL) {
+        // PostgreSQL: 使用 ON CONFLICT DO NOTHING
+        await db.run(
+          `INSERT INTO document_categories (user_id, name)
+           VALUES (?, ?)
+           ON CONFLICT (user_id, name) DO NOTHING`,
+          [userId, category]
+        );
+      } else {
+        // SQLite: 使用 INSERT OR IGNORE
+        await db.run(
+          `INSERT OR IGNORE INTO document_categories (user_id, name)
+           VALUES (?, ?)`,
+          [userId, category]
+        );
+      }
     }
   }
   if (icon !== undefined) {
@@ -242,19 +270,54 @@ async function deleteDocument(userId, documentId) {
 }
 
 /**
- * 搜索文档
+ * 搜索文档（支持PostgreSQL和SQLite）
  */
 async function searchDocuments(userId, searchQuery, options = {}) {
-  
   const { isArchived = false } = options;
 
-  const documents = await db.all(
-    `SELECT d.* FROM documents d
-     INNER JOIN documents_fts fts ON d.id = fts.rowid
-     WHERE fts MATCH ? AND d.user_id = ? AND d.is_archived = ?
-     ORDER BY rank`,
-    [searchQuery, userId, isArchived ? 1 : 0]
-  );
+  // 检测数据库类型
+  const isPostgreSQL = db._driver === 'postgresql';
+
+  let documents;
+
+  try {
+    if (isPostgreSQL) {
+      // PostgreSQL全文搜索
+      documents = await db.all(
+        `SELECT * FROM documents
+         WHERE user_id = $1 AND is_archived = $2 AND (
+           to_tsvector('english', title || ' ' || COALESCE(description, '')) @@
+           plainto_tsquery('english', $3)
+         )
+         ORDER BY ts_rank(
+           to_tsvector('english', title || ' ' || COALESCE(description, '')),
+           plainto_tsquery('english', $3)
+         ) DESC`,
+        [userId, isArchived, searchQuery]
+      );
+    } else {
+      // SQLite FTS5搜索
+      documents = await db.all(
+        `SELECT d.* FROM documents d
+         INNER JOIN documents_fts fts ON d.id = fts.rowid
+         WHERE fts MATCH ? AND d.user_id = ? AND d.is_archived = ?
+         ORDER BY rank`,
+        [searchQuery, userId, isArchived ? 1 : 0]
+      );
+    }
+  } catch (error) {
+    logger.error('Search error, falling back to LIKE search:', error);
+    // 降级为LIKE搜索
+    const searchPattern = `%${searchQuery}%`;
+    documents = await db.all(
+      `SELECT * FROM documents
+       WHERE user_id = $1 AND is_archived = $2 AND (
+         title LIKE $3 OR description LIKE $3
+       )
+       ORDER BY updated_at DESC`,
+      [userId, isArchived, searchPattern]
+    );
+  }
 
   // 为每个文档获取标签
   for (const doc of documents) {

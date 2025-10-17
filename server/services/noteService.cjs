@@ -226,22 +226,42 @@ class NoteService {
   }
 
   /**
-   * 全文搜索笔记
+   * 全文搜索笔记（支持PostgreSQL和SQLite）
    */
   async searchNotes(userId, searchQuery, options = {}) {
     try {
       const { limit = 50, offset = 0 } = options;
 
-      // 使用FTS5全文搜索
-      const query = `
-        SELECT n.* FROM notes n
-        INNER JOIN notes_fts fts ON n.id = fts.rowid
-        WHERE n.user_id = ? AND notes_fts MATCH ?
-        ORDER BY rank
-        LIMIT ? OFFSET ?
-      `;
+      // 检测数据库类型
+      const isPostgreSQL = this.db._driver === 'postgresql';
 
-      const notes = await this.db.all(query, [userId, searchQuery, limit, offset]);
+      let query, notes;
+
+      if (isPostgreSQL) {
+        // PostgreSQL全文搜索
+        query = `
+          SELECT * FROM notes
+          WHERE user_id = $1 AND (
+            to_tsvector('english', title || ' ' || content) @@ plainto_tsquery('english', $2)
+          )
+          ORDER BY ts_rank(
+            to_tsvector('english', title || ' ' || content),
+            plainto_tsquery('english', $2)
+          ) DESC
+          LIMIT $3 OFFSET $4
+        `;
+        notes = await this.db.all(query, [userId, searchQuery, limit, offset]);
+      } else {
+        // SQLite FTS5搜索
+        query = `
+          SELECT n.* FROM notes n
+          INNER JOIN notes_fts fts ON n.id = fts.rowid
+          WHERE n.user_id = ? AND notes_fts MATCH ?
+          ORDER BY rank
+          LIMIT ? OFFSET ?
+        `;
+        notes = await this.db.all(query, [userId, searchQuery, limit, offset]);
+      }
 
       return notes.map(note => ({
         ...note,

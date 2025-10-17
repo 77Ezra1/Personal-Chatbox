@@ -58,19 +58,32 @@ class PostgreSQLAdapter {
   async run(sql, params = [], callback) {
     try {
       // 转换SQL语法
-      const convertedSql = this.convertSqlPlaceholders(sql);
+      let convertedSql = this.convertSqlPlaceholders(sql);
+
+      // 自动添加 RETURNING id（如果是INSERT语句且没有RETURNING）
+      if (convertedSql.trim().toUpperCase().startsWith('INSERT') &&
+          !convertedSql.toUpperCase().includes('RETURNING')) {
+        // 移除末尾的分号（如果有）
+        convertedSql = convertedSql.replace(/;\s*$/, '');
+        convertedSql += ' RETURNING id';
+      }
+
       console.log('[PostgreSQL] Executing SQL:', convertedSql);
       console.log('[PostgreSQL] With params:', JSON.stringify(params));
 
       const result = await this.pool.query(convertedSql, params);
+
+      // 正确获取lastID
+      const lastID = result.rows[0]?.id || null;
+
       if (callback) {
         callback(null, {
-          lastID: result.rows[0]?.id,
+          lastID: lastID,
           changes: result.rowCount
         });
       }
       return {
-        lastID: result.rows[0]?.id,
+        lastID: lastID,
         changes: result.rowCount
       };
     } catch (err) {
@@ -142,6 +155,20 @@ class PostgreSQLAdapter {
     // 转换SQLite特有语法到PostgreSQL
     converted = converted.replace(/datetime\('now'\)/g, 'CURRENT_TIMESTAMP');
     converted = converted.replace(/datetime\("now"\)/g, 'CURRENT_TIMESTAMP');
+
+    // 修复Boolean比较
+    // is_archived = 0 → is_archived = false
+    converted = converted.replace(/\bis_archived\s*=\s*0\b/gi, 'is_archived = false');
+    converted = converted.replace(/\bis_archived\s*=\s*1\b/gi, 'is_archived = true');
+
+    // is_favorite = 0 → is_favorite = false
+    converted = converted.replace(/\bis_favorite\s*=\s*0\b/gi, 'is_favorite = false');
+    converted = converted.replace(/\bis_favorite\s*=\s*1\b/gi, 'is_favorite = true');
+
+    // 修复 INSERT OR IGNORE 语法
+    // INSERT OR IGNORE INTO → INSERT INTO ... ON CONFLICT DO NOTHING
+    converted = converted.replace(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\((.*?)\)\s*VALUES/gi,
+      'INSERT INTO $1 ($2) VALUES');
 
     return converted;
   }
