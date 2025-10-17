@@ -280,9 +280,16 @@ function registerRoutes() {
 
   // 通用API rate limiting
   app.use('/api', apiRateLimiter.middleware());
+
+  logger.info('📝 注册API路由...');
   app.use('/api/user-data', require('./routes/user-data.cjs')); // 用户数据路由
+  logger.info('✅ user-data 路由已注册');
+
   app.use('/api/profile', require('./routes/profile.cjs')); // 用户资料路由
+  logger.info('✅ profile 路由已注册');
+
   app.use('/api/analytics', require('./routes/analytics.cjs')); // 数据分析路由
+  logger.info('✅ analytics 路由已注册');
   // app.use('/api/images', require('./routes/images.cjs')); // 图片上传和分析路由 - 已删除（功能已集成到chat附件系统）
   // app.use('/api/voice', require('./routes/voice.cjs')); // 语音输入输出路由 - 已删除
   app.use('/api/files', require('./routes/files.cjs')); // 文件上传和解析路由

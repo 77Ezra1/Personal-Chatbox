@@ -27,6 +27,14 @@ const ProfileSettings = () => {
       const response = await fetch('/api/profile', {
         credentials: 'include'
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('获取用户资料失败:', response.status, errorText);
+        showMessage(`加载失败: ${response.status}`, 'error');
+        return;
+      }
+
       const data = await response.json();
       if (data.profile) {
         setProfile({
@@ -44,7 +52,7 @@ const ProfileSettings = () => {
       }
     } catch (error) {
       console.error('加载用户资料失败:', error);
-      showMessage('加载用户资料失败', 'error');
+      showMessage('加载用户资料失败: ' + error.message, 'error');
     }
   };
 
@@ -142,6 +150,7 @@ const ProfileSettings = () => {
     setLoading(true);
 
     try {
+      console.log('发送更新请求:', profile);
       const response = await fetch('/api/profile', {
         method: 'PUT',
         headers: {
@@ -151,7 +160,10 @@ const ProfileSettings = () => {
         body: JSON.stringify(profile)
       });
 
+      console.log('响应状态:', response.status);
       const data = await response.json();
+      console.log('响应数据:', data);
+
       if (response.ok) {
         showMessage('资料更新成功', 'success');
         // 更新全局用户状态
@@ -164,11 +176,12 @@ const ProfileSettings = () => {
           localStorage.setItem('theme', profile.theme);
         }
       } else {
-        showMessage(data.message || '更新失败', 'error');
+        console.error('更新失败:', data);
+        showMessage(data.message || `更新失败 (${response.status})`, 'error');
       }
     } catch (error) {
       console.error('更新资料失败:', error);
-      showMessage('更新资料失败', 'error');
+      showMessage('更新资料失败: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }

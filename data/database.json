@@ -1,5 +1,34 @@
 {
-  "users": [],
+  "users": [
+    {
+      "email": "2",
+      "password_hash": "9",
+      "username": "1",
+      "id": 1,
+      "created_at": "2025-10-17T03:38:39.586Z"
+    },
+    {
+      "email": "t",
+      "password_hash": "e",
+      "username": "s",
+      "id": 2,
+      "created_at": "2025-10-17T03:54:46.298Z"
+    },
+    {
+      "email": "w",
+      "password_hash": "o",
+      "username": "r",
+      "id": 3,
+      "created_at": "2025-10-17T04:00:13.223Z"
+    },
+    {
+      "email": "f",
+      "password_hash": "i",
+      "username": "n",
+      "id": 4,
+      "created_at": "2025-10-17T04:08:17.415Z"
+    }
+  ],
   "conversations": [],
   "messages": [],
   "invite_codes": [
@@ -12,8 +41,46 @@
       "created_at": "2025-10-16T01:58:48.844Z"
     }
   ],
-  "sessions": [],
+  "sessions": [
+    {
+      "id": 1,
+      "created_at": "2025-10-17T04:08:17.426Z"
+    }
+  ],
   "oauth_accounts": [],
-  "login_history": [],
+  "login_history": [
+    {
+      "id": 1,
+      "created_at": "2025-10-17T04:08:17.426Z"
+    },
+    {
+      "id": 2,
+      "created_at": "2025-10-17T04:08:37.489Z"
+    },
+    {
+      "id": 3,
+      "created_at": "2025-10-17T04:17:45.581Z"
+    },
+    {
+      "id": 4,
+      "created_at": "2025-10-17T04:18:02.671Z"
+    },
+    {
+      "id": 5,
+      "created_at": "2025-10-17T04:18:07.591Z"
+    },
+    {
+      "id": 6,
+      "created_at": "2025-10-17T04:18:08.116Z"
+    },
+    {
+      "id": 7,
+      "created_at": "2025-10-17T04:18:08.452Z"
+    },
+    {
+      "id": 8,
+      "created_at": "2025-10-17T04:18:08.686Z"
+    }
+  ],
   "user_configs": []
 }

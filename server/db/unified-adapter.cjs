@@ -293,12 +293,55 @@ function createJsonDatabaseAdapter() {
         params = [];
       }
 
+      // If no callback provided (or callback is not a function), return a promise
+      if (!callback || typeof callback !== 'function') {
+        return new Promise((resolve, reject) => {
+          try {
+            const parsed = parseSQL(sql, params);
+
+            if (parsed.type === 'CREATE') {
+              resolve();
+              return;
+            }
+
+            if (parsed.type === 'INSERT' && parsed.table) {
+              const table = parsed.table;
+              if (!data[table]) data[table] = [];
+
+              const record = {};
+              parsed.columns.forEach((col, index) => {
+                record[col] = params[index];
+              });
+
+              // 自动添加ID和时间戳
+              if (!record.id) {
+                record.id = data[table].length + 1;
+              }
+              if (!record.created_at) {
+                record.created_at = new Date().toISOString();
+              }
+
+              data[table].push(record);
+              saveData();
+
+              resolve({ lastID: record.id, changes: 1 });
+              return;
+            }
+
+            // 其他操作也返回成功
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+
+      // Callback mode
       try {
         const parsed = parseSQL(sql, params);
 
         if (parsed.type === 'CREATE') {
-          // 忽略CREATE TABLE
-          if (callback) callback(null);
+          callback(null);
           return;
         }
 
@@ -322,15 +365,14 @@ function createJsonDatabaseAdapter() {
           data[table].push(record);
           saveData();
 
-          if (callback) callback(null, { lastID: record.id, changes: 1 });
-          return { lastID: record.id, changes: 1 };
+          callback(null, { lastID: record.id, changes: 1 });
+          return;
         }
 
         // 其他操作也返回成功
-        if (callback) callback(null);
+        callback(null);
       } catch (err) {
-        if (callback) callback(err);
-        else throw err;
+        callback(err);
       }
     },
 
@@ -340,6 +382,39 @@ function createJsonDatabaseAdapter() {
         params = [];
       }
 
+      // If no callback provided (or callback is not a function), return a promise
+      if (!callback || typeof callback !== 'function') {
+        return new Promise((resolve, reject) => {
+          try {
+            const parsed = parseSQL(sql, params);
+
+            if (parsed.type === 'SELECT' && parsed.table) {
+              const table = parsed.table;
+              const rows = data[table] || [];
+
+              // 应用WHERE条件
+              let filtered = rows;
+              if (parsed.where && Object.keys(parsed.where).length > 0) {
+                filtered = rows.filter(row => {
+                  return Object.entries(parsed.where).every(([key, value]) => {
+                    return row[key] == value;
+                  });
+                });
+              }
+
+              const result = filtered[0] || null;
+              resolve(result);
+              return;
+            }
+
+            resolve(null);
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+
+      // Callback mode
       try {
         const parsed = parseSQL(sql, params);
 
@@ -358,15 +433,13 @@ function createJsonDatabaseAdapter() {
           }
 
           const result = filtered[0] || null;
-          if (callback) callback(null, result);
-          return result;
+          callback(null, result);
+          return;
         }
 
-        if (callback) callback(null, null);
-        return null;
+        callback(null, null);
       } catch (err) {
-        if (callback) callback(err);
-        else throw err;
+        callback(err);
       }
     },
 
@@ -376,6 +449,38 @@ function createJsonDatabaseAdapter() {
         params = [];
       }
 
+      // If no callback provided (or callback is not a function), return a promise
+      if (!callback || typeof callback !== 'function') {
+        return new Promise((resolve, reject) => {
+          try {
+            const parsed = parseSQL(sql, params);
+
+            if (parsed.type === 'SELECT' && parsed.table) {
+              const table = parsed.table;
+              const rows = data[table] || [];
+
+              // 应用WHERE条件
+              let filtered = rows;
+              if (parsed.where && Object.keys(parsed.where).length > 0) {
+                filtered = rows.filter(row => {
+                  return Object.entries(parsed.where).every(([key, value]) => {
+                    return row[key] == value;
+                  });
+                });
+              }
+
+              resolve(filtered);
+              return;
+            }
+
+            resolve([]);
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+
+      // Callback mode
       try {
         const parsed = parseSQL(sql, params);
 
@@ -393,23 +498,28 @@ function createJsonDatabaseAdapter() {
             });
           }
 
-          if (callback) callback(null, filtered);
-          return filtered;
+          callback(null, filtered);
+          return;
         }
 
-        if (callback) callback(null, []);
-        return [];
+        callback(null, []);
       } catch (err) {
-        if (callback) callback(err);
-        else throw err;
+        callback(err);
       }
     },
 
     prepare(sql) {
+      const self = this;
       return {
-        run: (...args) => this.run(sql, ...args),
-        get: (...args) => this.get(sql, ...args),
-        all: (...args) => this.all(sql, ...args)
+        run(...args) {
+          return self.run(sql, ...args);
+        },
+        get(...args) {
+          return self.get(sql, ...args);
+        },
+        all(...args) {
+          return self.all(sql, ...args);
+        }
       };
     },
 

@@ -93,29 +93,57 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
 
 ## 📚 使用文档
 
-### 新手入门
-- **[快速开始指南](docs/guides/GETTING_STARTED.md)** - 第一次使用必读
-- **[完整用户指南](docs/guides/MCP_COMPLETE_USER_GUIDE.md)** - 详细的功能说明
+> 💡 **快速导航**: 查看 **[完整文档索引](DOCUMENTATION_INDEX.md)** 了解所有文档
 
-### 功能指南
-- **[MCP服务使用指南](docs/guides/MCP_SERVICES_GUIDE.md)** - 如何使用各种MCP服务
-- **[MCP配置指南](docs/guides/MCP_CONFIG_USAGE_GUIDE.md)** - SQLite和Filesystem服务配置
-- **[Playwright服务指南](docs/guides/PLAYWRIGHT_SERVICE_GUIDE.md)** - 浏览器自动化服务
-- **[代理配置指南](docs/guides/PROXY_CONFIG_CONFIRMATION.md)** - 配置HTTP/SOCKS5代理
+### 🌟 新手入门 (必读)
+- **[快速开始指南](docs/guides/GETTING_STARTED.md)** - 第一次使用必读 ⭐⭐⭐⭐⭐
+- **[完整用户指南](docs/guides/MCP_COMPLETE_USER_GUIDE.md)** - 详细的功能说明 ⭐⭐⭐⭐
+- **[启动指南](START_GUIDE.md)** - 快速启动项目
 
-### 安装配置
-- **[依赖安装指南](docs/setup/INSTALL_DEPENDENCIES.md)** - 详细的安装步骤
-- **[Git克隆加速](docs/setup/GIT_CLONE_SPEEDUP.md)** - 国内用户克隆加速方法
-- **[SSH克隆指南](docs/setup/SSH_CLONE_GUIDE.md)** - 使用SSH克隆项目
-- **[代理集成指南](docs/setup/PROXY_INTEGRATION_GUIDE.md)** - 配置系统代理
-- **[VPN集成指南](docs/setup/VPN_INTEGRATION_GUIDE.md)** - VPN配置方法
+### ⚙️ 配置指南
+- **[API配置指南](API_CONFIGURATION_GUIDE.md)** - API密钥配置
+- **[数据库策略指南](DATABASE_STRATEGY_GUIDE.md)** - 数据库选择和配置 (新增)
+- **[代理配置指南](docs/guides/PROXY_CONFIG_CONFIRMATION.md)** - HTTP/SOCKS5代理设置
 
-### MCP服务资源
-- **[免费MCP服务](docs/guides/FREE_MCP_SERVICES.md)** - 无需付费的MCP服务列表
-- **[平价MCP服务](docs/guides/AFFORDABLE_MCP_SERVICES.md)** - 性价比高的付费服务
-- **[国内友好服务](docs/guides/CHINA_FRIENDLY_MCP_SERVICES.md)** - 适合国内用户的服务
-- **[推荐MCP服务](docs/guides/RECOMMENDED_MCP_SERVICES.md)** - 精选推荐服务
-- **[MCP服务定价](docs/guides/MCP_SERVICES_PRICING.md)** - 各服务价格对比
+### 🔌 MCP服务
+- **[MCP快速入门](docs/MCP_QUICK_START.md)** - MCP服务快速上手
+- **[MCP服务使用指南](docs/guides/MCP_SERVICES_GUIDE.md)** - 详细使用说明
+- **[MCP配置指南](docs/guides/MCP_CONFIG_USAGE_GUIDE.md)** - 高级配置
+- **[Playwright服务指南](docs/guides/PLAYWRIGHT_SERVICE_GUIDE.md)** - 浏览器自动化
+
+### 🌐 MCP服务资源
+- **[免费MCP服务](docs/guides/FREE_MCP_SERVICES.md)** - 免费服务列表
+- **[平价MCP服务](docs/guides/AFFORDABLE_MCP_SERVICES.md)** - 性价比服务
+- **[国内友好服务](docs/guides/CHINA_FRIENDLY_MCP_SERVICES.md)** - 国内可用
+- **[推荐MCP服务](docs/guides/RECOMMENDED_MCP_SERVICES.md)** - 精选推荐
+- **[MCP服务定价](docs/guides/MCP_SERVICES_PRICING.md)** - 价格对比
+
+### 🛠️ 安装配置
+- **[依赖安装指南](docs/setup/INSTALL_DEPENDENCIES.md)** - 详细安装步骤
+- **[Git克隆加速](docs/setup/GIT_CLONE_SPEEDUP.md)** - 国内用户加速
+- **[SSH克隆指南](docs/setup/SSH_CLONE_GUIDE.md)** - SSH方式克隆
+- **[代理集成指南](docs/setup/PROXY_INTEGRATION_GUIDE.md)** - 系统代理配置
+- **[VPN集成指南](docs/setup/VPN_INTEGRATION_GUIDE.md)** - VPN配置
+
+### 🎯 高级功能
+- **[AI Agent指南](docs/AI_AGENT_GUIDE.md)** - 智能代理使用
+- **[数据分析功能](docs/ANALYTICS_FEATURE_GUIDE.md)** - 数据分析
+- **[笔记管理](docs/NOTES_FEATURE.md)** - 笔记功能
+- **[文档管理](docs/DOCUMENTS_FEATURE.md)** - 文档功能
+- **[国际化指南](docs/I18N_GUIDE.md)** - 多语言支持
+
+### 👨‍💻 开发者文档
+- **[后端架构](docs/reports/BACKEND_ARCHITECTURE.md)** - 后端系统设计
+- **[UI开发指南](docs/UI_DEVELOPMENT_GUIDE.md)** - UI开发规范
+- **[测试用例](docs/TEST_CASES.md)** - 测试规范
+- **[Git推送脚本](docs/GIT_PUSH_SCRIPTS.md)** - Git自动化
+
+### 📊 更多文档
+查看 **[完整文档索引](DOCUMENTATION_INDEX.md)** 获取:
+- 90+ 详细文档列表
+- 按场景查找文档
+- 关键词搜索索引
+- 常见问题FAQ
 
 ## 🎯 核心功能
 

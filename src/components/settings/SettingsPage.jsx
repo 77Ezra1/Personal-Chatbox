@@ -7,6 +7,7 @@ import McpServiceConfig from '../mcp/McpServiceConfig_Simple'
 import { ApiKeysConfig } from './ApiKeysConfig'
 import ProxyConfig from './ProxyConfig'
 import { ShortcutSettings } from './ShortcutSettings'
+import ProfileSettings from './ProfileSettings'
 import './SettingsPage.css'
 
 /**
@@ -234,18 +235,7 @@ export function SettingsPage({
 
             {activeTab === 'profile' && (
               <div className="settings-section">
-                <h3 className="settings-section-title">
-                  {translate('settings.profile.title', 'User Profile')}
-                </h3>
-                <p className="settings-section-description">
-                  {translate('settings.profile.description', 'Manage your user profile and preferences')}
-                </p>
-                <div className="profile-placeholder">
-                  <User className="w-16 h-16 text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    {translate('settings.profile.comingSoon', 'User profile features coming soon')}
-                  </p>
-                </div>
+                <ProfileSettings />
               </div>
             )}
 
