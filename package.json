@@ -19,7 +19,9 @@
     "db:push": "prisma db push --accept-data-loss",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:custom": "node server/db/run-migration.cjs",
-    "db:migrate:search": "node server/db/run-migration.cjs"
+    "db:migrate:search": "node server/db/run-migration.cjs",
+    "db:test-sqlserver": "node scripts/test-sqlserver-connection.cjs",
+    "db:migrate-to-sqlserver": "node scripts/migrate-to-sqlserver.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -86,6 +88,7 @@
     "lucide-react": "^0.510.0",
     "mammoth": "^1.11.0",
     "mcp-sqlite": "^1.0.7",
+    "mssql": "^12.0.0",
     "multer": "^2.0.2",
     "next-themes": "^0.4.6",
     "node-fetch": "^3.3.2",

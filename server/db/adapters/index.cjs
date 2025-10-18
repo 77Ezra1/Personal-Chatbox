@@ -6,6 +6,7 @@
 
 const PostgresAdapter = require('./postgres.cjs');
 const SQLiteAdapter = require('./sqlite.cjs');
+const SqlServerAdapter = require('./sqlserver.cjs');
 const logger = require('../../utils/logger.cjs');
 
 /**
@@ -14,6 +15,21 @@ const logger = require('../../utils/logger.cjs');
  */
 async function createDatabaseAdapter() {
   const dbUrl = process.env.DATABASE_URL;
+
+  // SQL Server
+  if (dbUrl && (dbUrl.startsWith('mssql') || dbUrl.startsWith('sqlserver'))) {
+    logger.info('[DB] Using SQL Server adapter');
+
+    const adapter = new SqlServerAdapter({
+      url: dbUrl,
+      maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS) || 20,
+      minConnections: parseInt(process.env.DB_MIN_CONNECTIONS) || 2,
+      idleTimeout: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000
+    });
+
+    await adapter.connect();
+    return adapter;
+  }
 
   // PostgreSQL (production)
   if (dbUrl && dbUrl.startsWith('postgres')) {
@@ -48,6 +64,14 @@ async function createDatabaseAdapter() {
 function getDatabaseInfo() {
   const dbUrl = process.env.DATABASE_URL;
 
+  if (dbUrl && (dbUrl.startsWith('mssql') || dbUrl.startsWith('sqlserver'))) {
+    return {
+      type: 'sqlserver',
+      configured: true,
+      url: dbUrl.replace(/:[^:@]+@/, ':***@') // Hide password
+    };
+  }
+
   if (dbUrl && dbUrl.startsWith('postgres')) {
     return {
       type: 'postgres',
@@ -67,5 +91,6 @@ module.exports = {
   createDatabaseAdapter,
   getDatabaseInfo,
   PostgresAdapter,
-  SQLiteAdapter
+  SQLiteAdapter,
+  SqlServerAdapter
 };
