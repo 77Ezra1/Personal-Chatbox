@@ -1,124 +1,186 @@
 {
   "users": [
     {
-      "id": "8c25321e-7726-463b-b809-bd1c1b3d793a",
-      "email": "test@example.com",
-      "password_hash": "Test123456",
-      "username": "testuser",
-      "created_at": "2025-10-15T22:48:17.257Z",
-      "updated_at": "2025-10-15T22:48:17.258Z"
+      "email": "f",
+      "password_hash": "i",
+      "username": "n",
+      "id": 1,
+      "created_at": "2025-10-17T15:01:24.205Z"
     },
     {
-      "id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
-      "email": "2915165979@qq.com",
-      "password_hash": "personal-chatbox-Ezra123.",
-      "username": null,
-      "created_at": "2025-10-15T22:48:54.757Z",
-      "updated_at": "2025-10-15T22:48:54.757Z"
+      "email": "t",
+      "password_hash": "e",
+      "username": "s",
+      "id": 2,
+      "created_at": "2025-10-17T15:05:24.601Z"
+    },
+    {
+      "email": "2",
+      "password_hash": "9",
+      "username": "1",
+      "id": 3,
+      "created_at": "2025-10-17T17:07:18.570Z"
     }
   ],
-  "invite_codes": [
+  "oauth_accounts": [],
+  "sessions": [
     {
-      "id": "b6a9c771-76d1-4996-9dbb-143993e7f8af",
-      "code": "WELCOME2025",
-      "max_uses": 1000,
-      "used_count": 0,
-      "description": "欢迎使用邀请码",
-      "is_active": true,
-      "created_at": "2025-10-15T22:48:07.592Z",
-      "updated_at": "2025-10-15T22:48:07.593Z"
+      "id": 1,
+      "created_at": "2025-10-17T15:01:24.206Z"
     },
     {
-      "id": "6f087e87-7c78-4b7f-975d-f3a54f143e17",
-      "code": "FRIEND2025",
-      "max_uses": 1000,
-      "used_count": 0,
-      "description": "朋友邀请码",
-      "is_active": true,
-      "created_at": "2025-10-15T22:48:07.593Z",
-      "updated_at": "2025-10-15T22:48:07.593Z"
+      "id": 2,
+      "created_at": "2025-10-17T15:05:24.602Z"
     },
     {
-      "id": "efedab60-c82e-446e-8c56-55441d16f63b",
-      "code": "TEAM2025",
-      "max_uses": 1000,
-      "used_count": 0,
-      "description": "团队邀请码",
-      "is_active": true,
-      "created_at": "2025-10-15T22:48:07.593Z",
-      "updated_at": "2025-10-15T22:48:07.593Z"
+      "id": 3,
+      "created_at": "2025-10-17T17:07:18.573Z"
+    }
+  ],
+  "login_history": [
+    {
+      "id": 1,
+      "created_at": "2025-10-17T15:01:24.206Z"
     },
     {
-      "id": "9c70fcc2-71cf-4586-933e-cb32ff81cf86",
-      "code": "VIP2025",
-      "max_uses": 1000,
-      "used_count": 2,
-      "description": "VIP邀请码",
-      "is_active": true,
-      "created_at": "2025-10-15T22:48:07.593Z",
-      "updated_at": "2025-10-15T22:48:54.759Z"
+      "id": 2,
+      "created_at": "2025-10-17T15:02:08.400Z"
     },
     {
-      "id": "6b5d97f6-9819-4843-93df-520be6ed05df",
-      "code": "TEST2025",
-      "max_uses": 1000,
-      "used_count": 0,
-      "description": "测试邀请码",
-      "is_active": true,
-      "created_at": "2025-10-15T22:48:07.593Z",
-      "updated_at": "2025-10-15T22:48:07.593Z"
+      "id": 3,
+      "created_at": "2025-10-17T15:05:24.603Z"
+    },
+    {
+      "id": 4,
+      "created_at": "2025-10-17T15:13:48.787Z"
+    },
+    {
+      "id": 5,
+      "created_at": "2025-10-17T15:46:23.554Z"
+    },
+    {
+      "id": 6,
+      "created_at": "2025-10-17T15:46:43.743Z"
+    },
+    {
+      "id": 7,
+      "created_at": "2025-10-17T16:17:44.213Z"
+    },
+    {
+      "id": 8,
+      "created_at": "2025-10-17T17:07:18.573Z"
+    },
+    {
+      "id": 9,
+      "created_at": "2025-10-17T17:09:03.488Z"
+    },
+    {
+      "id": 10,
+      "created_at": "2025-10-17T17:16:22.203Z"
+    },
+    {
+      "id": 11,
+      "created_at": "2025-10-17T17:21:37.157Z"
+    },
+    {
+      "id": 12,
+      "created_at": "2025-10-17T17:32:39.712Z"
+    },
+    {
+      "id": 13,
+      "created_at": "2025-10-17T17:34:28.097Z"
+    },
+    {
+      "id": 14,
+      "created_at": "2025-10-17T17:34:41.030Z"
+    },
+    {
+      "id": 15,
+      "created_at": "2025-10-17T17:35:32.780Z"
+    },
+    {
+      "id": 16,
+      "created_at": "2025-10-17T17:46:43.705Z"
+    },
+    {
+      "id": 17,
+      "created_at": "2025-10-17T17:47:06.942Z"
+    },
+    {
+      "id": 18,
+      "created_at": "2025-10-17T17:50:39.056Z"
+    },
+    {
+      "id": 19,
+      "created_at": "2025-10-17T17:59:37.032Z"
+    },
+    {
+      "id": 20,
+      "created_at": "2025-10-17T18:00:11.862Z"
+    },
+    {
+      "id": 21,
+      "created_at": "2025-10-17T18:01:09.443Z"
     }
   ],
   "conversations": [],
   "messages": [],
-  "sessions": [
+  "user_configs": [],
+  "invite_codes": [
     {
-      "id": "247a1acd-eb70-4d7d-b314-f91a7af436c1",
-      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
-      "token": "token_1760568623520_0kl33w6of",
-      "expires_at": "2025-10-22T22:50:23.520Z",
-      "created_at": "2025-10-15T22:50:23.522Z",
-      "updated_at": "2025-10-15T22:50:23.522Z"
+      "id": 1,
+      "code": "WELCOME2025",
+      "max_uses": -1,
+      "used_count": 0,
+      "description": "欢迎使用",
+      "created_at": "2025-10-17T14:59:35.628Z",
+      "expires_at": null,
+      "is_active": 1
     },
     {
-      "id": "8d077006-0924-43ee-9652-7e35ea057acb",
-      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
-      "token": "token_1760568630991_bjszgxi9w",
-      "expires_at": "2025-10-22T22:50:30.991Z",
-      "created_at": "2025-10-15T22:50:30.991Z",
-      "updated_at": "2025-10-15T22:50:30.991Z"
-    },
+      "id": 2,
+      "code": "TEST2025",
+      "max_uses": -1,
+      "used_count": 0,
+      "description": "测试邀请码",
+      "created_at": "2025-10-17T14:59:35.631Z",
+      "expires_at": null,
+      "is_active": 1
+    }
+  ],
+  "images": [],
+  "image_analyses": [],
+  "voice_records": [],
+  "file_uploads": [],
+  "knowledge_bases": [],
+  "knowledge_documents": [],
+  "personas": [],
+  "workflows": [],
+  "agents": [],
+  "agent_tasks": [],
+  "context_memories": [],
+  "conversation_summaries": [],
+  "prompt_templates": [],
+  "user_mcp_configs": [
     {
-      "id": "07b115ca-5584-4114-ba2b-e5ba7ce3307b",
-      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
-      "token": "token_1760568646930_n6v9jgq62",
-      "expires_at": "2025-10-22T22:50:46.930Z",
-      "created_at": "2025-10-15T22:50:46.930Z",
-      "updated_at": "2025-10-15T22:50:46.930Z"
-    },
-    {
-      "id": "f631b2a8-1009-45f8-8f2a-4eb2a775ba2f",
-      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
-      "token": "token_1760568927818_1awmrib9m",
-      "expires_at": "2025-10-22T22:55:27.818Z",
-      "created_at": "2025-10-15T22:55:27.818Z",
-      "updated_at": "2025-10-15T22:55:27.818Z"
-    },
-    {
-      "id": "6c9b5e78-73ec-42d2-a41d-32048e607c0a",
-      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
-      "token": "token_1760569472651_vqs93m5ts",
-      "expires_at": "2025-10-22T23:04:32.651Z",
-      "created_at": "2025-10-15T23:04:32.651Z",
-      "updated_at": "2025-10-15T23:04:32.651Z"
-    },
-    {
-      "id": "69bc4709-e8a9-49e5-893f-2c407c853217",
-      "user_id": "202237c1-8a7e-43c8-9908-9ed5fc0bc064",
-      "token": "token_1760572863962_4jmkqgsax",
-      "expires_at": "2025-10-23T00:01:03.963Z",
-      "created_at": "2025-10-16T00:01:03.963Z",
-      "updated_at": "2025-10-16T00:01:03.963Z"
+      "user_id": 1,
+      "mcp_id": "test-memory3",
+      "name": "测试Memory服务3",
+      "description": "测试自定义MCP3",
+      "category": "other",
+      "icon": "🔧",
+      "command": "npx",
+      "args": "[\"-y\",\"@modelcontextprotocol/server-memory\"]",
+      "env_vars": "{}",
+      "config_data": "{}",
+      "official": 0,
+      "popularity": "medium",
+      "features": "[]",
+      "setup_instructions": "{}",
+      "documentation": "",
+      "enabled": 1,
+      "id": 1,
+      "created_at": "2025-10-17T15:23:10.555Z"
     }
   ]
 }

@@ -1,86 +1,84 @@
 {
   "users": [
     {
-      "email": "2",
-      "password_hash": "9",
-      "username": "1",
       "id": 1,
-      "created_at": "2025-10-17T03:38:39.586Z"
+      "email": "test@example.com",
+      "password_hash": "$2b$10$9NPNG87IybEZMhJAAB9ewunQ8Org.jFK3kWS7GfFnZ5bn46DmdRjK",
+      "username": "测试用户",
+      "avatar_url": null,
+      "created_at": "2025-10-17T18:07:58.406Z",
+      "last_login_at": null,
+      "is_locked": 0,
+      "locked_until": null,
+      "failed_login_attempts": 0
+    }
+  ],
+  "oauth_accounts": [],
+  "sessions": [
+    {
+      "user_id": 1,
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc2MDcyNzkxOSwiZXhwIjoxNzYxMzMyNzE5fQ.YcKBo4KgEKu7L-RnA53z-1mtRSxPNJTyyIot74LPTRU",
+      "expires_at": "2025-10-24T19:05:19.953Z",
+      "ip_address": "127.0.0.1",
+      "user_agent": "curl/8.7.1",
+      "id": 1,
+      "created_at": "2025-10-17T19:05:19.954Z"
     },
     {
-      "email": "t",
-      "password_hash": "e",
-      "username": "s",
+      "user_id": 1,
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc2MDcyODE0MSwiZXhwIjoxNzYxMzMyOTQxfQ.UUSLi2VgIvDxP7X0kZHXKLPMbSK6-s4VYEVK3dkra7w",
+      "expires_at": "2025-10-24T19:09:01.856Z",
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "id": 2,
-      "created_at": "2025-10-17T03:54:46.298Z"
+      "created_at": "2025-10-17T19:09:01.856Z"
+    }
+  ],
+  "login_history": [
+    {
+      "user_id": 1,
+      "ip_address": "127.0.0.1",
+      "user_agent": "curl/8.7.1",
+      "success": 1,
+      "id": 1,
+      "created_at": "2025-10-17T19:05:19.954Z"
     },
     {
-      "email": "w",
-      "password_hash": "o",
-      "username": "r",
-      "id": 3,
-      "created_at": "2025-10-17T04:00:13.223Z"
-    },
-    {
-      "email": "f",
-      "password_hash": "i",
-      "username": "n",
-      "id": 4,
-      "created_at": "2025-10-17T04:08:17.415Z"
+      "user_id": 1,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "success": 1,
+      "id": 2,
+      "created_at": "2025-10-17T19:09:01.857Z"
     }
   ],
   "conversations": [],
   "messages": [],
+  "user_configs": [],
   "invite_codes": [
     {
-      "code": "T",
-      "max_uses": "E",
-      "description": "S",
-      "is_active": "T",
       "id": 1,
-      "created_at": "2025-10-16T01:58:48.844Z"
+      "code": "WELCOME2025",
+      "max_uses": -1,
+      "used_count": 0,
+      "description": "欢迎使用",
+      "created_at": "2025-10-17T18:07:58.407Z",
+      "expires_at": null,
+      "is_active": 1
     }
   ],
-  "sessions": [
-    {
-      "id": 1,
-      "created_at": "2025-10-17T04:08:17.426Z"
-    }
-  ],
-  "oauth_accounts": [],
-  "login_history": [
-    {
-      "id": 1,
-      "created_at": "2025-10-17T04:08:17.426Z"
-    },
-    {
-      "id": 2,
-      "created_at": "2025-10-17T04:08:37.489Z"
-    },
-    {
-      "id": 3,
-      "created_at": "2025-10-17T04:17:45.581Z"
-    },
-    {
-      "id": 4,
-      "created_at": "2025-10-17T04:18:02.671Z"
-    },
-    {
-      "id": 5,
-      "created_at": "2025-10-17T04:18:07.591Z"
-    },
-    {
-      "id": 6,
-      "created_at": "2025-10-17T04:18:08.116Z"
-    },
-    {
-      "id": 7,
-      "created_at": "2025-10-17T04:18:08.452Z"
-    },
-    {
-      "id": 8,
-      "created_at": "2025-10-17T04:18:08.686Z"
-    }
-  ],
-  "user_configs": []
+  "images": [],
+  "image_analyses": [],
+  "voice_records": [],
+  "file_uploads": [],
+  "knowledge_bases": [],
+  "knowledge_documents": [],
+  "personas": [],
+  "workflows": [],
+  "agents": [],
+  "agent_tasks": [],
+  "context_memories": [],
+  "conversation_summaries": [],
+  "prompt_templates": [],
+  "user_mcp_configs": []
 }
