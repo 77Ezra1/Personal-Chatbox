@@ -25,7 +25,12 @@ export function AuthProvider({ children }) {
 
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
+        // 新的响应格式包含 authenticated 标志
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
       } else {
         // Session无效或已过期
         setUser(null);
@@ -40,6 +45,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
+      logger.log('[AuthContext] Attempting login for:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -50,17 +56,21 @@ export function AuthProvider({ children }) {
       });
 
       const data = await response.json();
+      logger.log('[AuthContext] Login response:', { status: response.status, data });
 
       if (!response.ok) {
+        logger.error('[AuthContext] Login failed:', data);
         throw data;
       }
 
       // Token通过httpOnly cookie自动保存，前端不存储
       setUser(data.user);
+      logger.log('[AuthContext] Login successful, user set:', data.user);
 
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      logger.error('[AuthContext] Login error:', error);
+      return { success: false, error: error.message || error.error || '登录失败' };
     }
   };
 

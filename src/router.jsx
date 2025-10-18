@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // 懒加载页面组件
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const App = lazy(() => import('./App'));
 
 // 加载中组件
@@ -56,27 +57,35 @@ function AppRoutes() {
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         {/* 公开路由 */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/welcome"
+          element={
+            <RouteGuard requireAuth={false}>
+              <LandingPage />
+            </RouteGuard>
+          }
+        />
+        <Route
+          path="/login"
           element={
             <RouteGuard requireAuth={false}>
               <LoginPage />
             </RouteGuard>
-          } 
+          }
         />
-        <Route 
-          path="/register" 
+        <Route
+          path="/register"
           element={<Navigate to="/login" replace />}
         />
 
         {/* 受保护的路由 */}
-        <Route 
-          path="/*" 
+        <Route
+          path="/*"
           element={
             <RouteGuard requireAuth={true}>
               <App />
             </RouteGuard>
-          } 
+          }
         />
       </Routes>
     </Suspense>

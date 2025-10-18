@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen, Bot, Workflow, Brain, FileText, Store, MessageSquare, BookOpen, Lock } from 'lucide-react'
+import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen, Bot, Workflow, Brain, FileText, Store, MessageSquare, BookOpen, Lock, Compass } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
 import { SearchBar } from './SearchBar'
 import { AdvancedFilter } from './AdvancedFilter'
+import { LanguageToggle } from '@/components/common/LanguageSwitcher'
 import { useAuth } from '@/contexts/AuthContext'
 
 /**
@@ -38,6 +39,7 @@ export function Sidebar({
   // 导航菜单项
   const navigationItems = [
     { path: '/', icon: MessageSquare, label: translate('sidebar.chat', 'Chat') },
+    { path: '/explore', icon: Compass, label: translate('sidebar.explore', 'Explore') },
     { path: '/agents', icon: Bot, label: translate('sidebar.agents', 'AI Agents'), badge: 'New' },
     { path: '/workflows', icon: Workflow, label: translate('sidebar.workflows', 'Workflows'), badge: 'New' },
     { path: '/notes', icon: FileText, label: translate('sidebar.notes', 'Notes'), badge: 'New' },
@@ -327,22 +329,11 @@ export function Sidebar({
 
           {/* Action Buttons Row */}
           <div className="sidebar-footer-tools">
-            <Button
+            <LanguageToggle
               variant="ghost"
               size="sm"
               className="sidebar-language-button"
-              onClick={() => {
-                onToggleLanguage?.()
-              }}
-              title={translate('tooltips.toggleLanguage', 'Toggle language')}
-            >
-              <Languages className="w-4 h-4" />
-              <span className="sidebar-language-label">
-                {language === 'en'
-                  ? translate('toggles.languageShortChinese', '中文')
-                  : translate('toggles.languageShortEnglish', 'EN')}
-              </span>
-            </Button>
+            />
 
             <Button
               variant="ghost"

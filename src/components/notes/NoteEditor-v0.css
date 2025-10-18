@@ -1,0 +1,510 @@
+/**
+ * Note Editor - v0.dev Enhanced Styles
+ * 优化的编辑器界面
+ */
+
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--notes-bg-primary);
+  overflow: hidden;
+}
+
+/* === 编辑器头部 === */
+.note-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--notes-spacing-md);
+  padding: var(--notes-spacing-lg) var(--notes-spacing-xl);
+  border-bottom: 1px solid var(--notes-border-subtle);
+  background: linear-gradient(180deg, var(--notes-bg-secondary) 0%, var(--notes-bg-primary) 100%);
+}
+
+.note-title-input {
+  flex: 1;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--notes-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  letter-spacing: -0.03em;
+  transition: all var(--notes-duration-normal);
+}
+
+.note-title-input::placeholder {
+  color: var(--notes-text-muted);
+  opacity: 0.5;
+}
+
+.note-title-input:focus {
+  color: var(--notes-text-primary);
+}
+
+.note-editor-actions {
+  display: flex;
+  gap: var(--notes-spacing-sm);
+}
+
+.note-editor-actions .btn-secondary {
+  padding: 10px 20px;
+  border-radius: var(--notes-radius-md);
+  background: var(--notes-glass-bg);
+  border: 1.5px solid var(--notes-glass-border);
+  color: var(--notes-text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  backdrop-filter: blur(var(--notes-glass-blur));
+  transition: all var(--notes-duration-normal) var(--notes-ease-out);
+}
+
+.note-editor-actions .btn-secondary:hover:not(:disabled) {
+  background: var(--notes-bg-hover);
+  border-color: var(--notes-border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--notes-shadow-sm);
+}
+
+.note-editor-actions .btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.note-editor-actions .btn-primary {
+  padding: 10px 24px;
+}
+
+/* === 工具栏 === */
+.note-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--notes-spacing-md);
+  padding: var(--notes-spacing-md) var(--notes-spacing-xl);
+  border-bottom: 1px solid var(--notes-border-subtle);
+  background: var(--notes-bg-secondary);
+  flex-wrap: wrap;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: var(--notes-spacing-sm);
+}
+
+.category-select {
+  padding: 8px 14px;
+  border: 1.5px solid var(--notes-border);
+  border-radius: var(--notes-radius-md);
+  background: var(--notes-bg-primary);
+  color: var(--notes-text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--notes-duration-normal) var(--notes-ease-out);
+  min-width: 120px;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: var(--notes-border-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.format-buttons {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--notes-glass-bg);
+  border: 1px solid var(--notes-glass-border);
+  border-radius: var(--notes-radius-md);
+  backdrop-filter: blur(8px);
+}
+
+.format-buttons .btn-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--notes-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--notes-text-secondary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--notes-duration-fast);
+}
+
+.format-buttons .btn-icon:hover:not(:disabled) {
+  background: var(--notes-bg-hover);
+  color: var(--notes-text-primary);
+}
+
+.format-buttons .btn-icon.active {
+  background: var(--notes-gradient-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.format-buttons .btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* === 编辑器主体 === */
+.note-editor-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--notes-spacing-xl);
+  background: var(--notes-bg-primary);
+}
+
+.ProseMirror {
+  outline: none;
+  min-height: 500px;
+  color: var(--notes-text-primary);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+/* 编辑器内容样式优化 */
+.ProseMirror h1 {
+  font-size: 2.25em;
+  font-weight: 800;
+  margin: 1.2em 0 0.6em;
+  background: var(--notes-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.ProseMirror h2 {
+  font-size: 1.75em;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+  color: var(--notes-text-primary);
+  border-bottom: 2px solid;
+  border-image: var(--notes-gradient-blue) 1;
+  padding-bottom: 0.3em;
+  letter-spacing: -0.02em;
+}
+
+.ProseMirror h3 {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin: 0.8em 0 0.4em;
+  color: var(--notes-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.ProseMirror p {
+  margin: 0.75em 0;
+  color: var(--notes-text-primary);
+}
+
+.ProseMirror blockquote {
+  position: relative;
+  border-left: 4px solid;
+  border-image: var(--notes-gradient-blue) 1;
+  padding-left: 20px;
+  margin: 1.5em 0;
+  color: var(--notes-text-secondary);
+  font-style: italic;
+  background: var(--notes-glass-bg);
+  padding: 16px 20px;
+  border-radius: 0 var(--notes-radius-md) var(--notes-radius-md) 0;
+}
+
+.ProseMirror blockquote::before {
+  content: '"';
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  font-size: 3em;
+  color: var(--notes-text-muted);
+  opacity: 0.3;
+  font-family: Georgia, serif;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.8em;
+  margin: 1em 0;
+}
+
+.ProseMirror li {
+  margin: 0.5em 0;
+  color: var(--notes-text-primary);
+}
+
+.ProseMirror code {
+  background: var(--notes-bg-elevated);
+  padding: 3px 8px;
+  border-radius: var(--notes-radius-sm);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #60a5fa;
+  border: 1px solid var(--notes-border);
+}
+
+.ProseMirror pre {
+  background: var(--notes-bg-elevated);
+  border: 1px solid var(--notes-border);
+  border-radius: var(--notes-radius-md);
+  padding: 20px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+  margin: 1.5em 0;
+}
+
+.ProseMirror pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  color: var(--notes-text-primary);
+}
+
+.ProseMirror hr {
+  border: none;
+  height: 2px;
+  background: var(--notes-gradient-primary);
+  margin: 2em 0;
+  border-radius: 2px;
+}
+
+.ProseMirror a {
+  color: #60a5fa;
+  text-decoration: underline;
+  text-decoration-color: rgba(96, 165, 250, 0.4);
+  transition: all var(--notes-duration-fast);
+}
+
+.ProseMirror a:hover {
+  color: #93c5fd;
+  text-decoration-color: rgba(96, 165, 250, 0.8);
+}
+
+.ProseMirror strong {
+  font-weight: 700;
+  color: var(--notes-text-primary);
+}
+
+.ProseMirror em {
+  font-style: italic;
+  color: var(--notes-text-secondary);
+}
+
+/* === 编辑器底部 === */
+.note-editor-footer {
+  padding: var(--notes-spacing-md) var(--notes-spacing-xl);
+  border-top: 1px solid var(--notes-border-subtle);
+  background: linear-gradient(0deg, var(--notes-bg-secondary) 0%, var(--notes-bg-primary) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--notes-spacing-md);
+}
+
+.tags-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--notes-spacing-sm);
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--notes-spacing-xs);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--notes-spacing-xs);
+  padding: 6px 12px;
+  border-radius: 100px;
+  background: var(--notes-glass-bg);
+  border: 1px solid var(--notes-glass-border);
+  color: var(--notes-text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  animation: notes-scale-in var(--notes-duration-normal) var(--notes-ease-spring);
+}
+
+.tag-remove {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: var(--notes-bg-hover);
+  color: var(--notes-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--notes-duration-fast);
+}
+
+.tag-remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error, #ef4444);
+  transform: scale(1.1);
+}
+
+.tag-input {
+  flex: 1;
+  min-width: 150px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--notes-border);
+  border-radius: 100px;
+  background: var(--notes-bg-primary);
+  color: var(--notes-text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all var(--notes-duration-normal);
+}
+
+.tag-input:focus {
+  outline: none;
+  border-color: var(--notes-border-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tag-input::placeholder {
+  color: var(--notes-text-muted);
+}
+
+.editor-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--notes-spacing-md);
+}
+
+.editor-hints {
+  font-size: 0.8rem;
+  color: var(--notes-text-tertiary);
+  font-weight: 500;
+}
+
+.editor-hints span {
+  opacity: 0.7;
+}
+
+/* === 笔记查看器 === */
+.note-viewer {
+  padding: var(--notes-spacing-xl);
+  overflow-y: auto;
+  flex: 1;
+  background: var(--notes-bg-primary);
+}
+
+.note-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--notes-spacing-md);
+  margin-bottom: var(--notes-spacing-lg);
+  padding-bottom: var(--notes-spacing-lg);
+  border-bottom: 2px solid;
+  border-image: var(--notes-gradient-primary) 1;
+}
+
+.note-viewer-header h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: var(--notes-gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.note-viewer-meta {
+  display: flex;
+  gap: var(--notes-spacing-lg);
+  margin: var(--notes-spacing-md) 0;
+  font-size: 0.9rem;
+  color: var(--notes-text-secondary);
+}
+
+.note-viewer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--notes-spacing-sm);
+  margin: var(--notes-spacing-md) 0 var(--notes-spacing-lg);
+}
+
+.note-viewer-content {
+  color: var(--notes-text-primary);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+/* 空状态 */
+.note-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  gap: var(--notes-spacing-md);
+  padding: var(--notes-spacing-xl);
+}
+
+.placeholder-icon {
+  font-size: 5rem;
+  opacity: 0.2;
+}
+
+.note-placeholder h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--notes-text-primary);
+}
+
+.note-placeholder p {
+  margin: 0;
+  color: var(--notes-text-secondary);
+  max-width: 400px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .note-editor-header,
+  .note-editor-toolbar,
+  .note-editor-body,
+  .note-editor-footer {
+    padding-left: var(--notes-spacing-md);
+    padding-right: var(--notes-spacing-md);
+  }
+
+  .note-title-input {
+    font-size: 1.5rem;
+  }
+
+  .note-viewer-header h1 {
+    font-size: 2rem;
+  }
+
+  .format-buttons {
+    flex-wrap: wrap;
+  }
+}

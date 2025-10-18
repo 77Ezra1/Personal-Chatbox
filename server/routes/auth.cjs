@@ -345,13 +345,74 @@ router.post('/logout', authMiddleware, async (req, res) => {
 
 /**
  * GET /api/auth/me
- * 获取当前用户信息
+ * 获取当前用户信息（使用可选认证，避免401错误）
  */
-router.get('/me', authMiddleware, (req, res) => {
-  res.json({
-    success: true,
-    user: req.user
-  });
+router.get('/me', async (req, res) => {
+  try {
+    const { extractToken, verifyToken } = require('../lib/auth-utils.cjs');
+
+    // 提取Token
+    const token = extractToken(req);
+
+    if (!token) {
+      return res.status(200).json({
+        success: true,
+        authenticated: false,
+        user: null
+      });
+    }
+
+    // 验证Token
+    const decoded = verifyToken(token);
+
+    if (!decoded) {
+      return res.status(200).json({
+        success: true,
+        authenticated: false,
+        user: null
+      });
+    }
+
+    // 检查Session是否存在且未过期
+    const session = await db.prepare(
+      "SELECT * FROM sessions WHERE token = ? AND expires_at > datetime('now')"
+    ).get(token);
+
+    if (!session) {
+      return res.status(200).json({
+        success: true,
+        authenticated: false,
+        user: null
+      });
+    }
+
+    // 获取用户信息
+    const user = await db.prepare(
+      'SELECT id, email, username, avatar_url, created_at FROM users WHERE id = ?'
+    ).get(decoded.userId);
+
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        authenticated: false,
+        user: null
+      });
+    }
+
+    // 返回用户信息
+    res.json({
+      success: true,
+      authenticated: true,
+      user
+    });
+  } catch (error) {
+    logger.error('[Auth] /me error:', error);
+    res.status(200).json({
+      success: true,
+      authenticated: false,
+      user: null
+    });
+  }
 });
 
 /**

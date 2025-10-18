@@ -8,6 +8,7 @@ import { ApiKeysConfig } from './ApiKeysConfig'
 import ProxyConfig from './ProxyConfig'
 import { ShortcutSettings } from './ShortcutSettings'
 import ProfileSettings from './ProfileSettings'
+import { ThemeSelector } from './ThemeSelector'
 import './SettingsPage.css'
 
 /**
@@ -169,28 +170,11 @@ export function SettingsPage({
                 <p className="settings-section-description">
                   {translate('settings.appearance.description', 'Choose your preferred color theme')}
                 </p>
-                <div className="theme-options">
-                  <label className="theme-option">
-                    <input
-                      type="radio"
-                      name="theme"
-                      value="light"
-                      checked={theme === 'light'}
-                      onChange={(e) => onThemeChange(e.target.value)}
-                    />
-                    <span>{translate('settings.appearance.light', 'Light')}</span>
-                  </label>
-                  <label className="theme-option">
-                    <input
-                      type="radio"
-                      name="theme"
-                      value="dark"
-                      checked={theme === 'dark'}
-                      onChange={(e) => onThemeChange(e.target.value)}
-                    />
-                    <span>{translate('settings.appearance.dark', 'Dark')}</span>
-                  </label>
-                </div>
+                <ThemeSelector
+                  theme={theme}
+                  onThemeChange={onThemeChange}
+                  translate={translate}
+                />
               </div>
             )}
 

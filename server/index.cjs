@@ -249,6 +249,60 @@ async function initializeServices() {
       }
     }
 
+    // ========== 加载用户自定义的 MCP 配置 ==========
+    logger.info('加载用户自定义 MCP 配置...');
+    try {
+      // 获取数据库实例
+      const { db } = require('./db/init.cjs');
+
+      // 查询所有启用的用户MCP配置
+      const userConfigs = await db.all(
+        'SELECT * FROM user_mcp_configs WHERE enabled = 1'
+      );
+
+      if (userConfigs && userConfigs.length > 0) {
+        logger.info(`找到 ${userConfigs.length} 个用户自定义的MCP服务配置`);
+
+        // 启动每个用户配置的MCP服务
+        for (const userConfig of userConfigs) {
+          try {
+            // 解析JSON字段
+            const args = userConfig.args ? JSON.parse(userConfig.args) : [];
+            const env_vars = userConfig.env_vars ? JSON.parse(userConfig.env_vars) : {};
+
+            // 构建MCP服务配置对象
+            const serviceConfig = {
+              id: userConfig.mcp_id,
+              name: userConfig.name,
+              description: userConfig.description || '',
+              command: userConfig.command,
+              args: args,
+              env: env_vars,
+              enabled: true,
+              autoLoad: true,
+              category: userConfig.category,
+              icon: userConfig.icon,
+              official: userConfig.official === 1,
+              popularity: userConfig.popularity
+            };
+
+            logger.info(`启动用户自定义 MCP 服务: ${userConfig.name} (ID: ${userConfig.mcp_id})`);
+            await mcpManager.startService(serviceConfig);
+            logger.info(`✅ 用户自定义 MCP 服务 ${userConfig.name} 启动成功`);
+
+          } catch (error) {
+            logger.error(`用户自定义 MCP 服务 ${userConfig.name} 启动失败:`, error);
+            // 继续启动其他服务,不中断流程
+          }
+        }
+      } else {
+        logger.info('没有找到启用的用户自定义 MCP 配置');
+      }
+    } catch (error) {
+      logger.error('加载用户自定义 MCP 配置失败:', error);
+      // 不中断服务器启动
+    }
+
     // 将 MCP Manager 添加到 services 中
     services.mcpManager = mcpManager;
 
@@ -302,6 +356,7 @@ function registerRoutes() {
   app.use('/api/templates', require('./routes/templateMarketplace.cjs')); // 模板市场路由
   app.use('/api', require('./routes/importExport.cjs')); // 导入导出增强路由
   app.use('/api/notes', require('./routes/notes.cjs')); // 笔记管理路由
+  app.use('/api/ai', require('./routes/ai-notes.cjs')); // AI 笔记功能路由
   app.use('/api/documents', require('./routes/documents.cjs')); // 文档管理路由
   app.use('/api/password-vault', require('./routes/password-vault.cjs')); // 密码保险库路由
   app.use('/api/mcp', mcpRouter);
@@ -343,9 +398,12 @@ async function start() {
 
     // 2. 初始化数据库
     logger.info('初始化数据库...');
-    const { initDatabase } = require('./db/init.cjs');
+    const { initDatabase, db } = require('./db/init.cjs');
     await initDatabase();
     logger.info('✅ 数据库初始化完成');
+
+    // 设置数据库实例到app.locals以便路由访问
+    app.locals.db = db;
 
     // 初始化服务
     await initializeServices();

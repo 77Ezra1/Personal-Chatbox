@@ -1,0 +1,97 @@
+/**
+ * Slash Commands Menu Styles
+ */
+
+.slash-commands-menu {
+  background: var(--background, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+  min-width: 240px;
+  z-index: 1000;
+}
+
+/* 暗色主题支持 */
+[data-theme="dark"] .slash-commands-menu {
+  background: #111827;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.command-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  color: var(--text-primary, #1f2937);
+  font-size: 14px;
+}
+
+[data-theme="dark"] .command-item {
+  color: #d1d5db;
+}
+
+.command-item:hover,
+.command-item.selected {
+  background: var(--background-hover, rgba(0, 0, 0, 0.05));
+}
+
+[data-theme="dark"] .command-item:hover,
+[data-theme="dark"] .command-item.selected {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.command-item.disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+.command-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+.command-title {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 滚动条美化 */
+.slash-commands-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.slash-commands-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slash-commands-menu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+[data-theme="dark"] .slash-commands-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.slash-commands-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .slash-commands-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

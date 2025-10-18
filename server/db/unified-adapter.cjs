@@ -210,11 +210,15 @@ function createJsonDatabaseAdapter() {
 
     // INSERT
     if (sqlUpper.startsWith('INSERT INTO')) {
-      const match = sql.match(/INSERT INTO (\w+)\s*\((.*?)\)\s*VALUES/i);
+      // 使用[\s\S]而不是.来匹配包括换行符的任何字符
+      const match = sql.match(/INSERT INTO (\w+)\s*\(([\s\S]*?)\)\s*VALUES/i);
       if (match) {
         const table = match[1];
         const columns = match[2].split(',').map(c => c.trim());
+        console.log('[JSON DB] Parsed INSERT:', { table, columns: columns.length });
         return { type: 'INSERT', table, columns, params };
+      } else {
+        console.log('[JSON DB] Failed to parse INSERT statement:', sql.substring(0, 100));
       }
     }
 
@@ -512,13 +516,13 @@ function createJsonDatabaseAdapter() {
       const self = this;
       return {
         run(...args) {
-          return self.run(sql, ...args);
+          return self.run(sql, args);
         },
         get(...args) {
-          return self.get(sql, ...args);
+          return self.get(sql, args);
         },
         all(...args) {
-          return self.all(sql, ...args);
+          return self.all(sql, args);
         }
       };
     },

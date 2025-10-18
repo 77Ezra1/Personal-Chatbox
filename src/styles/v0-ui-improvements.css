@@ -1,6 +1,18 @@
 /**
- * v0.dev 风格UI改进
- * 覆盖和增强现有样式
+ * v0.dev Style UI Enhancements
+ *
+ * This file contains UI improvements inspired by v0.dev design system:
+ * - Clean, modern aesthetics with consistent spacing
+ * - Smooth transitions and micro-interactions
+ * - Accessibility-first approach
+ * - Dark mode optimized
+ * - Responsive by default
+ *
+ * Key Principles:
+ * 1. Visual Consistency - Unified color palette, typography, spacing
+ * 2. Interaction Feedback - Clear hover, focus, active, disabled states
+ * 3. Accessibility - High contrast, keyboard navigation, ARIA support
+ * 4. Performance - Hardware-accelerated animations, optimized selectors
  */
 
 /* ===== 对话列表项优化 ===== */
@@ -521,3 +533,157 @@
 .slide-up {
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ===== 侧边栏 v0 风格优化 ===== */
+.sidebar {
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-header {
+  background: linear-gradient(to bottom, var(--card), transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.new-chat-btn-header {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: calc(var(--radius));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.new-chat-btn-header:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.new-chat-btn-header:active {
+  transform: translateY(0);
+}
+
+/* 导航链接优化 */
+.sidebar nav a {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar nav a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary);
+  transform: translateX(-3px);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar nav a:hover::before,
+.sidebar nav a.active::before {
+  transform: translateX(0);
+}
+
+/* 搜索栏优化 */
+.search-bar {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius));
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-bar:focus-within {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 10%, transparent);
+}
+
+/* 对话列表滚动条优化 */
+.conversation-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.conversation-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.conversation-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.conversation-list::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* 侧边栏底部优化 */
+.sidebar-footer {
+  background: linear-gradient(to top, var(--card), transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-footer-tools button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-footer-tools button:hover {
+  transform: scale(1.05);
+}
+
+.sidebar-footer-tools button:active {
+  transform: scale(0.95);
+}
+
+/* 徽章优化 */
+.sidebar nav a span[class*="badge"] {
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  letter-spacing: 0.02em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 暗色模式侧边栏优化 */
+.dark .sidebar {
+  background: var(--card);
+  border-right-color: var(--border);
+}
+
+.dark .sidebar-header,
+.dark .sidebar-footer {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--card) 95%, transparent), transparent);
+}
+
+/* 动画效果 */
+@keyframes sidebarSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sidebar nav a {
+  animation: sidebarSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.sidebar nav a:nth-child(1) { animation-delay: 0.05s; }
+.sidebar nav a:nth-child(2) { animation-delay: 0.1s; }
+.sidebar nav a:nth-child(3) { animation-delay: 0.15s; }
+.sidebar nav a:nth-child(4) { animation-delay: 0.2s; }
+.sidebar nav a:nth-child(5) { animation-delay: 0.25s; }
+.sidebar nav a:nth-child(6) { animation-delay: 0.3s; }
+.sidebar nav a:nth-child(7) { animation-delay: 0.35s; }
+.sidebar nav a:nth-child(8) { animation-delay: 0.4s; }

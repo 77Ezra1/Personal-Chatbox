@@ -7,7 +7,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #FFFFFF;
+  background: #ffffff;
   padding: 20px;
   position: relative;
 }
@@ -18,7 +18,7 @@
   top: 20px;
   right: 20px;
   background: transparent;
-  border: 1px solid #C2C8D0;
+  border: 1px solid #d1d5db;
   color: #000000;
   cursor: pointer;
   padding: 8px 12px;
@@ -34,12 +34,12 @@
 }
 
 .auth-language-btn:hover {
-  background: #F7F7F8;
-  border-color: #8E8EA0;
+  background: #f9fafb;
+  border-color: #9ca3af;
 }
 
 .auth-language-btn:active {
-  background: #EDEDF0;
+  background: #f3f4f6;
 }
 
 /* 返回按钮 */
@@ -49,7 +49,7 @@
   left: 20px;
   background: transparent;
   border: none;
-  color: #6E6E80;
+  color: #6b7280;
   cursor: pointer;
   padding: 8px;
   border-radius: 6px;
@@ -61,7 +61,7 @@
 }
 
 .auth-back-btn:hover {
-  background: #F7F7F8;
+  background: #f9fafb;
   color: #000000;
 }
 
@@ -129,7 +129,7 @@
 .auth-subtitle,
 .welcome-subtitle {
   font-size: 16px;
-  color: #6E6E80;
+  color: #6b7280;
   margin: 0 0 32px 0;
   text-align: center;
   line-height: 1.5;
@@ -158,9 +158,9 @@
   width: 100%;
   padding: 12px;
   font-size: 16px;
-  border: 1px solid #C2C8D0;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
-  background: #FFFFFF;
+  background: #ffffff;
   color: #000000;
   transition: all 0.2s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -174,17 +174,17 @@
 }
 
 .form-input:disabled {
-  background: #F7F7F8;
-  color: #6E6E80;
+  background: #f9fafb;
+  color: #6b7280;
   cursor: not-allowed;
 }
 
 .form-input::placeholder {
-  color: #A0A0A0;
+  color: #9ca3af;
 }
 
 .form-input:hover:not(:disabled):not(:focus) {
-  border-color: #8E8EA0;
+  border-color: #9ca3af;
 }
 
 .form-checkbox-group {
@@ -210,12 +210,12 @@
 .form-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: #F7F7F8;
+  background: #f9fafb;
 }
 
 .form-hint {
   font-size: 12px;
-  color: #6E6E80;
+  color: #6b7280;
   margin-top: 6px;
   line-height: 1.4;
 }
@@ -231,7 +231,7 @@
 .password-strength-bar {
   flex: 1;
   height: 4px;
-  background: #E5E7EB;
+  background: #e5e7eb;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -297,13 +297,13 @@
 
 .auth-btn-primary {
   background: #000000;
-  color: #FFFFFF;
+  color: #ffffff;
   margin-top: 16px;
   margin-bottom: 16px;
 }
 
 .auth-btn-primary:hover:not(:disabled) {
-  background: #2D2D2D;
+  background: #374151;
 }
 
 .auth-btn-primary:active:not(:disabled) {
@@ -314,13 +314,13 @@
 .auth-btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: #6E6E80;
+  background: #6b7280;
 }
 
 .btn-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #FFFFFF;
+  border: 2px solid #ffffff;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -338,7 +338,7 @@
   align-items: center;
   text-align: center;
   margin: 16px 0;
-  color: #6E6E80;
+  color: #6b7280;
   font-size: 14px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -347,7 +347,7 @@
 .auth-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .auth-divider span {
@@ -371,8 +371,8 @@
   font-size: 16px;
   font-weight: 500;
   border-radius: 6px;
-  border: 1px solid #C2C8D0;
-  background: #FFFFFF;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
   color: #000000;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -384,12 +384,12 @@
 }
 
 .oauth-btn:hover:not(:disabled) {
-  background: #F7F7F8;
-  border-color: #8E8EA0;
+  background: #f9fafb;
+  border-color: #9ca3af;
 }
 
 .oauth-btn:active:not(:disabled) {
-  background: #EDEDF0;
+  background: #f3f4f6;
 }
 
 .oauth-btn:disabled {
@@ -404,7 +404,7 @@
 /* 错误提示 */
 .auth-error {
   background: #000000;
-  color: #FFFFFF;
+  color: #ffffff;
   padding: 12px;
   border-radius: 6px;
   margin-bottom: 16px;
@@ -424,7 +424,7 @@
   text-align: center;
   margin-top: 16px;
   font-size: 14px;
-  color: #6E6E80;
+  color: #6b7280;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
@@ -456,7 +456,7 @@
 }
 
 .auth-terms a {
-  color: #6E6E80;
+  color: #6b7280;
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -466,7 +466,7 @@
 }
 
 .auth-terms span {
-  color: #C2C8D0;
+  color: #d1d5db;
 }
 
 /* 欢迎页面特定样式 */
@@ -495,21 +495,21 @@
 
 .welcome-btn-primary {
   background: #000000;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .welcome-btn-primary:hover {
-  background: #2D2D2D;
+  background: #374151;
 }
 
 .welcome-btn-secondary {
   background: transparent;
   color: #000000;
-  border: 1px solid #C2C8D0;
+  border: 1px solid #d1d5db;
 }
 
 .welcome-btn-secondary:hover {
-  background: #F7F7F8;
+  background: #f9fafb;
 }
 
 /* 响应式设计 */
@@ -550,7 +550,7 @@
 @media (prefers-color-scheme: dark) {
   .auth-page,
   .welcome-page {
-    background: #FFFFFF;
+    background: #ffffff;
   }
 
   .auth-title,
@@ -563,12 +563,12 @@
   .auth-subtitle,
   .welcome-subtitle,
   .form-hint {
-    color: #6E6E80;
+    color: #6b7280;
   }
 
   .form-input {
-    background: #FFFFFF;
-    border-color: #C2C8D0;
+    background: #ffffff;
+    border-color: #d1d5db;
     color: #000000;
   }
 
@@ -579,41 +579,41 @@
 
   .auth-btn-primary {
     background: #000000;
-    color: #FFFFFF;
+    color: #ffffff;
   }
 
   .auth-btn-primary:hover:not(:disabled) {
-    background: #2D2D2D;
+    background: #374151;
   }
 
   .oauth-btn {
-    background: #FFFFFF;
-    border-color: #C2C8D0;
+    background: #ffffff;
+    border-color: #d1d5db;
     color: #000000;
   }
 
   .oauth-btn:hover:not(:disabled) {
-    background: #F7F7F8;
+    background: #f9fafb;
   }
 
   .auth-error {
     background: #000000;
-    color: #FFFFFF;
+    color: #ffffff;
   }
 
   .auth-divider::before,
   .auth-divider::after {
-    border-color: #E5E7EB;
+    border-color: #e5e7eb;
   }
 
   .auth-language-btn {
     background: transparent;
-    border-color: #C2C8D0;
+    border-color: #d1d5db;
     color: #000000;
   }
 
   .auth-language-btn:hover {
-    background: #F7F7F8;
+    background: #f9fafb;
   }
 }
 

@@ -80,7 +80,7 @@
 .code-view {
   flex: 1;
   overflow: auto;
-  background: #1e1e1e;
+  background: #1f2937;
   padding: 16px;
 }
 
@@ -89,7 +89,7 @@
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
   font-size: 13px;
   line-height: 1.6;
-  color: #d4d4d4;
+  color: #d1d5db;
   white-space: pre-wrap;
   word-wrap: break-word;
 }

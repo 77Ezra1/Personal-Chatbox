@@ -108,27 +108,27 @@
 
 /* 代码块深色模式优化 */
 .dark .markdown-code-block {
-  background: #1e1e2e;
-  border-color: #313244;
+  background: #1f2937;
+  border-color: #4b5563;
 }
 
 .dark .markdown-code-toolbar {
-  background: #181825;
-  border-bottom: 1px solid #313244;
+  background: #111827;
+  border-bottom: 1px solid #4b5563;
 }
 
 .dark .markdown-code-scroll {
-  background: #1e1e2e;
+  background: #1f2937;
 }
 
 .dark .markdown-code-scroll pre {
-  color: #cdd6f4;
+  color: #d1d5db;
 }
 
 .dark .markdown-code-inline {
-  background: #1e1e2e;
-  border-color: #313244;
-  color: #cdd6f4;
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #d1d5db;
 }
 
 /* 引用块深色模式优化 */

@@ -386,13 +386,14 @@ router.post('/user-configs', async (req, res, next) => {
       throw createError.conflict('该MCP服务已存在，请使用更新接口');
     }
 
-    // 插入新配置
+    // 插入新配置,默认启用
     const result = await db.run(
       `INSERT INTO user_mcp_configs (
         user_id, mcp_id, name, description, category, icon,
         command, args, env_vars, config_data,
-        official, popularity, features, setup_instructions, documentation
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        official, popularity, features, setup_instructions, documentation,
+        enabled
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         mcp_id,
@@ -408,13 +409,57 @@ router.post('/user-configs', async (req, res, next) => {
         popularity || 'medium',
         JSON.stringify(features || []),
         JSON.stringify(setup_instructions || {}),
-        documentation || ''
+        documentation || '',
+        1 // 默认启用
       ]
     );
 
+    logger.info(`数据库插入结果:`, result);
+
+    // 动态启动MCP服务
+    const mcpManager = services.mcpManager;
+    if (mcpManager) {
+      try {
+        logger.info(`自定义创建并启动 MCP 服务: ${name} (ID: ${mcp_id})`);
+
+        // 构建服务配置
+        const serviceConfig = {
+          id: mcp_id,
+          name: name,
+          description: description || '',
+          command: command,
+          args: args || [],
+          env: env_vars || {},
+          enabled: true,
+          autoLoad: true,
+          category: category || 'other',
+          icon: icon || '🔧',
+          official: official || false,
+          popularity: popularity || 'medium'
+        };
+
+        await mcpManager.startService(serviceConfig);
+        logger.info(`✅ MCP 服务 ${name} 已启动`);
+
+        return res.json({
+          success: true,
+          id: result.lastInsertRowid || result.lastID,
+          message: 'MCP配置创建成功,服务已启动'
+        });
+      } catch (serviceError) {
+        logger.error(`MCP 服务启动失败: ${name}`, serviceError);
+        return res.json({
+          success: true,
+          id: result.lastInsertRowid || result.lastID,
+          message: `MCP配置创建成功,但服务启动失败: ${serviceError.message}`,
+          warning: serviceError.message
+        });
+      }
+    }
+
     res.json({
       success: true,
-      id: result.lastID,
+      id: result.lastInsertRowid || result.lastID,
       message: 'MCP配置创建成功'
     });
   } catch (error) {
@@ -565,7 +610,7 @@ router.delete('/user-configs/:id', async (req, res, next) => {
 
 /**
  * POST /api/mcp/user-configs/:id/toggle
- * 切换用户MCP配置的启用状态
+ * 切换用户MCP配置的启用状态,并动态启动/停止服务
  */
 router.post('/user-configs/:id/toggle', async (req, res, next) => {
   try {
@@ -573,8 +618,9 @@ router.post('/user-configs/:id/toggle', async (req, res, next) => {
     const configId = req.params.id;
     const db = req.app.locals.db;
 
+    // 获取完整的配置信息
     const config = await db.get(
-      'SELECT enabled FROM user_mcp_configs WHERE id = ? AND user_id = ?',
+      'SELECT * FROM user_mcp_configs WHERE id = ? AND user_id = ?',
       [configId, userId]
     );
 
@@ -584,15 +630,64 @@ router.post('/user-configs/:id/toggle', async (req, res, next) => {
 
     const newEnabled = !config.enabled;
 
+    // 更新数据库
     await db.run(
       'UPDATE user_mcp_configs SET enabled = ? WHERE id = ? AND user_id = ?',
       [newEnabled ? 1 : 0, configId, userId]
     );
 
+    // 动态启动或停止MCP服务
+    const mcpManager = services.mcpManager;
+    if (mcpManager) {
+      try {
+        if (newEnabled) {
+          // 启用服务 - 启动MCP服务
+          logger.info(`动态启动 MCP 服务: ${config.name} (ID: ${config.mcp_id})`);
+
+          // 解析JSON字段
+          const args = config.args ? JSON.parse(config.args) : [];
+          const env_vars = config.env_vars ? JSON.parse(config.env_vars) : {};
+
+          // 构建服务配置
+          const serviceConfig = {
+            id: config.mcp_id,
+            name: config.name,
+            description: config.description || '',
+            command: config.command,
+            args: args,
+            env: env_vars,
+            enabled: true,
+            autoLoad: true,
+            category: config.category,
+            icon: config.icon,
+            official: config.official === 1,
+            popularity: config.popularity
+          };
+
+          await mcpManager.startService(serviceConfig);
+          logger.info(`✅ MCP 服务 ${config.name} 已启动`);
+        } else {
+          // 禁用服务 - 停止MCP服务
+          logger.info(`动态停止 MCP 服务: ${config.name} (ID: ${config.mcp_id})`);
+          await mcpManager.stopService(config.mcp_id);
+          logger.info(`✅ MCP 服务 ${config.name} 已停止`);
+        }
+      } catch (serviceError) {
+        logger.error(`动态切换 MCP 服务失败: ${config.name}`, serviceError);
+        // 返回警告但不失败整个请求
+        return res.json({
+          success: true,
+          enabled: newEnabled,
+          message: `MCP服务已${newEnabled ? '启用' : '禁用'} (服务${newEnabled ? '启动' : '停止'}失败: ${serviceError.message})`,
+          warning: serviceError.message
+        });
+      }
+    }
+
     res.json({
       success: true,
       enabled: newEnabled,
-      message: `MCP服务已${newEnabled ? '启用' : '禁用'}`
+      message: `MCP服务已${newEnabled ? '启用并启动' : '禁用并停止'}`
     });
   } catch (error) {
     next(error);
@@ -637,13 +732,14 @@ router.post('/user-configs/from-template', async (req, res, next) => {
     // 合并环境变量
     const envVars = { ...(template.env || {}), ...(customEnvVars || {}) };
 
-    // 创建配置
+    // 创建配置,默认启用
     const result = await db.run(
       `INSERT INTO user_mcp_configs (
         user_id, mcp_id, name, description, category, icon,
         command, args, env_vars, config_data,
-        official, popularity, features, setup_instructions, documentation
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        official, popularity, features, setup_instructions, documentation,
+        enabled
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         template.id,
@@ -659,13 +755,57 @@ router.post('/user-configs/from-template', async (req, res, next) => {
         template.popularity || 'medium',
         JSON.stringify(template.features || []),
         JSON.stringify(template.setupInstructions || {}),
-        template.documentation || ''
+        template.documentation || '',
+        1 // 默认启用
       ]
     );
 
+    logger.info(`数据库插入结果:`, result);
+
+    // 动态启动MCP服务
+    const mcpManager = services.mcpManager;
+    if (mcpManager) {
+      try {
+        logger.info(`从模板创建并启动 MCP 服务: ${template.name} (ID: ${template.id})`);
+
+        // 构建服务配置
+        const serviceConfig = {
+          id: template.id,
+          name: template.name,
+          description: template.description || '',
+          command: template.command,
+          args: template.args || [],
+          env: envVars,
+          enabled: true,
+          autoLoad: true,
+          category: template.category,
+          icon: template.icon,
+          official: template.official || false,
+          popularity: template.popularity || 'medium'
+        };
+
+        await mcpManager.startService(serviceConfig);
+        logger.info(`✅ MCP 服务 ${template.name} 已启动`);
+
+        return res.json({
+          success: true,
+          id: result.lastInsertRowid || result.lastID,
+          message: 'MCP配置创建成功,服务已启动'
+        });
+      } catch (serviceError) {
+        logger.error(`MCP 服务启动失败: ${template.name}`, serviceError);
+        return res.json({
+          success: true,
+          id: result.lastInsertRowid || result.lastID,
+          message: `MCP配置创建成功,但服务启动失败: ${serviceError.message}`,
+          warning: serviceError.message
+        });
+      }
+    }
+
     res.json({
       success: true,
-      id: result.lastID,
+      id: result.lastInsertRowid || result.lastID,
       message: 'MCP配置创建成功'
     });
   } catch (error) {

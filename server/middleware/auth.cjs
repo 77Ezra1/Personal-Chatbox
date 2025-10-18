@@ -31,7 +31,7 @@ async function authMiddleware(req, res, next) {
 
     // 检查Session是否存在且未过期
     const session = await db.prepare(
-      "SELECT * FROM sessions WHERE token = ? AND expires_at > NOW()"
+      "SELECT * FROM sessions WHERE token = ? AND expires_at > datetime('now')"
     ).get(token);
 
     if (!session) {

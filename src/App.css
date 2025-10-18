@@ -26,6 +26,20 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* Add neutral colors for LoginPage */
+  --color-neutral-100: 245 245 245;
+  --color-neutral-200: 229 229 229;
+  --color-neutral-300: 212 212 212;
+  --color-neutral-600: 82 82 82;
+  --color-neutral-800: 38 38 38;
+
+  /* Add essential colors */
+  --color-black: 0 0 0;
+  --color-white: 255 255 255;
+  --color-red-50: 254 242 242;
+  --color-red-200: 254 202 202;
+  --color-red-600: 220 38 38;
 }
 
 :root {
@@ -1007,7 +1021,7 @@ button:hover:not(:disabled),
   border: 1px solid rgba(227, 231, 242, 0.6);
   box-shadow: none;
   margin-left: auto;
-  color: #1F2430;
+  color: #1f2937;
   max-width: 100%;
 }
 
@@ -1015,7 +1029,7 @@ button:hover:not(:disabled),
   background: #ffffff;
   border-color: rgba(227, 231, 242, 0.6);
   box-shadow: none;
-  color: #1F2430;
+  color: #1f2937;
 }
 
 .message-content-user::after {
@@ -1813,7 +1827,7 @@ button:hover:not(:disabled),
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f3f5fb;
+  background: #f3f4f6;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
@@ -1849,7 +1863,7 @@ button:hover:not(:disabled),
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  color: #1F2430;
+  color: #1f2937;
   background: none;
   transition: background 0.2s ease, transform 0.2s ease;
 }
@@ -1866,7 +1880,7 @@ button:hover:not(:disabled),
   padding: 6px 10px;
   border-radius: 999px;
   background: #ffffff;
-  color: #1F2430;
+  color: #1f2937;
   font-size: 12px;
   font-weight: 600;
 }
@@ -1947,8 +1961,8 @@ button:hover:not(:disabled),
 
 .config-select {
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, #1F2430 50%),
-    linear-gradient(135deg, #1F2430 50%, transparent 50%),
+  background-image: linear-gradient(45deg, transparent 50%, #1f2937 50%),
+    linear-gradient(135deg, #1f2937 50%, transparent 50%),
     linear-gradient(to right, #ffffff, #ffffff);
   background-position: calc(100% - 20px) calc(50% - 4px), calc(100% - 14px) calc(50% - 4px), 0 0;
   background-size: 6px 6px, 6px 6px, 100% 100%;
@@ -1960,7 +1974,7 @@ button:hover:not(:disabled),
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: #e4e7f2;
+  background: #e5e7eb;
   outline: none;
   -webkit-appearance: none;
   position: relative;
@@ -1969,7 +1983,7 @@ button:hover:not(:disabled),
 .config-slider::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 3px;
-  background: #e4e7f2;
+  background: #e5e7eb;
 }
 
 .config-slider::-webkit-slider-thumb {
@@ -1978,7 +1992,7 @@ button:hover:not(:disabled),
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #1F2430;
+  background: #1f2937;
   border: 2px solid #ffffff;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -1992,7 +2006,7 @@ button:hover:not(:disabled),
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #1F2430;
+  background: #1f2937;
   border: 2px solid #ffffff;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -2001,7 +2015,7 @@ button:hover:not(:disabled),
 .config-slider::-moz-range-track {
   height: 6px;
   border-radius: 3px;
-  background: #e4e7f2;
+  background: #e5e7eb;
 }
 
 .config-slider::-moz-range-thumb:hover {
@@ -2022,7 +2036,7 @@ button:hover:not(:disabled),
   height: 18px;
   border-radius: 6px;
   border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-  accent-color: #1F2430;
+  accent-color: #1f2937;
   cursor: pointer;
 }
 
@@ -2039,7 +2053,7 @@ button:hover:not(:disabled),
   padding: 12px 20px;
   border-radius: 12px;
   font-weight: 500;
-  background: #1F2430;
+  background: #1f2937;
   color: #ffffff;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -2113,7 +2127,7 @@ button:hover:not(:disabled),
   padding: 6px 10px;
   border-radius: 999px;
   background: #ffffff;
-  color: #1F2430;
+  color: #1f2937;
   font-size: 12px;
 }
 
@@ -2223,7 +2237,7 @@ button:hover:not(:disabled),
   top: 12px;
   right: 12px;
   background: rgba(255, 255, 255, 0.95);
-  color: #1F2430;
+  color: #1f2937;
   border-radius: 999px;
   width: 32px;
   height: 32px;
@@ -3366,7 +3380,7 @@ button:hover:not(:disabled),
 .welcome-footer {
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e5e7eb;
 }
 
 .welcome-footer-text {
@@ -3375,7 +3389,7 @@ button:hover:not(:disabled),
   justify-content: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: #6b7280;
   margin: 0;
 }
 

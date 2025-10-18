@@ -21,6 +21,7 @@ import AnalyticsPage from '@/pages/AnalyticsPage'
 import { ShortcutsDialog } from '@/components/common/ShortcutsDialog'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DataMigration } from '@/components/common/DataMigration'
+import { OnboardingTour } from '@/components/common/OnboardingTour'
 
 // Lazy load pages for better performance
 const AgentsPage = lazy(() => import('@/pages/AgentsPage'))
@@ -29,6 +30,8 @@ const NotesPage = lazy(() => import('@/pages/NotesPage'))
 const DocumentsPage = lazy(() => import('@/pages/DocumentsPage'))
 const PasswordVaultPage = lazy(() => import('@/pages/PasswordVaultPage'))
 const McpCustomPage = lazy(() => import('@/pages/McpCustomPage'))
+const ExplorePage = lazy(() => import('@/pages/ExplorePage'))
+const LandingPage = lazy(() => import('@/pages/LandingPage'))
 
 // Utils
 import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
@@ -684,6 +687,9 @@ function App() {
                 />
               } />
 
+              {/* 探索页面 - v0 风格 */}
+              <Route path="/explore" element={<ExplorePage />} />
+
               {/* Agent 管理页面 */}
               <Route path="/agents" element={<AgentsPage />} />
 
@@ -697,10 +703,10 @@ function App() {
               <Route path="/documents" element={<DocumentsPage />} />
 
               {/* 密码保险库页面 */}
-              <Route path="/password-vault" element={<PasswordVaultPage />} />
+              <Route path="/vault" element={<PasswordVaultPage />} />
 
               {/* MCP自定义配置页面 */}
-              <Route path="/mcp-custom" element={<McpCustomPage />} />
+              <Route path="/mcp" element={<McpCustomPage />} />
 
               {/* 默认重定向 */}
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -776,6 +782,9 @@ function App() {
           onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
           translate={translate}
         />
+
+        {/* 新用户引导 */}
+        <OnboardingTour />
       </DataMigration>
   )
 }

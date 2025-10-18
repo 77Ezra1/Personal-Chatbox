@@ -226,89 +226,90 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-page">
-      {/* 顶部Logo */}
-      <div className="auth-page-header">
-        <a href="/" className="auth-logo-text">Personal Chatbox</a>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white relative">
+      {/* 顶部Logo - v0 风格 */}
+      <div className="absolute top-0 left-0 right-0 z-50 bg-white border-b border-neutral-200">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <a href="/" className="text-2xl font-semibold tracking-tight hover:opacity-80 transition-opacity">
+              Personal Chatbox
+            </a>
+            {/* 语言切换按钮 */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-neutral-600 hover:bg-neutral-100 transition-colors"
+              type="button"
+              title={language === 'en' ? '切换到中文' : 'Switch to English'}
+            >
+              <Globe size={18} />
+              <span>{language === 'en' ? '中文' : 'EN'}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* 语言切换按钮 */}
-      <button
-        onClick={toggleLanguage}
-        className="auth-language-btn"
-        type="button"
-        title={language === 'en' ? '切换到中文' : 'Switch to English'}
-      >
-        <Globe size={20} />
-        <span>{language === 'en' ? '中文' : 'EN'}</span>
-      </button>
-
-      {/* 返回按钮 */}
+      {/* 返回按钮 - v0 风格 */}
       {step > 1 && (
         <button
           onClick={handleBack}
-          className="auth-back-btn"
+          className="absolute top-24 left-6 flex items-center gap-2 px-3 py-2 rounded-md text-sm text-neutral-600 hover:bg-neutral-100 transition-colors"
           type="button"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
+          <span>{t('back') || '返回'}</span>
         </button>
       )}
 
-      <div className="auth-content">
+      <div className="w-full max-w-md mx-auto px-6 pt-20">
 
-          {/* 步骤1: 邮箱输入 */}
+          {/* 步骤1: 邮箱输入 - v0 风格 */}
           {step === 1 && (
-            <>
-              <h1 className="auth-title">{t('loginTitle')}</h1>
-              <p className="auth-subtitle">
-                {t('loginSubtitle')}
-              </p>
+            <div className="space-y-6 text-center">
+              <h1 className="text-2xl font-bold">{t('loginTitle')}</h1>
 
               {error && (
-                <div className="auth-error">
+                <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                   <AlertCircle size={16} />
                   <span>{error}</span>
                 </div>
               )}
 
-              <form onSubmit={handleEmailSubmit} className="auth-form">
-                <div className="form-group">
-                  <label htmlFor="email">{t('emailLabel')}</label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder={t('emailPlaceholder')}
-                    disabled={loading}
-                    className="form-input"
-                    autoComplete="email"
-                    autoFocus
-                  />
-                </div>
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder={t('emailPlaceholder')}
+                  disabled={loading}
+                  className="w-full h-11 px-3 text-sm rounded-md border border-neutral-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+                  autoComplete="email"
+                  autoFocus
+                />
 
                 <button
                   type="submit"
-                  className="auth-btn auth-btn-primary"
+                  className="w-full h-11 bg-black text-white text-sm font-medium rounded-full transition-all duration-200 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <span className="btn-spinner"></span>
-                  ) : (
-                    <span>{t('continueButton')}</span>
-                  )}
+                  {loading ? '正在处理...' : t('continueButton')}
                 </button>
               </form>
 
-              <div className="auth-divider">
-                <span>{t('divider')}</span>
+              <div className="relative flex items-center justify-center py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-neutral-300"></div>
+                </div>
+                <div className="relative bg-white px-4 text-sm text-neutral-500">
+                  {t('divider')}
+                </div>
               </div>
 
-              <div className="oauth-buttons">
+              <div className="space-y-3">
                 <button
-                  className="oauth-btn oauth-btn-google"
+                  className="w-full flex items-center justify-center gap-3 h-11 px-4 border border-neutral-300 rounded-md text-sm font-medium hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => alert('Google登录功能开发中')}
                   disabled
                 >
@@ -322,7 +323,7 @@ export default function LoginPage() {
                 </button>
 
                 <button
-                  className="oauth-btn oauth-btn-github"
+                  className="w-full flex items-center justify-center gap-3 h-11 px-4 border border-neutral-300 rounded-md text-sm font-medium hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => alert('GitHub登录功能开发中')}
                   disabled
                 >
@@ -333,69 +334,66 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              <div className="auth-terms">
-                <a href="/terms">{t('termsOfUse')}</a>
-                <span>|</span>
-                <a href="/privacy">{t('privacyPolicy')}</a>
+              <div className="flex items-center justify-center gap-4 text-xs text-neutral-500 pt-4">
+                <a href="/terms" className="hover:text-neutral-900 transition-colors">{t('termsOfUse')}</a>
+                <span>·</span>
+                <a href="/privacy" className="hover:text-neutral-900 transition-colors">{t('privacyPolicy')}</a>
               </div>
-            </>
+            </div>
           )}
 
-          {/* 步骤2: 密码输入 */}
+          {/* 步骤2: 密码输入 - v0 风格 */}
           {step === 2 && (
-            <>
-              <h1 className="auth-title">
+            <div className="space-y-6 text-center">
+              <h1 className="text-2xl font-bold">
                 {isNewUser ? t('createAccountTitle') : t('enterPasswordTitle')}
               </h1>
-              <p className="auth-subtitle">
-                <span className="auth-email-display">{formData.email}</span>
+              <p className="text-sm text-neutral-600">
+                <span className="font-medium text-neutral-900">{formData.email}</span>
               </p>
 
               {error && (
-                <div className="auth-error">
+                <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                   <AlertCircle size={16} />
                   <span>{error}</span>
                 </div>
               )}
 
-              <form onSubmit={handlePasswordSubmit} className="auth-form">
-                <div className="form-group">
-                  <label htmlFor="password">{t('passwordLabel')}</label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder={t('passwordPlaceholder')}
-                    disabled={loading}
-                    className="form-input"
-                    autoComplete={isNewUser ? 'new-password' : 'current-password'}
-                    autoFocus
-                  />
-                </div>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder={t('passwordPlaceholder')}
+                  disabled={loading}
+                  className="w-full h-11 px-3 text-sm rounded-md border border-neutral-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+                  autoComplete={isNewUser ? 'new-password' : 'current-password'}
+                  autoFocus
+                />
 
                 {isNewUser && (
-                  <div className="password-requirements">
-                    <div className={`requirement ${passwordStrength.hasLength ? 'valid' : ''}`}>
-                      {passwordStrength.hasLength ? <Check size={14} /> : <div className="requirement-dot" />}
+                  <div className="space-y-2 p-3 bg-neutral-50 rounded-md text-left">
+                    <div className={`flex items-center gap-2 text-xs ${passwordStrength.hasLength ? 'text-green-600' : 'text-neutral-500'}`}>
+                      {passwordStrength.hasLength ? <Check size={14} /> : <div className="w-3.5 h-3.5 rounded-full border border-current" />}
                       <span>{t('passwordRequirements.length')}</span>
                     </div>
-                    <div className={`requirement ${passwordStrength.hasUpperCase ? 'valid' : ''}`}>
-                      {passwordStrength.hasUpperCase ? <Check size={14} /> : <div className="requirement-dot" />}
+                    <div className={`flex items-center gap-2 text-xs ${passwordStrength.hasUpperCase ? 'text-green-600' : 'text-neutral-500'}`}>
+                      {passwordStrength.hasUpperCase ? <Check size={14} /> : <div className="w-3.5 h-3.5 rounded-full border border-current" />}
                       <span>{t('passwordRequirements.uppercase')}</span>
                     </div>
-                    <div className={`requirement ${passwordStrength.hasLowerCase ? 'valid' : ''}`}>
-                      {passwordStrength.hasLowerCase ? <Check size={14} /> : <div className="requirement-dot" />}
+                    <div className={`flex items-center gap-2 text-xs ${passwordStrength.hasLowerCase ? 'text-green-600' : 'text-neutral-500'}`}>
+                      {passwordStrength.hasLowerCase ? <Check size={14} /> : <div className="w-3.5 h-3.5 rounded-full border border-current" />}
                       <span>{t('passwordRequirements.lowercase')}</span>
                     </div>
-                    <div className={`requirement ${passwordStrength.hasNumber ? 'valid' : ''}`}>
-                      {passwordStrength.hasNumber ? <Check size={14} /> : <div className="requirement-dot" />}
+                    <div className={`flex items-center gap-2 text-xs ${passwordStrength.hasNumber ? 'text-green-600' : 'text-neutral-500'}`}>
+                      {passwordStrength.hasNumber ? <Check size={14} /> : <div className="w-3.5 h-3.5 rounded-full border border-current" />}
                       <span>{t('passwordRequirements.number')}</span>
                     </div>
-                    <div className={`requirement ${passwordStrength.hasSpecialChar ? 'valid' : ''}`}>
-                      {passwordStrength.hasSpecialChar ? <Check size={14} /> : <div className="requirement-dot" />}
+                    <div className={`flex items-center gap-2 text-xs ${passwordStrength.hasSpecialChar ? 'text-green-600' : 'text-neutral-500'}`}>
+                      {passwordStrength.hasSpecialChar ? <Check size={14} /> : <div className="w-3.5 h-3.5 rounded-full border border-current" />}
                       <span>{t('passwordRequirements.special')}</span>
                     </div>
                   </div>
@@ -403,42 +401,32 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  className="auth-btn auth-btn-primary"
+                  className="w-full h-11 bg-black text-white text-sm font-medium rounded-full transition-all duration-200 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <span className="btn-spinner"></span>
-                  ) : (
-                    <span>{t('continueButton')}</span>
-                  )}
+                  {loading ? '正在处理...' : t('continueButton')}
                 </button>
               </form>
-            </>
+            </div>
           )}
 
-          {/* 步骤3: 邀请码输入（仅新用户） */}
+          {/* 步骤3: 邀请码输入（仅新用户） - v0 风格 */}
           {step === 3 && (
-            <>
-              {/* 返回按钮 */}
-              <button onClick={handleBack} className="auth-back-btn">
-                <ArrowLeft size={20} />
-              </button>
-
-              <h1 className="auth-title">{t('inviteCodeTitle')}</h1>
-              <p className="auth-subtitle">
+            <div className="space-y-6 text-center">
+              <h1 className="text-2xl font-bold">{t('inviteCodeTitle')}</h1>
+              <p className="text-sm text-neutral-600">
                 {t('inviteCodeSubtitle')}
               </p>
 
               {error && (
-                <div className="auth-error">
+                <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                   <AlertCircle size={16} />
                   <span>{error}</span>
                 </div>
               )}
 
-              <form onSubmit={handleInviteCodeSubmit} className="auth-form">
-                <div className="form-group">
-                  <label htmlFor="inviteCode">{t('inviteCodeLabel')}</label>
+              <form onSubmit={handleInviteCodeSubmit} className="space-y-4">
+                <div>
                   <input
                     id="inviteCode"
                     name="inviteCode"
@@ -448,28 +436,24 @@ export default function LoginPage() {
                     onChange={handleChange}
                     placeholder={t('inviteCodePlaceholder')}
                     disabled={loading}
-                    className="form-input"
+                    className="w-full h-11 px-3 text-sm rounded-md border border-neutral-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
                     autoComplete="off"
                     autoFocus
                   />
-                  <p className="form-hint">
+                  <p className="mt-2 text-xs text-neutral-500 text-left">
                     {t('inviteCodeHint')}
                   </p>
                 </div>
 
                 <button
                   type="submit"
-                  className="auth-btn auth-btn-primary"
+                  className="w-full h-11 bg-black text-white text-sm font-medium rounded-full transition-all duration-200 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
-                  {loading ? (
-                    <span className="btn-spinner"></span>
-                  ) : (
-                    <span>{t('continueButton')}</span>
-                  )}
+                  {loading ? '正在处理...' : t('continueButton')}
                 </button>
               </form>
-            </>
+            </div>
           )}
       </div>
     </div>

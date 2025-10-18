@@ -19,6 +19,12 @@ router.get('/overview', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // 获取用户货币设置
+    const userProfile = db.prepare(`
+      SELECT currency FROM users WHERE id = ?
+    `).get(userId);
+    const userCurrency = userProfile?.currency || 'USD';
+
     // 总对话数
     const conversationCount = db.prepare(`
       SELECT COUNT(*) as count
@@ -32,6 +38,14 @@ router.get('/overview', authMiddleware, async (req, res) => {
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
       WHERE c.user_id = ?
+    `).get(userId);
+
+    // API调用次数统计（计算assistant角色的消息数）
+    const apiCallCount = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM messages m
+      JOIN conversations c ON m.conversation_id = c.id
+      WHERE c.user_id = ? AND role = 'assistant'
     `).get(userId);
 
     // Token统计（从消息中提取）
@@ -58,10 +72,11 @@ router.get('/overview', authMiddleware, async (req, res) => {
       LIMIT 5
     `).all(userId);
 
-    // 费用估算（基于token数）
+    // 费用估算（基于token数，转换为用户货币）
     const estimatedCost = calculateCost(
       tokenStats.prompt_tokens || 0,
-      tokenStats.completion_tokens || 0
+      tokenStats.completion_tokens || 0,
+      userCurrency
     );
 
     // 今日数据
@@ -73,11 +88,20 @@ router.get('/overview', authMiddleware, async (req, res) => {
       WHERE c.user_id = ? AND DATE(m.timestamp) = ?
     `).get(userId, today);
 
+    // 今日API调用
+    const todayApiCalls = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM messages m
+      JOIN conversations c ON m.conversation_id = c.id
+      WHERE c.user_id = ? AND DATE(m.timestamp) = ? AND role = 'assistant'
+    `).get(userId, today);
+
     res.json({
       success: true,
       data: {
         conversations: conversationCount.count,
         messages: messageCount.count,
+        apiCalls: apiCallCount.count,
         tokens: {
           prompt: tokenStats.prompt_tokens || 0,
           completion: tokenStats.completion_tokens || 0,
@@ -85,6 +109,7 @@ router.get('/overview', authMiddleware, async (req, res) => {
         },
         cost: estimatedCost,
         todayMessages: todayStats.count,
+        todayApiCalls: todayApiCalls.count,
         topModels: modelUsage
       }
     });
@@ -345,24 +370,64 @@ router.get('/export', authMiddleware, async (req, res) => {
 // ========== 辅助函数 ==========
 
 /**
- * 计算费用估算
- * 基于不同模型的定价
+ * 货币汇率（相对于USD）
  */
-function calculateCost(promptTokens, completionTokens) {
+const EXCHANGE_RATES = {
+  'USD': 1.0,      // 美元（基准）
+  'CNY': 7.2,      // 人民币
+  'EUR': 0.92,     // 欧元
+  'GBP': 0.79,     // 英镑
+  'JPY': 149.5,    // 日元
+  'KRW': 1320.0,   // 韩元
+  'HKD': 7.8,      // 港币
+  'TWD': 31.5      // 新台币
+};
+
+/**
+ * 货币符号映射
+ */
+const CURRENCY_SYMBOLS = {
+  'USD': '$',
+  'CNY': '¥',
+  'EUR': '€',
+  'GBP': '£',
+  'JPY': '¥',
+  'KRW': '₩',
+  'HKD': 'HK$',
+  'TWD': 'NT$'
+};
+
+/**
+ * 计算费用估算
+ * 基于不同模型的定价，并转换为指定货币
+ */
+function calculateCost(promptTokens, completionTokens, currency = 'USD') {
   // 平均价格（美元/1M tokens）
   const avgPricePerMillion = {
     prompt: 0.5,      // $0.5/1M tokens
     completion: 1.5   // $1.5/1M tokens
   };
 
-  const promptCost = (promptTokens / 1000000) * avgPricePerMillion.prompt;
-  const completionCost = (completionTokens / 1000000) * avgPricePerMillion.completion;
+  // 先计算USD价格
+  const promptCostUSD = (promptTokens / 1000000) * avgPricePerMillion.prompt;
+  const completionCostUSD = (completionTokens / 1000000) * avgPricePerMillion.completion;
+  const totalCostUSD = promptCostUSD + completionCostUSD;
+
+  // 转换为目标货币
+  const exchangeRate = EXCHANGE_RATES[currency] || 1.0;
+  const promptCost = promptCostUSD * exchangeRate;
+  const completionCost = completionCostUSD * exchangeRate;
+  const totalCost = totalCostUSD * exchangeRate;
+
+  // 根据货币类型决定小数位数
+  const decimals = ['JPY', 'KRW'].includes(currency) ? 0 : 4;
 
   return {
-    total: (promptCost + completionCost).toFixed(4),
-    prompt: promptCost.toFixed(4),
-    completion: completionCost.toFixed(4),
-    currency: 'USD'
+    total: totalCost.toFixed(decimals),
+    prompt: promptCost.toFixed(decimals),
+    completion: completionCost.toFixed(decimals),
+    currency: currency,
+    currencySymbol: CURRENCY_SYMBOLS[currency] || currency
   };
 }
 

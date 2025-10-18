@@ -272,11 +272,22 @@ export default function AnalyticsPage() {
           <div className="stat-content">
             <p className="stat-label">{translate('analytics.estimatedCost', '预估成本')}</p>
             <p className="stat-value">
-              ${parseFloat(overview?.cost?.total || 0).toFixed(4)}
+              {overview?.cost?.currencySymbol || ''}{parseFloat(overview?.cost?.total || 0).toLocaleString()}
             </p>
             <p className="stat-detail">
-              USD ({translate('analytics.estimated', '预估值')})
+              {overview?.cost?.currency || 'USD'} ({translate('analytics.estimated', '预估值')})
             </p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon red">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div className="stat-content">
+            <p className="stat-label">{translate('analytics.apiCalls', 'API调用次数')}</p>
+            <p className="stat-value">{(overview?.apiCalls || 0).toLocaleString()}</p>
+            <p className="stat-trend">{translate('analytics.todayApiCalls', '今日调用')}: {overview?.todayApiCalls || 0}</p>
           </div>
         </div>
       </div>

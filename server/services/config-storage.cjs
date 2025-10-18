@@ -116,6 +116,17 @@ class ConfigStorage {
     return {
       version: '1.0.0',
       services: {
+        openai: {
+          enabled: false,
+          apiKey: '',
+          baseUrl: 'https://api.openai.com/v1'
+        },
+        deepseek: {
+          enabled: true,
+          apiKey: '',
+          baseUrl: 'https://api.deepseek.com',
+          model: 'deepseek-chat'
+        },
         proxy: {
           enabled: false,
           protocol: 'http',
@@ -145,11 +156,6 @@ class ConfigStorage {
           clientId: '',
           clientSecret: '',
           refreshToken: ''
-        },
-        deepseek: {
-          enabled: true,
-          apiKey: '',
-          model: 'deepseek-chat'
         }
       },
       createdAt: new Date().toISOString(),
@@ -234,20 +240,28 @@ class ConfigStorage {
    */
   encryptConfig(config) {
     const encrypted = JSON.parse(JSON.stringify(config));
-    
+
     // 加密各个服务的敏感字段
+    if (encrypted.services.openai?.apiKey) {
+      encrypted.services.openai.apiKey = this.encrypt(encrypted.services.openai.apiKey);
+    }
+
+    if (encrypted.services.deepseek?.apiKey) {
+      encrypted.services.deepseek.apiKey = this.encrypt(encrypted.services.deepseek.apiKey);
+    }
+
     if (encrypted.services.braveSearch?.apiKey) {
       encrypted.services.braveSearch.apiKey = this.encrypt(encrypted.services.braveSearch.apiKey);
     }
-    
+
     if (encrypted.services.github?.token) {
       encrypted.services.github.token = this.encrypt(encrypted.services.github.token);
     }
-    
+
     if (encrypted.services.notion?.token) {
       encrypted.services.notion.token = this.encrypt(encrypted.services.notion.token);
     }
-    
+
     if (encrypted.services.gmail) {
       if (encrypted.services.gmail.clientId) {
         encrypted.services.gmail.clientId = this.encrypt(encrypted.services.gmail.clientId);
@@ -259,7 +273,7 @@ class ConfigStorage {
         encrypted.services.gmail.refreshToken = this.encrypt(encrypted.services.gmail.refreshToken);
       }
     }
-    
+
     if (encrypted.services.googleCalendar) {
       if (encrypted.services.googleCalendar.clientId) {
         encrypted.services.googleCalendar.clientId = this.encrypt(encrypted.services.googleCalendar.clientId);
@@ -271,11 +285,7 @@ class ConfigStorage {
         encrypted.services.googleCalendar.refreshToken = this.encrypt(encrypted.services.googleCalendar.refreshToken);
       }
     }
-    
-    if (encrypted.services.deepseek?.apiKey) {
-      encrypted.services.deepseek.apiKey = this.encrypt(encrypted.services.deepseek.apiKey);
-    }
-    
+
     return encrypted;
   }
 
@@ -284,20 +294,28 @@ class ConfigStorage {
    */
   decryptConfig(encrypted) {
     const config = JSON.parse(JSON.stringify(encrypted));
-    
+
     // 解密各个服务的敏感字段
+    if (config.services.openai?.apiKey) {
+      config.services.openai.apiKey = this.decrypt(config.services.openai.apiKey);
+    }
+
+    if (config.services.deepseek?.apiKey) {
+      config.services.deepseek.apiKey = this.decrypt(config.services.deepseek.apiKey);
+    }
+
     if (config.services.braveSearch?.apiKey) {
       config.services.braveSearch.apiKey = this.decrypt(config.services.braveSearch.apiKey);
     }
-    
+
     if (config.services.github?.token) {
       config.services.github.token = this.decrypt(config.services.github.token);
     }
-    
+
     if (config.services.notion?.token) {
       config.services.notion.token = this.decrypt(config.services.notion.token);
     }
-    
+
     if (config.services.gmail) {
       if (config.services.gmail.clientId) {
         config.services.gmail.clientId = this.decrypt(config.services.gmail.clientId);
@@ -309,7 +327,7 @@ class ConfigStorage {
         config.services.gmail.refreshToken = this.decrypt(config.services.gmail.refreshToken);
       }
     }
-    
+
     if (config.services.googleCalendar) {
       if (config.services.googleCalendar.clientId) {
         config.services.googleCalendar.clientId = this.decrypt(config.services.googleCalendar.clientId);
@@ -321,11 +339,7 @@ class ConfigStorage {
         config.services.googleCalendar.refreshToken = this.decrypt(config.services.googleCalendar.refreshToken);
       }
     }
-    
-    if (config.services.deepseek?.apiKey) {
-      config.services.deepseek.apiKey = this.decrypt(config.services.deepseek.apiKey);
-    }
-    
+
     return config;
   }
 
@@ -341,17 +355,21 @@ class ConfigStorage {
    */
   getPublicConfig() {
     const config = JSON.parse(JSON.stringify(this.config));
-    
+
     // 移除敏感字段,只保留状态信息
     Object.keys(config.services).forEach(serviceKey => {
       const service = config.services[serviceKey];
-      
+
       // 保留 enabled 状态
       const enabled = service.enabled;
-      
+
       // 检查是否已配置(有 API Key)
       let configured = false;
-      if (serviceKey === 'braveSearch') {
+      if (serviceKey === 'openai') {
+        configured = !!service.apiKey;
+      } else if (serviceKey === 'deepseek') {
+        configured = !!service.apiKey;
+      } else if (serviceKey === 'braveSearch') {
         configured = !!service.apiKey;
       } else if (serviceKey === 'github') {
         configured = !!service.token;
@@ -361,17 +379,17 @@ class ConfigStorage {
         configured = !!(service.clientId && service.clientSecret);
       } else if (serviceKey === 'googleCalendar') {
         configured = !!(service.clientId && service.clientSecret);
-      } else if (serviceKey === 'deepseek') {
-        configured = !!service.apiKey;
+      } else if (serviceKey === 'proxy') {
+        configured = !!(service.host && service.port);
       }
-      
+
       // 替换为公开信息
       config.services[serviceKey] = {
         enabled,
         configured
       };
     });
-    
+
     return config;
   }
 
@@ -424,6 +442,38 @@ class ConfigStorage {
    */
   async updateServiceConfig(serviceKey, serviceConfig) {
     return await this.updateService(serviceKey, serviceConfig);
+  }
+
+  /**
+   * 保存服务配置
+   */
+  async saveServiceConfig(serviceKey, serviceConfig) {
+    return await this.updateService(serviceKey, serviceConfig);
+  }
+
+  /**
+   * 删除服务配置
+   */
+  async deleteServiceConfig(serviceKey) {
+    if (!this.config.services[serviceKey]) {
+      console.log(`[ConfigStorage] 服务 ${serviceKey} 不存在`);
+      return;
+    }
+
+    // 重置为默认配置
+    const defaultConfig = this.getDefaultConfig();
+    if (defaultConfig.services[serviceKey]) {
+      this.config.services[serviceKey] = { ...defaultConfig.services[serviceKey] };
+    } else {
+      delete this.config.services[serviceKey];
+    }
+
+    this.config.updatedAt = new Date().toISOString();
+
+    // 保存到文件
+    await this.save();
+
+    console.log(`[ConfigStorage] 服务 ${serviceKey} 已重置`);
   }
 }
 

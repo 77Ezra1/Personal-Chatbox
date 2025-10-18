@@ -1,3 +1,8 @@
+/* Tailwind CSS v4 基础层 */
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/preflight" layer(base);
+@import "tailwindcss/utilities" layer(utilities);
+
 /* v0.dev 风格UI改进 */
 @import './styles/v0-ui-improvements.css';
 
