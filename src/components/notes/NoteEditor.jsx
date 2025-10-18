@@ -1,9 +1,15 @@
 /**
  * 笔记编辑器组件
  * 支持富文本编辑、Markdown语法
+ * 使用 TipTap 编辑器提供 Typora/Feishu 风格的编辑体验
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import MarkdownLikeEditor from './MarkdownLikeEditor';
+import { WordCounter } from './WordCounter';
+import { AIToolbar } from './AIToolbar';
+import { Select } from './Select';
+import './NoteEditor-v0.css';
 import './NoteEditor.css';
 
 export function NoteEditor({ note, categories, onSave, onCancel, translate }) {
@@ -13,9 +19,8 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate }) {
   const [tags, setTags] = useState(note?.tags || []);
   const [tagInput, setTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
+  const [editor, setEditor] = useState(null);
 
-  const contentRef = useRef(null);
   const titleRef = useRef(null);
 
   // 自动聚焦标题
@@ -79,69 +84,63 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSave, onCancel]);
 
-  // 插入格式
-  const insertFormat = useCallback((before, after = '') => {
-    const textarea = contentRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    const newText = content.substring(0, start) + before + selectedText + after + content.substring(end);
-
-    setContent(newText);
-
-    // 恢复光标位置
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + before.length + selectedText.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  }, [content]);
-
-  // 格式化按钮
+  // 格式化按钮 - 使用 TipTap 命令
   const formatButtons = [
-    { label: 'B', title: 'Bold', action: () => insertFormat('**', '**') },
-    { label: 'I', title: 'Italic', action: () => insertFormat('*', '*') },
-    { label: 'H1', title: 'Heading 1', action: () => insertFormat('# ') },
-    { label: 'H2', title: 'Heading 2', action: () => insertFormat('## ') },
-    { label: 'H3', title: 'Heading 3', action: () => insertFormat('### ') },
-    { label: '•', title: 'List', action: () => insertFormat('- ') },
-    { label: '1.', title: 'Numbered List', action: () => insertFormat('1. ') },
-    { label: 'Link', title: 'Link', action: () => insertFormat('[', '](url)') },
-    { label: 'Code', title: 'Code Block', action: () => insertFormat('```\n', '\n```') }
+    {
+      label: 'B',
+      title: 'Bold (Ctrl+B)',
+      action: () => editor?.chain().focus().toggleBold().run(),
+      isActive: () => editor?.isActive('bold')
+    },
+    {
+      label: 'I',
+      title: 'Italic (Ctrl+I)',
+      action: () => editor?.chain().focus().toggleItalic().run(),
+      isActive: () => editor?.isActive('italic')
+    },
+    {
+      label: 'H1',
+      title: 'Heading 1',
+      action: () => editor?.chain().focus().toggleHeading({ level: 1 }).run(),
+      isActive: () => editor?.isActive('heading', { level: 1 })
+    },
+    {
+      label: 'H2',
+      title: 'Heading 2',
+      action: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(),
+      isActive: () => editor?.isActive('heading', { level: 2 })
+    },
+    {
+      label: 'H3',
+      title: 'Heading 3',
+      action: () => editor?.chain().focus().toggleHeading({ level: 3 }).run(),
+      isActive: () => editor?.isActive('heading', { level: 3 })
+    },
+    {
+      label: '•',
+      title: 'Bullet List',
+      action: () => editor?.chain().focus().toggleBulletList().run(),
+      isActive: () => editor?.isActive('bulletList')
+    },
+    {
+      label: '1.',
+      title: 'Numbered List',
+      action: () => editor?.chain().focus().toggleOrderedList().run(),
+      isActive: () => editor?.isActive('orderedList')
+    },
+    {
+      label: '❝',
+      title: 'Quote',
+      action: () => editor?.chain().focus().toggleBlockquote().run(),
+      isActive: () => editor?.isActive('blockquote')
+    },
+    {
+      label: 'Code',
+      title: 'Code Block',
+      action: () => editor?.chain().focus().toggleCodeBlock().run(),
+      isActive: () => editor?.isActive('codeBlock')
+    }
   ];
-
-  // 渲染Markdown预览
-  const renderPreview = useCallback(() => {
-    // 简单的Markdown渲染
-    let html = content
-      // 代码块
-      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-      // 行内代码
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // 标题
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      // 粗体
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // 斜体
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // 链接
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-      // 列表
-      .replace(/^\- (.*$)/gim, '<li>$1</li>')
-      .replace(/^(\d+)\. (.*$)/gim, '<li>$2</li>')
-      // 段落
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>');
-
-    // 包裹列表
-    html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-
-    return `<p>${html}</p>`;
-  }, [content]);
 
   return (
     <div className="note-editor">
@@ -155,13 +154,6 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate }) {
           onChange={(e) => setTitle(e.target.value)}
         />
         <div className="note-editor-actions">
-          <button
-            className="btn-icon"
-            onClick={() => setIsPreview(!isPreview)}
-            title={isPreview ? 'Edit' : 'Preview'}
-          >
-            {isPreview ? '✏️' : '👁️'}
-          </button>
           <button
             className="btn-secondary"
             onClick={onCancel}
@@ -180,52 +172,59 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate }) {
       </div>
 
       <div className="note-editor-toolbar">
-        <div className="toolbar-section">
-          <select
+        <div className="toolbar-section toolbar-category">
+          <Select
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="category-select"
-          >
-            <option value="default">{translate?.('notes.defaultCategory') || 'Default'}</option>
-            {categories?.map(cat => (
-              <option key={cat.id} value={cat.name}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+            onChange={setCategory}
+            options={[
+              { value: 'default', label: translate?.('notes.defaultCategory') || 'Default', icon: '📁' },
+              ...(categories?.map(cat => ({
+                value: cat.name,
+                label: cat.name,
+                icon: '📂'
+              })) || [])
+            ]}
+            icon="📁"
+            className="category-select-custom"
+          />
         </div>
 
-        {!isPreview && (
-          <div className="toolbar-section format-buttons">
-            {formatButtons.map((btn, index) => (
-              <button
-                key={index}
-                className="btn-icon"
-                title={btn.title}
-                onClick={btn.action}
-              >
-                {btn.label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="toolbar-section format-buttons">
+          {formatButtons.map((btn, index) => (
+            <button
+              key={index}
+              className={`btn-icon ${btn.isActive?.() ? 'active' : ''}`}
+              title={btn.title}
+              onClick={btn.action}
+              disabled={!editor}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* AI 工具栏 */}
+      {editor && (
+        <AIToolbar
+          noteContent={content}
+          editor={editor}
+          onInsert={(text) => {
+            editor.chain().focus().insertContent(text).run();
+          }}
+          onReplace={(oldText, newText) => {
+            // 替换逻辑已在 AIToolbar 中处理
+          }}
+        />
+      )}
+
       <div className="note-editor-body">
-        {isPreview ? (
-          <div
-            className="note-preview"
-            dangerouslySetInnerHTML={{ __html: renderPreview() }}
-          />
-        ) : (
-          <textarea
-            ref={contentRef}
-            className="note-content-input"
-            placeholder={translate?.('notes.contentPlaceholder') || 'Start writing...'}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-        )}
+        <MarkdownLikeEditor
+          initialHTML={note?.content || ''}
+          placeholder={translate?.('notes.contentPlaceholder') || '使用 Markdown 快捷键：# 标题，- 列表，> 引用...'}
+          onUpdateHTML={setContent}
+          onEditorReady={setEditor}
+        />
       </div>
 
       <div className="note-editor-footer">
@@ -253,8 +252,11 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate }) {
           />
         </div>
 
-        <div className="editor-hints">
-          <span>{translate?.('notes.shortcuts') || 'Shortcuts'}: Ctrl+S {translate?.('common.save') || 'Save'}, Esc {translate?.('common.cancel') || 'Cancel'}</span>
+        <div className="editor-footer-row">
+          <WordCounter content={content} />
+          <div className="editor-hints">
+            <span>{translate?.('notes.shortcuts') || 'Shortcuts'}: Ctrl+S {translate?.('common.save') || 'Save'}, Esc {translate?.('common.cancel') || 'Cancel'}</span>
+          </div>
         </div>
       </div>
     </div>

@@ -6,8 +6,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { NoteList } from '@/components/notes/NoteList';
 import { NoteEditor } from '@/components/notes/NoteEditor';
+import { Select } from '@/components/notes/Select';
 import { useTranslation } from '@/hooks/useTranslation';
 import * as notesApi from '@/lib/notesApi';
+import '@/styles/notes-v0-theme.css';
+import '@/styles/notes-v0-enhanced.css';
 import './NotesPage.css';
 
 export default function NotesPage() {
@@ -99,12 +102,18 @@ export default function NotesPage() {
       if (selectedNote) {
         // 更新现有笔记
         const updated = await notesApi.updateNote(selectedNote.id, noteData);
+        if (!updated || !updated.id) {
+          throw new Error('Invalid response from server');
+        }
         setNotes(notes.map(n => n.id === updated.id ? updated : n));
         setSelectedNote(updated);
         toast.success(translate('notes.updateSuccess') || 'Note updated');
       } else {
         // 创建新笔记
         const created = await notesApi.createNote(noteData);
+        if (!created || !created.id) {
+          throw new Error('Invalid response from server');
+        }
         setNotes([created, ...notes]);
         setSelectedNote(created);
         toast.success(translate('notes.createSuccess') || 'Note created');
@@ -141,6 +150,9 @@ export default function NotesPage() {
   const handleToggleFavorite = useCallback(async (noteId, isFavorite) => {
     try {
       const updated = await notesApi.updateNote(noteId, { is_favorite: isFavorite });
+      if (!updated || !updated.id) {
+        throw new Error('Invalid response from server');
+      }
       setNotes(notes.map(n => n.id === updated.id ? updated : n));
       if (selectedNote?.id === noteId) {
         setSelectedNote(updated);
@@ -240,31 +252,37 @@ export default function NotesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
 
-          <select
-            className="filter-select"
+          <Select
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-          >
-            <option value="">{translate('notes.allCategories') || 'All Categories'}</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.name}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+            onChange={setFilterCategory}
+            options={[
+              { value: '', label: translate('notes.allCategories') || 'All Categories', icon: '📁' },
+              ...categories.map(cat => ({
+                value: cat.name,
+                label: cat.name,
+                icon: '📂'
+              }))
+            ]}
+            icon="📁"
+            placeholder={translate('notes.allCategories') || 'All Categories'}
+          />
 
-          <select
-            className="filter-select"
+          <Select
             value={filterTag}
-            onChange={(e) => setFilterTag(e.target.value)}
-          >
-            <option value="">{translate('notes.allTags') || 'All Tags'}</option>
-            {tags.map(tag => (
-              <option key={tag.tag} value={tag.tag}>
-                {tag.tag} ({tag.count})
-              </option>
-            ))}
-          </select>
+            onChange={setFilterTag}
+            options={[
+              { value: '', label: translate('notes.allTags') || 'All Tags', icon: '🏷️' },
+              ...tags.map(tag => ({
+                value: tag.tag,
+                label: tag.tag,
+                count: tag.count,
+                icon: '🏷️'
+              }))
+            ]}
+            icon="🏷️"
+            placeholder={translate('notes.allTags') || 'All Tags'}
+            searchable={tags.length > 5}
+          />
 
           <div className="filter-checkboxes">
             <label>
@@ -286,15 +304,16 @@ export default function NotesPage() {
           </div>
 
           <div className="sort-controls">
-            <select
-              className="filter-select"
+            <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="updated_at">{translate('notes.sortUpdated') || 'Last Updated'}</option>
-              <option value="created_at">{translate('notes.sortCreated') || 'Created'}</option>
-              <option value="title">{translate('notes.sortTitle') || 'Title'}</option>
-            </select>
+              onChange={setSortBy}
+              options={[
+                { value: 'updated_at', label: translate('notes.sortUpdated') || 'Last Updated', icon: '🕐' },
+                { value: 'created_at', label: translate('notes.sortCreated') || 'Created', icon: '📅' },
+                { value: 'title', label: translate('notes.sortTitle') || 'Title', icon: '📝' }
+              ]}
+              icon="🔽"
+            />
             <button
               className="btn-icon"
               onClick={() => setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC')}
@@ -367,9 +386,10 @@ export default function NotesPage() {
                 ))}
               </div>
             )}
-            <div className="note-viewer-content">
-              {selectedNote.content}
-            </div>
+            <div
+              className="note-viewer-content note-preview"
+              dangerouslySetInnerHTML={{ __html: selectedNote.content }}
+            />
           </div>
         ) : (
           <div className="note-placeholder">

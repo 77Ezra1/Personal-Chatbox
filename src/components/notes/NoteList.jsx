@@ -3,6 +3,7 @@
  */
 
 import { memo } from 'react';
+import './NoteCard.css';
 import './NoteList.css';
 
 export const NoteList = memo(function NoteList({
@@ -70,20 +71,21 @@ export const NoteList = memo(function NoteList({
 
   return (
     <div className="note-list">
-      {notes.map(note => (
+      {notes.filter(note => note && note.id).map((note, index) => (
         <div
           key={note.id}
-          className={`note-item ${selectedNoteId === note.id ? 'selected' : ''}`}
+          className={`note-card ${selectedNoteId === note.id ? 'selected' : ''} ${note.is_favorite ? 'favorited' : ''}`}
+          style={{ animationDelay: `${index * 50}ms` }}
           onClick={() => onSelectNote(note)}
         >
-          <div className="note-item-header">
-            <h3 className="note-item-title">
+          <div className="note-card-header">
+            <h3 className="note-card-title">
               {note.is_favorite && <span className="favorite-icon">⭐</span>}
               {note.title || 'Untitled Note'}
             </h3>
-            <div className="note-item-actions">
+            <div className="note-card-actions">
               <button
-                className="btn-icon-small"
+                className="btn-card-action"
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleFavorite(note.id, !note.is_favorite);
@@ -93,7 +95,7 @@ export const NoteList = memo(function NoteList({
                 {note.is_favorite ? '★' : '☆'}
               </button>
               <button
-                className="btn-icon-small btn-danger"
+                className="btn-card-action btn-danger"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteNote(note.id);
@@ -105,14 +107,14 @@ export const NoteList = memo(function NoteList({
             </div>
           </div>
 
-          <p className="note-item-content">
+          <p className="note-card-content">
             {truncateContent(note.content)}
           </p>
 
-          <div className="note-item-footer">
-            <div className="note-item-meta">
+          <div className="note-card-footer">
+            <div className="note-card-meta">
               {note.category && note.category !== 'default' && (
-                <span className="note-category">
+                <span className="note-category-badge">
                   📁 {note.category}
                 </span>
               )}
@@ -122,9 +124,9 @@ export const NoteList = memo(function NoteList({
             </div>
 
             {note.tags && note.tags.length > 0 && (
-              <div className="note-tags">
+              <div className="note-card-tags">
                 {note.tags.slice(0, 3).map((tag, index) => (
-                  <span key={index} className="note-tag">
+                  <span key={index} className="note-tag-pill">
                     {tag}
                   </span>
                 ))}

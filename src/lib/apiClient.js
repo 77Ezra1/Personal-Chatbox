@@ -237,16 +237,7 @@ export const analyticsAPI = {
 }
 
 /**
- * 导出默认实例和所有API
+ * 导出默认实例
+ * 所有API已通过export const导出
  */
 export default apiClient
-
-export {
-  apiClient,
-  agentAPI,
-  workflowAPI,
-  contextAPI,
-  summaryAPI,
-  templateMarketAPI,
-  analyticsAPI
-}

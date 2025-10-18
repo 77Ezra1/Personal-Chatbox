@@ -68,6 +68,15 @@
   gap: 8px;
 }
 
+.toolbar-category {
+  min-width: 200px;
+  max-width: 250px;
+}
+
+.category-select-custom {
+  width: 100%;
+}
+
 .category-select {
   padding: 8px 12px;
   border: 1.5px solid var(--border);
@@ -122,6 +131,17 @@
 
 .format-buttons .btn-icon:active {
   transform: translateY(0);
+}
+
+.format-buttons .btn-icon.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.format-buttons .btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ===== 编辑器主体 ===== */
@@ -258,6 +278,14 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.editor-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 /* ===== 标签输入 ===== */

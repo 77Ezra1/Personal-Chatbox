@@ -155,7 +155,11 @@ export const TRANSLATIONS = {
         title: 'Theme',
         description: 'Choose your preferred color theme',
         light: 'Light',
-        dark: 'Dark'
+        lightDesc: 'Bright and clean interface',
+        dark: 'Dark',
+        darkDesc: 'Easy on the eyes',
+        auto: 'Auto',
+        autoDesc: 'Follow system preference'
       },
       language: {
         title: 'Language',
@@ -600,9 +604,12 @@ export const TRANSLATIONS = {
     },
     sidebar: {
       chat: 'Chat',
+      explore: 'Explore',
       agents: 'AI Agents',
       workflows: 'Workflows',
       notes: 'Notes',
+      documents: 'Documents',
+      passwordVault: 'Password Vault',
       knowledge: 'Knowledge',
       analytics: 'Analytics',
       settings: 'Settings'
@@ -830,7 +837,11 @@ export const TRANSLATIONS = {
         title: '主题',
         description: '选择您偏好的颜色主题',
         light: '浅色',
-        dark: '深色'
+        lightDesc: '明亮简洁的界面',
+        dark: '深色',
+        darkDesc: '保护眼睛',
+        auto: '自动',
+        autoDesc: '跟随系统设置'
       },
       language: {
         title: '语言',
@@ -1275,9 +1286,12 @@ export const TRANSLATIONS = {
     },
     sidebar: {
       chat: '对话',
+      explore: '探索',
       agents: 'AI 助手',
       workflows: '工作流',
       notes: '笔记',
+      documents: '文档',
+      passwordVault: '密码保险箱',
       knowledge: '知识库',
       analytics: '数据分析',
       settings: '设置'

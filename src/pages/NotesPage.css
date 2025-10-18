@@ -105,6 +105,7 @@
   color: var(--muted-foreground);
 }
 
+/* 原生 select 样式（作为后备） */
 .filter-select {
   width: 100%;
   padding: 10px 12px;
@@ -125,6 +126,16 @@
   outline: none;
   border-color: var(--ring);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 10%, transparent);
+}
+
+/* 自定义 Select 组件适配 */
+.notes-filters .custom-select {
+  width: 100%;
+}
+
+.notes-filters .select-trigger {
+  font-size: 0.9rem;
+  height: 42px;
 }
 
 .filter-checkboxes {
@@ -159,15 +170,18 @@
 .sort-controls {
   display: flex;
   gap: 8px;
+  align-items: stretch;
 }
 
-.sort-controls .filter-select {
+.sort-controls .filter-select,
+.sort-controls .custom-select {
   flex: 1;
 }
 
 .sort-controls .btn-icon {
   min-width: 42px;
   height: 42px;
+  flex-shrink: 0;
 }
 
 /* ===== 笔记列表容器 ===== */
@@ -213,6 +227,13 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--background);
+  min-width: 0; /* 防止flex子项溢出 */
+}
+
+/* 确保编辑器占满内容区 */
+.notes-content > .note-editor {
+  width: 100%;
+  height: 100%;
 }
 
 /* ===== 笔记查看器 ===== */

@@ -27,8 +27,21 @@ export function useTranslation() {
 
   // 翻译函数
   const translate = useCallback(
-    (key, fallback = '') => {
-      return getTranslationValue(language, key) ?? fallback
+    (key, params) => {
+      // If params is a string, it's the fallback
+      const fallback = typeof params === 'string' ? params : ''
+      const variables = typeof params === 'object' && params !== null ? params : {}
+
+      let text = getTranslationValue(language, key) ?? fallback
+
+      // Replace placeholders like {count}, {name}, etc.
+      if (text && typeof text === 'string' && Object.keys(variables).length > 0) {
+        Object.entries(variables).forEach(([varKey, varValue]) => {
+          text = text.replace(new RegExp(`\\{${varKey}\\}`, 'g'), String(varValue))
+        })
+      }
+
+      return text
     },
     [language]
   )
