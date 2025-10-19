@@ -369,12 +369,15 @@ function createJsonDatabaseAdapter() {
           data[table].push(record);
           saveData();
 
-          callback(null, { lastID: record.id, changes: 1 });
+          // 修复：提供正确的上下文对象
+          const context = { lastID: record.id, changes: 1 };
+          callback.call(context, null);
           return;
         }
 
         // 其他操作也返回成功
-        callback(null);
+        const emptyContext = { lastID: null, changes: 0 };
+        callback.call(emptyContext, null);
       } catch (err) {
         callback(err);
       }

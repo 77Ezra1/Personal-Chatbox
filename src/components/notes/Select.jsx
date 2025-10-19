@@ -22,7 +22,8 @@ export function Select({
   const selectRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // 鍏抽棴涓嬫媺妗?  useEffect(() => {
+  // 鍏抽棴涓嬫媺妗?
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (selectRef.current && !selectRef.current.contains(event.target)) {
         setIsOpen(false);
