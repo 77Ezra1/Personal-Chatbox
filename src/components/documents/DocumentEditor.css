@@ -6,31 +6,50 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 32px;
+  padding: 32px 48px;
   overflow-y: auto;
   background: var(--background);
+  width: 100%;
+  min-height: 0;
 }
 
 .document-editor-header {
-  margin-bottom: 32px;
-  padding-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .document-editor-header h2 {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--foreground);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
+/* ===== 双列布局 ===== */
+.document-editor-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 32px;
+  align-items: start;
+}
+
 /* ===== 表单 ===== */
 .document-editor-form {
-  max-width: 800px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+}
+
+/* ===== AI助手列 ===== */
+.document-editor-ai {
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 200px);
+  overflow: visible;
 }
 
 .form-group {
@@ -356,22 +375,64 @@
 }
 
 /* ===== 响应式设计 ===== */
+@media (max-width: 1400px) {
+  .document-editor-layout {
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+  }
+
+  .document-editor {
+    padding: 24px 32px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .document-editor-layout {
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+  }
+
+  .document-editor {
+    padding: 24px;
+  }
+
+  .document-editor-ai {
+    max-height: calc(100vh - 180px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .document-editor-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .document-editor-ai {
+    position: relative;
+    max-height: none;
+  }
+
+  .document-editor {
+    padding: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .document-editor {
-    padding: 16px;
+    padding: 20px 16px;
+  }
+
+  .document-editor-form {
+    gap: 16px;
   }
 
   .document-editor-header {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
   }
 
   .document-editor-header h2 {
     font-size: 1.5rem;
-  }
-
-  .document-editor-form {
-    gap: 20px;
   }
 
   .form-group-checkboxes {
@@ -391,6 +452,10 @@
 
   .icon-picker-dropdown {
     grid-template-columns: repeat(6, 1fr);
+  }
+
+  .document-editor-layout {
+    gap: 20px;
   }
 }
 

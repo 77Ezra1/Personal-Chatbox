@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { NoteList } from '@/components/notes/NoteList';
 import { NoteEditor } from '@/components/notes/NoteEditor';
 import { Select } from '@/components/notes/Select';
+import { RightPanel } from '@/components/notes/RightPanel';
+import { OutlinePanel } from '@/components/notes/OutlinePanel';
+import { AIAssistantPanel } from '@/components/notes/AIAssistantPanel';
+import { ResizablePanel } from '@/components/notes/ResizablePanel';
 import { useTranslation } from '@/hooks/useTranslation';
 import * as notesApi from '@/lib/notesApi';
 import '@/styles/notes-v0-theme.css';
@@ -31,6 +35,11 @@ export default function NotesPage() {
   const [sortBy, setSortBy] = useState('updated_at');
   const [sortOrder, setSortOrder] = useState('DESC');
   const [statistics, setStatistics] = useState(null);
+
+  // 右侧面板状态
+  const [rightPanelTab, setRightPanelTab] = useState('outline');
+  const [currentEditor, setCurrentEditor] = useState(null);
+  const [currentContent, setCurrentContent] = useState('');
 
   // 加载笔记
   const loadNotes = useCallback(async () => {
@@ -98,10 +107,16 @@ export default function NotesPage() {
 
   // 保存笔记
   const handleSaveNote = useCallback(async (noteData) => {
+    console.log('[NotesPage] Saving note:', noteData);
+    console.log('[NotesPage] Selected note:', selectedNote);
+
     try {
       if (selectedNote) {
         // 更新现有笔记
+        console.log('[NotesPage] Updating note ID:', selectedNote.id);
         const updated = await notesApi.updateNote(selectedNote.id, noteData);
+        console.log('[NotesPage] Update response:', updated);
+
         if (!updated || !updated.id) {
           throw new Error('Invalid response from server');
         }
@@ -110,7 +125,10 @@ export default function NotesPage() {
         toast.success(translate('notes.updateSuccess') || 'Note updated');
       } else {
         // 创建新笔记
+        console.log('[NotesPage] Creating new note');
         const created = await notesApi.createNote(noteData);
+        console.log('[NotesPage] Create response:', created);
+
         if (!created || !created.id) {
           throw new Error('Invalid response from server');
         }
@@ -121,8 +139,9 @@ export default function NotesPage() {
       setIsEditing(false);
       loadMetadata(); // 更新统计信息
     } catch (error) {
-      console.error('Failed to save note:', error);
-      toast.error(translate('notes.saveError') || 'Failed to save note');
+      console.error('[NotesPage] Failed to save note:', error);
+      console.error('[NotesPage] Error details:', error.response?.data || error.message);
+      toast.error(translate('notes.saveError') || `Failed to save note: ${error.message}`);
     }
   }, [selectedNote, notes, translate, loadMetadata]);
 
@@ -215,11 +234,17 @@ export default function NotesPage() {
 
   return (
     <div className="notes-page">
-      {/* 侧边栏 */}
-      <div className="notes-sidebar">
+      {/* 左侧边栏 - 可调整宽度 */}
+      <ResizablePanel
+        side="left"
+        defaultWidth={280}
+        minWidth={200}
+        maxWidth={400}
+        storageKey="notes-sidebar-width"
+        className="notes-sidebar"
+      >
         <div className="notes-sidebar-header">
-          <h2>{translate('notes.title') || 'Notes'}</h2>
-          <button className="btn-primary" onClick={handleCreateNote}>
+          <button className="btn-primary btn-new-note" onClick={handleCreateNote}>
             + {translate('notes.newNote') || 'New Note'}
           </button>
         </div>
@@ -247,7 +272,7 @@ export default function NotesPage() {
           <input
             type="text"
             className="search-input"
-            placeholder={translate('notes.search') || 'Search notes...'}
+            placeholder={translate('notes.search') || '搜索...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -256,7 +281,7 @@ export default function NotesPage() {
             value={filterCategory}
             onChange={setFilterCategory}
             options={[
-              { value: '', label: translate('notes.allCategories') || 'All Categories', icon: '📁' },
+              { value: '', label: translate('notes.allCategories') || '所有分类', icon: '📁' },
               ...categories.map(cat => ({
                 value: cat.name,
                 label: cat.name,
@@ -264,14 +289,14 @@ export default function NotesPage() {
               }))
             ]}
             icon="📁"
-            placeholder={translate('notes.allCategories') || 'All Categories'}
+            placeholder={translate('notes.allCategories') || '分类'}
           />
 
           <Select
             value={filterTag}
             onChange={setFilterTag}
             options={[
-              { value: '', label: translate('notes.allTags') || 'All Tags', icon: '🏷️' },
+              { value: '', label: translate('notes.allTags') || '所有标签', icon: '🏷️' },
               ...tags.map(tag => ({
                 value: tag.tag,
                 label: tag.tag,
@@ -280,7 +305,7 @@ export default function NotesPage() {
               }))
             ]}
             icon="🏷️"
-            placeholder={translate('notes.allTags') || 'All Tags'}
+            placeholder={translate('notes.allTags') || '标签'}
             searchable={tags.length > 5}
           />
 
@@ -355,7 +380,7 @@ export default function NotesPage() {
             />
           </label>
         </div>
-      </div>
+      </ResizablePanel>
 
       {/* 主内容区 */}
       <div className="notes-content">
@@ -366,6 +391,8 @@ export default function NotesPage() {
             onSave={handleSaveNote}
             onCancel={handleCancelEdit}
             translate={translate}
+            onEditorReady={setCurrentEditor}
+            onContentChange={setCurrentContent}
           />
         ) : selectedNote ? (
           <div className="note-viewer">
@@ -399,6 +426,43 @@ export default function NotesPage() {
           </div>
         )}
       </div>
+
+      {/* 右侧面板 - 仅在编辑模式显示，可调整宽度 */}
+      {isEditing && (
+        <ResizablePanel
+          side="right"
+          defaultWidth={350}
+          minWidth={280}
+          maxWidth={600}
+          storageKey="notes-right-panel-width"
+        >
+          <RightPanel
+            activeTab={rightPanelTab}
+            onTabChange={setRightPanelTab}
+            tabs={[
+              { id: 'outline', label: '大纲', icon: '📑' },
+              { id: 'ai', label: 'AI助手', icon: '🤖' }
+            ]}
+          >
+            {rightPanelTab === 'outline' && (
+              <OutlinePanel
+                editor={currentEditor}
+                content={currentContent}
+              />
+            )}
+            {rightPanelTab === 'ai' && (
+              <AIAssistantPanel
+                noteContent={currentContent}
+                onInsertText={(text) => {
+                  if (currentEditor) {
+                    currentEditor.chain().focus().insertContent(text).run();
+                  }
+                }}
+              />
+            )}
+          </RightPanel>
+        </ResizablePanel>
+      )}
     </div>
   );
 }

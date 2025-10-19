@@ -217,7 +217,8 @@
       "Bash(attrib:*)",
       "Bash(cmd /c \"echo test > d:\\Personal-Chatbox\\test-edit-permission.txt && type d:\\Personal-Chatbox\\test-edit-permission.txt && del d:\\Personal-Chatbox\\test-edit-permission.txt\")",
       "Bash(cmd /c \"where code\")",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(wait:*)"
     ],
     "deny": [],
     "ask": []

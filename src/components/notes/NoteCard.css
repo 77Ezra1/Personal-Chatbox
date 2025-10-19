@@ -5,15 +5,26 @@
 
 .note-card {
   position: relative;
-  background: var(--notes-glass-bg);
-  border: 1px solid var(--notes-glass-border);
-  border-radius: var(--notes-radius-lg);
-  padding: var(--notes-spacing-md);
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 10px;
   cursor: pointer;
-  transition: all var(--notes-duration-normal) var(--notes-ease-out);
-  backdrop-filter: blur(var(--notes-glass-blur));
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  animation: notes-slide-up var(--notes-duration-normal) var(--notes-ease-out);
+  animation: notes-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes notes-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 渐变边框效果 */
@@ -24,53 +35,31 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: var(--notes-radius-lg);
-  padding: 1px;
-  background: var(--notes-gradient-primary);
+  border-radius: var(--radius);
+  padding: 1.5px;
+  background: linear-gradient(135deg, var(--primary), var(--ring));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
-  transition: opacity var(--notes-duration-normal);
-  pointer-events: none;
-}
-
-/* 光晕效果 */
-.note-card::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(59, 130, 246, 0.15) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity var(--notes-duration-slow);
+  transition: opacity 0.25s;
   pointer-events: none;
 }
 
 .note-card:hover {
-  transform: translateY(-4px);
-  background: var(--notes-bg-hover);
-  border-color: var(--notes-border-strong);
-  box-shadow: var(--notes-shadow-primary);
+  transform: translateY(-3px);
+  border-color: var(--ring);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .note-card:hover::before {
-  opacity: 0.6;
-}
-
-.note-card:hover::after {
-  opacity: 1;
+  opacity: 0.5;
 }
 
 .note-card.selected {
-  background: var(--notes-glass-bg);
-  border-color: transparent;
+  background: var(--secondary);
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .note-card.selected::before {
@@ -81,13 +70,17 @@
 .note-card.favorited {
   background: linear-gradient(
     135deg,
-    rgba(236, 72, 153, 0.05) 0%,
+    rgba(236, 72, 153, 0.03) 0%,
     transparent 100%
   );
 }
 
-.note-card.favorited::before {
-  background: var(--notes-gradient-pink);
+.note-card.favorited:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(236, 72, 153, 0.06) 0%,
+    transparent 100%
+  );
 }
 
 /* 卡片头部 */
@@ -97,22 +90,23 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--notes-spacing-sm);
-  margin-bottom: var(--notes-spacing-sm);
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .note-card-title {
   flex: 1;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--notes-text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .note-card-favorite {
@@ -163,12 +157,13 @@
 .note-card-content {
   position: relative;
   z-index: 1;
-  color: var(--notes-text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin: var(--notes-spacing-md) 0;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 10px 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -180,67 +175,147 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: var(--notes-spacing-md);
-  padding-top: var(--notes-spacing-md);
-  border-top: 1px solid var(--notes-border-subtle);
-}
-
-.note-card-tags {
-  display: flex;
-  gap: var(--notes-spacing-xs);
   flex-wrap: wrap;
-  flex: 1;
-}
-
-.note-tag {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--notes-glass-bg);
-  color: var(--notes-text-secondary);
-  border: 1px solid var(--notes-glass-border);
-  backdrop-filter: blur(8px);
-  transition: all var(--notes-duration-fast);
-}
-
-.note-tag:hover {
-  background: var(--notes-bg-hover);
-  color: var(--notes-text-primary);
-  border-color: var(--notes-border);
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
 .note-card-meta {
   display: flex;
   align-items: center;
-  gap: var(--notes-spacing-sm);
+  gap: 10px;
   font-size: 0.75rem;
-  color: var(--notes-text-tertiary);
-  white-space: nowrap;
+  color: var(--muted-foreground);
 }
 
-.note-card-meta-item {
+.note-category-badge {
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--secondary);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.note-date {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+}
+
+.note-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.note-tag-pill {
+  padding: 2px 7px;
+  border-radius: var(--radius);
+  font-size: 0.65rem;
+  font-weight: 500;
+  background: var(--secondary);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.note-tag-pill:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.note-tag-more {
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  background: var(--muted);
+}
+
+/* 操作按钮 */
+.note-card-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-card-action {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius));
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
 }
 
-/* 操作按钮组 */
-.note-card-actions {
-  position: absolute;
-  top: var(--notes-spacing-md);
-  right: var(--notes-spacing-md);
+.btn-card-action:hover {
+  background: var(--secondary);
+  border-color: var(--ring);
+  color: var(--foreground);
+  transform: scale(1.05);
+}
+
+.btn-card-action.btn-danger:hover {
+  background: hsl(0, 84%, 60%);
+  border-color: hsl(0, 84%, 60%);
+  color: white;
+}
+
+.favorite-icon {
+  margin-right: 6px;
+  font-size: 0.9rem;
+}
+
+/* 空列表提示 */
+.note-list-empty {
   display: flex;
-  gap: var(--notes-spacing-xs);
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: all var(--notes-duration-normal);
-  z-index: 2;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 60px 20px;
+  text-align: center;
 }
 
-.note-card:hover .note-card-actions {
-  opacity: 1;
-  transform: translateY(0);
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.note-list-empty p {
+  font-size: 1.1rem;
+  color: var(--foreground);
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.empty-hint {
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* 笔记列表布局 */
+.note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .note-card-action {

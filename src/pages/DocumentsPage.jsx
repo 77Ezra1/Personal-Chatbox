@@ -219,53 +219,13 @@ export default function DocumentsPage() {
 
   return (
     <div className="documents-page">
-      {/* 侧边栏 */}
-      <div className="documents-sidebar">
-        <div className="documents-sidebar-header">
-          <div className="documents-header-top">
-            <h2>{translate('documents.title') || 'Documents'}</h2>
-            <div className="view-mode-toggle">
-              <button
-                className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}
-                onClick={() => setViewMode('list')}
-                title="列表视图"
-              >
-                ☰
-              </button>
-              <button
-                className={`view-mode-btn ${viewMode === 'card' ? 'active' : ''}`}
-                onClick={() => setViewMode('card')}
-                title="卡片视图"
-              >
-                ▦
-              </button>
-            </div>
-          </div>
-          <button className="btn-primary" onClick={handleCreateDocument}>
-            + {translate('documents.newDocument') || 'New'}
-          </button>
-        </div>
+      {/* 顶部工具栏 */}
+      <div className="documents-toolbar">
+        <h1 className="documents-toolbar-title">
+          📚 {translate('documents.title') || 'Documents'}
+        </h1>
 
-        {/* 统计信息 */}
-        {statistics && (
-          <div className="documents-stats">
-            <div className="stat-item">
-              <span className="stat-label">{translate('documents.total') || 'Total'}</span>
-              <span className="stat-value">{statistics.total}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">{translate('documents.favorites') || 'Favorites'}</span>
-              <span className="stat-value">{statistics.favorites}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">{translate('documents.categories') || 'Categories'}</span>
-              <span className="stat-value">{statistics.categories}</span>
-            </div>
-          </div>
-        )}
-
-        {/* 搜索和过滤 */}
-        <div className="documents-filters">
+        <div className="documents-toolbar-search">
           <input
             type="text"
             className="search-input"
@@ -273,92 +233,9 @@ export default function DocumentsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-
-          <select
-            className="filter-select"
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-          >
-            <option value="">{translate('documents.allCategories') || 'All Categories'}</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.name}>
-                {cat.icon} {cat.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="filter-select"
-            value={filterTag}
-            onChange={(e) => setFilterTag(e.target.value)}
-          >
-            <option value="">{translate('documents.allTags') || 'All Tags'}</option>
-            {tags.map(tag => (
-              <option key={tag.tag} value={tag.tag}>
-                {tag.tag} ({tag.count})
-              </option>
-            ))}
-          </select>
-
-          <div className="filter-checkboxes">
-            <label>
-              <input
-                type="checkbox"
-                checked={showFavoritesOnly}
-                onChange={(e) => setShowFavoritesOnly(e.target.checked)}
-              />
-              {translate('documents.favoritesOnly') || 'Favorites Only'}
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showArchived}
-                onChange={(e) => setShowArchived(e.target.checked)}
-              />
-              {translate('documents.showArchived') || 'Show Archived'}
-            </label>
-          </div>
-
-          <div className="sort-controls">
-            <select
-              className="filter-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="updated_at">{translate('documents.sortUpdated') || 'Last Updated'}</option>
-              <option value="created_at">{translate('documents.sortCreated') || 'Created'}</option>
-              <option value="title">{translate('documents.sortTitle') || 'Title'}</option>
-              <option value="visit_count">{translate('documents.sortVisits') || 'Most Visited'}</option>
-            </select>
-            <button
-              className="btn-icon"
-              onClick={() => setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC')}
-              title={sortOrder === 'ASC' ? 'Ascending' : 'Descending'}
-            >
-              {sortOrder === 'ASC' ? '↑' : '↓'}
-            </button>
-          </div>
         </div>
 
-        {/* 文档列表 */}
-        <div className="documents-list-container">
-          {loading ? (
-            <div className="loading-spinner">{translate('common.loading') || 'Loading...'}</div>
-          ) : (
-            <DocumentList
-              documents={documents}
-              selectedDocumentId={selectedDocument?.id}
-              onSelectDocument={handleSelectDocument}
-              onDeleteDocument={handleDeleteDocument}
-              onToggleFavorite={handleToggleFavorite}
-              translate={translate}
-              viewMode={viewMode}
-            />
-          )}
-        </div>
-
-        {/* 操作按钮 */}
-        <div className="documents-actions">
+        <div className="documents-toolbar-actions">
           <button className="btn-secondary" onClick={handleExport}>
             📥 {translate('documents.export') || 'Export'}
           </button>
@@ -371,71 +248,151 @@ export default function DocumentsPage() {
               onChange={handleImport}
             />
           </label>
+          <button className="btn-primary" onClick={handleCreateDocument}>
+            + {translate('documents.newDocument') || 'New'}
+          </button>
+        </div>
+      </div>
+
+      {/* 过滤栏 */}
+      <div className="documents-filters-bar">
+        {/* 统计信息 */}
+        {statistics && (
+          <div className="documents-stats-inline">
+            <div className="stat-item-inline">
+              <span>{translate('documents.total') || 'Total'}:</span>
+              <span className="stat-value">{statistics.total}</span>
+            </div>
+            <div className="stat-item-inline">
+              <span>⭐ {translate('documents.favorites') || 'Favorites'}:</span>
+              <span className="stat-value">{statistics.favorites}</span>
+            </div>
+            <div className="stat-item-inline">
+              <span>📁 {translate('documents.categories') || 'Categories'}:</span>
+              <span className="stat-value">{statistics.categories}</span>
+            </div>
+          </div>
+        )}
+
+        <select
+          className="filter-select-inline"
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+        >
+          <option value="">{translate('documents.allCategories') || 'All Categories'}</option>
+          {categories.map(cat => (
+            <option key={cat.id} value={cat.name}>
+              {cat.icon} {cat.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="filter-select-inline"
+          value={filterTag}
+          onChange={(e) => setFilterTag(e.target.value)}
+        >
+          <option value="">{translate('documents.allTags') || 'All Tags'}</option>
+          {tags.map(tag => (
+            <option key={tag.tag} value={tag.tag}>
+              {tag.tag} ({tag.count})
+            </option>
+          ))}
+        </select>
+
+        <label className="filter-checkbox-inline">
+          <input
+            type="checkbox"
+            checked={showFavoritesOnly}
+            onChange={(e) => setShowFavoritesOnly(e.target.checked)}
+          />
+          ⭐ {translate('documents.favoritesOnly') || 'Favorites'}
+        </label>
+
+        <label className="filter-checkbox-inline">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={(e) => setShowArchived(e.target.checked)}
+          />
+          📦 {translate('documents.showArchived') || 'Archived'}
+        </label>
+
+        <div className="sort-controls-inline">
+          <select
+            className="filter-select-inline"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="updated_at">{translate('documents.sortUpdated') || 'Last Updated'}</option>
+            <option value="created_at">{translate('documents.sortCreated') || 'Created'}</option>
+            <option value="title">{translate('documents.sortTitle') || 'Title'}</option>
+            <option value="visit_count">{translate('documents.sortVisits') || 'Most Visited'}</option>
+          </select>
+          <button
+            className="btn-icon"
+            onClick={() => setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC')}
+            title={sortOrder === 'ASC' ? 'Ascending' : 'Descending'}
+          >
+            {sortOrder === 'ASC' ? '↑' : '↓'}
+          </button>
+        </div>
+
+        <div className="view-mode-toggle">
+          <button
+            className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+            title="列表视图"
+          >
+            ☰
+          </button>
+          <button
+            className={`view-mode-btn ${viewMode === 'card' ? 'active' : ''}`}
+            onClick={() => setViewMode('card')}
+            title="卡片视图"
+          >
+            ▦
+          </button>
         </div>
       </div>
 
       {/* 主内容区 */}
-      <div className="documents-content">
+      <div className="documents-main-content">
         {isEditing ? (
-          <DocumentEditor
-            document={selectedDocument}
-            categories={categories}
-            onSave={handleSaveDocument}
-            onCancel={handleCancelEdit}
-            translate={translate}
-          />
-        ) : selectedDocument ? (
-          <div className="document-viewer">
-            <div className="document-viewer-header">
-              <div className="document-viewer-title-section">
-                <span className="document-viewer-icon">{selectedDocument.icon}</span>
-                <h1>{selectedDocument.title}</h1>
-              </div>
-              <div className="document-viewer-actions">
-                <button className="btn-secondary" onClick={handleOpenLink}>
-                  🔗 {translate('documents.openLink') || 'Open Link'}
-                </button>
-                <button className="btn-primary" onClick={handleEditCurrentDocument}>
-                  ✏️ {translate('common.edit') || 'Edit'}
-                </button>
-              </div>
-            </div>
-
-            <div className="document-viewer-meta">
-              <span>{translate('documents.category') || 'Category'}: {selectedDocument.category}</span>
-              <span>{translate('documents.updated') || 'Updated'}: {new Date(selectedDocument.updated_at).toLocaleString()}</span>
-              {selectedDocument.visit_count > 0 && (
-                <span>{translate('documents.visits') || 'Visits'}: {selectedDocument.visit_count}</span>
-              )}
-            </div>
-
-            {selectedDocument.tags && selectedDocument.tags.length > 0 && (
-              <div className="document-viewer-tags">
-                {selectedDocument.tags.map((tag, index) => (
-                  <span key={index} className="tag">{tag}</span>
-                ))}
-              </div>
-            )}
-
-            {selectedDocument.description && (
-              <div className="document-viewer-description">
-                <h3>{translate('documents.description') || 'Description'}</h3>
-                <p>{selectedDocument.description}</p>
-              </div>
-            )}
-
-            <div className="document-viewer-url">
-              <h3>{translate('documents.url') || 'URL'}</h3>
-              <a href={selectedDocument.url} target="_blank" rel="noopener noreferrer" className="document-link">
-                {selectedDocument.url}
-              </a>
-            </div>
+          <div className="documents-display-area">
+            <DocumentEditor
+              document={selectedDocument}
+              categories={categories}
+              onSave={handleSaveDocument}
+              onCancel={handleCancelEdit}
+              translate={translate}
+            />
           </div>
         ) : (
-          <div className="document-placeholder">
-            <div className="placeholder-icon">📚</div>
-            <h2>{translate('documents.selectDocument') || 'Select a document to view'}</h2>
-            <p>{translate('documents.selectDocumentHint') || 'Or create a new document to get started'}</p>
+          <div className="documents-display-area">
+            <div className="documents-list-wrapper">
+              {loading ? (
+                <div className="loading-spinner">{translate('common.loading') || 'Loading...'}</div>
+              ) : documents.length === 0 ? (
+                <div className="documents-empty">
+                  <div className="documents-empty-icon">📚</div>
+                  <h3>{translate('documents.noDocuments') || 'No documents found'}</h3>
+                  <p>{translate('documents.noDocumentsHint') || 'Create your first document to get started'}</p>
+                </div>
+              ) : (
+                <div className={viewMode === 'card' ? 'documents-grid-view' : 'documents-list-view'}>
+                  <DocumentList
+                    documents={documents}
+                    selectedDocumentId={selectedDocument?.id}
+                    onSelectDocument={handleSelectDocument}
+                    onDeleteDocument={handleDeleteDocument}
+                    onToggleFavorite={handleToggleFavorite}
+                    translate={translate}
+                    viewMode={viewMode}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

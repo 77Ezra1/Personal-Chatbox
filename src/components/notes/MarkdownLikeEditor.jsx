@@ -13,7 +13,7 @@ import { useEffect } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Extension, textblockTypeInputRule } from '@tiptap/core'
+import { Extension, textblockTypeInputRule, wrappingInputRule } from '@tiptap/core'
 import { SlashCommands } from './SlashCommands'
 import 'tippy.js/dist/tippy.css'
 
@@ -24,25 +24,25 @@ const HeadingMarkdownShortcut = Extension.create({
   addInputRules() {
     // Space trigger: Standard Markdown behavior "# title" + space -> H1
     const rules = [
-      // h1 ~ h6
+      // h1 ~ h6 标题
       textblockTypeInputRule({
         find: /^(#{1,6})\s$/,
         type: this.editor.schema.nodes.heading,
         getAttributes: match => ({ level: match[1].length }),
       }),
-      // Bullet list
-      textblockTypeInputRule({
-        find: /^(\*|-|\+)\s$/,
+      // 无序列表: - 或 * 或 + 加空格
+      wrappingInputRule({
+        find: /^\s*([-*+])\s$/,
         type: this.editor.schema.nodes.bulletList,
       }),
-      // Ordered list
-      textblockTypeInputRule({
+      // 有序列表: 1. 加空格
+      wrappingInputRule({
         find: /^(\d+)\.\s$/,
         type: this.editor.schema.nodes.orderedList,
       }),
-      // Blockquote
+      // 引用: > 加空格
       textblockTypeInputRule({
-        find: /^(>)\s$/,
+        find: /^>\s$/,
         type: this.editor.schema.nodes.blockquote,
       }),
     ]
@@ -139,38 +139,123 @@ const HeadingMarkdownShortcut = Extension.create({
 // Styles: Feishu/Notion-like layout (can be adjusted as needed)
 const styles = `
 .tdoc {
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
   margin: 0;
-  padding: 20px;
+  padding: 20px 24px;
   line-height: 1.75;
-  color: #111827;
+  color: var(--foreground, #111827);
   font-size: 16px;
-  min-height: 400px;
+  min-height: 100%;
   outline: none;
+  box-sizing: border-box;
 }
-.tdoc h1 { font-size: 32px; font-weight: 700; margin: 28px 0 12px; color: #1a1a1a; }
-.tdoc h2 { font-size: 26px; font-weight: 700; margin: 24px 0 10px; color: #1a1a1a; }
-.tdoc h3 { font-size: 22px; font-weight: 700; margin: 20px 0 8px; color: #1a1a1a; }
-.tdoc h4 { font-size: 18px; font-weight: 700; margin: 16px 0 8px; color: #1a1a1a; }
-.tdoc h5 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; color: #1a1a1a; }
-.tdoc h6 { font-size: 14px; font-weight: 700; margin: 12px 0 6px; color: #1a1a1a; }
+/* 在超大屏幕上适当限制宽度并居中，提升阅读体验 */
+@media (min-width: 1600px) {
+  .tdoc {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 32px;
+  }
+}
+@media (min-width: 1920px) {
+  .tdoc {
+    max-width: 1600px;
+    padding: 20px 48px;
+  }
+}
+/* 小屏幕优化 */
+@media (max-width: 768px) {
+  .tdoc {
+    padding: 16px;
+  }
+}
+.tdoc h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 28px 0 12px;
+  color: var(--foreground, #1a1a1a);
+  border: none !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+.tdoc h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 24px 0 10px;
+  color: var(--foreground, #1a1a1a);
+  border: none !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+.tdoc h3 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 20px 0 8px;
+  color: var(--foreground, #1a1a1a);
+  border: none !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+.tdoc h4 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+  color: var(--foreground, #1a1a1a);
+  border: none !important;
+  text-decoration: none !important;
+}
+.tdoc h5 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 14px 0 6px;
+  color: var(--foreground, #1a1a1a);
+  border: none !important;
+  text-decoration: none !important;
+}
+.tdoc h6 {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 12px 0 6px;
+  color: var(--foreground, #1a1a1a);
+  border: none !important;
+  text-decoration: none !important;
+}
 .tdoc p  { margin: 10px 0; }
 .tdoc blockquote {
-  border-left: 3px solid #e5e7eb;
-  background: #f9fafb;
+  border-left: 3px solid var(--border, #e5e7eb);
+  background: var(--secondary, #f9fafb);
   padding: 10px 14px;
   margin: 12px 0;
-  color: #374151;
+  color: var(--muted-foreground, #374151);
 }
 .tdoc ul, .tdoc ol {
-  padding-left: 1.4em;
+  padding-left: 1.8em;
   margin: 8px 0;
+  list-style-position: outside;
+}
+.tdoc ul {
+  list-style-type: disc !important;
+}
+.tdoc ol {
+  list-style-type: decimal !important;
 }
 .tdoc li {
   margin: 4px 0;
+  display: list-item !important;
+  color: var(--foreground, #111827);
+}
+.tdoc ul ul {
+  list-style-type: circle !important;
+}
+.tdoc ul ul ul {
+  list-style-type: square !important;
+}
+.tdoc li::marker {
+  color: var(--foreground, #111827);
 }
 .tdoc code {
-  background: #f3f4f6;
+  background: var(--secondary, #f3f4f6);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
@@ -178,8 +263,8 @@ const styles = `
   font-size: 0.9em;
 }
 .tdoc pre {
-  background: #0b1021;
-  color: #e5e7eb;
+  background: var(--code-block-bg, #0b1021);
+  color: var(--code-block-text, #e5e7eb);
   padding: 14px 16px;
   border-radius: 8px;
   overflow: auto;
@@ -189,7 +274,7 @@ const styles = `
 .tdoc pre code {
   background: transparent;
   padding: 0;
-  color: #e5e7eb;
+  color: var(--code-block-text, #e5e7eb);
 }
 .tdoc hr {
   border: none;
@@ -205,7 +290,7 @@ const styles = `
 }
 .tdoc strong {
   font-weight: 700;
-  color: #111827;
+  color: var(--foreground, #111827);
 }
 .tdoc em {
   font-style: italic;
@@ -261,13 +346,17 @@ export default function MarkdownLikeEditor({
       },
       handleDOMEvents: {
         // Paste plain text with Markdown processing: minimal handling
-        paste: (_view, event) => {
+        paste: (view, event) => {
           if (!event.clipboardData) return false
           const text = event.clipboardData.getData('text/plain')
           if (!text) return false
-          // Let browser paste as plain text, TipTap handles formatting
+          // Prevent default paste behavior
           event.preventDefault()
-          document.execCommand('insertText', false, text)
+          // Use TipTap's transaction to insert text (modern approach)
+          const { state } = view
+          const { tr } = state
+          tr.insertText(text)
+          view.dispatch(tr)
           return true
         },
       },

@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { AIAssistant } from './AIAssistant';
 import './DocumentEditor.css';
 
 const ICON_OPTIONS = ['📄', '📝', '📋', '📌', '📎', '📁', '📂', '📚', '📖', '📕', '📗', '📘', '📙', '🔖', '🏷️', '💼', '🗂️', '📊', '📈', '📉', '🔗', '🌐', '💡', '⚡', '🎯', '🚀', '⭐', '💎'];
@@ -78,13 +79,19 @@ export function DocumentEditor({ document, categories, onSave, onCancel, transla
     onSave(formData);
   };
 
+  // 处理AI建议
+  const handleAISuggestion = (type, value) => {
+    setFormData(prev => ({ ...prev, [type]: value }));
+  };
+
   return (
     <div className="document-editor">
       <div className="document-editor-header">
         <h2>{document ? translate('documents.editDocument') || 'Edit Document' : translate('documents.newDocument') || 'New Document'}</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="document-editor-form">
+      <div className="document-editor-layout">
+        <form onSubmit={handleSubmit} className="document-editor-form">
         {/* 图标选择 */}
         <div className="form-group">
           <label>{translate('documents.icon') || 'Icon'}</label>
@@ -240,6 +247,16 @@ export function DocumentEditor({ document, categories, onSave, onCancel, transla
           </button>
         </div>
       </form>
+
+      {/* AI助手侧边栏 */}
+      <div className="document-editor-ai">
+        <AIAssistant
+          formData={formData}
+          onSuggestion={handleAISuggestion}
+          translate={translate}
+        />
+      </div>
+      </div>
     </div>
   );
 }

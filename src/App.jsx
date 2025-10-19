@@ -703,7 +703,7 @@ function App() {
               <Route path="/documents" element={<DocumentsPage />} />
 
               {/* 密码保险库页面 */}
-              <Route path="/vault" element={<PasswordVaultPage />} />
+              <Route path="/password-vault" element={<PasswordVaultPage />} />
 
               {/* MCP自定义配置页面 */}
               <Route path="/mcp" element={<McpCustomPage />} />

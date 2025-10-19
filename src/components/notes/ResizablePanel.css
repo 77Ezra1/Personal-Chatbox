@@ -1,0 +1,103 @@
+/**
+ * 可调整大小面板样式
+ */
+
+.resizable-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: none; /* 拖拽时不使用过渡动画 */
+}
+
+.resizable-panel-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 拖拽手柄 */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+/* 左侧面板的手柄在右边 */
+.resize-handle-left {
+  right: -4px;
+}
+
+/* 右侧面板的手柄在左边 */
+.resize-handle-right {
+  left: -4px;
+}
+
+/* 拖拽手柄的可视化线条 */
+.resize-handle-line {
+  width: 1px;
+  height: 100%;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+/* 悬停效果 */
+.resize-handle:hover .resize-handle-line {
+  background: var(--primary);
+  width: 2px;
+  box-shadow: 0 0 8px var(--primary);
+}
+
+/* 拖拽中的效果 */
+.resize-handle.resizing {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.resize-handle.resizing .resize-handle-line {
+  background: var(--primary);
+  width: 2px;
+  box-shadow: 0 0 12px var(--primary);
+}
+
+[data-theme="dark"] .resize-handle.resizing {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 拖拽时的视觉提示 */
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.resize-handle:hover::before {
+  opacity: 0.3;
+  background: var(--muted-foreground);
+}
+
+.resize-handle.resizing::before {
+  opacity: 0.5;
+  background: var(--primary);
+}
+
+/* 响应式：小屏幕禁用调整 */
+@media (max-width: 1200px) {
+  .resize-handle {
+    display: none;
+  }
+}

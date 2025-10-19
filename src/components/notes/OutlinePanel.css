@@ -1,0 +1,177 @@
+/**
+ * 大纲面板样式
+ */
+
+.outline-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+}
+
+/* 大纲头部 */
+.outline-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  flex-shrink: 0;
+}
+
+.outline-icon {
+  font-size: 1.2rem;
+}
+
+.outline-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--foreground);
+  flex: 1;
+}
+
+.outline-count {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  background: var(--secondary);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* 大纲列表 */
+.outline-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+}
+
+/* 大纲项 */
+.outline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+
+.outline-item:hover {
+  background: var(--secondary);
+  border-left-color: var(--muted-foreground);
+}
+
+.outline-item.active {
+  background: var(--secondary);
+  border-left-color: var(--primary);
+}
+
+.outline-item.active .outline-text {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* 大纲层级缩进 */
+.outline-item.outline-level-1 {
+  padding-left: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.outline-item.outline-level-2 {
+  padding-left: 28px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.outline-item.outline-level-3 {
+  padding-left: 40px;
+  font-size: 0.8rem;
+}
+
+.outline-item.outline-level-4 {
+  padding-left: 52px;
+  font-size: 0.8rem;
+}
+
+.outline-item.outline-level-5 {
+  padding-left: 64px;
+  font-size: 0.75rem;
+}
+
+.outline-item.outline-level-6 {
+  padding-left: 76px;
+  font-size: 0.75rem;
+}
+
+/* 大纲项图标 */
+.outline-bullet {
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.outline-item:hover .outline-bullet,
+.outline-item.active .outline-bullet {
+  color: var(--primary);
+}
+
+/* 大纲项文本 */
+.outline-text {
+  flex: 1;
+  color: var(--foreground);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* 空状态 */
+.outline-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  height: 100%;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+
+.empty-hint {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+
+/* 滚动条样式 */
+.outline-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.outline-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.outline-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.outline-list::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
