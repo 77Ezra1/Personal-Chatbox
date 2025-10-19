@@ -30,7 +30,6 @@ const NotesPage = lazy(() => import('@/pages/NotesPage'))
 const DocumentsPage = lazy(() => import('@/pages/DocumentsPage'))
 const PasswordVaultPage = lazy(() => import('@/pages/PasswordVaultPage'))
 const McpCustomPage = lazy(() => import('@/pages/McpCustomPage'))
-const ExplorePage = lazy(() => import('@/pages/ExplorePage'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
 
 // Utils
@@ -686,9 +685,6 @@ function App() {
                   translate={translate}
                 />
               } />
-
-              {/* 探索页面 - v0 风格 */}
-              <Route path="/explore" element={<ExplorePage />} />
 
               {/* Agent 管理页面 */}
               <Route path="/agents" element={<AgentsPage />} />

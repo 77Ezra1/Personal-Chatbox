@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--notes-bg-primary);
+  background: var(--note-editor-surface, #f7f8fb);
   overflow: hidden;
 }
 
@@ -18,15 +18,16 @@
   justify-content: space-between;
   gap: var(--notes-spacing-md);
   padding: var(--notes-spacing-lg) var(--notes-spacing-xl);
-  border-bottom: 1px solid var(--notes-border-subtle);
-  background: linear-gradient(180deg, var(--notes-bg-secondary) 0%, var(--notes-bg-primary) 100%);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: var(--note-editor-surface, #f7f8fb);
+  color: var(--note-editor-text, #111827);
 }
 
 .note-title-input {
   flex: 1;
   font-size: 2rem;
   font-weight: 800;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
   background: transparent;
   border: none;
   outline: none;
@@ -36,12 +37,12 @@
 }
 
 .note-title-input::placeholder {
-  color: var(--notes-text-muted);
+  color: var(--muted-foreground, #9ca3af);
   opacity: 0.5;
 }
 
 .note-title-input:focus {
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
 }
 
 .note-editor-actions {
@@ -84,9 +85,10 @@
   align-items: center;
   gap: var(--notes-spacing-md);
   padding: var(--notes-spacing-md) var(--notes-spacing-xl);
-  border-bottom: 1px solid var(--notes-border-subtle);
-  background: var(--notes-bg-secondary);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: var(--note-editor-surface, #f7f8fb);
   flex-wrap: wrap;
+  color: var(--note-editor-text, #111827);
 }
 
 .toolbar-section {
@@ -118,10 +120,9 @@
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: var(--notes-glass-bg);
-  border: 1px solid var(--notes-glass-border);
+  background: rgba(17, 24, 39, 0.04);
+  border: 1px solid rgba(17, 24, 39, 0.12);
   border-radius: var(--notes-radius-md);
-  backdrop-filter: blur(8px);
 }
 
 .format-buttons .btn-icon {
@@ -133,7 +134,7 @@
   border-radius: var(--notes-radius-sm);
   border: none;
   background: transparent;
-  color: var(--notes-text-secondary);
+  color: var(--note-editor-text, #111827);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -141,14 +142,14 @@
 }
 
 .format-buttons .btn-icon:hover:not(:disabled) {
-  background: var(--notes-bg-hover);
-  color: var(--notes-text-primary);
+  background: rgba(17, 24, 39, 0.08);
+  color: var(--note-editor-text, #111827);
 }
 
 .format-buttons .btn-icon.active {
-  background: var(--notes-gradient-primary);
-  color: white;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  background: var(--note-editor-text, #111827);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.2);
 }
 
 .format-buttons .btn-icon:disabled {
@@ -161,13 +162,13 @@
   flex: 1;
   overflow-y: auto;
   padding: 0;
-  background: var(--notes-bg-primary);
+  background: var(--note-editor-surface, #f7f8fb);
 }
 
 .ProseMirror {
   outline: none;
   min-height: 500px;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
   font-size: 1.05rem;
   line-height: 1.75;
   font-weight: 400;
@@ -178,10 +179,7 @@
   font-size: 2.25em;
   font-weight: 800;
   margin: 1.2em 0 0.6em;
-  background: var(--notes-gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--notes-text-primary, var(--note-editor-text, #111827));
   letter-spacing: -0.03em;
   line-height: 1.2;
 }
@@ -190,7 +188,7 @@
   font-size: 1.75em;
   font-weight: 700;
   margin: 1em 0 0.5em;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
   border-bottom: 2px solid;
   border-image: var(--notes-gradient-blue) 1;
   padding-bottom: 0.3em;
@@ -201,13 +199,13 @@
   font-size: 1.4em;
   font-weight: 700;
   margin: 0.8em 0 0.4em;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
   letter-spacing: -0.01em;
 }
 
 .ProseMirror p {
   margin: 0.75em 0;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
 }
 
 .ProseMirror blockquote {
@@ -216,7 +214,7 @@
   border-image: var(--notes-gradient-blue) 1;
   padding-left: 20px;
   margin: 1.5em 0;
-  color: var(--notes-text-secondary);
+  color: var(--note-editor-text, #111827);
   font-style: italic;
   background: var(--notes-glass-bg);
   padding: 16px 20px;
@@ -242,7 +240,7 @@
 
 .ProseMirror li {
   margin: 0.5em 0;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
 }
 
 .ProseMirror code {
@@ -271,7 +269,7 @@
   background: transparent;
   padding: 0;
   border: none;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
 }
 
 .ProseMirror hr {
@@ -296,12 +294,12 @@
 
 .ProseMirror strong {
   font-weight: 700;
-  color: var(--notes-text-primary);
+  color: var(--note-editor-text, #111827);
 }
 
 .ProseMirror em {
   font-style: italic;
-  color: var(--notes-text-secondary);
+  color: var(--note-editor-text, #111827);
 }
 
 /* === 编辑器底部 === */

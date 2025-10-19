@@ -22,6 +22,15 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    watch: {
+      ignored: [
+        'data/**',
+        '**/data/**',
+        '**/uploads/**',
+        '**/logs/**',
+        '**/backup/**'
+      ],
+    },
     // 配置中间件以服务根目录下的HTML文件
     middlewareMode: false,
     // 添加自定义中间件

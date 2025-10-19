@@ -23,12 +23,27 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
 - Node.js 18+
 - pnpm (推荐) 或 npm
 
-### 安装步骤
+### 一键启动（推荐）⭐
+
+**Windows 用户:**
+```powershell
+.\start-all-auto.ps1
+```
+
+**Mac/Linux 用户:**
+```bash
+./start-all-auto.sh
+```
+
+> 💡 **提示**: 一键启动脚本会自动检测依赖、编译 better-sqlite3、处理端口冲突，无需手动操作！  
+> 详细说明请查看: **[完整启动指南](docs/startup/STARTUP_GUIDE.md)**
+
+### 手动安装步骤
 
 1. **克隆项目**
    ```bash
    git clone https://github.com/77Ezra1/Personal-Chatbox.git
-   cd Personal Chatbox
+   cd Personal-Chatbox
    ```
 
 2. **安装依赖**
@@ -46,9 +61,10 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
 4. **启动应用**
    ```bash
    # 一键启动（推荐）
-   ./start.sh
+   ./start-all-auto.sh   # Mac/Linux
+   .\start-all-auto.ps1  # Windows
 
-   # 或者分别启动
+   # 或者手动分别启动
    pnpm dev              # 启动前端(开发模式)
    node server/index.cjs # 启动后端
    ```
@@ -93,12 +109,12 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
 
 ## 📚 使用文档
 
-> 💡 **快速导航**: 查看 **[完整文档索引](DOCUMENTATION_INDEX.md)** 了解所有文档
+> 💡 **快速导航**: 查看 **[完整文档索引](docs/COMPLETE_INDEX.md)** 了解所有文档
 
 ### 🌟 新手入门 (必读)
+- **[完整启动指南](docs/startup/STARTUP_GUIDE.md)** - Windows/Mac/Linux 一键启动 ⭐⭐⭐⭐⭐
 - **[快速开始指南](docs/guides/GETTING_STARTED.md)** - 第一次使用必读 ⭐⭐⭐⭐⭐
 - **[完整用户指南](docs/guides/MCP_COMPLETE_USER_GUIDE.md)** - 详细的功能说明 ⭐⭐⭐⭐
-- **[启动指南](START_GUIDE.md)** - 快速启动项目
 
 ### ⚙️ 配置指南
 - **[API配置指南](API_CONFIGURATION_GUIDE.md)** - API密钥配置
@@ -139,11 +155,11 @@ Personal Chatbox是一个基于React和Node.js开发的全栈AI对话应用,旨�
 - **[Git推送脚本](docs/GIT_PUSH_SCRIPTS.md)** - Git自动化
 
 ### 📊 更多文档
-查看 **[完整文档索引](DOCUMENTATION_INDEX.md)** 获取:
-- 90+ 详细文档列表
-- 按场景查找文档
-- 关键词搜索索引
-- 常见问题FAQ
+查看 **[完整文档索引](docs/COMPLETE_INDEX.md)** 获取:
+- 150+ 详细文档列表
+- 按场景/角色查找文档
+- 启动脚本完整说明
+- 分类导航和快速链接
 
 ## 🎯 核心功能
 

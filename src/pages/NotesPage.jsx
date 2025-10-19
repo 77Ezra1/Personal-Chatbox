@@ -12,6 +12,8 @@ import { OutlinePanel } from '@/components/notes/OutlinePanel';
 import { AIAssistantPanel } from '@/components/notes/AIAssistantPanel';
 import { ResizablePanel } from '@/components/notes/ResizablePanel';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatNoteTime } from '@/lib/utils';
 import * as notesApi from '@/lib/notesApi';
 import '@/styles/notes-v0-theme.css';
 import '@/styles/notes-v0-enhanced.css';
@@ -19,6 +21,7 @@ import './NotesPage.css';
 
 export default function NotesPage() {
   const { translate } = useTranslation();
+  const { user } = useAuth();
 
   // 状态管理
   const [notes, setNotes] = useState([]);
@@ -40,6 +43,11 @@ export default function NotesPage() {
   const [rightPanelTab, setRightPanelTab] = useState('outline');
   const [currentEditor, setCurrentEditor] = useState(null);
   const [currentContent, setCurrentContent] = useState('');
+
+  // 获取用户时区，优先使用用户设置，否则使用默认值
+  const getUserTimezone = useCallback(() => {
+    return user?.timezone || 'Asia/Shanghai';
+  }, [user]);
 
   // 加载笔记
   const loadNotes = useCallback(async () => {
@@ -193,6 +201,61 @@ export default function NotesPage() {
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
   }, []);
+
+  // 创建新分类
+  const handleCreateCategory = useCallback(async (categoryName) => {
+    try {
+      console.log('[NotesPage] Creating category:', categoryName);
+      
+      // 调用 API 创建分类
+      const result = await notesApi.createCategory({
+        name: categoryName,
+        color: '#6366f1', // 默认颜色
+        description: '',
+        icon: ''
+      });
+
+      console.log('[NotesPage] Category created:', result);
+
+      if (result.success && result.category) {
+        // 将新分类添加到状态中
+        setCategories(prevCategories => [...prevCategories, result.category]);
+        
+        // 更新统计信息
+        loadMetadata();
+        
+        toast.success(result.message || translate('notes.categoryCreated') || 'Category created successfully');
+        
+        // 返回新创建的分类
+        return result.category;
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('[NotesPage] Failed to create category:', error);
+      
+      // 处理特定错误
+      const errorCode = error.response?.data?.code;
+      const errorMessage = error.response?.data?.error || error.message;
+      
+      switch (errorCode) {
+        case 'DUPLICATE_CATEGORY':
+          toast.error(translate('notes.categoryExists') || 'Category already exists');
+          break;
+        case 'NAME_TOO_LONG':
+          toast.error(translate('notes.categoryNameTooLong') || 'Category name is too long (max 50 characters)');
+          break;
+        case 'INVALID_COLOR':
+          toast.error(translate('notes.invalidColor') || 'Invalid color format');
+          break;
+        default:
+          toast.error(translate('notes.categoryCreateError') || `Failed to create category: ${errorMessage}`);
+      }
+      
+      // 抛出错误以便 NoteEditor 可以处理
+      throw error;
+    }
+  }, [translate, loadMetadata]);
 
   // 导出笔记
   const handleExport = useCallback(async () => {
@@ -361,6 +424,7 @@ export default function NotesPage() {
               onDeleteNote={handleDeleteNote}
               onToggleFavorite={handleToggleFavorite}
               translate={translate}
+              userTimezone={getUserTimezone()}
             />
           )}
         </div>
@@ -390,6 +454,7 @@ export default function NotesPage() {
             categories={categories}
             onSave={handleSaveNote}
             onCancel={handleCancelEdit}
+            onCreateCategory={handleCreateCategory}
             translate={translate}
             onEditorReady={setCurrentEditor}
             onContentChange={setCurrentContent}
@@ -404,9 +469,16 @@ export default function NotesPage() {
             </div>
             <div className="note-viewer-meta">
               <span>{translate('notes.category') || 'Category'}: {selectedNote.category}</span>
-              <span>{translate('notes.updated') || 'Updated'}: {new Date(selectedNote.updated_at).toLocaleString()}</span>
+              <span>
+                {translate('notes.updated') || 'Updated'}: {formatNoteTime(
+                  selectedNote.updated_at,
+                  selectedNote.created_at,
+                  getUserTimezone()
+                )}
+              </span>
             </div>
-            {selectedNote.tags && selectedNote.tags.length > 0 && (
+            {/* normalizeNote 确保 tags 是数组 */}
+            {selectedNote.tags.length > 0 && (
               <div className="note-viewer-tags">
                 {selectedNote.tags.map((tag, index) => (
                   <span key={index} className="tag">{tag}</span>

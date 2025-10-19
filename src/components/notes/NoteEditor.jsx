@@ -12,11 +12,12 @@ import { Select } from './Select';
 import './NoteEditor-v0.css';
 import './NoteEditor.css';
 
-export function NoteEditor({ note, categories, onSave, onCancel, translate, onEditorReady, onContentChange }) {
+export function NoteEditor({ note, categories, onSave, onCancel, translate, onEditorReady, onContentChange, onCreateCategory }) {
   const [title, setTitle] = useState(note?.title || '');
   const [content, setContent] = useState(note?.content || '');
   const [category, setCategory] = useState(note?.category || 'default');
   const [tags, setTags] = useState(note?.tags || []);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [editor, setEditor] = useState(null);
@@ -95,6 +96,21 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate, onEd
   const handleRemoveTag = useCallback((tagToRemove) => {
     setTags(tags.filter(t => t !== tagToRemove));
   }, [tags]);
+
+  // 处理分类创建
+  const handleCreateCategory = useCallback(async () => {
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+
+    try {
+      const created = await onCreateCategory?.(trimmed);
+      const categoryName = created?.name || trimmed;
+      setCategory(categoryName);
+      setNewCategoryName('');
+    } catch (error) {
+      console.error('[NoteEditor] Failed to create category:', error);
+    }
+  }, [newCategoryName, onCreateCategory]);
 
   // 快捷键处理
   useEffect(() => {
@@ -217,6 +233,10 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate, onEd
         {/* 格式化工具栏 */}
         <div className="note-editor-toolbar">
           <div className="toolbar-section toolbar-category">
+            <div className="category-section-header">
+              <span className="section-icon">📂</span>
+              <span className="section-label">{translate?.('notes.category') || 'Category'}</span>
+            </div>
             <Select
               value={category}
               onChange={setCategory}
@@ -231,6 +251,30 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate, onEd
               icon="📁"
               className="category-select-custom"
             />
+            <div className="category-create-inline">
+              <input
+                type="text"
+                className="category-create-input"
+                placeholder={translate?.('notes.newCategoryPlaceholder') || 'New category name'}
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCreateCategory();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="btn-secondary category-create-button"
+                onClick={handleCreateCategory}
+                disabled={!newCategoryName.trim()}
+                title={translate?.('notes.addCategoryTooltip') || 'Add new category'}
+              >
+                {translate?.('notes.addCategory') || 'Add'}
+              </button>
+            </div>
           </div>
 
           <div className="toolbar-section toolbar-tags">

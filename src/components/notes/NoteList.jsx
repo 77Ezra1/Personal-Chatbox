@@ -3,6 +3,7 @@
  */
 
 import { memo } from 'react';
+import { formatNoteTime } from '@/lib/utils';
 import './NoteCard.css';
 import './NoteList.css';
 
@@ -12,38 +13,23 @@ export const NoteList = memo(function NoteList({
   onSelectNote,
   onDeleteNote,
   onToggleFavorite,
-  translate
+  translate,
+  userTimezone = 'Asia/Shanghai'
 }) {
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-
-    // 小于1分钟
-    if (diff < 60000) {
-      return translate?.('time.justNow') || 'Just now';
-    }
-    // 小于1小时
-    if (diff < 3600000) {
-      const minutes = Math.floor(diff / 60000);
-      return translate?.('time.minutesAgo', { count: minutes }) || `${minutes}m ago`;
-    }
-    // 小于1天
-    if (diff < 86400000) {
-      const hours = Math.floor(diff / 3600000);
-      return translate?.('time.hoursAgo', { count: hours }) || `${hours}h ago`;
-    }
-    // 小于7天
-    if (diff < 604800000) {
-      const days = Math.floor(diff / 86400000);
-      return translate?.('time.daysAgo', { count: days }) || `${days}d ago`;
-    }
-    // 显示日期
-    return date.toLocaleDateString();
+  const formatDate = (note) => {
+    // 使用 formatNoteTime 统一格式化，带回退逻辑
+    // normalizeNote 确保 updated_at 和 created_at 已经是 ISO 格式
+    return formatNoteTime(
+      note.updated_at,
+      note.created_at,
+      userTimezone
+    );
   };
 
   const truncateContent = (content, maxLength = 100) => {
+    // normalizeNote 确保 content 是字符串
     if (!content) return '';
+    
     // 移除Markdown格式
     const plainText = content
       .replace(/#{1,6}\s/g, '')
@@ -71,7 +57,7 @@ export const NoteList = memo(function NoteList({
 
   return (
     <div className="note-list">
-      {notes.filter(note => note && note.id).map((note, index) => (
+      {notes.map((note, index) => (
         <div
           key={note.id}
           className={`note-card ${selectedNoteId === note.id ? 'selected' : ''} ${note.is_favorite ? 'favorited' : ''}`}
@@ -119,11 +105,12 @@ export const NoteList = memo(function NoteList({
                 </span>
               )}
               <span className="note-date">
-                {formatDate(note.updated_at)}
+                {formatDate(note)}
               </span>
             </div>
 
-            {note.tags && note.tags.length > 0 && (
+            {/* normalizeNote 确保 tags 是数组 */}
+            {note.tags.length > 0 && (
               <div className="note-card-tags">
                 {note.tags.slice(0, 3).map((tag, index) => (
                   <span key={index} className="note-tag-pill">

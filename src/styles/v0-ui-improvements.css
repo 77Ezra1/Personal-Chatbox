@@ -210,8 +210,9 @@
 }
 
 .message-input-body:focus-within {
-  border-color: var(--input-focus);
-  box-shadow: var(--shadow-md), 0 0 0 3px color-mix(in srgb, var(--ring) 10%, transparent);
+  /* 移除蓝色边框和外发光效果 */
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .message-input-main {

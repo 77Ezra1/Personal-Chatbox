@@ -327,23 +327,94 @@ class NoteService {
 
   /**
    * 创建新分类
+   * @param {number} userId - 用户ID
+   * @param {Object} categoryData - 分类数据
+   * @param {string} categoryData.name - 分类名称（必填）
+   * @param {string} [categoryData.color='#6366f1'] - 分类颜色（可选，默认紫色）
+   * @param {string} [categoryData.description=''] - 分类描述（可选）
+   * @param {string} [categoryData.icon=''] - 分类图标（可选，emoji或图标名称）
+   * @param {number} [categoryData.sortOrder=0] - 排序顺序（可选）
+   * @returns {Promise<Object>} 返回创建的分类对象
    */
   async createCategory(userId, categoryData) {
     try {
-      const { name, color = '#6366f1' } = categoryData;
+      const { 
+        name, 
+        color = '#6366f1', 
+        description = '', 
+        icon = '', 
+        sortOrder = 0 
+      } = categoryData;
 
-      const result = await this.db.run(
-        `INSERT INTO note_categories (user_id, name, color, created_at)
-         VALUES (?, ?, ?, datetime('now'))`,
-        [userId, name, color]
+      // 验证分类名称
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        throw new Error('Category name is required and must be a non-empty string');
+      }
+
+      const trimmedName = name.trim();
+
+      // 检查名称长度限制
+      if (trimmedName.length > 50) {
+        throw new Error('Category name must be less than 50 characters');
+      }
+
+      // 验证颜色格式（支持 hex 和 rgb/rgba）
+      const colorRegex = /^(#[0-9A-Fa-f]{3,8}|rgb\(|rgba\()/;
+      if (color && !colorRegex.test(color)) {
+        throw new Error('Invalid color format. Use hex (#RGB, #RRGGBB) or rgb/rgba format');
+      }
+
+      // 检查分类是否已存在
+      const existing = await this.db.get(
+        'SELECT id FROM note_categories WHERE user_id = ? AND LOWER(name) = LOWER(?)',
+        [userId, trimmedName]
       );
 
+      if (existing) {
+        throw new Error('Category already exists');
+      }
+
+      // 如果未指定排序顺序，获取最大值+1
+      let finalSortOrder = sortOrder;
+      if (sortOrder === 0) {
+        const maxOrder = await this.db.get(
+          'SELECT MAX(sort_order) as max_order FROM note_categories WHERE user_id = ?',
+          [userId]
+        );
+        finalSortOrder = (maxOrder?.max_order || 0) + 1;
+      }
+
+      const now = new Date().toISOString();
+
+      // 插入新分类
+      const result = await this.db.run(
+        `INSERT INTO note_categories (user_id, name, color, description, icon, sort_order, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [userId, trimmedName, color, description, icon, finalSortOrder, now, now]
+      );
+
+      // 获取笔记数量
+      const noteCount = await this.db.get(
+        'SELECT COUNT(*) as count FROM notes WHERE user_id = ? AND category = ?',
+        [userId, trimmedName]
+      );
+
+      // 返回完整的分类对象
       return {
-        id: result.lastID,
-        user_id: userId,
-        name,
-        color,
-        created_at: new Date().toISOString()
+        success: true,
+        category: {
+          id: result.lastID,
+          user_id: userId,
+          name: trimmedName,
+          color,
+          description,
+          icon,
+          sort_order: finalSortOrder,
+          note_count: noteCount?.count || 0,
+          created_at: now,
+          updated_at: now
+        },
+        message: 'Category created successfully'
       };
     } catch (error) {
       if (error.message.includes('UNIQUE constraint failed')) {

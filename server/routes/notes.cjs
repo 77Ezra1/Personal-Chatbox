@@ -224,25 +224,80 @@ router.post('/batch-delete', async (req, res) => {
 /**
  * 创建新分类
  * POST /api/notes/categories
- * Body: { name, color }
+ * Body: { 
+ *   name: string (必填),
+ *   color: string (可选，默认 #6366f1),
+ *   description: string (可选),
+ *   icon: string (可选),
+ *   sortOrder: number (可选)
+ * }
+ * Response: {
+ *   success: boolean,
+ *   category: {
+ *     id: number,
+ *     user_id: number,
+ *     name: string,
+ *     color: string,
+ *     description: string,
+ *     icon: string,
+ *     sort_order: number,
+ *     note_count: number,
+ *     created_at: string,
+ *     updated_at: string
+ *   },
+ *   message: string
+ * }
  */
 router.post('/categories', async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, color } = req.body;
+    const { name, color, description, icon, sortOrder } = req.body;
 
     if (!name) {
-      return res.status(400).json({ success: false, error: 'Category name is required' });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Category name is required',
+        code: 'MISSING_NAME' 
+      });
     }
 
-    const category = await noteService.createCategory(userId, { name, color });
-    res.status(201).json({ success: true, category });
+    const result = await noteService.createCategory(userId, { 
+      name, 
+      color, 
+      description, 
+      icon, 
+      sortOrder 
+    });
+    
+    res.status(201).json(result);
   } catch (error) {
     if (error.message === 'Category already exists') {
-      return res.status(409).json({ success: false, error: error.message });
+      return res.status(409).json({ 
+        success: false, 
+        error: error.message,
+        code: 'DUPLICATE_CATEGORY' 
+      });
+    }
+    if (error.message.includes('must be less than 50 characters')) {
+      return res.status(400).json({ 
+        success: false, 
+        error: error.message,
+        code: 'NAME_TOO_LONG' 
+      });
+    }
+    if (error.message.includes('Invalid color format')) {
+      return res.status(400).json({ 
+        success: false, 
+        error: error.message,
+        code: 'INVALID_COLOR' 
+      });
     }
     logger.error('[Notes API] Error creating category:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      code: 'INTERNAL_ERROR' 
+    });
   }
 });
 

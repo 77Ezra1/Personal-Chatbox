@@ -1,6 +1,6 @@
-/**
- * 优化的下拉选择组件
- * 支持图标、搜索、分组等功能
+﻿/**
+ * 浼樺寲鐨勪笅鎷夐€夋嫨缁勪欢
+ * 鏀寔鍥炬爣銆佹悳绱€佸垎缁勭瓑鍔熻兘
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -22,8 +22,7 @@ export function Select({
   const selectRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // 关闭下拉框
-  useEffect(() => {
+  // 鍏抽棴涓嬫媺妗?  useEffect(() => {
     const handleClickOutside = (event) => {
       if (selectRef.current && !selectRef.current.contains(event.target)) {
         setIsOpen(false);
@@ -43,24 +42,24 @@ export function Select({
     };
   }, [isOpen, searchable]);
 
-  // 过滤选项
+  // 杩囨护閫夐」
   const filteredOptions = searchable && searchQuery
     ? options.filter(opt =>
         opt.label.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : options;
 
-  // 获取当前选中的选项
+  // 鑾峰彇褰撳墠閫変腑鐨勯€夐」
   const selectedOption = options.find(opt => opt.value === value);
 
-  // 处理选择
+  // 澶勭悊閫夋嫨
   const handleSelect = (optionValue) => {
     onChange(optionValue);
     setIsOpen(false);
     setSearchQuery('');
   };
 
-  // 处理键盘事件
+  // 澶勭悊閿洏浜嬩欢
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
       setIsOpen(false);

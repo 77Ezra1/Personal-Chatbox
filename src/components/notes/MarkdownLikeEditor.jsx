@@ -13,6 +13,8 @@ import { useEffect } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import { TextStyle } from '@tiptap/extension-text-style'
+import Color from '@tiptap/extension-color'
 import { Extension, textblockTypeInputRule, wrappingInputRule } from '@tiptap/core'
 import { SlashCommands } from './SlashCommands'
 import 'tippy.js/dist/tippy.css'
@@ -144,7 +146,8 @@ const styles = `
   margin: 0;
   padding: 20px 24px;
   line-height: 1.75;
-  color: var(--foreground, #111827);
+  color: var(--note-editor-text, #111827);
+  caret-color: var(--note-editor-text, #111827);
   font-size: 16px;
   min-height: 100%;
   outline: none;
@@ -174,7 +177,7 @@ const styles = `
   font-size: 32px;
   font-weight: 700;
   margin: 28px 0 12px;
-  color: var(--foreground, #1a1a1a);
+  color: var(--note-editor-text, #111827);
   border: none !important;
   text-decoration: none !important;
   border-bottom: none !important;
@@ -183,7 +186,7 @@ const styles = `
   font-size: 26px;
   font-weight: 700;
   margin: 24px 0 10px;
-  color: var(--foreground, #1a1a1a);
+  color: var(--note-editor-text, #111827);
   border: none !important;
   text-decoration: none !important;
   border-bottom: none !important;
@@ -192,7 +195,7 @@ const styles = `
   font-size: 22px;
   font-weight: 700;
   margin: 20px 0 8px;
-  color: var(--foreground, #1a1a1a);
+  color: var(--note-editor-text, #111827);
   border: none !important;
   text-decoration: none !important;
   border-bottom: none !important;
@@ -201,7 +204,7 @@ const styles = `
   font-size: 18px;
   font-weight: 700;
   margin: 16px 0 8px;
-  color: var(--foreground, #1a1a1a);
+  color: var(--note-editor-text, #111827);
   border: none !important;
   text-decoration: none !important;
 }
@@ -209,7 +212,7 @@ const styles = `
   font-size: 16px;
   font-weight: 700;
   margin: 14px 0 6px;
-  color: var(--foreground, #1a1a1a);
+  color: var(--note-editor-text, #111827);
   border: none !important;
   text-decoration: none !important;
 }
@@ -217,7 +220,7 @@ const styles = `
   font-size: 14px;
   font-weight: 700;
   margin: 12px 0 6px;
-  color: var(--foreground, #1a1a1a);
+  color: var(--note-editor-text, #111827);
   border: none !important;
   text-decoration: none !important;
 }
@@ -243,7 +246,7 @@ const styles = `
 .tdoc li {
   margin: 4px 0;
   display: list-item !important;
-  color: var(--foreground, #111827);
+  color: var(--note-editor-text, #111827);
 }
 .tdoc ul ul {
   list-style-type: circle !important;
@@ -252,7 +255,7 @@ const styles = `
   list-style-type: square !important;
 }
 .tdoc li::marker {
-  color: var(--foreground, #111827);
+  color: var(--note-editor-text, #111827);
 }
 .tdoc code {
   background: var(--secondary, #f3f4f6);
@@ -290,7 +293,7 @@ const styles = `
 }
 .tdoc strong {
   font-weight: 700;
-  color: var(--foreground, #111827);
+  color: var(--note-editor-text, #111827);
 }
 .tdoc em {
   font-style: italic;
@@ -307,6 +310,7 @@ const styles = `
 }
 .ProseMirror {
   outline: none;
+  caret-color: var(--note-editor-text, #111827);
 }
 .ProseMirror-focused {
   outline: none;
@@ -321,6 +325,8 @@ export default function MarkdownLikeEditor({
 }) {
   const editor = useEditor({
     extensions: [
+      Color.configure({ types: ['textStyle'] }),
+      TextStyle,
       StarterKit.configure({
         bulletList: { keepMarks: true },
         orderedList: { keepMarks: true },

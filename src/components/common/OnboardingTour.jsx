@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { X, ArrowRight, Compass, MessageSquare, FileText, Bot } from 'lucide-react'
+import { X, ArrowRight, MessageSquare, FileText, Bot } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const ONBOARDING_STORAGE_KEY = 'personal-chatbox-onboarding-completed'
@@ -22,13 +22,6 @@ export function OnboardingTour() {
       description: '让我们快速了解一下主要功能',
       icon: MessageSquare,
       action: null
-    },
-    {
-      title: '探索功能模块',
-      description: '点击侧边栏的"探索"按钮,查看所有可用的功能模块',
-      icon: Compass,
-      highlight: 'explore',
-      action: () => navigate('/explore')
     },
     {
       title: 'AI 对话',

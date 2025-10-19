@@ -4,6 +4,7 @@
  */
 
 import apiClient from './apiClient';
+import { normalizeNote, normalizeNotes } from './utils';
 
 const API_BASE = '/notes';
 
@@ -23,7 +24,7 @@ export async function getAllNotes(options = {}) {
   if (options.offset) params.offset = options.offset;
 
   const response = await apiClient.get(API_BASE, { params });
-  return response.data.notes;
+  return normalizeNotes(response.data.notes);
 }
 
 /**
@@ -31,7 +32,7 @@ export async function getAllNotes(options = {}) {
  */
 export async function getNoteById(noteId) {
   const response = await apiClient.get(`${API_BASE}/${noteId}`);
-  return response.data.note;
+  return normalizeNote(response.data.note);
 }
 
 /**
@@ -39,7 +40,7 @@ export async function getNoteById(noteId) {
  */
 export async function createNote(noteData) {
   const response = await apiClient.post(API_BASE, noteData);
-  return response.data.note;
+  return normalizeNote(response.data.note);
 }
 
 /**
@@ -47,7 +48,7 @@ export async function createNote(noteData) {
  */
 export async function updateNote(noteId, updates) {
   const response = await apiClient.put(`${API_BASE}/${noteId}`, updates);
-  return response.data.note;
+  return normalizeNote(response.data.note);
 }
 
 /**
@@ -76,7 +77,7 @@ export async function searchNotes(query, options = {}) {
   if (options.offset) params.offset = options.offset;
 
   const response = await apiClient.get(`${API_BASE}/search`, { params });
-  return response.data.notes;
+  return normalizeNotes(response.data.notes);
 }
 
 /**
@@ -89,10 +90,33 @@ export async function getCategories() {
 
 /**
  * 创建新分类
+ * @param {Object} categoryData - 分类数据
+ * @param {string} categoryData.name - 分类名称（必填）
+ * @param {string} [categoryData.color='#6366f1'] - 分类颜色（可选）
+ * @param {string} [categoryData.description=''] - 分类描述（可选）
+ * @param {string} [categoryData.icon=''] - 分类图标（可选）
+ * @param {number} [categoryData.sortOrder=0] - 排序顺序（可选）
+ * @returns {Promise<Object>} 返回格式：
+ * {
+ *   success: boolean,
+ *   category: {
+ *     id: number,
+ *     user_id: number,
+ *     name: string,
+ *     color: string,
+ *     description: string,
+ *     icon: string,
+ *     sort_order: number,
+ *     note_count: number,
+ *     created_at: string,
+ *     updated_at: string
+ *   },
+ *   message: string
+ * }
  */
 export async function createCategory(categoryData) {
   const response = await apiClient.post(`${API_BASE}/categories`, categoryData);
-  return response.data.category;
+  return response.data;
 }
 
 /**

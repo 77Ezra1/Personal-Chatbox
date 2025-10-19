@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen, Bot, Workflow, Brain, FileText, Store, MessageSquare, BookOpen, Lock, Compass } from 'lucide-react'
+import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen, Bot, Workflow, Brain, FileText, Store, MessageSquare, BookOpen, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
 import { SearchBar } from './SearchBar'
@@ -39,7 +39,6 @@ export function Sidebar({
   // 导航菜单项
   const navigationItems = [
     { path: '/', icon: MessageSquare, label: translate('sidebar.chat', 'Chat') },
-    { path: '/explore', icon: Compass, label: translate('sidebar.explore', 'Explore') },
     { path: '/agents', icon: Bot, label: translate('sidebar.agents', 'AI Agents'), badge: 'New' },
     { path: '/workflows', icon: Workflow, label: translate('sidebar.workflows', 'Workflows'), badge: 'New' },
     { path: '/notes', icon: FileText, label: translate('sidebar.notes', 'Notes'), badge: 'New' },

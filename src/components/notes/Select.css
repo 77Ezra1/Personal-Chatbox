@@ -1,6 +1,6 @@
-/**
- * 优化的下拉选择组件样式
- * v0.dev 风格设计
+﻿/**
+ * 浼樺寲鐨勪笅鎷夐€夋嫨缁勪欢鏍峰紡
+ * v0.dev 椋庢牸璁捐
  */
 
 .custom-select {
@@ -17,7 +17,7 @@
   letter-spacing: -0.01em;
 }
 
-/* ===== 触发按钮 ===== */
+/* ===== 瑙﹀彂鎸夐挳 ===== */
 .select-trigger {
   width: 100%;
   display: flex;
@@ -81,7 +81,7 @@
   transform: rotate(180deg);
 }
 
-/* ===== 下拉框 ===== */
+/* ===== 涓嬫媺妗?===== */
 .select-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -107,7 +107,7 @@
   }
 }
 
-/* ===== 搜索框 ===== */
+/* ===== 鎼滅储妗?===== */
 .select-search {
   display: flex;
   align-items: center;
@@ -136,7 +136,7 @@
   color: var(--muted-foreground);
 }
 
-/* ===== 选项列表 ===== */
+/* ===== 閫夐」鍒楄〃 ===== */
 .select-options {
   max-height: 240px;
   overflow-y: auto;
@@ -160,7 +160,7 @@
   background: var(--muted-foreground);
 }
 
-/* ===== 选项 ===== */
+/* ===== 閫夐」 ===== */
 .select-option {
   width: 100%;
   display: flex;
@@ -233,7 +233,7 @@
   font-size: 0.875rem;
 }
 
-/* ===== 暗黑模式优化 ===== */
+/* ===== 鏆楅粦妯″紡浼樺寲 ===== */
 .dark .select-trigger {
   background: var(--background);
   border-color: var(--border);
@@ -259,7 +259,7 @@
   color: var(--primary-foreground);
 }
 
-/* ===== 响应式 ===== */
+/* ===== 鍝嶅簲寮?===== */
 @media (max-width: 768px) {
   .select-dropdown {
     max-height: 50vh;
@@ -270,14 +270,14 @@
   }
 }
 
-/* ===== 焦点状态 ===== */
+/* ===== 鐒︾偣鐘舵€?===== */
 .select-trigger:focus-visible {
   outline: none;
   border-color: var(--ring);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 10%, transparent);
 }
 
-/* ===== 加载状态 ===== */
+/* ===== 鍔犺浇鐘舵€?===== */
 .select-loading {
   display: flex;
   align-items: center;
