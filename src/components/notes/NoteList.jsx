@@ -16,6 +16,9 @@ export const NoteList = memo(function NoteList({
   translate,
   userTimezone = 'Asia/Shanghai'
 }) {
+  console.log('[NoteList] Rendering with notes count:', notes.length);
+  console.log('[NoteList] Selected note ID:', selectedNoteId);
+  
   const formatDate = (note) => {
     // 使用 formatNoteTime 统一格式化，带回退逻辑
     // normalizeNote 确保 updated_at 和 created_at 已经是 ISO 格式
@@ -26,24 +29,8 @@ export const NoteList = memo(function NoteList({
     );
   };
 
-  const truncateContent = (content, maxLength = 100) => {
-    // normalizeNote 确保 content 是字符串
-    if (!content) return '';
-    
-    // 移除Markdown格式
-    const plainText = content
-      .replace(/#{1,6}\s/g, '')
-      .replace(/\*\*/g, '')
-      .replace(/\*/g, '')
-      .replace(/`/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .trim();
-
-    if (plainText.length <= maxLength) return plainText;
-    return plainText.substring(0, maxLength) + '...';
-  };
-
   if (notes.length === 0) {
+    console.log('[NoteList] No notes to display');
     return (
       <div className="note-list-empty">
         <div className="empty-icon">📝</div>
@@ -60,70 +47,68 @@ export const NoteList = memo(function NoteList({
       {notes.map((note, index) => (
         <div
           key={note.id}
-          className={`note-card ${selectedNoteId === note.id ? 'selected' : ''} ${note.is_favorite ? 'favorited' : ''}`}
-          style={{ animationDelay: `${index * 50}ms` }}
+          className={`note-list-item ${selectedNoteId === note.id ? 'selected' : ''} ${note.is_favorite ? 'favorited' : ''}`}
+          style={{ animationDelay: `${index * 30}ms` }}
           onClick={() => onSelectNote(note)}
         >
-          <div className="note-card-header">
-            <h3 className="note-card-title">
-              {note.is_favorite && <span className="favorite-icon">⭐</span>}
-              {note.title || 'Untitled Note'}
-            </h3>
-            <div className="note-card-actions">
-              <button
-                className="btn-card-action"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleFavorite(note.id, !note.is_favorite);
-                }}
-                title={note.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                {note.is_favorite ? '★' : '☆'}
-              </button>
-              <button
-                className="btn-card-action btn-danger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteNote(note.id);
-                }}
-                title="Delete note"
-              >
-                🗑️
-              </button>
-            </div>
+          {/* 笔记名称 + 收藏图标 */}
+          <div className="note-list-item-title">
+            {note.is_favorite && <span className="favorite-indicator">⭐</span>}
+            <span className="note-title-text">{note.title || 'Untitled Note'}</span>
           </div>
 
-          <p className="note-card-content">
-            {truncateContent(note.content)}
-          </p>
-
-          <div className="note-card-footer">
-            <div className="note-card-meta">
-              {note.category && note.category !== 'default' && (
-                <span className="note-category-badge">
-                  📁 {note.category}
-                </span>
-              )}
-              <span className="note-date">
-                {formatDate(note)}
+          {/* 笔记分类 */}
+          {note.category && note.category !== 'default' && (
+            <div className="note-list-item-category">
+              <span className="category-badge" style={{ 
+                backgroundColor: note.category_color || '#6366f1',
+                color: '#fff'
+              }}>
+                {note.category}
               </span>
             </div>
+          )}
 
-            {/* normalizeNote 确保 tags 是数组 */}
-            {note.tags.length > 0 && (
-              <div className="note-card-tags">
-                {note.tags.slice(0, 3).map((tag, index) => (
-                  <span key={index} className="note-tag-pill">
-                    {tag}
-                  </span>
-                ))}
-                {note.tags.length > 3 && (
-                  <span className="note-tag-more">
-                    +{note.tags.length - 3}
-                  </span>
-                )}
-              </div>
-            )}
+          {/* 时间信息 */}
+          <div className="note-list-item-time">
+            <span className="time-created" title="创建时间">
+              📝 {new Date(note.created_at).toLocaleDateString('zh-CN', {
+                timeZone: userTimezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              })}
+            </span>
+            <span className="time-separator">•</span>
+            <span className="time-updated" title="最后修改">
+              ✏️ {formatDate(note)}
+            </span>
+          </div>
+
+          {/* 操作按钮 */}
+          <div className="note-list-item-actions">
+            <button
+              className="btn-list-action btn-favorite"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(note.id, !note.is_favorite);
+              }}
+              title={note.is_favorite ? '取消收藏' : '收藏'}
+            >
+              {note.is_favorite ? '★' : '☆'}
+            </button>
+            <button
+              className="btn-list-action btn-delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm('确定要删除这条笔记吗？')) {
+                  onDeleteNote(note.id);
+                }
+              }}
+              title="删除笔记"
+            >
+              🗑️
+            </button>
           </div>
         </div>
       ))}

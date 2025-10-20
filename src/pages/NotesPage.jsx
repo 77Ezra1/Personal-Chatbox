@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { NoteList } from '@/components/notes/NoteList';
 import { NoteEditor } from '@/components/notes/NoteEditor';
+import { NoteCardsGrid } from '@/components/notes/NoteCardsGrid';
 import { Select } from '@/components/notes/Select';
 import { RightPanel } from '@/components/notes/RightPanel';
 import { OutlinePanel } from '@/components/notes/OutlinePanel';
@@ -13,7 +14,6 @@ import { AIAssistantPanel } from '@/components/notes/AIAssistantPanel';
 import { ResizablePanel } from '@/components/notes/ResizablePanel';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/contexts/AuthContext';
-import { formatNoteTime } from '@/lib/utils';
 import * as notesApi from '@/lib/notesApi';
 import '@/styles/notes-v0-theme.css';
 import '@/styles/notes-v0-enhanced.css';
@@ -62,6 +62,8 @@ export default function NotesPage() {
         sortOrder
       };
 
+      console.log('[NotesPage] Loading notes with options:', options);
+
       let fetchedNotes;
       if (searchQuery) {
         fetchedNotes = await notesApi.searchNotes(searchQuery, options);
@@ -69,9 +71,12 @@ export default function NotesPage() {
         fetchedNotes = await notesApi.getAllNotes(options);
       }
 
+      console.log('[NotesPage] Loaded notes count:', fetchedNotes.length);
+      console.log('[NotesPage] First 3 notes:', fetchedNotes.slice(0, 3));
       setNotes(fetchedNotes);
+      console.log('[NotesPage] Notes state updated');
     } catch (error) {
-      console.error('Failed to load notes:', error);
+      console.error('[NotesPage] Failed to load notes:', error);
       toast.error(translate('notes.loadError') || 'Failed to load notes');
     } finally {
       setLoading(false);
@@ -117,41 +122,105 @@ export default function NotesPage() {
   const handleSaveNote = useCallback(async (noteData) => {
     console.log('[NotesPage] Saving note:', noteData);
     console.log('[NotesPage] Selected note:', selectedNote);
+    console.log('[NotesPage] Current filter - category:', filterCategory, 'tag:', filterTag);
 
     try {
+      let savedNote;
+      
       if (selectedNote) {
         // 更新现有笔记
         console.log('[NotesPage] Updating note ID:', selectedNote.id);
-        const updated = await notesApi.updateNote(selectedNote.id, noteData);
-        console.log('[NotesPage] Update response:', updated);
+        savedNote = await notesApi.updateNote(selectedNote.id, noteData);
+        console.log('[NotesPage] Update response:', savedNote);
 
-        if (!updated || !updated.id) {
+        if (!savedNote || !savedNote.id) {
           throw new Error('Invalid response from server');
         }
-        setNotes(notes.map(n => n.id === updated.id ? updated : n));
-        setSelectedNote(updated);
+        
         toast.success(translate('notes.updateSuccess') || 'Note updated');
       } else {
         // 创建新笔记
         console.log('[NotesPage] Creating new note');
-        const created = await notesApi.createNote(noteData);
-        console.log('[NotesPage] Create response:', created);
+        savedNote = await notesApi.createNote(noteData);
+        console.log('[NotesPage] Create response:', savedNote);
 
-        if (!created || !created.id) {
+        if (!savedNote || !savedNote.id) {
           throw new Error('Invalid response from server');
         }
-        setNotes([created, ...notes]);
-        setSelectedNote(created);
+        
         toast.success(translate('notes.createSuccess') || 'Note created');
       }
+      
+      setSelectedNote(savedNote);
       setIsEditing(false);
-      loadMetadata(); // 更新统计信息
+      
+      // 更新元数据（分类、标签统计）
+      await loadMetadata();
+      
+      // 检查新保存的笔记是否匹配当前筛选条件
+      const matchesCurrentFilter = 
+        (!filterCategory || savedNote.category === filterCategory) &&
+        (!filterTag || (savedNote.tags && savedNote.tags.includes(filterTag))) &&
+        (!showFavoritesOnly || savedNote.is_favorite);
+      
+      console.log('[NotesPage] Note matches current filter:', matchesCurrentFilter);
+      console.log('[NotesPage] Note category:', savedNote.category, 'Current filter:', filterCategory);
+      console.log('[NotesPage] Note tags:', savedNote.tags, 'Current tag filter:', filterTag);
+      
+      // 始终重新加载笔记列表以确保最新数据显示
+      if (matchesCurrentFilter) {
+        // 笔记匹配当前筛选条件，使用当前筛选重新加载
+        console.log('[NotesPage] Note matches filter, reloading with current filters');
+        const options = {
+          category: filterCategory || undefined,
+          tag: filterTag || undefined,
+          isFavorite: showFavoritesOnly || undefined,
+          isArchived: showArchived,
+          sortBy,
+          sortOrder
+        };
+        const fetchedNotes = await notesApi.getAllNotes(options);
+        setNotes(fetchedNotes);
+        console.log('[NotesPage] Reloaded notes count:', fetchedNotes.length);
+      } else if (filterCategory || filterTag || showFavoritesOnly) {
+        // 笔记不匹配当前筛选条件，清除筛选并显示所有笔记
+        console.log('[NotesPage] Note does not match filter, clearing filters to show the note');
+        
+        // 先清除筛选条件
+        setFilterCategory('');
+        setFilterTag('');
+        setShowFavoritesOnly(false);
+        
+        // 立即加载所有笔记（使用清除后的筛选条件）
+        const allNotes = await notesApi.getAllNotes({
+          isArchived: showArchived,
+          sortBy,
+          sortOrder
+        });
+        setNotes(allNotes);
+        console.log('[NotesPage] Loaded all notes after clearing filters:', allNotes.length);
+        
+        toast.info(translate('notes.filterCleared') || 'Filters cleared to show your note', {
+          duration: 2000
+        });
+      } else {
+        // 没有筛选条件，加载所有笔记
+        console.log('[NotesPage] No filters active, loading all notes');
+        const allNotes = await notesApi.getAllNotes({
+          isArchived: showArchived,
+          sortBy,
+          sortOrder
+        });
+        setNotes(allNotes);
+        console.log('[NotesPage] Loaded all notes:', allNotes.length);
+      }
+      
     } catch (error) {
       console.error('[NotesPage] Failed to save note:', error);
       console.error('[NotesPage] Error details:', error.response?.data || error.message);
       toast.error(translate('notes.saveError') || `Failed to save note: ${error.message}`);
     }
-  }, [selectedNote, notes, translate, loadMetadata]);
+  }, [selectedNote, translate, loadMetadata, filterCategory, filterTag, showFavoritesOnly, showArchived, sortBy, sortOrder]);
 
   // 删除笔记
   const handleDeleteNote = useCallback(async (noteId) => {
@@ -190,12 +259,11 @@ export default function NotesPage() {
     }
   }, [notes, selectedNote, translate]);
 
-  // 编辑当前笔记
-  const handleEditCurrentNote = useCallback(() => {
-    if (selectedNote) {
-      setIsEditing(true);
-    }
-  }, [selectedNote]);
+  // 编辑笔记
+  const handleEditNote = useCallback((note) => {
+    setSelectedNote(note);
+    setIsEditing(true);
+  }, []);
 
   // 取消编辑
   const handleCancelEdit = useCallback(() => {
@@ -459,43 +527,15 @@ export default function NotesPage() {
             onEditorReady={setCurrentEditor}
             onContentChange={setCurrentContent}
           />
-        ) : selectedNote ? (
-          <div className="note-viewer">
-            <div className="note-viewer-header">
-              <h1>{selectedNote.title}</h1>
-              <button className="btn-primary" onClick={handleEditCurrentNote}>
-                ✏️ {translate('common.edit') || 'Edit'}
-              </button>
-            </div>
-            <div className="note-viewer-meta">
-              <span>{translate('notes.category') || 'Category'}: {selectedNote.category}</span>
-              <span>
-                {translate('notes.updated') || 'Updated'}: {formatNoteTime(
-                  selectedNote.updated_at,
-                  selectedNote.created_at,
-                  getUserTimezone()
-                )}
-              </span>
-            </div>
-            {/* normalizeNote 确保 tags 是数组 */}
-            {selectedNote.tags.length > 0 && (
-              <div className="note-viewer-tags">
-                {selectedNote.tags.map((tag, index) => (
-                  <span key={index} className="tag">{tag}</span>
-                ))}
-              </div>
-            )}
-            <div
-              className="note-viewer-content note-preview"
-              dangerouslySetInnerHTML={{ __html: selectedNote.content }}
-            />
-          </div>
         ) : (
-          <div className="note-placeholder">
-            <div className="placeholder-icon">📝</div>
-            <h2>{translate('notes.selectNote') || 'Select a note to view'}</h2>
-            <p>{translate('notes.selectNoteHint') || 'Or create a new note to get started'}</p>
-          </div>
+          <NoteCardsGrid
+            notes={notes}
+            onEditNote={handleEditNote}
+            translate={translate}
+            userTimezone={getUserTimezone()}
+            categories={categories}
+            loading={loading}
+          />
         )}
       </div>
 

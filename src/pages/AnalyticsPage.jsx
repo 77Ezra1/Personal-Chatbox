@@ -31,6 +31,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/hooks/useTranslation'
 import { createLogger } from '@/lib/logger'
+import InsightsSection from '@/components/analytics/InsightsSection'
 import './AnalyticsPage.css'
 
 const logger = createLogger('AnalyticsPage')
@@ -154,7 +155,7 @@ export default function AnalyticsPage() {
     )
   }
 
-  // Error state
+  // Error state - 显示错误但仍尝试展示数据
   if (error && !overview) {
     return (
       <div className="analytics-page error">
@@ -167,6 +168,18 @@ export default function AnalyticsPage() {
         </Button>
       </div>
     )
+  }
+
+  // 默认数据（如果 API 返回为空）
+  const safeOverview = overview || {
+    conversations: 0,
+    messages: 0,
+    apiCalls: 0,
+    tokens: { prompt: 0, completion: 0, total: 0 },
+    cost: { total: 0, currency: 'USD', currencySymbol: '$' },
+    todayMessages: 0,
+    todayApiCalls: 0,
+    topModels: []
   }
 
   return (
@@ -233,9 +246,9 @@ export default function AnalyticsPage() {
             <MessageSquare className="w-5 h-5" />
           </div>
           <div className="stat-content">
-            <p className="stat-label">{translate('analytics.totalConversations', '总对话数')}</p>
-            <p className="stat-value">{(overview?.conversations || 0).toLocaleString()}</p>
-            <p className="stat-trend">{translate('analytics.todayMessages', '今日消息')}: {overview?.todayMessages || 0}</p>
+            <p className="stat-label">💬 {translate('analytics.totalConversations', '您与 AI 交流了')}</p>
+            <p className="stat-value">{(safeOverview.conversations || 0).toLocaleString()} {translate('analytics.times', '次')}</p>
+            <p className="stat-trend">📅 {translate('analytics.todayMessages', '今日消息')}: {safeOverview.todayMessages || 0}</p>
           </div>
         </div>
 
@@ -244,8 +257,9 @@ export default function AnalyticsPage() {
             <Zap className="w-5 h-5" />
           </div>
           <div className="stat-content">
-            <p className="stat-label">{translate('analytics.totalMessages', '总消息数')}</p>
-            <p className="stat-value">{(overview?.messages || 0).toLocaleString()}</p>
+            <p className="stat-label">⚡ {translate('analytics.totalMessages', '总消息数')}</p>
+            <p className="stat-value">{(safeOverview.messages || 0).toLocaleString()}</p>
+            <p className="stat-trend">{translate('analytics.avgPerDay', '平均每天')}: {Math.round((safeOverview.messages || 0) / 30)}</p>
           </div>
         </div>
 
@@ -254,13 +268,13 @@ export default function AnalyticsPage() {
             <TrendingUp className="w-5 h-5" />
           </div>
           <div className="stat-content">
-            <p className="stat-label">{translate('analytics.totalTokens', '总Token数')}</p>
+            <p className="stat-label">🚀 {translate('analytics.totalTokens', 'Token 使用量')}</p>
             <p className="stat-value">
-              {(overview?.tokens?.total || 0).toLocaleString()}
+              {(safeOverview.tokens?.total || 0).toLocaleString()}
             </p>
             <p className="stat-detail">
-              Prompt: {(overview?.tokens?.prompt || 0).toLocaleString()} |
-              Completion: {(overview?.tokens?.completion || 0).toLocaleString()}
+              📤 Prompt: {(safeOverview.tokens?.prompt || 0).toLocaleString()} |
+              📥 回复: {(safeOverview.tokens?.completion || 0).toLocaleString()}
             </p>
           </div>
         </div>
@@ -270,12 +284,12 @@ export default function AnalyticsPage() {
             <DollarSign className="w-5 h-5" />
           </div>
           <div className="stat-content">
-            <p className="stat-label">{translate('analytics.estimatedCost', '预估成本')}</p>
+            <p className="stat-label">💰 {translate('analytics.estimatedCost', '累计花费')}</p>
             <p className="stat-value">
-              {overview?.cost?.currencySymbol || ''}{parseFloat(overview?.cost?.total || 0).toLocaleString()}
+              {safeOverview.cost?.currencySymbol || '¥'}{parseFloat(safeOverview.cost?.total || 0).toFixed(2)}
             </p>
             <p className="stat-detail">
-              {overview?.cost?.currency || 'USD'} ({translate('analytics.estimated', '预估值')})
+              {safeOverview.cost?.currency || 'CNY'} ({translate('analytics.estimated', '预估值')})
             </p>
           </div>
         </div>
@@ -285,9 +299,9 @@ export default function AnalyticsPage() {
             <BarChart3 className="w-5 h-5" />
           </div>
           <div className="stat-content">
-            <p className="stat-label">{translate('analytics.apiCalls', 'API调用次数')}</p>
-            <p className="stat-value">{(overview?.apiCalls || 0).toLocaleString()}</p>
-            <p className="stat-trend">{translate('analytics.todayApiCalls', '今日调用')}: {overview?.todayApiCalls || 0}</p>
+            <p className="stat-label">📞 {translate('analytics.apiCalls', 'API 调用次数')}</p>
+            <p className="stat-value">{(safeOverview.apiCalls || 0).toLocaleString()}</p>
+            <p className="stat-trend">📊 {translate('analytics.todayApiCalls', '今日调用')}: {safeOverview.todayApiCalls || 0}</p>
           </div>
         </div>
       </div>
@@ -448,14 +462,17 @@ export default function AnalyticsPage() {
         </div>
       )}
 
+      {/* Smart Insights Section */}
+      <InsightsSection />
+
       {/* Top Models List */}
-      {overview?.topModels && overview.topModels.length > 0 && (
+      {safeOverview.topModels && safeOverview.topModels.length > 0 && (
         <div className="chart-section">
           <div className="chart-header">
             <h2>{translate('analytics.topModelsDetail', '热门模型详情')}</h2>
           </div>
           <div className="top-models">
-            {overview.topModels.map((model, index) => (
+            {safeOverview.topModels.map((model, index) => (
               <div key={model.model} className="top-model-item">
                 <div className="model-rank">{index + 1}</div>
                 <div className="model-info">
@@ -464,7 +481,7 @@ export default function AnalyticsPage() {
                     <div
                       className="model-bar-fill"
                       style={{
-                        width: `${(model.count / overview.topModels[0].count) * 100}%`,
+                        width: `${(model.count / safeOverview.topModels[0].count) * 100}%`,
                         background: COLORS[index % COLORS.length]
                       }}
                     />
@@ -478,7 +495,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* Empty State */}
-      {!loading && (!overview || (overview.conversations === 0 && overview.messages === 0)) && (
+      {!loading && (!safeOverview || (safeOverview.conversations === 0 && safeOverview.messages === 0)) && (
         <div className="chart-section">
           <div style={{ textAlign: 'center', padding: '3rem' }}>
             <BarChart3 className="w-16 h-16 text-muted-foreground opacity-20 mx-auto mb-4" />

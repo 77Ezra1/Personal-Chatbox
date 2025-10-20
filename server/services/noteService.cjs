@@ -365,12 +365,21 @@ class NoteService {
       }
 
       // 检查分类是否已存在
+      console.log('[noteService] 检查分类是否存在:', {
+        userId,
+        trimmedName,
+        sql: 'SELECT id FROM note_categories WHERE user_id = ? AND LOWER(name) = LOWER(?)'
+      });
+      
       const existing = await this.db.get(
         'SELECT id FROM note_categories WHERE user_id = ? AND LOWER(name) = LOWER(?)',
         [userId, trimmedName]
       );
 
+      console.log('[noteService] 检查结果:', existing);
+
       if (existing) {
+        console.log('[noteService] 分类已存在，抛出错误');
         throw new Error('Category already exists');
       }
 

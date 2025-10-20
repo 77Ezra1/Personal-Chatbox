@@ -104,12 +104,15 @@ router.post('/register', async (req, res) => {
       // 加密密码
       const passwordHash = await hashPassword(password);
 
+      // 如果没有提供用户名，从邮箱生成一个（避免重复，添加时间戳）
+      const finalUsername = username || `${email.split('@')[0]}_${Date.now()}`;
+
       // 创建用户
       const result = await db.prepare(
-        `INSERT INTO users (email, password_hash, username) VALUES (?, ?, ?) RETURNING id`
-      ).run(email.toLowerCase(), passwordHash, username || null);
+        `INSERT INTO users (email, password, username) VALUES (?, ?, ?)`
+      ).run(email.toLowerCase(), passwordHash, finalUsername);
 
-      const userId = result.lastID || result.rows?.[0]?.id;
+      const userId = result.lastInsertRowid || result.lastID || result.rows?.[0]?.id;
 
       if (!userId) {
         throw new Error('Failed to get user ID after registration');
@@ -157,7 +160,7 @@ router.post('/register', async (req, res) => {
         user: {
           id: userId,
           email: email.toLowerCase(),
-          username: username || null
+          username: finalUsername
         },
         token
       });
@@ -224,7 +227,7 @@ router.post('/login', async (req, res) => {
     }
 
     // 验证密码
-    const isValid = await verifyPassword(password, user.password_hash);
+    const isValid = await verifyPassword(password, user.password);
 
     if (!isValid) {
       // 登录失败，增加失败次数

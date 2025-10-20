@@ -16,7 +16,7 @@
   overflow: hidden;
 }
 
-/* ===== 缁熶竴椤堕儴鍖哄煙 ===== */
+/* ===== 统一顶部区域 ===== */
 .note-editor-top {
   flex-shrink: 0;
   background: var(--note-editor-surface, #f7f8fb);
@@ -24,6 +24,10 @@
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   color: var(--note-editor-text, #111827);
+  max-height: 50vh; /* 限制顶部最大高度为视口的50% */
+  overflow-y: auto; /* 内容过多时可滚动 */
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== 缂栬緫鍣ㄥご閮?===== */
@@ -69,18 +73,8 @@
   align-items: center;
 }
 
-/* ===== 宸ュ叿鏍?===== */
-.note-editor-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 24px;
-  border-bottom: 1px solid var(--border);
-  background: var(--note-editor-surface, #f7f8fb);
-  flex-shrink: 0;
-  color: var(--note-editor-text, #111827);
-}
+/* ===== 工具栏 - 已移至文件末尾的两行布局 ===== */
+/* 旧样式已删除，使用文件末尾的新布局样式 */
 
 .note-editor-color-controls {
   display: inline-flex;
@@ -147,8 +141,8 @@
   display: flex;
   align-items: stretch;
   gap: 6px;
-  margin-top: 10px;
-  padding: 10px;
+  margin-top: 6px; /* 减少上边距 */
+  padding: 6px 8px; /* 减少内边距 */
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.03) 100%);
   border: 1.5px solid rgba(59, 130, 246, 0.15);
   border-radius: calc(var(--radius) + 2px);
@@ -1404,3 +1398,151 @@
   animation: editorFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+
+/* ===== 优化布局 - 紧凑型工具栏 ===== */
+.toolbar-category-compact {
+  min-width: 150px;
+  max-width: 200px;
+  flex-shrink: 0;
+}
+
+.toolbar-category-compact .category-select-custom {
+  width: 100%;
+}
+
+/* 确保编辑器主体有足够空间 */
+.note-editor-body {
+  min-height: 300px; /* 确保编辑区域始终可见 */
+}
+
+/* ===== 分类选择和新建分类并排布局 ===== */
+.toolbar-category-select {
+  min-width: 200px;
+  max-width: 250px;
+  flex-shrink: 0;
+}
+
+.toolbar-category-create {
+  min-width: 250px;
+  max-width: 350px;
+  flex-shrink: 0;
+}
+
+.toolbar-category-select .category-section-header,
+.toolbar-category-create .category-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.category-section-header .section-icon {
+  font-size: 14px;
+}
+
+.category-section-header .section-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ===== 工具栏两行布局优化 ===== */
+.note-editor-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-row-main {
+  /* 第一行：分类和标签 */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.toolbar-row-format {
+  /* 第二行：格式化按钮 */
+  background: var(--secondary) !important;
+  padding: 6px 24px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* 确保各组件在同一行内合理排列 */
+.toolbar-row .toolbar-section {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.toolbar-row .toolbar-category-select {
+  min-width: 180px;
+  max-width: 200px;
+}
+
+.toolbar-row .toolbar-category-create {
+  min-width: 250px;
+  max-width: 300px;
+}
+
+.toolbar-row .toolbar-tags {
+  flex: 1;
+  min-width: 200px;
+}
+
+.toolbar-row .format-buttons {
+  display: flex !important;
+  flex-direction: row !important; /* 明确指定横向 */
+  gap: 6px !important;
+  flex-wrap: nowrap !important; /* 禁止换行 */
+  align-items: center !important;
+  overflow-x: auto !important; /* 如果按钮太多，允许横向滚动 */
+}
+
+/* 格式化按钮样式优化 - 使用更高优先级的选择器 */
+.toolbar-row-format .format-buttons .btn-icon {
+  flex-shrink: 0 !important; /* 防止按钮被压缩 */
+  min-width: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  padding: 0 !important;
+}
+
+.toolbar-row-format .format-buttons .btn-icon:hover {
+  background: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.toolbar-row-format .format-buttons .btn-icon.active {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-color: var(--primary) !important;
+}
+
+/* ===== 紧凑化标题样式 ===== */
+.toolbar-row .category-section-header {
+  font-size: 0.7rem;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}

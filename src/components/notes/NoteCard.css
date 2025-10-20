@@ -1,424 +1,342 @@
 /**
- * Note Card - v0.dev Glass Morphism Design
- * 毛玻璃效果的笔记卡片
+ * 笔记卡片样式 - 详情视图
  */
 
-.note-card {
-  position: relative;
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  animation: notes-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* ===== 容器 ===== */
+.note-card-container {
+  padding: 2rem;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--background);
 }
 
-@keyframes notes-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 渐变边框效果 */
-.note-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: var(--radius);
-  padding: 1.5px;
-  background: linear-gradient(135deg, var(--primary), var(--ring));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.25s;
-  pointer-events: none;
-}
-
-.note-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--ring);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-.note-card:hover::before {
-  opacity: 0.5;
-}
-
-.note-card.selected {
-  background: var(--secondary);
-  border-color: var(--primary);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-.note-card.selected::before {
-  opacity: 1;
-}
-
-/* 收藏笔记特殊样式 */
-.note-card.favorited {
-  background: linear-gradient(
-    135deg,
-    rgba(236, 72, 153, 0.03) 0%,
-    transparent 100%
-  );
-}
-
-.note-card.favorited:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(236, 72, 153, 0.06) 0%,
-    transparent 100%
-  );
-}
-
-/* 卡片头部 */
-.note-card-header {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.note-card-title {
-  flex: 1;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--foreground);
-  margin: 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  letter-spacing: -0.01em;
-}
-
-.note-card-favorite {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--notes-radius-sm);
-  background: transparent;
-  border: none;
-  color: var(--notes-text-tertiary);
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all var(--notes-duration-fast);
-}
-
-.note-card-favorite:hover {
-  background: var(--notes-bg-hover);
-  color: #f59e0b;
-  transform: scale(1.1);
-}
-
-.note-card-favorite.favorited {
-  color: #f59e0b;
-}
-
-/* 分类标签 */
-.note-card-category {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--notes-spacing-xs);
-  padding: 4px 12px;
-  border-radius: 100px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: var(--notes-gradient-blue);
-  color: white;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
-  position: relative;
-  z-index: 1;
-}
-
-/* 内容预览 */
-.note-card-content {
-  position: relative;
-  z-index: 1;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
-  line-height: 1.5;
-  margin: 10px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 底部元数据 */
-.note-card-footer {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-
-.note-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-}
-
-.note-category-badge {
-  padding: 2px 8px;
-  border-radius: var(--radius);
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: var(--secondary);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-}
-
-.note-date {
-  font-size: 0.7rem;
-  color: var(--muted-foreground);
-}
-
-.note-card-tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 0;
-}
-
-.note-tag-pill {
-  padding: 2px 7px;
-  border-radius: var(--radius);
-  font-size: 0.65rem;
-  font-weight: 500;
-  background: var(--secondary);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-
-.note-tag-pill:hover {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
-}
-
-.note-tag-more {
-  padding: 2px 6px;
-  border-radius: var(--radius);
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--muted-foreground);
-  background: var(--muted);
-}
-
-/* 操作按钮 */
-.note-card-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.btn-card-action {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius));
-  background: var(--card);
-  color: var(--muted-foreground);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0;
-}
-
-.btn-card-action:hover {
-  background: var(--secondary);
-  border-color: var(--ring);
-  color: var(--foreground);
-  transform: scale(1.05);
-}
-
-.btn-card-action.btn-danger:hover {
-  background: hsl(0, 84%, 60%);
-  border-color: hsl(0, 84%, 60%);
-  color: white;
-}
-
-.favorite-icon {
-  margin-right: 6px;
-  font-size: 0.9rem;
-}
-
-/* 空列表提示 */
-.note-list-empty {
+/* ===== 占位符 ===== */
+.note-card-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 60px 20px;
+  color: var(--muted-foreground);
   text-align: center;
+  padding: 2rem;
 }
 
-.empty-icon {
+.note-card-placeholder .placeholder-icon {
   font-size: 4rem;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
   opacity: 0.5;
 }
 
-.note-list-empty p {
-  font-size: 1.1rem;
-  color: var(--foreground);
+.note-card-placeholder h2 {
+  font-size: 1.5rem;
   font-weight: 600;
-  margin: 0 0 10px 0;
+  margin: 0 0 0.5rem 0;
+  color: var(--foreground);
 }
 
-.empty-hint {
-  font-size: 0.9rem;
+.note-card-placeholder p {
+  font-size: 0.95rem;
+  margin: 0;
   color: var(--muted-foreground);
+}
+
+/* ===== 卡片 ===== */
+.note-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  transition: box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.note-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== 卡片头部 ===== */
+.note-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.note-card-title {
+  flex: 1;
   margin: 0;
-}
-
-/* 笔记列表布局 */
-.note-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.note-card-action {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--notes-radius-sm);
-  background: var(--notes-glass-bg);
-  border: 1px solid var(--notes-glass-border);
-  color: var(--notes-text-secondary);
-  font-size: 0.9rem;
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-  transition: all var(--notes-duration-fast);
-}
-
-.note-card-action:hover {
-  background: var(--notes-bg-hover);
-  border-color: var(--notes-border);
-  color: var(--notes-text-primary);
-  transform: scale(1.05);
-}
-
-.note-card-action.delete:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: var(--error, #ef4444);
-  color: var(--error, #ef4444);
-}
-
-/* 延迟动画 */
-.note-card:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.note-card:nth-child(2) {
-  animation-delay: 0.05s;
-}
-
-.note-card:nth-child(3) {
-  animation-delay: 0.1s;
-}
-
-.note-card:nth-child(4) {
-  animation-delay: 0.15s;
-}
-
-.note-card:nth-child(5) {
-  animation-delay: 0.2s;
-}
-
-.note-card:nth-child(n+6) {
-  animation-delay: 0.25s;
-}
-
-/* 空状态 */
-.notes-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--notes-spacing-xl);
-  text-align: center;
-  gap: var(--notes-spacing-md);
-}
-
-.notes-empty-icon {
-  font-size: 4rem;
-  opacity: 0.3;
-}
-
-.notes-empty-title {
-  font-size: 1.25rem;
+  font-size: 1.875rem;
   font-weight: 700;
-  color: var(--notes-text-primary);
-  margin: 0;
+  line-height: 1.2;
+  color: var(--foreground);
+  word-break: break-word;
 }
 
-.notes-empty-description {
-  font-size: 0.9rem;
-  color: var(--notes-text-secondary);
-  max-width: 400px;
-  margin: 0;
+.note-card-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-/* 响应式 */
+.note-card-edit-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.note-card-edit-btn:active {
+  transform: translateY(0);
+}
+
+.note-card-edit-btn .edit-icon {
+  font-size: 1rem;
+}
+
+/* ===== 元信息区域 ===== */
+.note-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.meta-item.meta-tags {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.meta-label {
+  color: var(--muted-foreground);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.meta-value {
+  color: var(--foreground);
+  font-weight: 400;
+}
+
+/* ===== 分类徽章 ===== */
+.category-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: calc(var(--radius) - 2px);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+/* ===== 标签 ===== */
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tag-badge:hover {
+  background: var(--accent-hover, var(--accent));
+  border-color: var(--primary);
+}
+
+/* ===== 分隔线 ===== */
+.note-card-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 1.5rem 0;
+}
+
+/* ===== 内容预览 ===== */
+.note-card-content {
+  margin-top: 1.5rem;
+}
+
+.note-content-preview {
+  color: var(--foreground);
+  line-height: 1.7;
+  font-size: 0.9375rem;
+}
+
+/* 内容预览样式 */
+.note-content-preview h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem 0;
+  line-height: 1.3;
+  color: var(--foreground);
+}
+
+.note-content-preview h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.875rem 0;
+  line-height: 1.3;
+  color: var(--foreground);
+}
+
+.note-content-preview h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0 0.75rem 0;
+  line-height: 1.4;
+  color: var(--foreground);
+}
+
+.note-content-preview p {
+  margin: 0.75rem 0;
+  line-height: 1.7;
+}
+
+.note-content-preview ul,
+.note-content-preview ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.note-content-preview li {
+  margin: 0.375rem 0;
+  line-height: 1.6;
+}
+
+.note-content-preview code {
+  padding: 0.125rem 0.375rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.875em;
+}
+
+.note-content-preview pre {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.note-content-preview pre code {
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.note-content-preview blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--primary);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.note-content-preview a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.note-content-preview a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.note-content-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  margin: 1rem 0;
+}
+
+.note-content-preview table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.note-content-preview table th,
+.note-content-preview table td {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.note-content-preview table th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+.note-content-preview hr {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* ===== 响应式设计 ===== */
 @media (max-width: 768px) {
+  .note-card-container {
+    padding: 1rem;
+  }
+
   .note-card {
-    padding: var(--notes-spacing-sm) var(--notes-spacing-md);
+    padding: 1.5rem;
   }
 
   .note-card-title {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
 
-  .note-card-content {
-    -webkit-line-clamp: 2;
-    font-size: 0.85rem;
+  .note-card-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .note-card-actions {
-    opacity: 1;
-    transform: translateY(0);
+  .note-card-edit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .meta-row {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }

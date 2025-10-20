@@ -45,29 +45,29 @@ router.get('/overview', authMiddleware, async (req, res) => {
       SELECT COUNT(*) as count
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
-      WHERE c.user_id = ? AND role = 'assistant'
+      WHERE c.user_id = ? AND m.role = 'assistant'
     `).get(userId);
 
     // Token统计（从消息中提取）
     const tokenStats = db.prepare(`
       SELECT
-        SUM(CAST(json_extract(metadata, '$.usage.prompt_tokens') AS INTEGER)) as prompt_tokens,
-        SUM(CAST(json_extract(metadata, '$.usage.completion_tokens') AS INTEGER)) as completion_tokens,
-        SUM(CAST(json_extract(metadata, '$.usage.total_tokens') AS INTEGER)) as total_tokens
+        SUM(CAST(json_extract(m.metadata, '$.usage.prompt_tokens') AS INTEGER)) as prompt_tokens,
+        SUM(CAST(json_extract(m.metadata, '$.usage.completion_tokens') AS INTEGER)) as completion_tokens,
+        SUM(CAST(json_extract(m.metadata, '$.usage.total_tokens') AS INTEGER)) as total_tokens
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
-      WHERE c.user_id = ? AND metadata IS NOT NULL
+      WHERE c.user_id = ? AND m.metadata IS NOT NULL
     `).get(userId);
 
     // 模型使用统计
     const modelUsage = db.prepare(`
       SELECT
-        model,
+        m.model,
         COUNT(*) as count
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
-      WHERE c.user_id = ? AND model IS NOT NULL AND role = 'assistant'
-      GROUP BY model
+      WHERE c.user_id = ? AND m.model IS NOT NULL AND m.role = 'assistant'
+      GROUP BY m.model
       ORDER BY count DESC
       LIMIT 5
     `).all(userId);
@@ -93,7 +93,7 @@ router.get('/overview', authMiddleware, async (req, res) => {
       SELECT COUNT(*) as count
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
-      WHERE c.user_id = ? AND DATE(m.timestamp) = ? AND role = 'assistant'
+      WHERE c.user_id = ? AND DATE(m.timestamp) = ? AND m.role = 'assistant'
     `).get(userId, today);
 
     res.json({
@@ -175,14 +175,14 @@ router.get('/models', authMiddleware, async (req, res) => {
 
     const modelStats = db.prepare(`
       SELECT
-        model,
+        m.model,
         COUNT(*) as count,
-        SUM(CAST(json_extract(metadata, '$.usage.total_tokens') AS INTEGER)) as total_tokens,
-        AVG(CAST(json_extract(metadata, '$.usage.total_tokens') AS INTEGER)) as avg_tokens
+        SUM(CAST(json_extract(m.metadata, '$.usage.total_tokens') AS INTEGER)) as total_tokens,
+        AVG(CAST(json_extract(m.metadata, '$.usage.total_tokens') AS INTEGER)) as avg_tokens
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
-      WHERE c.user_id = ? AND model IS NOT NULL AND role = 'assistant'
-      GROUP BY model
+      WHERE c.user_id = ? AND m.model IS NOT NULL AND m.role = 'assistant'
+      GROUP BY m.model
       ORDER BY count DESC
     `).all(userId);
 
@@ -217,11 +217,11 @@ router.get('/tools', authMiddleware, async (req, res) => {
 
     const toolStats = db.prepare(`
       SELECT
-        json_extract(metadata, '$.tool_calls') as tool_calls
+        json_extract(m.metadata, '$.tool_calls') as tool_calls
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
       WHERE c.user_id = ?
-        AND json_extract(metadata, '$.tool_calls') IS NOT NULL
+        AND json_extract(m.metadata, '$.tool_calls') IS NOT NULL
     `).all(userId);
 
     // 解析工具调用数据
@@ -270,13 +270,13 @@ router.get('/heatmap', authMiddleware, async (req, res) => {
 
     const heatmapData = db.prepare(`
       SELECT
-        CAST(strftime('%w', timestamp) AS INTEGER) as day_of_week,
-        CAST(strftime('%H', timestamp) AS INTEGER) as hour,
+        CAST(strftime('%w', m.timestamp) AS INTEGER) as day_of_week,
+        CAST(strftime('%H', m.timestamp) AS INTEGER) as hour,
         COUNT(*) as count
       FROM messages m
       JOIN conversations c ON m.conversation_id = c.id
       WHERE c.user_id = ?
-        AND timestamp >= datetime('now', '-30 days')
+        AND m.timestamp >= datetime('now', '-30 days')
       GROUP BY day_of_week, hour
       ORDER BY day_of_week, hour
     `).all(userId);

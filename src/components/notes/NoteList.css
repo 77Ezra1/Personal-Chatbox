@@ -329,3 +329,224 @@
 .note-list::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
+
+/* ===== 新列表项样式（紧凑列表布局）===== */
+.note-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  animation: slideIn 0.2s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.note-list-item:hover {
+  background: var(--accent);
+  border-left-color: var(--primary);
+}
+
+.note-list-item.selected {
+  background: var(--accent);
+  border-left-color: var(--primary);
+  font-weight: 500;
+}
+
+.note-list-item.favorited {
+  border-left-color: #fbbf24;
+}
+
+.note-list-item.favorited.selected {
+  border-left-color: #f59e0b;
+}
+
+/* 标题行 - 紧凑布局 */
+.note-list-item-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.note-list-item-title .favorite-indicator {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.note-list-item-title .note-title-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-list-item.selected .note-list-item-title {
+  font-weight: 600;
+}
+
+/* 分类标签 - 更紧凑 */
+.note-list-item-category {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.note-list-item-category .category-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+/* 时间信息 - 单行紧凑 */
+.note-list-item-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  flex-wrap: wrap;
+  opacity: 0.8;
+}
+
+.note-list-item-time .time-created,
+.note-list-item-time .time-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.note-list-item-time .time-separator {
+  opacity: 0.4;
+  margin: 0 2px;
+}
+
+/* 操作按钮 - 紧凑型 */
+.note-list-item-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.note-list-item:hover .note-list-item-actions,
+.note-list-item.selected .note-list-item-actions {
+  opacity: 1;
+}
+
+.btn-list-action {
+  background: var(--background);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-list-action:hover {
+  background: var(--secondary);
+  transform: scale(1.05);
+}
+
+.btn-list-action.btn-favorite:hover {
+  background: #fef3c7;
+  border-color: #fbbf24;
+  color: #f59e0b;
+}
+
+.btn-list-action.btn-delete:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.btn-list-action:active {
+  transform: scale(0.95);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .note-list-item {
+    padding: 8px 10px;
+    gap: 3px;
+  }
+
+  .note-list-item-title {
+    font-size: 0.85rem;
+    padding-right: 60px; /* 为按钮留出空间 */
+  }
+
+  .note-list-item-time {
+    font-size: 0.65rem;
+  }
+
+  .note-list-item-actions {
+    opacity: 1; /* 移动端始终显示 */
+  }
+
+  .btn-list-action {
+    min-width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
+  }
+}
+
+/* 列表滚动优化 */
+.note-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.note-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.note-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.note-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.note-list::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}

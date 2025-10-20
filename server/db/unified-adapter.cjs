@@ -35,6 +35,7 @@ function createDatabaseAdapter() {
   // 尝试使用 better-sqlite3
   try {
     const BetterSqlite3 = require('better-sqlite3');
+    console.log('[Unified DB] 正在打开数据库:', DB_PATH);
     const db = new BetterSqlite3(DB_PATH);
 
     // 设置PRAGMA
@@ -43,7 +44,7 @@ function createDatabaseAdapter() {
     db.pragma('foreign_keys = ON');
     db.pragma('busy_timeout = 5000');
 
-    console.log('[Unified DB] ✅ Using better-sqlite3');
+    console.log('[Unified DB] ✅ Using better-sqlite3, 数据库路径:', DB_PATH);
 
     // 返回标准接口
     return {
@@ -238,6 +239,16 @@ function createJsonDatabaseAdapter() {
         let paramIndex = 0;
 
         andConditions.forEach((cond) => {
+          // 匹配 LOWER(column) = LOWER(?) 的条件
+          const lowerMatch = cond.match(/LOWER\((\w+)\)\s*=\s*LOWER\(\?\)/i);
+          if (lowerMatch && paramIndex < params.length) {
+            const column = lowerMatch[1];
+            // 存储为特殊标记，在后续匹配时使用小写比较
+            where[`LOWER_${column}`] = params[paramIndex].toString().toLowerCase();
+            paramIndex++;
+            return;
+          }
+
           // 匹配 column = ? 的简单条件
           const simpleMatch = cond.match(/^(\w+)\s*=\s*\?/);
           if (simpleMatch && paramIndex < params.length) {
@@ -276,7 +287,55 @@ function createJsonDatabaseAdapter() {
     if (sqlUpper.startsWith('UPDATE')) {
       const tableMatch = sql.match(/UPDATE (\w+)/i);
       const table = tableMatch ? tableMatch[1] : null;
-      return { type: 'UPDATE', table, params };
+      
+      // 解析 SET 子句
+      const setMatch = sql.match(/SET\s+(.*?)\s+WHERE/i);
+      const setClause = setMatch ? setMatch[1].trim() : '';
+      const setFields = {};
+      
+      if (setClause) {
+        // 分割 SET 子句中的字段赋值
+        const assignments = setClause.split(',').map(s => s.trim());
+        let paramIndex = 0;
+        
+        assignments.forEach(assignment => {
+          const eqMatch = assignment.match(/(\w+)\s*=\s*(.+)/);
+          if (eqMatch) {
+            const column = eqMatch[1].trim();
+            const value = eqMatch[2].trim();
+            
+            if (value === '?') {
+              // 使用参数
+              setFields[column] = params[paramIndex++];
+            } else if (value === "datetime('now')") {
+              // 特殊处理时间戳
+              setFields[column] = new Date().toISOString();
+            } else {
+              // 直接值
+              setFields[column] = value.replace(/^'|'$/g, '');
+            }
+          }
+        });
+      }
+      
+      // 解析 WHERE 子句
+      const whereMatch = sql.match(/WHERE\s+(.+)$/i);
+      const where = {};
+      
+      if (whereMatch) {
+        const whereSql = whereMatch[1].trim();
+        const andConditions = whereSql.split(' AND ').map(s => s.trim());
+        let whereParamIndex = Object.keys(setFields).filter(k => setClause.includes('?')).length;
+        
+        andConditions.forEach(cond => {
+          const simpleMatch = cond.match(/^(\w+)\s*=\s*\?/);
+          if (simpleMatch && whereParamIndex < params.length) {
+            where[simpleMatch[1]] = params[whereParamIndex++];
+          }
+        });
+      }
+      
+      return { type: 'UPDATE', table, setFields, where, params };
     }
 
     // DELETE
@@ -332,6 +391,79 @@ function createJsonDatabaseAdapter() {
               return;
             }
 
+            // UPDATE
+            if (parsed.type === 'UPDATE' && parsed.table) {
+              const table = parsed.table;
+              if (!data[table]) {
+                resolve({ changes: 0 });
+                return;
+              }
+
+              let changes = 0;
+              data[table] = data[table].map(row => {
+                // 检查WHERE条件
+                const matches = Object.entries(parsed.where || {}).every(([key, value]) => {
+                  return row[key] == value;
+                });
+
+                if (matches) {
+                  // 应用SET字段更新
+                  Object.entries(parsed.setFields || {}).forEach(([key, value]) => {
+                    row[key] = value;
+                  });
+                  changes++;
+                }
+
+                return row;
+              });
+
+              if (changes > 0) {
+                saveData();
+              }
+
+              resolve({ changes });
+              return;
+            }
+
+            // DELETE
+            if (parsed.type === 'DELETE' && parsed.table) {
+              const table = parsed.table;
+              if (!data[table]) {
+                resolve({ changes: 0 });
+                return;
+              }
+
+              const originalLength = data[table].length;
+              
+              // 解析WHERE条件
+              const whereMatch = sql.match(/WHERE\s+(.+)$/i);
+              if (whereMatch) {
+                const whereSql = whereMatch[1].trim();
+                const andConditions = whereSql.split(' AND ').map(s => s.trim());
+                let paramIndex = 0;
+                const where = {};
+                
+                andConditions.forEach(cond => {
+                  const simpleMatch = cond.match(/^(\w+)\s*=\s*\?/);
+                  if (simpleMatch && paramIndex < params.length) {
+                    where[simpleMatch[1]] = params[paramIndex++];
+                  }
+                });
+                
+                data[table] = data[table].filter(row => {
+                  return !Object.entries(where).every(([key, value]) => row[key] == value);
+                });
+              }
+
+              const changes = originalLength - data[table].length;
+              if (changes > 0) {
+                saveData();
+              }
+
+              resolve({ changes });
+              return;
+            }
+
             // 其他操作也返回成功
             resolve();
           } catch (err) {
@@ -375,6 +507,79 @@ function createJsonDatabaseAdapter() {
           return;
         }
 
+        // UPDATE
+        if (parsed.type === 'UPDATE' && parsed.table) {
+          const table = parsed.table;
+          if (!data[table]) {
+            callback.call({ changes: 0 }, null);
+            return;
+          }
+
+          let changes = 0;
+          data[table] = data[table].map(row => {
+            // 检查WHERE条件
+            const matches = Object.entries(parsed.where || {}).every(([key, value]) => {
+              return row[key] == value;
+            });
+
+            if (matches) {
+              // 应用SET字段更新
+              Object.entries(parsed.setFields || {}).forEach(([key, value]) => {
+                row[key] = value;
+              });
+              changes++;
+            }
+
+            return row;
+          });
+
+          if (changes > 0) {
+            saveData();
+          }
+
+          callback.call({ changes }, null);
+          return;
+        }
+
+        // DELETE
+        if (parsed.type === 'DELETE' && parsed.table) {
+          const table = parsed.table;
+          if (!data[table]) {
+            callback.call({ changes: 0 }, null);
+            return;
+          }
+
+          const originalLength = data[table].length;
+          
+          // 解析WHERE条件
+          const whereMatch = sql.match(/WHERE\s+(.+)$/i);
+          if (whereMatch) {
+            const whereSql = whereMatch[1].trim();
+            const andConditions = whereSql.split(' AND ').map(s => s.trim());
+            let paramIndex = 0;
+            const where = {};
+            
+            andConditions.forEach(cond => {
+              const simpleMatch = cond.match(/^(\w+)\s*=\s*\?/);
+              if (simpleMatch && paramIndex < params.length) {
+                where[simpleMatch[1]] = params[paramIndex++];
+              }
+            });
+            
+            data[table] = data[table].filter(row => {
+              return !Object.entries(where).every(([key, value]) => row[key] == value);
+            });
+          }
+
+          const changes = originalLength - data[table].length;
+          if (changes > 0) {
+            saveData();
+          }
+
+          callback.call({ changes }, null);
+          return;
+        }
+
         // 其他操作也返回成功
         const emptyContext = { lastID: null, changes: 0 };
         callback.call(emptyContext, null);
@@ -404,7 +609,20 @@ function createJsonDatabaseAdapter() {
               if (parsed.where && Object.keys(parsed.where).length > 0) {
                 filtered = rows.filter(row => {
                   return Object.entries(parsed.where).every(([key, value]) => {
-                    return row[key] == value;
+                    // 处理 LOWER_ 前缀的条件（不区分大小写比较）
+                    if (key.startsWith('LOWER_')) {
+                      const actualColumn = key.substring(6); // 移除 'LOWER_' 前缀
+                      const rowValue = row[actualColumn];
+                      if (rowValue == null) return false;
+                      return rowValue.toString().toLowerCase() === value;
+                    }
+                    // 对于布尔字段，undefined 视为 0
+                    let rowValue = row[key];
+                    if (rowValue === undefined && (key === 'is_archived' || key === 'is_favorite')) {
+                      rowValue = 0;
+                    }
+                    // 普通条件（直接比较）
+                    return rowValue == value;
                   });
                 });
               }
@@ -434,7 +652,20 @@ function createJsonDatabaseAdapter() {
           if (parsed.where && Object.keys(parsed.where).length > 0) {
             filtered = rows.filter(row => {
               return Object.entries(parsed.where).every(([key, value]) => {
-                return row[key] == value;
+                // 处理 LOWER_ 前缀的条件（不区分大小写比较）
+                if (key.startsWith('LOWER_')) {
+                  const actualColumn = key.substring(6); // 移除 'LOWER_' 前缀
+                  const rowValue = row[actualColumn];
+                  if (rowValue == null) return false;
+                  return rowValue.toString().toLowerCase() === value;
+                }
+                // 对于布尔字段，undefined 视为 0
+                let rowValue = row[key];
+                if (rowValue === undefined && (key === 'is_archived' || key === 'is_favorite')) {
+                  rowValue = 0;
+                }
+                // 普通条件（直接比较）
+                return rowValue == value;
               });
             });
           }
@@ -471,7 +702,20 @@ function createJsonDatabaseAdapter() {
               if (parsed.where && Object.keys(parsed.where).length > 0) {
                 filtered = rows.filter(row => {
                   return Object.entries(parsed.where).every(([key, value]) => {
-                    return row[key] == value;
+                    // 处理 LOWER_ 前缀的条件（不区分大小写比较）
+                    if (key.startsWith('LOWER_')) {
+                      const actualColumn = key.substring(6); // 移除 'LOWER_' 前缀
+                      const rowValue = row[actualColumn];
+                      if (rowValue == null) return false;
+                      return rowValue.toString().toLowerCase() === value;
+                    }
+                    // 对于布尔字段，undefined 视为 0
+                    let rowValue = row[key];
+                    if (rowValue === undefined && (key === 'is_archived' || key === 'is_favorite')) {
+                      rowValue = 0;
+                    }
+                    // 普通条件（直接比较）
+                    return rowValue == value;
                   });
                 });
               }
@@ -500,7 +744,20 @@ function createJsonDatabaseAdapter() {
           if (parsed.where && Object.keys(parsed.where).length > 0) {
             filtered = rows.filter(row => {
               return Object.entries(parsed.where).every(([key, value]) => {
-                return row[key] == value;
+                // 处理 LOWER_ 前缀的条件（不区分大小写比较）
+                if (key.startsWith('LOWER_')) {
+                  const actualColumn = key.substring(6); // 移除 'LOWER_' 前缀
+                  const rowValue = row[actualColumn];
+                  if (rowValue == null) return false;
+                  return rowValue.toString().toLowerCase() === value;
+                }
+                // 对于布尔字段，undefined 视为 0
+                let rowValue = row[key];
+                if (rowValue === undefined && (key === 'is_archived' || key === 'is_favorite')) {
+                  rowValue = 0;
+                }
+                // 普通条件（直接比较）
+                return rowValue == value;
               });
             });
           }

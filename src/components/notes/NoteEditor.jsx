@@ -232,106 +232,104 @@ export function NoteEditor({ note, categories, onSave, onCancel, translate, onEd
 
         {/* 格式化工具栏 */}
         <div className="note-editor-toolbar">
-          <div className="toolbar-section toolbar-category">
-            <div className="category-section-header">
-              <span className="section-icon">📂</span>
-              <span className="section-label">{translate?.('notes.category') || 'Category'}</span>
-            </div>
-            <Select
-              value={category}
-              onChange={setCategory}
-              options={[
-                { value: 'default', label: translate?.('notes.defaultCategory') || 'Default', icon: '📁' },
-                ...(categories?.map(cat => ({
-                  value: cat.name,
-                  label: cat.name,
-                  icon: '📂'
-                })) || [])
-              ]}
-              icon="📁"
-              className="category-select-custom"
-            />
-            <div className="category-create-inline">
-              <input
-                type="text"
-                className="category-create-input"
-                placeholder={translate?.('notes.newCategoryPlaceholder') || 'New category name'}
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleCreateCategory();
-                  }
-                }}
+          {/* 第一行：分类和标签 */}
+          <div className="toolbar-row toolbar-row-main">
+            {/* 分类选择区域 */}
+            <div className="toolbar-section toolbar-category-select">
+              <div className="category-section-header">
+                <span className="section-icon">📂</span>
+                <span className="section-label">{translate?.('notes.category') || '分类'}</span>
+              </div>
+              <Select
+                value={category}
+                onChange={setCategory}
+                options={[
+                  { value: 'default', label: translate?.('notes.defaultCategory') || '默认', icon: '📁' },
+                  ...(categories?.map(cat => ({
+                    value: cat.name,
+                    label: cat.name,
+                    icon: '📂'
+                  })) || [])
+                ]}
+                icon="📁"
+                className="category-select-custom"
               />
-              <button
-                type="button"
-                className="btn-secondary category-create-button"
-                onClick={handleCreateCategory}
-                disabled={!newCategoryName.trim()}
-                title={translate?.('notes.addCategoryTooltip') || 'Add new category'}
-              >
-                {translate?.('notes.addCategory') || 'Add'}
-              </button>
+            </div>
+
+            {/* 新建分类区域 */}
+            <div className="toolbar-section toolbar-category-create">
+              <div className="category-create-inline">
+                <input
+                  type="text"
+                  className="category-create-input"
+                  placeholder={translate?.('notes.newCategoryPlaceholder') || '新分类名称'}
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCreateCategory();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn-secondary category-create-button"
+                  onClick={handleCreateCategory}
+                  disabled={!newCategoryName.trim()}
+                  title={translate?.('notes.addCategoryTooltip') || '添加新分类'}
+                >
+                  {translate?.('notes.addCategory') || '添加'}
+                </button>
+              </div>
+            </div>
+
+            {/* 标签输入 */}
+            <div className="toolbar-section toolbar-tags">
+              <div className="tags-container">
+                {tags.map((tag, index) => (
+                  <span key={index} className="tag-chip">
+                    {tag}
+                    <button
+                      type="button"
+                      className="tag-remove-btn"
+                      onClick={() => handleRemoveTag(tag)}
+                      title="Remove tag"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  className="tag-input-inline"
+                  placeholder={translate?.('notes.addTag') || '添加标签...'}
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="toolbar-section toolbar-tags">
-            <div className="tags-container">
-              {tags.map((tag, index) => (
-                <span key={index} className="tag-chip">
-                  {tag}
-                  <button
-                    type="button"
-                    className="tag-remove-btn"
-                    onClick={() => handleRemoveTag(tag)}
-                    title="Remove tag"
-                  >
-                    ×
-                  </button>
-                </span>
+          {/* 第二行：格式化按钮 */}
+          <div className="toolbar-row toolbar-row-format">
+            <div className="toolbar-section format-buttons">
+              {formatButtons.map((btn, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  className={`btn-icon ${btn.isActive?.() ? 'active' : ''}`}
+                  title={btn.title}
+                  onClick={btn.action}
+                  disabled={!editor}
+                >
+                  {btn.label}
+                </button>
               ))}
-              <input
-                type="text"
-                className="tag-input-inline"
-                placeholder={translate?.('notes.addTag') || '添加标签...'}
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleAddTag}
-              />
             </div>
-          </div>
-
-          <div className="toolbar-section format-buttons">
-            {formatButtons.map((btn, index) => (
-              <button
-                key={index}
-                type="button"
-                className={`btn-icon ${btn.isActive?.() ? 'active' : ''}`}
-                title={btn.title}
-                onClick={btn.action}
-                disabled={!editor}
-              >
-                {btn.label}
-              </button>
-            ))}
           </div>
         </div>
-
-        {/* AI 工具栏 */}
-        {editor && (
-          <AIToolbar
-            noteContent={content}
-            editor={editor}
-            onInsert={(text) => {
-              editor.chain().focus().insertContent(text).run();
-            }}
-            onReplace={() => {
-              // 替换逻辑已在 AIToolbar 中处理
-            }}
-          />
-        )}
       </div>
 
       <div className="note-editor-body">

@@ -105,7 +105,11 @@ router.get('/', async (req, res) => {
       offset: req.query.offset ? parseInt(req.query.offset) : 0
     };
 
+    logger.info(`[Notes API] GET /api/notes - userId: ${userId}, query:`, req.query);
+    logger.info(`[Notes API] Parsed options:`, options);
+
     const notes = await noteService.getAllNotes(userId, options);
+    logger.info(`[Notes API] Found ${notes.length} notes`);
     res.json({ success: true, notes });
   } catch (error) {
     logger.error('[Notes API] Error getting notes:', error);
