@@ -8,9 +8,69 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/auth.cjs');
 const NotesAIService = require('../services/notesAIService.cjs');
 const logger = require('../utils/logger.cjs');
+const { db } = require('../db/init.cjs');
 
 // 所有路由都需要认证
 router.use(authMiddleware);
+
+/**
+ * 保存AI使用统计到数据库
+ * @param {number} userId - 用户ID
+ * @param {string} action - 操作类型（如 'summary', 'rewrite'等）
+ * @param {Object} usage - Token使用信息 { prompt_tokens, completion_tokens, total_tokens }
+ * @param {string} model - 使用的模型
+ * @param {string} prompt - 用户输入
+ * @param {string} response - AI响应
+ * @param {number} relatedId - 关联ID（笔记ID等，可选）
+ */
+async function saveAIUsage(userId, action, usage, model, prompt, response, relatedId = null) {
+  if (!usage) return; // 如果没有usage信息（mock响应），跳过
+
+  try {
+    // 计算成本（DeepSeek价格：输入1元/百万tokens，输出2元/百万tokens）
+    const promptCost = (usage.prompt_tokens || 0) / 1000000 * 0.14;  // $0.14/1M tokens
+    const completionCost = (usage.completion_tokens || 0) / 1000000 * 0.28;  // $0.28/1M tokens
+    const totalCost = promptCost + completionCost;
+
+    // 准备元数据
+    const metadata = JSON.stringify({
+      usage: usage,
+      action: action,
+      prompt_preview: prompt.substring(0, 100),
+      response_preview: response.substring(0, 100),
+      timestamp: new Date().toISOString()
+    });
+
+    // 插入到专用的AI使用日志表
+    await db.prepare(
+      `INSERT INTO ai_usage_logs (
+        user_id, source, action, model,
+        prompt_tokens, completion_tokens, total_tokens,
+        cost_usd, currency,
+        related_id, related_type,
+        metadata, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+    ).run(
+      userId,
+      'notes',  // 数据来源
+      action,
+      model,
+      usage.prompt_tokens || 0,
+      usage.completion_tokens || 0,
+      usage.total_tokens || 0,
+      totalCost,
+      'USD',
+      relatedId,
+      relatedId ? 'note' : null,
+      metadata
+    );
+
+    logger.info(`[AI Notes] Saved usage stats for user ${userId}: ${usage.total_tokens} tokens, $${totalCost.toFixed(6)}`);
+  } catch (error) {
+    logger.error('[AI Notes] Failed to save usage stats:', error);
+    // 不抛出错误，避免影响主功能
+  }
+}
 
 /**
  * 生成摘要
@@ -38,11 +98,23 @@ router.post('/notes/summary', async (req, res) => {
     const aiService = new NotesAIService(req.user.id);
     await aiService.initialize();
 
-    const summary = await aiService.generateSummary(content);
+    const result = await aiService.generateSummary(content);
+
+    // 保存token统计
+    await saveAIUsage(
+      req.user.id,
+      'summary',
+      result.usage,
+      result.model,
+      content,
+      result.text
+    );
 
     res.json({
       success: true,
-      summary
+      summary: result.text,
+      usage: result.usage,
+      model: result.model
     });
   } catch (error) {
     logger.error('[AI Notes API] Summary error:', error);
@@ -79,11 +151,16 @@ router.post('/notes/outline', async (req, res) => {
     const aiService = new NotesAIService(req.user.id);
     await aiService.initialize();
 
-    const outline = await aiService.generateOutline(content);
+    const result = await aiService.generateOutline(content);
+
+    // 保存token统计
+    await saveAIUsage(req.user.id, 'outline', result.usage, result.model, content, result.text);
 
     res.json({
       success: true,
-      outline
+      outline: result.text,
+      usage: result.usage,
+      model: result.model
     });
   } catch (error) {
     logger.error('[AI Notes API] Outline error:', error);
@@ -128,12 +205,24 @@ router.post('/notes/rewrite', async (req, res) => {
     const aiService = new NotesAIService(req.user.id);
     await aiService.initialize();
 
-    const rewritten = await aiService.rewriteText(text, style);
+    const result = await aiService.rewriteText(text, style);
+
+    // 保存token统计
+    await saveAIUsage(
+      req.user.id,
+      `rewrite_${style}`,
+      result.usage,
+      result.model,
+      text,
+      result.text
+    );
 
     res.json({
       success: true,
-      text: rewritten,
-      style
+      text: result.text,
+      style,
+      usage: result.usage,
+      model: result.model
     });
   } catch (error) {
     logger.error('[AI Notes API] Rewrite error:', error);
@@ -163,12 +252,17 @@ router.post('/notes/tasks', async (req, res) => {
     const aiService = new NotesAIService(req.user.id);
     await aiService.initialize();
 
-    const tasks = await aiService.extractTasks(content);
+    const result = await aiService.extractTasks(content);
+
+    // 保存token统计
+    await saveAIUsage(req.user.id, 'extract_tasks', result.usage, result.model, content, JSON.stringify(result.tasks));
 
     res.json({
       success: true,
-      tasks,
-      count: tasks.length
+      tasks: result.tasks,
+      count: result.tasks.length,
+      usage: result.usage,
+      model: result.model
     });
   } catch (error) {
     logger.error('[AI Notes API] Tasks extraction error:', error);
@@ -198,11 +292,16 @@ router.post('/notes/suggest-tags', async (req, res) => {
     const aiService = new NotesAIService(req.user.id);
     await aiService.initialize();
 
-    const tags = await aiService.suggestTags(title || '', content || '');
+    const result = await aiService.suggestTags(title || '', content || '');
+
+    // 保存token统计
+    await saveAIUsage(req.user.id, 'suggest_tags', result.usage, result.model, `${title} | ${content}`, result.tags.join(', '));
 
     res.json({
       success: true,
-      tags
+      tags: result.tags,
+      usage: result.usage,
+      model: result.model
     });
   } catch (error) {
     logger.error('[AI Notes API] Tag suggestion error:', error);
@@ -239,11 +338,16 @@ router.post('/notes/qa', async (req, res) => {
     const aiService = new NotesAIService(req.user.id);
     await aiService.initialize();
 
-    const answer = await aiService.answerQuestion(question, content);
+    const result = await aiService.answerQuestion(question, content);
+
+    // 保存token统计
+    await saveAIUsage(req.user.id, 'qa', result.usage, result.model, `Q: ${question}`, result.text);
 
     res.json({
       success: true,
-      answer
+      answer: result.text,
+      usage: result.usage,
+      model: result.model
     });
   } catch (error) {
     logger.error('[AI Notes API] Q&A error:', error);
@@ -280,11 +384,16 @@ router.post('/notes/expand', async (req, res) => {
     const aiService = new NotesAIService(req.user.id);
     await aiService.initialize();
 
-    const expansion = await aiService.expandContent(content, context);
+    const result = await aiService.expandContent(content, context);
+
+    // 保存token统计
+    await saveAIUsage(req.user.id, 'expand', result.usage, result.model, content, result.text);
 
     res.json({
       success: true,
-      expansion
+      expansion: result.text,
+      usage: result.usage,
+      model: result.model
     });
   } catch (error) {
     logger.error('[AI Notes API] Expansion error:', error);

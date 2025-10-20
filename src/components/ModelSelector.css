@@ -1,0 +1,181 @@
+/* 模型选择器样式 */
+
+.model-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.model-selector-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+  color: var(--foreground);
+  font-size: 14px;
+}
+
+.recommendation-hint {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  font-weight: normal;
+}
+
+/* 卡片式选择 */
+.model-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.model-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.model-option:hover {
+  border-color: var(--primary);
+  background: var(--accent);
+}
+
+.model-option.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.model-option.active .model-cost,
+.model-option.active .model-desc {
+  color: var(--primary-foreground);
+  opacity: 0.9;
+}
+
+.model-option.recommended {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.model-option.recommended.active {
+  background: var(--primary);
+}
+
+.model-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.model-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.model-name {
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-recommended {
+  font-size: 11px;
+  padding: 2px 6px;
+  background: #fbbf24;
+  color: #78350f;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.model-desc {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.model-cost {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+/* 下拉选择器样式 */
+.model-selector-compact .model-select,
+.model-selector-dropdown .model-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.model-selector-compact .model-select:hover,
+.model-selector-dropdown .model-select:hover {
+  border-color: var(--primary);
+}
+
+.model-selector-compact .model-select:focus,
+.model-selector-dropdown .model-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+/* 尺寸变体 */
+.model-selector-small .model-option {
+  padding: 8px;
+  gap: 8px;
+}
+
+.model-selector-small .model-icon {
+  font-size: 18px;
+}
+
+.model-selector-small .model-name {
+  font-size: 13px;
+}
+
+.model-selector-small .model-desc,
+.model-selector-small .model-cost {
+  font-size: 11px;
+}
+
+.model-selector-large .model-option {
+  padding: 16px;
+  gap: 16px;
+}
+
+.model-selector-large .model-icon {
+  font-size: 32px;
+}
+
+.model-selector-large .model-name {
+  font-size: 16px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .model-option {
+    padding: 10px;
+  }
+
+  .model-icon {
+    font-size: 20px;
+  }
+
+  .model-name {
+    font-size: 13px;
+  }
+}

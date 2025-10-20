@@ -40,13 +40,19 @@ ${noteContent}
 摘要：`;
 
     try {
-      const summary = await this.aiService.generateText(prompt, {
+      const response = await this.aiService.generateText(prompt, {
         temperature: 0.3,
         maxTokens: 200
       });
 
       logger.info('[NotesAI] Summary generated successfully');
-      return summary.trim();
+
+      // 返回内容和token统计
+      return {
+        text: response.content.trim(),
+        usage: response.usage,
+        model: response.model
+      };
     } catch (error) {
       logger.error('[NotesAI] Summary generation error:', error);
       throw new Error('Failed to generate summary: ' + error.message);
@@ -75,13 +81,17 @@ ${noteContent}
 大纲：`;
 
     try {
-      const outline = await this.aiService.generateText(prompt, {
+      const response = await this.aiService.generateText(prompt, {
         temperature: 0.3,
         maxTokens: 500
       });
 
       logger.info('[NotesAI] Outline generated successfully');
-      return outline.trim();
+      return {
+        text: response.content.trim(),
+        usage: response.usage,
+        model: response.model
+      };
     } catch (error) {
       logger.error('[NotesAI] Outline generation error:', error);
       throw new Error('Failed to generate outline: ' + error.message);
@@ -120,13 +130,17 @@ ${text}
 改写后：`;
 
     try {
-      const rewritten = await this.aiService.generateText(prompt, {
+      const response = await this.aiService.generateText(prompt, {
         temperature: 0.5,
         maxTokens: Math.min(text.length * 2, 1000)
       });
 
       logger.info('[NotesAI] Text rewritten successfully with style:', style);
-      return rewritten.trim();
+      return {
+        text: response.content.trim(),
+        usage: response.usage,
+        model: response.model
+      };
     } catch (error) {
       logger.error('[NotesAI] Rewrite error:', error);
       throw new Error('Failed to rewrite text: ' + error.message);
@@ -156,7 +170,7 @@ ${noteContent}
 JSON：`;
 
     try {
-      const response = await this.aiService.generateText(prompt, {
+      const aiResponse = await this.aiService.generateText(prompt, {
         temperature: 0.2,
         maxTokens: 500
       });
@@ -165,7 +179,7 @@ JSON：`;
       let tasks = [];
       try {
         // 移除可能的 markdown 代码块标记
-        const jsonStr = response.trim()
+        const jsonStr = aiResponse.content.trim()
           .replace(/^```json\s*/, '')
           .replace(/^```\s*/, '')
           .replace(/\s*```$/, '');
@@ -181,10 +195,18 @@ JSON：`;
       }
 
       logger.info('[NotesAI] Extracted tasks:', tasks.length);
-      return tasks;
+      return {
+        tasks: tasks,
+        usage: aiResponse.usage,
+        model: aiResponse.model
+      };
     } catch (error) {
       logger.error('[NotesAI] Task extraction error:', error);
-      return [];
+      return {
+        tasks: [],
+        usage: null,
+        model: null
+      };
     }
   }
 
@@ -215,12 +237,12 @@ JSON：`;
 标签：`;
 
     try {
-      const response = await this.aiService.generateText(prompt, {
+      const aiResponse = await this.aiService.generateText(prompt, {
         temperature: 0.4,
         maxTokens: 100
       });
 
-      const tags = response
+      const tags = aiResponse.content
         .trim()
         .split(/[,，、]/)
         .map(tag => tag.trim().toLowerCase())
@@ -228,10 +250,18 @@ JSON：`;
         .slice(0, 5); // 最多5个标签
 
       logger.info('[NotesAI] Suggested tags:', tags);
-      return tags;
+      return {
+        tags: tags,
+        usage: aiResponse.usage,
+        model: aiResponse.model
+      };
     } catch (error) {
       logger.error('[NotesAI] Tag suggestion error:', error);
-      return [];
+      return {
+        tags: [],
+        usage: null,
+        model: null
+      };
     }
   }
 
@@ -256,13 +286,17 @@ ${noteContent}
 回答：`;
 
     try {
-      const answer = await this.aiService.generateText(prompt, {
+      const response = await this.aiService.generateText(prompt, {
         temperature: 0.3,
         maxTokens: 300
       });
 
       logger.info('[NotesAI] Question answered successfully');
-      return answer.trim();
+      return {
+        text: response.content.trim(),
+        usage: response.usage,
+        model: response.model
+      };
     } catch (error) {
       logger.error('[NotesAI] Q&A error:', error);
       throw new Error('Failed to answer question: ' + error.message);
@@ -292,13 +326,17 @@ ${currentContent}
 扩展内容：`;
 
     try {
-      const expansion = await this.aiService.generateText(prompt, {
+      const response = await this.aiService.generateText(prompt, {
         temperature: 0.7,
         maxTokens: Math.floor(currentContent.length * 0.8)
       });
 
       logger.info('[NotesAI] Content expanded successfully');
-      return expansion.trim();
+      return {
+        text: response.content.trim(),
+        usage: response.usage,
+        model: response.model
+      };
     } catch (error) {
       logger.error('[NotesAI] Expansion error:', error);
       throw new Error('Failed to expand content: ' + error.message);

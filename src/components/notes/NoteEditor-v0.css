@@ -118,43 +118,57 @@
 
 .format-buttons {
   display: flex;
-  gap: 4px;
-  padding: 4px;
-  background: rgba(17, 24, 39, 0.04);
-  border: 1px solid rgba(17, 24, 39, 0.12);
-  border-radius: var(--notes-radius-md);
+  gap: 2px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 .format-buttons .btn-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--notes-radius-sm);
+  border-radius: 6px;
   border: none;
   background: transparent;
   color: var(--note-editor-text, #111827);
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all var(--notes-duration-fast);
+  transition: all 0.15s ease;
+  opacity: 0.7;
 }
 
 .format-buttons .btn-icon:hover:not(:disabled) {
-  background: rgba(17, 24, 39, 0.08);
-  color: var(--note-editor-text, #111827);
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 1;
 }
 
 .format-buttons .btn-icon.active {
-  background: var(--note-editor-text, #111827);
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(17, 24, 39, 0.2);
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  font-weight: 600;
 }
 
 .format-buttons .btn-icon:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* 暗黑模式 */
+.dark .format-buttons .btn-icon {
+  color: var(--note-editor-text-dark, #f9fafb);
+}
+
+.dark .format-buttons .btn-icon:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .format-buttons .btn-icon.active {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* === 编辑器主体 === */

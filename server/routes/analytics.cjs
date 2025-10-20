@@ -59,6 +59,20 @@ router.get('/overview', authMiddleware, async (req, res) => {
       WHERE c.user_id = ? AND m.metadata IS NOT NULL
     `).get(userId);
 
+    // 按来源统计 Token（完全从 ai_usage_logs 读取，统一管理）
+    const tokensBySource = db.prepare(`
+      SELECT
+        source,
+        SUM(prompt_tokens) as prompt_tokens,
+        SUM(completion_tokens) as completion_tokens,
+        SUM(total_tokens) as total_tokens,
+        COUNT(*) as message_count
+      FROM ai_usage_logs
+      WHERE user_id = ?
+      GROUP BY source
+      ORDER BY total_tokens DESC
+    `).all(userId);
+
     // 模型使用统计
     const modelUsage = db.prepare(`
       SELECT
@@ -96,6 +110,22 @@ router.get('/overview', authMiddleware, async (req, res) => {
       WHERE c.user_id = ? AND DATE(m.timestamp) = ? AND m.role = 'assistant'
     `).get(userId, today);
 
+    // 格式化按来源的统计数据
+    const sourceStats = tokensBySource.map(item => ({
+      source: item.source,
+      tokens: {
+        prompt: item.prompt_tokens || 0,
+        completion: item.completion_tokens || 0,
+        total: item.total_tokens || 0
+      },
+      messageCount: item.message_count || 0,
+      cost: calculateCost(
+        item.prompt_tokens || 0,
+        item.completion_tokens || 0,
+        userCurrency
+      )
+    }));
+
     res.json({
       success: true,
       data: {
@@ -107,6 +137,7 @@ router.get('/overview', authMiddleware, async (req, res) => {
           completion: tokenStats.completion_tokens || 0,
           total: tokenStats.total_tokens || 0
         },
+        tokensBySource: sourceStats, // 新增：按来源分类的统计
         cost: estimatedCost,
         todayMessages: todayStats.count,
         todayApiCalls: todayApiCalls.count,
@@ -125,14 +156,14 @@ router.get('/overview', authMiddleware, async (req, res) => {
 
 /**
  * 获取使用趋势数据
- * GET /api/analytics/trends?period=7d|30d|90d
+ * GET /api/analytics/trends?period=1d|7d|30d|90d
  */
 router.get('/trends', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     const period = req.query.period || '7d';
 
-    const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+    const days = period === '1d' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : 90;
 
     const trends = db.prepare(`
       SELECT

@@ -5,12 +5,10 @@
 
 const express = require('express');
 const router = express.Router();
-const ConfigManager = require('../services/configManager.cjs');
 const { authMiddleware } = require('../middleware/auth.cjs');
 const { cacheMiddleware, clearUserCache } = require('../middleware/cache.cjs');
 const logger = require('../utils/logger.cjs');
-
-const configManager = new ConfigManager();
+const { db } = require('../db/init.cjs');
 
 // 所有config路由都需要认证
 router.use(authMiddleware);
@@ -304,13 +302,21 @@ router.get('/services', async (req, res) => {
   }
 });
 
-// 更新服务配置
-router.post('/service/:serviceId', async (req, res) => {
+// 更新服务配置（改用数据库，每个用户独立配置）
+router.post('/service/:serviceId', authMiddleware, async (req, res) => {
   try {
     const { serviceId } = req.params;
     const configData = req.body;
+    const userId = req.user?.id;  // 从认证中间件获取用户ID
 
-    const configStorage = require('../services/config-storage.cjs');
+    logger.info(`[Config] POST /service/${serviceId} - userId: ${userId}, configData:`, configData);
+
+    if (!userId) {
+      logger.error('[Config] No userId found in req.user');
+      return res.status(401).json({ error: '未授权' });
+    }
+
+    logger.info(`[User ${userId}] 保存服务配置: ${serviceId}`);
 
     // 验证服务ID
     const validServices = ['openai', 'deepseek', 'braveSearch', 'github', 'proxy'];
@@ -318,8 +324,38 @@ router.post('/service/:serviceId', async (req, res) => {
       return res.status(400).json({ error: '不支持的服务ID' });
     }
 
-    // 保存配置
-    await configStorage.saveServiceConfig(serviceId, configData);
+    // 从数据库读取用户现有配置
+    const { db } = require('../db/init.cjs');
+    const existing = await db.prepare(
+      'SELECT api_keys FROM user_configs WHERE user_id = ?'
+    ).get(userId);
+
+    // 解析现有的 API keys
+    let apiKeys = {};
+    if (existing && existing.api_keys) {
+      try {
+        apiKeys = JSON.parse(existing.api_keys);
+      } catch (e) {
+        logger.warn(`[User ${userId}] 解析 api_keys 失败, 使用空对象`);
+      }
+    }
+
+    // 更新对应服务的 API key
+    if (configData.apiKey) {
+      apiKeys[serviceId] = configData.apiKey;
+      logger.info(`[User ${userId}] 更新 ${serviceId} API key`);
+    }
+
+    // 保存到数据库
+    await db.prepare(`
+      INSERT INTO user_configs (user_id, api_keys, updated_at)
+      VALUES (?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(user_id) DO UPDATE SET
+        api_keys = excluded.api_keys,
+        updated_at = CURRENT_TIMESTAMP
+    `).run(userId, JSON.stringify(apiKeys));
+
+    logger.info(`[User ${userId}] ${serviceId} 配置已保存到数据库`);
 
     res.json({
       success: true,

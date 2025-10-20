@@ -97,7 +97,7 @@ const createMessage = ({
  * 基于数据库的对话管理Hook
  */
 export function useConversationsDB() {
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [conversations, setConversations] = useState({});
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -105,17 +105,14 @@ export function useConversationsDB() {
 
   // 从数据库加载对话
   const loadConversations = useCallback(async () => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       setLoading(false);
       return;
     }
 
     try {
       const response = await fetch('/api/user-data/conversations', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
+        credentials: 'include' // 使用 httpOnly cookie 认证，不需要手动传 token
       });
 
       if (!response.ok) {
@@ -152,18 +149,24 @@ export function useConversationsDB() {
       logger.error('[useConversationsDB] Error loading conversations:', error);
       setLoading(false);
     }
-  }, [token, isAuthenticated]);
+  }, [isAuthenticated]);
 
   // 保存对话到数据库
   const saveConversations = useCallback(async (conversationsToSave) => {
     logger.log('[useConversationsDB] saveConversations called:', {
       isAuthenticated,
-      hasToken: !!token,
+      loading,
       conversationsCount: Object.keys(conversationsToSave || {}).length
     });
 
-    if (!isAuthenticated || !token) {
-      logger.warn('[useConversationsDB] Skip saving: not authenticated or no token');
+    if (!isAuthenticated) {
+      logger.warn('[useConversationsDB] Skip saving: not authenticated');
+      return;
+    }
+
+    // 防止在初始加载期间保存空数据导致数据库被清空
+    if (loading) {
+      logger.warn('[useConversationsDB] Skip saving: still loading initial data');
       return;
     }
 
@@ -172,10 +175,9 @@ export function useConversationsDB() {
       const response = await fetch('/api/user-data/conversations', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
-        credentials: 'include',
+        credentials: 'include', // 使用 httpOnly cookie 认证
         body: JSON.stringify({ conversations: conversationsToSave })
       });
 
@@ -184,13 +186,13 @@ export function useConversationsDB() {
         logger.error('[useConversationsDB] Save failed:', response.status, errorText);
         throw new Error(`保存对话失败: ${response.status}`);
       }
-      
+
       logger.log('[useConversationsDB] Conversations saved successfully');
     } catch (error) {
       logger.error('[useConversationsDB] Error saving conversations:', error);
       throw error;
     }
-  }, [token, isAuthenticated]);
+  }, [isAuthenticated, loading]);
 
   // 防抖保存
   const debouncedSave = useCallback((conversationsToSave) => {
@@ -304,9 +306,31 @@ export function useConversationsDB() {
 
   // 删除对话
   const removeConversation = useCallback((id) => {
+    // 判断是否是数据库 ID（需要调用删除 API）
+    const isDbId = typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id));
+
+    if (isDbId && isAuthenticated) {
+      // 异步调用后端删除 API（不阻塞 UI）
+      fetch(`/api/user-data/conversations/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+        .then(response => {
+          if (!response.ok) {
+            logger.error('[useConversationsDB] Failed to delete conversation:', id);
+          } else {
+            logger.log('[useConversationsDB] Successfully deleted conversation from database:', id);
+          }
+        })
+        .catch(error => {
+          logger.error('[useConversationsDB] Error deleting conversation:', error);
+        });
+    }
+
+    // 立即删除前端状态（不等待 API）
     setConversations(prev => {
       const { [id]: removed, ...rest } = prev;
-      
+
       // 如果删除的是当前对话,切换到其他对话
       if (id === currentConversationId) {
         const remainingIds = Object.keys(rest);
@@ -322,10 +346,10 @@ export function useConversationsDB() {
         }
       }
 
-      debouncedSave(rest);
+      // 不需要保存剩余对话，因为删除操作已经在后端完成
       return rest;
     });
-  }, [currentConversationId, debouncedSave]);
+  }, [currentConversationId, debouncedSave, isAuthenticated]);
 
   // 删除消息
   const deleteMessage = useCallback((conversationId, messageId) => {

@@ -39,6 +39,8 @@
   opacity: 0;
   transition: opacity 0.2s ease;
   background: var(--secondary);
+  pointer-events: none; /* 🔥 关键修复：让伪元素不阻挡点击事件 */
+  z-index: -1; /* 确保伪元素在内容下方 */
 }
 
 .conversation-item:hover::before {
@@ -47,7 +49,7 @@
 
 .conversation-item:hover {
   border-color: var(--border);
-  background: transparent;
+  /* 移除 transparent，让 ::before 的背景显示 */
 }
 
 .conversation-item.active {
@@ -144,12 +146,7 @@
   font-size: 14px;
 }
 
-.message-content-user {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-bottom-right-radius: 4px;
-  box-shadow: var(--shadow-sm);
-}
+/* 用户消息样式已移至 App.css 统一管理，避免样式冲突 */
 
 .message-content-ai {
   background: var(--card);
@@ -264,14 +261,21 @@
   min-height: 44px;
   max-height: 200px;
   padding: 8px 0;
-  border: none;
-  outline: none;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important; /* 移除蓝色边框 */
   background: transparent;
   color: var(--foreground);
   font-size: 14px;
   line-height: 1.5;
   resize: none;
   font-family: inherit;
+}
+
+.message-input-textarea:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important; /* 确保聚焦时也没有蓝色边框 */
 }
 
 .message-input-textarea::placeholder {
@@ -282,8 +286,8 @@
 .message-input-send {
   height: 44px;
   padding: 0 20px;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: #18181b !important; /* 深黑色背景 - 强制优先级 */
+  color: white !important; /* 白色文字 - 强制优先级 */
   border: none;
   border-radius: calc(var(--radius) - 2px);
   font-weight: 600;
@@ -298,19 +302,22 @@
 }
 
 .message-input-send:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: #27272a !important; /* 悬停时稍浅的黑色 */
   transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .message-input-send:active:not(:disabled) {
   transform: translateY(0);
+  background: #09090b !important; /* 点击时纯黑 */
 }
 
 .message-input-send:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: #71717a !important; /* 禁用时灰色 */
 }
+
 
 /* ===== 按钮组件通用样式 ===== */
 .button {
@@ -487,9 +494,7 @@
 }
 
 /* ===== 暗色模式特殊处理 ===== */
-.dark .message-content-user {
-  box-shadow: var(--shadow-md);
-}
+/* .dark .message-content-user 样式已移至 App.css */
 
 .dark .message-content-ai {
   border-color: var(--border);

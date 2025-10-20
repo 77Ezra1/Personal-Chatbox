@@ -74,74 +74,177 @@ router.post('/conversations', authMiddleware, async (req, res) => {
   logger.info('[User Data] Conversations count:', Object.keys(conversations).length);
 
   try {
-    // 1. 删除用户现有的所有对话（级联删除消息）
-    await db.prepare('DELETE FROM conversations WHERE user_id = ?').run(userId);
-    console.log('[User Data] Deleted old conversations for user:', userId);
-
-    // 2. 插入新的对话和消息
     const conversationList = Object.values(conversations);
 
     if (conversationList.length === 0) {
-      console.log('[User Data] No conversations to save');
-      return res.json({ message: '对话数据已保存', count: 0 });
+      logger.info('[User Data] No conversations to save, skipping');
+      return res.json({ message: '没有对话需要保存', count: 0 });
     }
 
-    let totalMessages = 0;
+    // 获取数据库中现有的对话 ID
+    const existingConversations = await db.prepare(
+      'SELECT id FROM conversations WHERE user_id = ?'
+    ).all(userId);
 
-    // 3. 遍历并插入每个对话
-    for (const [index, conv] of conversationList.entries()) {
+    // 创建现有对话 ID 的 Set
+    const existingIds = new Set(existingConversations.map(c => c.id));
+
+    let totalMessages = 0;
+    let updatedCount = 0;
+    let insertedCount = 0;
+
+    // 遍历前端传来的对话,进行增量更新
+    for (const conv of conversationList) {
       try {
-        // 插入对话
-        await db.prepare(
-          `INSERT INTO conversations (id, user_id, title, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?)`
-        ).run(
-          conv.id,
-          userId,
-          conv.title || '新对话',
-          conv.createdAt || new Date().toISOString(),
-          conv.updatedAt || new Date().toISOString()
+        const title = conv.title || '新对话';
+        let dbId = null;
+
+        // 判断 conv.id 是否是数据库整数 ID（从数据库加载的）还是前端临时 ID（新创建的）
+        const isDbId = typeof conv.id === 'number' || (typeof conv.id === 'string' && /^\d+$/.test(conv.id));
+        const convIdAsInt = isDbId ? parseInt(conv.id, 10) : null;
+
+        // 如果 ID 是数据库 ID 且存在于数据库中，则更新
+        if (convIdAsInt && existingIds.has(convIdAsInt)) {
+          dbId = convIdAsInt;
+          await db.prepare(
+            `UPDATE conversations
+             SET title = ?, updated_at = ?
+             WHERE id = ? AND user_id = ?`
+          ).run(
+            title,
+            conv.updatedAt || new Date().toISOString(),
+            dbId,
+            userId
+          );
+          updatedCount++;
+          logger.info(`[User Data] Updated conversation: ${title} (ID: ${dbId})`);
+        } else {
+          // 插入新对话（前端临时 ID，或者数据库中不存在的 ID）
+          const result = await db.prepare(
+            `INSERT INTO conversations (user_id, title, created_at, updated_at)
+             VALUES (?, ?, ?, ?)`
+          ).run(
+            userId,
+            title,
+            conv.createdAt || new Date().toISOString(),
+            conv.updatedAt || new Date().toISOString()
+          );
+          dbId = result.lastInsertRowid || result.lastID;
+          existingIds.add(dbId);
+          insertedCount++;
+          logger.info(`[User Data] Inserted new conversation: ${title} (ID: ${dbId}, frontend ID: ${conv.id})`);
+        }
+
+        // 获取该对话现有消息的时间戳列表（用于去重）
+        const existingMessages = await db.prepare(
+          'SELECT timestamp, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC'
+        ).all(dbId);
+
+        // 创建一个 Set 用于快速查找（使用时间戳+内容前50字符作为唯一标识）
+        const existingMessageSet = new Set(
+          existingMessages.map(m => `${m.timestamp}:${(m.content || '').substring(0, 50)}`)
         );
 
-        // 插入该对话的所有消息
-        if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
-          for (const msg of conv.messages) {
-            // 验证消息内容大小
+        const newMessages = conv.messages || [];
+
+        // 过滤出真正需要插入的新消息
+        const messagesToInsert = newMessages.filter(msg => {
+          const msgKey = `${msg.timestamp}:${(msg.content || '').substring(0, 50)}`;
+          return !existingMessageSet.has(msgKey);
+        });
+
+        // 插入新消息
+        if (messagesToInsert.length > 0) {
+          for (const msg of messagesToInsert) {
             const content = msg.content || '';
-            if (content.length > 100000) { // 限制单条消息100KB
-              logger.warn(`[User Data] Message content too large (${content.length} bytes), truncating`);
+            if (content.length > 100000) {
+              logger.warn(`[User Data] Message content too large (${content.length} bytes), skipping`);
               continue;
             }
 
+            // 插入到 messages 表（保持向后兼容）
             await db.prepare(
-              `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, status, attachments)
+              `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, model, source)
                VALUES (?, ?, ?, ?, ?, ?, ?)`
             ).run(
-              conv.id,
+              dbId,
               msg.role || 'user',
               content,
               msg.timestamp || new Date().toISOString(),
               msg.metadata ? JSON.stringify(msg.metadata) : null,
-              msg.status || 'done',
-              msg.attachments ? JSON.stringify(msg.attachments) : '[]'
+              msg.model || null,
+              msg.source || 'chat' // 默认为对话来源
             );
             totalMessages++;
+
+            // 双写：如果是 assistant 消息且有 usage 信息，同时写入 ai_usage_logs
+            if (msg.role === 'assistant' && msg.metadata && msg.metadata.usage) {
+              try {
+                const usage = msg.metadata.usage;
+
+                // 计算成本（DeepSeek 价格）
+                const promptCost = (usage.prompt_tokens || 0) / 1000000 * 0.14;
+                const completionCost = (usage.completion_tokens || 0) / 1000000 * 0.28;
+                const totalCost = promptCost + completionCost;
+
+                // 准备元数据
+                const aiLogMetadata = JSON.stringify({
+                  usage: usage,
+                  conversation_id: dbId,
+                  conversation_title: title,
+                  content_preview: content.substring(0, 100),
+                  timestamp: msg.timestamp || new Date().toISOString()
+                });
+
+                // 插入到 ai_usage_logs
+                await db.prepare(
+                  `INSERT INTO ai_usage_logs (
+                    user_id, source, action, model,
+                    prompt_tokens, completion_tokens, total_tokens,
+                    cost_usd, currency,
+                    related_id, related_type,
+                    metadata, created_at
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                ).run(
+                  userId,
+                  msg.source || 'chat',
+                  'chat',  // action
+                  msg.model || 'unknown',
+                  usage.prompt_tokens || 0,
+                  usage.completion_tokens || 0,
+                  usage.total_tokens || 0,
+                  totalCost,
+                  'USD',
+                  dbId,  // 关联到对话ID
+                  'conversation',
+                  aiLogMetadata,
+                  msg.timestamp || new Date().toISOString()
+                );
+
+              } catch (aiLogError) {
+                // 双写失败不影响主流程
+                logger.warn(`[User Data] Failed to write to ai_usage_logs:`, aiLogError.message);
+              }
+            }
           }
+
+          logger.info(`[User Data] Added ${messagesToInsert.length} new messages to conversation: ${title}`);
         }
       } catch (convError) {
-        logger.error(`[User Data] Error inserting conversation ${index + 1}:`, convError);
+        logger.error(`[User Data] Error processing conversation:`, convError);
         throw convError;
       }
     }
 
-    logger.info(`[User Data] ✅ Successfully saved ${conversationList.length} conversations with ${totalMessages} messages`);
+    logger.info(`[User Data] ✅ Saved: ${insertedCount} new, ${updatedCount} updated conversations with ${totalMessages} new messages`);
 
     // Clear cache after saving conversations
     clearUserCache(userId);
 
     return res.json({
       message: '对话数据已保存',
-      count: conversationList.length,
+      inserted: insertedCount,
+      updated: updatedCount,
       totalMessages
     });
 
@@ -149,6 +252,51 @@ router.post('/conversations', authMiddleware, async (req, res) => {
     logger.error('[User Data] Error in conversation save:', error);
     return res.status(500).json({
       message: '保存对话数据失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * 删除单个对话
+ * DELETE /api/user-data/conversations/:id
+ */
+router.delete('/conversations/:id', authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  const conversationId = parseInt(req.params.id, 10);
+
+  if (!conversationId || isNaN(conversationId)) {
+    return res.status(400).json({ message: '无效的对话 ID' });
+  }
+
+  try {
+    // 验证对话属于当前用户
+    const conversation = await db.prepare(
+      'SELECT id FROM conversations WHERE id = ? AND user_id = ?'
+    ).get(conversationId, userId);
+
+    if (!conversation) {
+      return res.status(404).json({ message: '对话不存在或无权限删除' });
+    }
+
+    // 删除对话（级联删除关联的消息）
+    await db.prepare('DELETE FROM conversations WHERE id = ? AND user_id = ?')
+      .run(conversationId, userId);
+
+    logger.info(`[User Data] ✅ Deleted conversation ${conversationId} for user ${userId}`);
+
+    // Clear cache
+    clearUserCache(userId);
+
+    return res.json({
+      message: '对话已删除',
+      conversationId
+    });
+
+  } catch (error) {
+    logger.error('[User Data] Error deleting conversation:', error);
+    return res.status(500).json({
+      message: '删除对话失败',
       error: error.message
     });
   }

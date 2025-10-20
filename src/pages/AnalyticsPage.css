@@ -592,3 +592,101 @@
     transform: none;
   }
 }
+
+/* ========== 数据来源统计卡片 ========== */
+.source-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.source-stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.3s ease;
+}
+
+.source-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+}
+
+.source-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.source-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.source-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.source-tokens {
+  margin-bottom: 16px;
+}
+
+.token-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.token-row.secondary {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.token-row span {
+  color: var(--muted-foreground);
+}
+
+.token-row strong {
+  color: var(--foreground);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.source-cost {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.source-cost span {
+  color: var(--muted-foreground);
+}
+
+.source-cost strong {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .source-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -174,11 +174,12 @@ function App() {
 
     let accumulatedContent = ''
     let accumulatedReasoning = ''
+    let usageData = null // 保存 usage 信息
 
     try {
       // 使用缓存的工具列表
       logger.log('[App] MCP Tools loaded:', mcpTools.length, mcpTools)
-      
+
       const response = await generateAIResponse({
         messages,
         modelConfig: { ...modelConfig, deepThinking: isDeepThinking },
@@ -214,11 +215,18 @@ function App() {
             status: 'loading',
             metadata: {
               ...(isDeepThinking ? { deepThinking: true } : {}),
-              ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {})
+              ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {}),
+              ...(usageData ? { usage: usageData } : {})
             }
           }))
         }
       })
+
+      // 保存 usage 信息
+      if (response?.usage) {
+        usageData = response.usage
+        logger.log('[App] Token usage:', usageData)
+      }
 
       // 检查是否有工具调用
       if (response?.tool_calls && Array.isArray(response.tool_calls) && response.tool_calls.length > 0) {
@@ -230,7 +238,8 @@ function App() {
           status: 'loading',
           metadata: {
             ...(isDeepThinking ? { deepThinking: true } : {}),
-            toolCalling: true
+            toolCalling: true,
+            ...(usageData ? { usage: usageData } : {})
           }
         }))
         
@@ -349,7 +358,8 @@ function App() {
               metadata: {
                 deepThinking: true, // 确保显示思考过程
                 reasoning: currentReasoning,
-                toolCalling: false
+                toolCalling: false,
+                ...(usageData ? { usage: usageData } : {})
               }
             }))
           }
@@ -360,6 +370,21 @@ function App() {
           ? finalResponse.content
           : accumulatedContent
         let finalReasoning = toolCallReasoning
+
+        // 累积工具调用的 usage 信息
+        if (finalResponse?.usage) {
+          if (usageData) {
+            // 合并两次调用的 token 数
+            usageData = {
+              prompt_tokens: (usageData.prompt_tokens || 0) + (finalResponse.usage.prompt_tokens || 0),
+              completion_tokens: (usageData.completion_tokens || 0) + (finalResponse.usage.completion_tokens || 0),
+              total_tokens: (usageData.total_tokens || 0) + (finalResponse.usage.total_tokens || 0)
+            }
+          } else {
+            usageData = finalResponse.usage
+          }
+          logger.log('[App] Tool call final usage:', usageData)
+        }
         
         // 提取最终的推理内容
         const contentForExtraction = finalContent || accumulatedContent
@@ -377,7 +402,8 @@ function App() {
           metadata: {
             deepThinking: true,
             reasoning: finalReasoning,
-            toolCalling: false
+            toolCalling: false,
+            ...(usageData ? { usage: usageData } : {})
           }
         }))
       } else {
@@ -403,7 +429,8 @@ function App() {
           status: 'done',
           metadata: {
             ...(isDeepThinking ? { deepThinking: true } : {}),
-            ...(finalReasoning ? { reasoning: finalReasoning } : {})
+            ...(finalReasoning ? { reasoning: finalReasoning } : {}),
+            ...(usageData ? { usage: usageData } : {})
           }
         }))
       }
@@ -416,9 +443,20 @@ function App() {
           modelConfig,
           tools: tools?.length || 0
         })
-        toast.error(translate('toasts.failedToGenerate'))
+        
+        // 显示更具体的错误信息
+        if (error.message?.includes('API key') || error.message?.includes('configure')) {
+          toast.error(language === 'zh' ? '请先在设置中配置 API 密钥' : 'Please configure API key in settings first')
+        } else {
+          toast.error(translate('toasts.failedToGenerate'))
+        }
+        
         updateMessage(currentConversationId, placeholderMessage.id, () => ({
-          status: 'error'
+          status: 'error',
+          content: error.message?.includes('API key') 
+            ? (language === 'zh' ? '⚠️ 请先配置 API 密钥\n\n请点击左侧设置图标，选择 AI 服务提供商（如 DeepSeek），并输入您的 API 密钥。' 
+              : '⚠️ Please configure API key first\n\nClick the settings icon on the left, select an AI provider (e.g., DeepSeek), and enter your API key.')
+            : undefined
         }))
       } else {
         updateMessage(currentConversationId, placeholderMessage.id, (prev) => ({
@@ -443,7 +481,8 @@ function App() {
     translate,
     mcpTools,
     callTool,
-    systemPrompt
+    systemPrompt,
+    language
   ])
 
   const handleSendMessage = useCallback(async (content, attachments = []) => {

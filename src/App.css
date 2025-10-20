@@ -1015,21 +1015,22 @@ button:hover:not(:disabled),
 }
 
 .message-content-user {
-  padding: 12px 18px; /* 减小内边距 */
-  border-radius: 18px; /* 减小圆角 */
-  background: #ffffff;
-  border: 1px solid rgba(227, 231, 242, 0.6);
-  box-shadow: none;
+  padding: 12px 18px !important; /* 减小内边距 */
+  border-radius: 18px !important; /* 减小圆角 */
+  background: #ffffff !important;
+  border: 1px solid rgba(227, 231, 242, 0.6) !important;
+  box-shadow: none !important;
   margin-left: auto;
-  color: #1f2937;
-  max-width: 100%;
+  color: #1f2937 !important;
+  max-width: fit-content !important; /* 让气泡根据内容自适应大小 */
+  width: auto !important; /* 宽度由内容决定 */
 }
 
 .dark .message-content-user {
-  background: #ffffff;
-  border-color: rgba(227, 231, 242, 0.6);
-  box-shadow: none;
-  color: #1f2937;
+  background: #ffffff !important;
+  border-color: rgba(227, 231, 242, 0.6) !important;
+  box-shadow: none !important;
+  color: #1f2937 !important;
 }
 
 .message-content-user::after {

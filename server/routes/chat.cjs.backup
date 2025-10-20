@@ -6,60 +6,41 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger.cjs');
-const { authMiddleware } = require('../middleware/auth.cjs');
-const { db } = require('../db/init.cjs');
+const ConfigManager = require('../services/configManager.cjs');
+
+// 配置管理器实例
+const configManager = new ConfigManager();
 
 // OpenAI SDK
 const { OpenAI } = require('openai');
 
 /**
- * 从数据库获取用户的 API key
- * @param {number} userId - 用户ID
- * @param {string} provider - 服务提供商 (如 'deepseek', 'openai')
- * @returns {Promise<string|null>} API key 或 null
- */
-async function getUserApiKey(userId, provider) {
-  try {
-    const config = await db.prepare(
-      'SELECT api_keys FROM user_configs WHERE user_id = ?'
-    ).get(userId);
-
-    if (!config || !config.api_keys) {
-      return null;
-    }
-
-    const apiKeys = JSON.parse(config.api_keys);
-    return apiKeys[provider] || null;
-  } catch (error) {
-    logger.error(`[User ${userId}] 获取 API key 失败:`, error);
-    return null;
-  }
-}
-
-/**
  * 创建 OpenAI 客户端实例
- * 从数据库读取用户配置的 API key（不使用环境变量）
- * @param {number} userId - 用户ID
- * @returns {Promise<OpenAI>} OpenAI 客户端实例
+ * 优先使用用户配置的 API key，其次使用环境变量
  */
-async function createOpenAIClient(userId) {
+async function createOpenAIClient() {
   try {
-    // 从数据库读取用户配置的 API key
-    const apiKey = await getUserApiKey(userId, 'deepseek');
+    // 1. 先尝试获取用户配置的 API key
+    let apiKey = await configManager.getApiKey('deepseek');
 
+    // 2. 如果用户没有配置，使用环境变量
     if (!apiKey) {
-      logger.warn(`[User ${userId}] DeepSeek API key 未配置`);
-      throw new Error('DeepSeek API key 未配置，请在设置中配置 API 密钥');
+      apiKey = process.env.DEEPSEEK_API_KEY;
+      if (!apiKey) {
+        logger.warn('未配置 DeepSeek API key，请在设置中配置或设置 DEEPSEEK_API_KEY 环境变量');
+        throw new Error('DeepSeek API key 未配置');
+      }
+      logger.info('使用环境变量中的 DeepSeek API key');
+    } else {
+      logger.info('使用用户配置的 DeepSeek API key');
     }
-
-    logger.info(`[User ${userId}] 使用数据库中的用户配置 API key`);
 
     return new OpenAI({
       apiKey: apiKey,
       baseURL: 'https://api.deepseek.com'
     });
   } catch (error) {
-    logger.error(`[User ${userId}] 创建 OpenAI 客户端失败:`, error);
+    logger.error('创建 OpenAI 客户端失败:', error);
     throw error;
   }
 }
@@ -107,11 +88,8 @@ function initializeRouter(services) {
 /**
  * POST /api/chat
  * 处理对话请求
- * 需要认证：从数据库读取用户的 API key
  */
-router.post('/', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-
+router.post('/', async (req, res) => {
   try {
     let { messages, model = 'deepseek-chat', stream = false } = req.body;
 
@@ -121,7 +99,7 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
 
-    logger.info(`[User ${userId}] 收到对话请求: model=${model}, messages=${messages.length}条`);
+    logger.info(`收到对话请求: model=${model}, messages=${messages.length}条`);
 
     // 获取所有可用的工具（包括MCP工具和原有服务工具）
     let allTools = [];
@@ -212,8 +190,8 @@ router.post('/', authMiddleware, async (req, res) => {
       logger.info(`工具列表: ${apiParams.tools.map(t => t.function.name).join(', ')}`);
     }
 
-    // 创建 OpenAI 客户端（从数据库读取用户配置的 API key）
-    const openai = await createOpenAIClient(userId);
+    // 创建 OpenAI 客户端（使用用户配置的 API key）
+    const openai = await createOpenAIClient();
 
     // 调用 DeepSeek API（第一次调用不使用流式，因为可能有工具调用）
     logger.info(`调用 DeepSeek API，参数: ${JSON.stringify({
@@ -287,17 +265,11 @@ router.post('/', authMiddleware, async (req, res) => {
             logger.info(`流式传输完成: ${chunk.choices[0].finish_reason}, 总chunks: ${chunkCount}`);
             logger.info(`总内容长度: ${fullContent.length}, 思考长度: ${fullReasoning.length}`);
 
-            // 包含 usage 信息（通常在最后一个 chunk 中）
-            if (chunk.usage) {
-              logger.info(`Token usage: prompt=${chunk.usage.prompt_tokens}, completion=${chunk.usage.completion_tokens}, total=${chunk.usage.total_tokens}`);
-            }
-
             res.write(`data: ${JSON.stringify({
               type: 'done',
               finish_reason: chunk.choices[0].finish_reason,
               fullContent: fullContent,
-              fullReasoning: fullReasoning,
-              usage: chunk.usage || null  // 🔥 添加 usage 信息
+              fullReasoning: fullReasoning
             })}\n\n`);
           }
         }
@@ -454,17 +426,11 @@ router.post('/', authMiddleware, async (req, res) => {
               logger.info(`工具后流式传输完成: ${chunk.choices[0].finish_reason}, 总chunks: ${chunkCount}`);
               logger.info(`总内容长度: ${fullContent.length}, 思考长度: ${fullReasoning.length}`);
 
-              // 包含 usage 信息
-              if (chunk.usage) {
-                logger.info(`[工具后] Token usage: prompt=${chunk.usage.prompt_tokens}, completion=${chunk.usage.completion_tokens}, total=${chunk.usage.total_tokens}`);
-              }
-
               res.write(`data: ${JSON.stringify({
                 type: 'done',
                 finish_reason: chunk.choices[0].finish_reason,
                 fullContent: fullContent,
-                fullReasoning: fullReasoning,
-                usage: chunk.usage || null  // 🔥 添加 usage 信息
+                fullReasoning: fullReasoning
               })}\n\n`);
             }
           }

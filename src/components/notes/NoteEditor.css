@@ -358,53 +358,70 @@
 
 .format-buttons {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   flex-wrap: nowrap;
+  background: transparent;
+  padding: 0;
 }
 
 .format-buttons .btn-icon {
-  min-width: 28px;
-  height: 28px;
-  padding: 3px 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
   color: var(--foreground);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.7;
 }
 
 .format-buttons .btn-icon:hover {
-  background: var(--secondary);
-  border-color: var(--input-focus);
-  transform: translateY(-1px);
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 1;
 }
 
 .format-buttons .btn-icon:active {
-  transform: translateY(0);
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(0.95);
 }
 
 .format-buttons .btn-icon.active {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  font-weight: 600;
 }
 
 .format-buttons .btn-icon:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* 暗黑模式下的按钮样式 */
+.dark .format-buttons .btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .format-buttons .btn-icon:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .format-buttons .btn-icon.active {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ===== 缂栬緫鍣ㄤ富浣?===== */
 .note-editor-body {
   flex: 1;
   display: flex;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--note-editor-surface, #f7f8fb);
   color: var(--note-editor-text, #111827);
   min-height: 0;
@@ -1001,53 +1018,70 @@
 
 .format-buttons {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   flex-wrap: nowrap;
+  background: transparent;
+  padding: 0;
 }
 
 .format-buttons .btn-icon {
-  min-width: 28px;
-  height: 28px;
-  padding: 3px 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
   color: var(--foreground);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.7;
 }
 
 .format-buttons .btn-icon:hover {
-  background: var(--secondary);
-  border-color: var(--input-focus);
-  transform: translateY(-1px);
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 1;
 }
 
 .format-buttons .btn-icon:active {
-  transform: translateY(0);
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(0.95);
 }
 
 .format-buttons .btn-icon.active {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  font-weight: 600;
 }
 
 .format-buttons .btn-icon:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* 暗黑模式下的按钮样式 */
+.dark .format-buttons .btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .format-buttons .btn-icon:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .format-buttons .btn-icon.active {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ===== 缂栬緫鍣ㄤ富浣?===== */
 .note-editor-body {
   flex: 1;
   display: flex;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--note-editor-surface, #f7f8fb);
   color: var(--note-editor-text, #111827);
   min-height: 0;

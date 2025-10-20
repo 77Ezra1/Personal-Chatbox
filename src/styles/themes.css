@@ -273,11 +273,11 @@ input:focus, textarea:focus, select:focus {
 
 /* 消息样式 */
 .message-user {
-  background-color: var(--message-user-bg);
+  background-color: transparent !important; /* 移除蓝色背景，让气泡本身的白色显示 */
 }
 
 .message-assistant {
-  background-color: var(--message-assistant-bg);
+  background-color: transparent; /* AI 消息也使用透明背景 */
 }
 
 .message-system {

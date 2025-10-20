@@ -230,11 +230,12 @@ async function callDeepSeekMCP({
     // 判断是否使用流式输出
     const useStream = !!onToken
 
-    // 调用后端 API
+    // 调用后端 API（后端从数据库读取 API key）
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`  // 需要认证
       },
       body: JSON.stringify({
         messages: formattedMessages,
@@ -264,6 +265,7 @@ async function callDeepSeekMCP({
 
       let fullContent = ''
       let fullReasoning = ''
+      let usageInfo = null  // 保存 token usage 信息
       let chunkCount = 0
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
@@ -328,6 +330,12 @@ async function callDeepSeekMCP({
                 if (parsed.type === 'done') {
                   logger.log(`[callDeepSeekMCP] Stream done: ${parsed.finish_reason}, total chunks: ${chunkCount}`)
                   logger.log(`[callDeepSeekMCP] Final content: ${fullContent.length}, reasoning: ${fullReasoning.length}`)
+
+                  // 保存 usage 信息
+                  if (parsed.usage) {
+                    usageInfo = parsed.usage
+                    logger.log(`[callDeepSeekMCP] Token usage:`, usageInfo)
+                  }
                 }
 
                 if (parsed.type === 'error') {
@@ -349,6 +357,7 @@ async function callDeepSeekMCP({
           content: fullContent,
           text: fullContent,
           reasoning: fullReasoning || null,
+          usage: usageInfo || null,  // 🔥 添加 usage 信息
           finishReason: 'stop'
         }
 
@@ -409,6 +418,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   } = modelConfig
   logger.log('[aiClient] Extracted values:', { provider, model, apiKey: apiKey ? 'present' : 'missing', temperature, maxTokens })
 
+  // 所有服务商都需要在前端配置 API key
   if (!apiKey) {
     throw new Error('Please configure the API key for the selected provider first. Go to Settings > API Keys to add your key.')
   }

@@ -17,6 +17,7 @@ import { TextStyle } from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 import { Extension, textblockTypeInputRule, wrappingInputRule } from '@tiptap/core'
 import { SlashCommands } from './SlashCommands'
+import { TipTapToolbar } from './TipTapToolbar'
 import 'tippy.js/dist/tippy.css'
 
 // Custom extension for Markdown shortcuts with Enter key trigger
@@ -379,6 +380,8 @@ export default function MarkdownLikeEditor({
   return (
     <>
       <style>{styles}</style>
+      {/* 富文本工具栏 - 选中文本时自动显示 */}
+      {editor && <TipTapToolbar editor={editor} />}
       <EditorContent editor={editor} />
     </>
   )

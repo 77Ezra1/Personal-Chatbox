@@ -363,7 +363,7 @@ function registerRoutes() {
   app.use('/api/chat', chatRouter);
   app.use('/api/proxy', proxyRouter);
   app.use('/api/test-connection', require('./routes/test-connection.cjs')); // API连接测试路由
-  app.use('/api/config', require('./routes/config.cjs'));
+  app.use('/api/config', require('./routes/config.cjs')); // 配置管理路由（使用数据库）
 }
 
 // 健康检查

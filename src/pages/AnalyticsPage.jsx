@@ -197,6 +197,12 @@ export default function AnalyticsPage() {
           {/* Period Selector */}
           <div className="period-selector">
             <button
+              className={period === '1d' ? 'active' : ''}
+              onClick={() => setPeriod('1d')}
+            >
+              {translate('analytics.period.today', '今天')}
+            </button>
+            <button
               className={period === '7d' ? 'active' : ''}
               onClick={() => setPeriod('7d')}
             >
@@ -286,7 +292,7 @@ export default function AnalyticsPage() {
           <div className="stat-content">
             <p className="stat-label">💰 {translate('analytics.estimatedCost', '累计花费')}</p>
             <p className="stat-value">
-              {safeOverview.cost?.currencySymbol || '¥'}{parseFloat(safeOverview.cost?.total || 0).toFixed(2)}
+              {safeOverview.cost?.currencySymbol || '¥'}{safeOverview.cost?.total || '0.0000'}
             </p>
             <p className="stat-detail">
               {safeOverview.cost?.currency || 'CNY'} ({translate('analytics.estimated', '预估值')})
@@ -305,6 +311,61 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {/* Token Usage by Source (按来源统计) */}
+      {safeOverview.tokensBySource && safeOverview.tokensBySource.length > 0 && (
+        <div className="chart-section">
+          <div className="chart-header">
+            <h2>
+              <PieChartIcon className="w-5 h-5" />
+              📊 Token 使用来源分布
+            </h2>
+            <p className="chart-description">不同功能的 Token 消耗统计</p>
+          </div>
+          <div className="source-stats-grid">
+            {safeOverview.tokensBySource.map((source, index) => {
+              const sourceNames = {
+                'chat': '💬 对话',
+                'notes': '📝 笔记',
+                'documents': '📄 文档'
+              };
+              const sourceName = sourceNames[source.source] || source.source;
+
+              return (
+                <div key={source.source} className="source-stat-card">
+                  <div className="source-header">
+                    <h3>{sourceName}</h3>
+                    <span className="source-badge" style={{
+                      background: COLORS[index % COLORS.length] + '20',
+                      color: COLORS[index % COLORS.length]
+                    }}>
+                      {source.messageCount} 次调用
+                    </span>
+                  </div>
+                  <div className="source-tokens">
+                    <div className="token-row">
+                      <span>总 Token:</span>
+                      <strong>{(source.tokens?.total || 0).toLocaleString()}</strong>
+                    </div>
+                    <div className="token-row secondary">
+                      <span>📤 Prompt:</span>
+                      <span>{(source.tokens?.prompt || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="token-row secondary">
+                      <span>📥 完成:</span>
+                      <span>{(source.tokens?.completion || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="source-cost">
+                    <span>💰 预估成本:</span>
+                    <strong>{source.cost?.currencySymbol || '¥'}{source.cost?.total || '0.0000'}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Trends Chart */}
       {trends.length > 0 && (

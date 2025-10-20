@@ -6,9 +6,7 @@ const express = require('express');
 const router = express.Router();
 const { OpenAI } = require('openai');
 const logger = require('../utils/logger.cjs');
-const ConfigManager = require('../services/configManager.cjs');
-
-const configManager = new ConfigManager();
+const configStorage = require('../services/config-storage.cjs');
 
 /**
  * 测试DeepSeek连接

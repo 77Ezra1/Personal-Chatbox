@@ -40,33 +40,26 @@ export function AIAssistantPanel({ noteContent, onInsertText }) {
     setIsLoading(true);
 
     try {
-      // 构建上下文：包含当前笔记内容
-      const context = noteContent
-        ? `当前笔记内容：\n${noteContent.substring(0, 2000)}\n\n用户问题：${userMessage}`
-        : userMessage;
-
-      // 调用AI API
-      const response = await fetch('/api/ai/chat', {
+      // 调用后端笔记 AI 问答接口
+      const response = await fetch('/api/ai/notes/qa', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // 使用 cookie 认证
         body: JSON.stringify({
-          messages: [
-            ...newMessages.slice(-5).map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content: context }
-          ],
-          model: localStorage.getItem('selectedModel') || 'gpt-3.5-turbo'
+          question: userMessage,
+          content: noteContent || ''
         })
       });
 
       if (!response.ok) {
-        throw new Error('AI request failed');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'AI request failed');
       }
 
       const data = await response.json();
-      const aiMessage = data.message || data.content || '抱歉，我无法回答这个问题。';
+      const aiMessage = data.answer || '抱歉，我无法回答这个问题。';
 
       // 添加AI回复
       setMessages([

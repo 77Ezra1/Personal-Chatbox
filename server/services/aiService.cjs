@@ -13,45 +13,69 @@ class AIService {
 
   async initializeServices() {
     try {
-      // 尝试加载用户配置
-      const ConfigManager = require('./configManager.cjs');
-      const configManager = new ConfigManager();
-      const config = await configManager.loadUserConfig(this.userId);
+      // 直接从数据库读取用户API配置
+      const { db } = require('../db/init.cjs');
+      const { OpenAI } = require('openai');
+
+      let openaiApiKey = null;
+      let deepseekApiKey = null;
+
+      // 如果有userId，从数据库读取
+      if (this.userId) {
+        try {
+          const config = await db.prepare(
+            'SELECT api_keys FROM user_configs WHERE user_id = ?'
+          ).get(this.userId);
+
+          if (config && config.api_keys) {
+            const apiKeys = JSON.parse(config.api_keys);
+            openaiApiKey = apiKeys.openai;
+            deepseekApiKey = apiKeys.deepseek;
+            console.log(`[AI Service] User ${this.userId} API keys loaded from database`);
+          }
+        } catch (error) {
+          console.warn(`[AI Service] Failed to load user ${this.userId} config:`, error.message);
+        }
+      }
+
+      // 回退到环境变量
+      openaiApiKey = openaiApiKey || process.env.OPENAI_API_KEY;
+      deepseekApiKey = deepseekApiKey || process.env.DEEPSEEK_API_KEY;
 
       // 初始化 OpenAI
-      const { OpenAI } = require('openai');
-      const openaiApiKey = config?.openai?.apiKey || process.env.OPENAI_API_KEY;
-
       if (openaiApiKey && openaiApiKey !== 'test-key') {
         this.openai = new OpenAI({
           apiKey: openaiApiKey
         });
-        console.log('[AI Service] OpenAI initialized with user config');
+        console.log('[AI Service] OpenAI initialized');
       } else {
         console.warn('[AI Service] OpenAI API key not configured');
       }
 
-      // 初始化 DeepSeek
-      const deepseekApiKey = config?.deepseek?.apiKey || process.env.DEEPSEEK_API_KEY;
+      // 初始化 DeepSeek（使用OpenAI SDK兼容接口）
       if (deepseekApiKey && deepseekApiKey !== 'test-key') {
-        this.deepseek = {
+        this.deepseek = new OpenAI({
           apiKey: deepseekApiKey,
           baseURL: 'https://api.deepseek.com'
-        };
-        console.log('[AI Service] DeepSeek initialized with user config');
+        });
+        console.log('[AI Service] DeepSeek initialized');
       } else {
         console.warn('[AI Service] DeepSeek API key not configured');
       }
     } catch (error) {
-      console.warn('[AI Service] Initialization error:', error.message);
-      // 回退到环境变量
+      console.error('[AI Service] Initialization error:', error.message);
+      // 尝试使用环境变量作为最后的回退
       try {
         const { OpenAI } = require('openai');
-        this.openai = new OpenAI({
-          apiKey: process.env.OPENAI_API_KEY || 'test-key'
-        });
+        if (process.env.DEEPSEEK_API_KEY) {
+          this.deepseek = new OpenAI({
+            apiKey: process.env.DEEPSEEK_API_KEY,
+            baseURL: 'https://api.deepseek.com'
+          });
+          console.log('[AI Service] Fallback to DeepSeek with env variable');
+        }
       } catch (e) {
-        console.warn('[AI Service] Fallback initialization failed:', e.message);
+        console.error('[AI Service] Fallback initialization failed:', e.message);
       }
     }
   }
@@ -62,8 +86,16 @@ class AIService {
       await this.initializeServices();
     }
 
+    // 智能选择默认模型：优先使用已配置的API
+    let defaultModel = 'gpt-3.5-turbo';
+    if (this.deepseek && !this.openai) {
+      defaultModel = 'deepseek-chat';
+    } else if (!this.deepseek && this.openai) {
+      defaultModel = 'gpt-3.5-turbo';
+    }
+
     const {
-      model = 'gpt-3.5-turbo',
+      model = defaultModel,
       maxTokens = 1000,
       temperature = 0.7
     } = options;
@@ -71,22 +103,63 @@ class AIService {
     const fullPrompt = context ? `${context}\n\n${prompt}` : prompt;
 
     try {
-      if (this.openai) {
-        const response = await this.openai.chat.completions.create({
-          model,
+      // 根据模型名称选择对应的客户端
+      let client = null;
+      let actualModel = model;
+
+      console.log(`[AI Service] generateResponse called with model: ${model}`);
+      console.log(`[AI Service] this.deepseek:`, this.deepseek ? 'initialized' : 'null');
+      console.log(`[AI Service] this.openai:`, this.openai ? 'initialized' : 'null');
+
+      // 判断模型类型
+      if (model.includes('deepseek')) {
+        client = this.deepseek;
+        actualModel = 'deepseek-chat'; // DeepSeek的标准模型名
+        console.log(`[AI Service] Selected DeepSeek client`);
+      } else if (model.includes('gpt')) {
+        client = this.openai;
+        console.log(`[AI Service] Selected OpenAI client`);
+      } else {
+        // 默认：有DeepSeek用DeepSeek，否则用OpenAI
+        client = this.deepseek || this.openai;
+        actualModel = this.deepseek ? 'deepseek-chat' : model;
+        console.log(`[AI Service] Selected default client:`, client ? 'found' : 'null');
+      }
+
+      console.log(`[AI Service] Final client:`, client ? 'available' : 'null', `model: ${actualModel}`);
+
+      if (client) {
+        const response = await client.chat.completions.create({
+          model: actualModel,
           messages: [{ role: 'user', content: fullPrompt }],
           max_tokens: maxTokens,
           temperature
         });
-        return response.choices[0].message.content;
+
+        // 返回包含token统计的完整信息
+        return {
+          content: response.choices[0].message.content,
+          usage: response.usage || null,
+          model: actualModel
+        };
       }
 
       // 回退到模拟响应
       console.warn('[AI Service] No API key configured, using mock response');
-      return this.generateMockResponse(fullPrompt);
+      const mockContent = this.generateMockResponse(fullPrompt);
+      return {
+        content: mockContent,
+        usage: null,
+        model: 'mock'
+      };
     } catch (error) {
       console.error('[AI Service] Generate response error:', error);
-      return this.generateMockResponse(fullPrompt);
+      const mockContent = this.generateMockResponse(fullPrompt);
+      return {
+        content: mockContent,
+        usage: null,
+        model: 'mock'
+      };
     }
   }
 
