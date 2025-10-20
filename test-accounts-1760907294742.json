@@ -1,0 +1,72 @@
+[
+  {
+    "序号": 1,
+    "邮箱": "testuser1_1760907294741@demo.com",
+    "密码": "dpJf8X$Mjeg7",
+    "邀请码": "TEST-W6N44G27",
+    "状态": "未注册"
+  },
+  {
+    "序号": 2,
+    "邮箱": "testuser2_1760907294741@demo.com",
+    "密码": "NaCDLFTpZTZm",
+    "邀请码": "TEST-JYQBEHND",
+    "状态": "未注册"
+  },
+  {
+    "序号": 3,
+    "邮箱": "testuser3_1760907294742@test.com",
+    "密码": "zhLqWw%M#qF7",
+    "邀请码": "TEST-Q61I9LOD",
+    "状态": "未注册"
+  },
+  {
+    "序号": 4,
+    "邮箱": "testuser4_1760907294742@test.com",
+    "密码": "4TGL5SA44qL3",
+    "邀请码": "TEST-XQ3PPYLX",
+    "状态": "未注册"
+  },
+  {
+    "序号": 5,
+    "邮箱": "testuser5_1760907294742@test.com",
+    "密码": "u$zn5YtAumuN",
+    "邀请码": "TEST-IF1LHHCG",
+    "状态": "未注册"
+  },
+  {
+    "序号": 6,
+    "邮箱": "testuser6_1760907294742@example.com",
+    "密码": "KtiQwzBGnZUP",
+    "邀请码": "TEST-OYO5GEY3",
+    "状态": "未注册"
+  },
+  {
+    "序号": 7,
+    "邮箱": "testuser7_1760907294742@demo.com",
+    "密码": "PWm4M%vhcti6",
+    "邀请码": "TEST-U4WV6BY0",
+    "状态": "未注册"
+  },
+  {
+    "序号": 8,
+    "邮箱": "testuser8_1760907294742@example.com",
+    "密码": "ndVJ!sJDSjYA",
+    "邀请码": "TEST-FSQYZGEJ",
+    "状态": "未注册"
+  },
+  {
+    "序号": 9,
+    "邮箱": "testuser9_1760907294742@test.com",
+    "密码": "LrCCQcM2CNwa",
+    "邀请码": "TEST-0S3NQVLF",
+    "状态": "未注册"
+  },
+  {
+    "序号": 10,
+    "邮箱": "testuser10_1760907294742@example.com",
+    "密码": "2k7g@hBGTSVV",
+    "邀请码": "TEST-00YSL3RT",
+    "状态": "未注册"
+  }
+]
