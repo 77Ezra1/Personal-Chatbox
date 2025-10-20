@@ -218,7 +218,18 @@
       "Bash(cmd /c \"echo test > d:\\Personal-Chatbox\\test-edit-permission.txt && type d:\\Personal-Chatbox\\test-edit-permission.txt && del d:\\Personal-Chatbox\\test-edit-permission.txt\")",
       "Bash(cmd /c \"where code\")",
       "Bash(git log:*)",
-      "Bash(wait:*)"
+      "Bash(wait:*)",
+      "Bash(if [ -f /Users/ezra/Personal-Chatbox/data/user-config.json ])",
+      "Bash(then cat /Users/ezra/Personal-Chatbox/data/user-config.json)",
+      "Bash(else echo \"配置文件不存在\")",
+      "Bash(fi)",
+      "Bash(for file in server/routes/*.cjs)",
+      "Bash(/Users/ezra/Personal-Chatbox/test-api-config.sh)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwLCJlbWFpbCI6ImFwaXRlc3RAdGVzdC5jb20iLCJpYXQiOjE3NjA5Nzk5MDYsImV4cCI6MTc2MTU4NDcwNn0.x5emwlSOk5LdMidalmIbAp_nv54bGTBDFsVQjUlhY-c\")",
+      "Bash(NODE_ENV=development timeout 10 node:*)",
+      "Bash(/Users/ezra/Personal-Chatbox/test-conversation-flow.sh)",
+      "Bash(./test-notes-ai.sh:*)",
+      "Bash(/Users/ezra/Personal-Chatbox/scripts/organize-docs.sh:*)"
     ],
     "deny": [],
     "ask": []
