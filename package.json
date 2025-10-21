@@ -27,7 +27,10 @@
     "db:reset": "node scripts/reset-database.cjs",
     "db:backup": "node scripts/backup-database.cjs",
     "db:restore": "node scripts/restore-database.cjs",
-    "db:list-backups": "node scripts/list-backups.cjs"
+    "db:list-backups": "node scripts/list-backups.cjs",
+    "db:verify": "node scripts/verify-migration.cjs",
+    "sync:push": "bash scripts/sync-to-cloud.sh || scripts\\sync-to-cloud.bat",
+    "sync:pull": "bash scripts/sync-from-cloud.sh || scripts\\sync-from-cloud.bat"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
