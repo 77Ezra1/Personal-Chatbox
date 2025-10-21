@@ -359,6 +359,9 @@ function registerRoutes() {
   app.use('/api/ai', require('./routes/ai-notes.cjs')); // AI 笔记功能路由
   app.use('/api/documents', require('./routes/documents.cjs')); // 文档管理路由
   app.use('/api/password-vault', require('./routes/password-vault.cjs')); // 密码保险库路由
+  app.use('/api/prompt-workbooks', require('./routes/prompt-workbooks.cjs')); // Prompt工作簿路由
+  app.use('/api/prompt-templates', require('./routes/prompt-templates.cjs')); // Prompt模板路由
+  app.use('/api/prompt-favorites', require('./routes/prompt-favorites.cjs')); // Prompt收藏路由
   app.use('/api/mcp', mcpRouter);
   app.use('/api/chat', chatRouter);
   app.use('/api/proxy', proxyRouter);

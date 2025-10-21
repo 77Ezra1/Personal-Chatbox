@@ -423,6 +423,11 @@ router.get('/me', async (req, res) => {
  * 检查邮箱是否已注册
  */
 router.post('/check-email', async (req, res) => {
+  console.log('=====================================================');
+  console.log('[Auth] /check-email 路由被调用');
+  console.log('[Auth] Request body:', req.body);
+  console.log('=====================================================');
+
   try {
     const { email } = req.body;
 
@@ -454,6 +459,14 @@ router.post('/check-email', async (req, res) => {
 
     // 查询邮箱是否存在
     const user = await db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
+
+    // DEBUG: 添加调试日志
+    console.log('[Auth] check-email DEBUG:', {
+      email: email,
+      lowercase: email.toLowerCase(),
+      user: user,
+      exists: !!user
+    });
 
     res.json({
       success: true,

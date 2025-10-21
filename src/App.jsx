@@ -30,6 +30,7 @@ const NotesPage = lazy(() => import('@/pages/NotesPage'))
 const DocumentsPage = lazy(() => import('@/pages/DocumentsPage'))
 const PasswordVaultPage = lazy(() => import('@/pages/PasswordVaultPage'))
 const McpCustomPage = lazy(() => import('@/pages/McpCustomPage'))
+const PromptTemplatesPage = lazy(() => import('@/pages/PromptTemplatesPage'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
 
 // Utils
@@ -742,6 +743,9 @@ function App() {
 
               {/* MCP自定义配置页面 */}
               <Route path="/mcp" element={<McpCustomPage />} />
+
+              {/* Prompt模板库页面 */}
+              <Route path="/prompt-templates" element={<PromptTemplatesPage />} />
 
               {/* 默认重定向 */}
               <Route path="*" element={<Navigate to="/" replace />} />

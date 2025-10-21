@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen, Bot, Workflow, Brain, FileText, Store, MessageSquare, BookOpen, Lock } from 'lucide-react'
+import { BarChart3, Languages, Moon, Plus, Settings, Sun, Trash, Trash2, LogOut, User, PanelLeftClose, PanelLeftOpen, Bot, Workflow, Brain, FileText, Store, MessageSquare, BookOpen, Lock, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConversationItem } from './ConversationItem'
 import { SearchBar } from './SearchBar'
@@ -41,6 +41,7 @@ export function Sidebar({
     { path: '/', icon: MessageSquare, label: translate('sidebar.chat', 'Chat') },
     { path: '/agents', icon: Bot, label: translate('sidebar.agents', 'AI Agents'), badge: 'New' },
     { path: '/workflows', icon: Workflow, label: translate('sidebar.workflows', 'Workflows'), badge: 'New' },
+    { path: '/prompt-templates', icon: Sparkles, label: translate('sidebar.promptTemplates', 'Prompt库'), badge: 'New' },
     { path: '/notes', icon: FileText, label: translate('sidebar.notes', 'Notes'), badge: 'New' },
     { path: '/documents', icon: BookOpen, label: translate('sidebar.documents', 'Documents'), badge: 'New' },
     { path: '/password-vault', icon: Lock, label: translate('sidebar.passwordVault', 'Password Vault'), badge: 'New' },

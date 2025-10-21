@@ -250,12 +250,13 @@
 
 .stat-trend,
 .stat-detail {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted-foreground);
   display: flex;
   align-items: center;
   gap: 4px;
   line-height: 1.4;
+  font-weight: 500;
 }
 
 /* Chart Sections */
