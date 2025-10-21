@@ -47,6 +47,22 @@ function main() {
   const backupPath = path.join(backupDir, `app-${timestamp}.db`);
 
   try {
+    // ⚠️ 重要：执行 WAL checkpoint 确保所有数据都写入主文件
+    // 这样可以确保备份包含最新的数据，即使服务器正在运行
+    try {
+      const Database = require('better-sqlite3');
+      const db = new Database(dbPath);
+
+      log('🔄 执行 WAL checkpoint...', 'yellow');
+      db.pragma('wal_checkpoint(FULL)');
+      db.close();
+      log('✓ WAL checkpoint 完成', 'green');
+    } catch (e) {
+      log('⚠️  警告: 无法执行 WAL checkpoint', 'yellow');
+      log(`   ${e.message}`, 'yellow');
+      log('   提示: 如果服务器正在运行，建议先停止服务再备份', 'yellow');
+    }
+
     // 复制数据库文件
     fs.copyFileSync(dbPath, backupPath);
 

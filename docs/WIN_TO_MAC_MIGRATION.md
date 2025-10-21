@@ -7,6 +7,8 @@
 ### 在 Windows 上（结束工作）
 
 ```bash
+# ⚠️ 重要：先停止所有服务（按 Ctrl+C 停止 npm run dev 和 npm run server）
+# 然后执行备份
 npm run sync:push
 ```
 
@@ -18,6 +20,8 @@ npm run dev
 ```
 
 就这么简单！✅
+
+**⚠️ 重要提示**：备份前必须先停止服务器！如果服务器正在运行，SQLite 的 WAL（预写日志）可能导致备份不包含最新数据。
 
 ---
 

@@ -7,11 +7,16 @@
 ### 在源电脑（macOS 或 Windows）
 
 ```bash
+# ⚠️ 重要：先停止所有服务（按 Ctrl+C）
+# 然后执行备份
+
 # 1. 备份数据
 npm run sync:push
 
 # 2. 通过云盘自动同步（iCloud/OneDrive）
 ```
+
+**⚠️ 重要提示**：备份前必须先停止服务器！如果服务器正在运行，SQLite 的 WAL（预写日志）可能导致备份不包含最新数据。
 
 ### 在目标电脑（Windows 或 macOS）
 
