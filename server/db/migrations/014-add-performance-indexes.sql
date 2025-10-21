@@ -17,10 +17,7 @@ ON messages(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_timestamp
 ON messages(conversation_id, timestamp DESC);
 
--- 按用户ID查询消息
-CREATE INDEX IF NOT EXISTS idx_messages_user_id
-ON messages(user_id)
-WHERE user_id IS NOT NULL;
+-- Note: messages table doesn't have user_id column, removed invalid index
 
 -- ========================================
 -- Conversations Table Indexes
@@ -90,13 +87,13 @@ ON user_configs(user_id);
 CREATE INDEX IF NOT EXISTS idx_login_history_user_id
 ON login_history(user_id);
 
--- 按时间戳排序
-CREATE INDEX IF NOT EXISTS idx_login_history_timestamp
-ON login_history(timestamp DESC);
+-- 按时间戳排序 (Note: column is login_at, not timestamp)
+CREATE INDEX IF NOT EXISTS idx_login_history_login_at
+ON login_history(login_at DESC);
 
--- 复合索引：用户ID + 时间戳
-CREATE INDEX IF NOT EXISTS idx_login_history_user_timestamp
-ON login_history(user_id, timestamp DESC);
+-- 复合索引：用户ID + 登录时间
+CREATE INDEX IF NOT EXISTS idx_login_history_user_login_at
+ON login_history(user_id, login_at DESC);
 
 -- 按IP地址查询（安全分析）
 CREATE INDEX IF NOT EXISTS idx_login_history_ip_address
@@ -109,50 +106,18 @@ ON login_history(ip_address);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_invite_codes_code
 ON invite_codes(code);
 
--- 查询未使用的邀请码
-CREATE INDEX IF NOT EXISTS idx_invite_codes_used
-ON invite_codes(used);
+-- 查询活跃的邀请码 (Note: using is_active instead of used)
+CREATE INDEX IF NOT EXISTS idx_invite_codes_is_active
+ON invite_codes(is_active);
 
--- 复合索引：used + created_at
-CREATE INDEX IF NOT EXISTS idx_invite_codes_used_created
-ON invite_codes(used, created_at DESC);
-
--- ========================================
--- MCP Servers Table Indexes (if exists)
--- ========================================
--- 按用户ID查询MCP服务器
-CREATE INDEX IF NOT EXISTS idx_mcp_servers_user_id
-ON mcp_servers(user_id)
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='mcp_servers');
+-- 复合索引：is_active + created_at
+CREATE INDEX IF NOT EXISTS idx_invite_codes_active_created
+ON invite_codes(is_active, created_at DESC);
 
 -- ========================================
--- Knowledge Base Table Indexes (if exists)
+-- Note: Conditional indexes for optional tables removed
+-- These indexes will be created by their respective migration files
 -- ========================================
--- 按用户ID查询知识库
-CREATE INDEX IF NOT EXISTS idx_knowledge_base_user_id
-ON knowledge_base(user_id)
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='knowledge_base');
-
--- 按会话ID查询知识
-CREATE INDEX IF NOT EXISTS idx_knowledge_base_conversation_id
-ON knowledge_base(conversation_id)
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='knowledge_base');
-
--- ========================================
--- Personas Table Indexes (if exists)
--- ========================================
--- 按用户ID查询人格
-CREATE INDEX IF NOT EXISTS idx_personas_user_id
-ON personas(user_id)
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='personas');
-
--- ========================================
--- Workflows Table Indexes (if exists)
--- ========================================
--- 按用户ID查询工作流
-CREATE INDEX IF NOT EXISTS idx_workflows_user_id
-ON workflows(user_id)
-WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='workflows');
 
 -- ========================================
 -- PostgreSQL Specific Optimizations

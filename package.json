@@ -21,7 +21,13 @@
     "db:migrate:custom": "node server/db/run-migration.cjs",
     "db:migrate:search": "node server/db/run-migration.cjs",
     "db:test-sqlserver": "node scripts/test-sqlserver-connection.cjs",
-    "db:migrate-to-sqlserver": "node scripts/migrate-to-sqlserver.cjs"
+    "db:migrate-to-sqlserver": "node scripts/migrate-to-sqlserver.cjs",
+    "db:setup": "node scripts/setup-database.cjs",
+    "db:seed": "node scripts/seed-database.cjs",
+    "db:reset": "node scripts/reset-database.cjs",
+    "db:backup": "node scripts/backup-database.cjs",
+    "db:restore": "node scripts/restore-database.cjs",
+    "db:list-backups": "node scripts/list-backups.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

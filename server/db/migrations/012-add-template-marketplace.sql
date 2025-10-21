@@ -113,32 +113,5 @@ INSERT OR IGNORE INTO template_categories (id, name, description, icon, color, s
 ('cat-personal', '个人生活', '日记总结、旅行记录、生活规划等模板', 'heart', '#ef4444', 5),
 ('cat-research', '学术研究', '论文摘要、研究报告、学术讨论等模板', 'academic-cap', '#06b6d4', 6);
 
--- 插入示例模板到市场
-INSERT OR IGNORE INTO template_marketplace (id, template_id, user_id, title, description, category, tags, is_featured, is_verified, download_count, rating_average, rating_count, view_count) VALUES
-('market-1', 'template-meeting', 1, '专业会议总结模板', '专门用于会议记录的总结模板，包含会议主题、讨论内容、决策和行动项', 'cat-business', '["meeting", "business", "professional"]', TRUE, TRUE, 156, 4.8, 23, 342),
-('market-2', 'template-interview', 1, '面试总结模板', '专门用于面试记录的总结模板，包含候选人信息、技术评估、面试表现等', 'cat-business', '["interview", "hr", "recruitment"]', TRUE, TRUE, 89, 4.6, 18, 234),
-('market-3', 'template-brief', 1, '简短总结模板', '生成简洁明了的对话总结，适合快速了解对话内容', 'cat-personal', '["brief", "quick", "simple"]', FALSE, TRUE, 234, 4.4, 31, 456),
-('market-4', 'template-detailed', 1, '详细总结模板', '生成内容全面的对话总结，包含细节和逻辑分析', 'cat-education', '["detailed", "comprehensive", "analysis"]', FALSE, TRUE, 178, 4.7, 25, 389),
-('market-5', 'template-complete', 1, '完整总结模板', '生成深入分析的完整总结，包含见解和建议', 'cat-research', '["complete", "insight", "recommendation"]', FALSE, TRUE, 67, 4.5, 12, 123);
-
--- 插入示例评分
-INSERT OR IGNORE INTO template_ratings (id, template_id, user_id, rating, comment, is_verified) VALUES
-('rating-1', 'template-meeting', 1, 5, '非常实用的会议总结模板，结构清晰，使用方便', TRUE),
-('rating-2', 'template-interview', 1, 4, '面试总结模板很好用，帮助我更好地记录面试过程', TRUE),
-('rating-3', 'template-brief', 1, 4, '简短总结模板适合快速了解对话内容', TRUE),
-('rating-4', 'template-detailed', 1, 5, '详细总结模板内容全面，分析深入', TRUE),
-('rating-5', 'template-complete', 1, 4, '完整总结模板提供了很好的见解和建议', TRUE);
-
--- 插入示例收藏
-INSERT OR IGNORE INTO template_favorites (id, template_id, user_id) VALUES
-('fav-1', 'template-meeting', 1),
-('fav-2', 'template-interview', 1),
-('fav-3', 'template-detailed', 1);
-
--- 插入示例使用记录
-INSERT OR IGNORE INTO template_usage_logs (id, template_id, user_id, conversation_id, usage_type) VALUES
-('usage-1', 'template-meeting', 1, 'conv-1', 'use'),
-('usage-2', 'template-interview', 1, 'conv-2', 'use'),
-('usage-3', 'template-brief', 1, 'conv-3', 'view'),
-('usage-4', 'template-detailed', 1, 'conv-4', 'download'),
-('usage-5', 'template-complete', 1, 'conv-5', 'use');
+-- 示例模板数据已移至 seed-database.cjs 脚本中
+-- 运行 npm run db:seed 来填充测试数据

@@ -79,14 +79,5 @@ INSERT OR IGNORE INTO format_configs (id, format_name, format_type, config_json,
 ('config-markdown-import', 'Markdown 导入', 'import', '{"parseMetadata": true, "extractCodeBlocks": true, "preserveFormatting": true}', TRUE),
 ('config-txt-import', 'TXT 导入', 'import', '{"encoding": "utf8", "lineEnding": "\\n", "splitBy": "conversation", "roleDetection": true}', TRUE);
 
--- 插入示例导出记录
-INSERT OR IGNORE INTO export_records (id, user_id, export_type, format, file_path, file_size, conversation_ids, export_options, status, created_at, completed_at) VALUES
-('export-1', 1, 'conversation', 'json', '/tmp/exports/export-1.json', 2048, '["conv-1"]', '{"includeMetadata": true, "includeFiles": false, "compression": false}', 'completed', '2025-10-15T10:00:00Z', '2025-10-15T10:01:00Z'),
-('export-2', 1, 'batch', 'csv', '/tmp/exports/export-2.csv', 1536, '["conv-1", "conv-2"]', '{"includeHeaders": true, "separator": ",", "encoding": "utf8"}', 'completed', '2025-10-15T11:00:00Z', '2025-10-15T11:01:30Z'),
-('export-3', 1, 'conversation', 'markdown', '/tmp/exports/export-3.md', 3072, '["conv-1"]', '{"includeMetadata": true, "includeTimestamps": true, "toc": true}', 'completed', '2025-10-15T12:00:00Z', '2025-10-15T12:01:15Z');
-
--- 插入示例导入记录
-INSERT OR IGNORE INTO import_records (id, user_id, import_type, format, file_path, file_size, import_options, status, success_count, error_count, created_at, completed_at) VALUES
-('import-1', 1, 'conversation', 'json', '/tmp/imports/import-1.json', 1024, '{"validateSchema": true, "mergeStrategy": "skip"}', 'completed', 1, 0, '2025-10-15T13:00:00Z', '2025-10-15T13:01:00Z'),
-('import-2', 1, 'batch', 'csv', '/tmp/imports/import-2.csv', 2048, '{"delimiter": ",", "encoding": "utf8", "skipEmptyLines": true}', 'completed', 3, 1, '2025-10-15T14:00:00Z', '2025-10-15T14:02:00Z'),
-('import-3', 1, 'conversation', 'markdown', '/tmp/imports/import-3.md', 1536, '{"parseMetadata": true, "extractCodeBlocks": true}', 'completed', 1, 0, '2025-10-15T15:00:00Z', '2025-10-15T15:01:30Z');
+-- 示例导入导出记录已移至 seed-database.cjs 脚本中
+-- 运行 npm run db:seed 来填充测试数据

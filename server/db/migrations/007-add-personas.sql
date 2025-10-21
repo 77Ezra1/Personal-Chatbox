@@ -83,6 +83,17 @@ CREATE INDEX IF NOT EXISTS idx_persona_ratings_user_id
 CREATE INDEX IF NOT EXISTS idx_persona_ratings_persona_id
   ON persona_ratings(persona_id);
 
+-- 先创建系统用户（如果不存在）用于内置角色
+INSERT OR IGNORE INTO users (id, email, password_hash, username, avatar_url, created_at)
+VALUES (
+  0,
+  'system@chatbox.local',
+  '$2a$10$dummy.hash.for.system.user.that.cannot.be.used.for.login',
+  'System',
+  '/avatars/system.png',
+  CURRENT_TIMESTAMP
+);
+
 -- 插入内置角色数据
 INSERT INTO personas (
   id, user_id, name, description, avatar_url, system_prompt,
