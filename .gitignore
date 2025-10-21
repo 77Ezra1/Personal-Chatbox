@@ -27,10 +27,25 @@ logs/
 data/app.db
 data/app.db-shm
 data/app.db-wal
+data/chatbox.db
+data/chatbox.db-shm
+data/chatbox.db-wal
+
+# 数据库备份文件（不应提交到Git）
+data/backups/
+data/*.db
+data/*.db-shm
+data/*.db-wal
 
 # 配置加密密钥
 data/.key
 data/config.json
+
+# Claude Code 本地配置
+.claude/settings.local.json
+
+# Windows 临时文件
+nul
 
 # 锁文件（保留 package-lock.json，忽略 pnpm-lock.yaml）
 pnpm-lock.yaml
