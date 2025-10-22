@@ -1,5 +1,6 @@
 const { verifyToken, extractToken } = require('../lib/auth-utils.cjs');
 const { db } = require('../db/init.cjs');
+const logger = require('../utils/logger.cjs');
 
 /**
  * 认证中间件
@@ -20,6 +21,7 @@ async function authMiddleware(req, res, next) {
 
     // 验证Token
     const decoded = verifyToken(token);
+    logger.info('[Auth] Decoded token:', decoded);
 
     if (!decoded) {
       return res.status(401).json({
@@ -33,6 +35,7 @@ async function authMiddleware(req, res, next) {
     const session = await db.prepare(
       "SELECT * FROM sessions WHERE token = ? AND expires_at > datetime('now')"
     ).get(token);
+    logger.info('[Auth] Session found:', !!session);
 
     if (!session) {
       return res.status(401).json({
@@ -43,11 +46,14 @@ async function authMiddleware(req, res, next) {
     }
 
     // 获取用户信息
+    console.log('=== AUTH DEBUG decoded.userId:', decoded.userId);
     const user = await db.prepare(
       'SELECT id, email, username, avatar_url, created_at FROM users WHERE id = ?'
     ).get(decoded.userId);
+    console.log('=== AUTH DEBUG user result:', user);
 
     if (!user) {
+      console.log('=== AUTH DEBUG User NOT FOUND for userId:', decoded.userId);
       return res.status(401).json({
         success: false,
         error: 'User not found',
@@ -58,6 +64,7 @@ async function authMiddleware(req, res, next) {
     // 将用户信息附加到请求对象
     req.user = user;
     req.session = session;
+    logger.info('[Auth Middleware] User object:', user);
     next();
   } catch (error) {
     console.error('[Auth Middleware] Error:', error);

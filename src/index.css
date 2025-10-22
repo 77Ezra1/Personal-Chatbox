@@ -3,6 +3,10 @@
 @import "tailwindcss/preflight" layer(base);
 @import "tailwindcss/utilities" layer(utilities);
 
+/* AG Grid CSS - For Table View */
+@import 'ag-grid-community/styles/ag-grid.min.css';
+@import 'ag-grid-community/styles/ag-theme-alpine.min.css';
+
 /* v0.dev 风格UI改进 */
 @import './styles/v0-ui-improvements.css';
 

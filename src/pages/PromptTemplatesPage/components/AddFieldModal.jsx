@@ -47,7 +47,7 @@ export default function AddFieldModal({ open, onOpenChange, onConfirm, workbook 
     }
 
     // 检查字段名是否已存在
-    const existingSchema = workbook.field_schema || [];
+    const existingSchema = workbook.field_schema?.fields || [];
     if (existingSchema.some(f => f.name === fieldName.trim())) {
       toast.error('字段名称已存在');
       return;

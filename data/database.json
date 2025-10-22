@@ -8,37 +8,56 @@
       "avatar_url": null,
       "created_at": "2025-10-17T18:07:58.406Z",
       "last_login_at": null,
-      "is_locked": 0,
-      "locked_until": null,
-      "failed_login_attempts": 0
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z",
+      "failed_login_attempts": 5
     },
     {
       "email": "your@email.com",
       "password_hash": "$2b$10$2uBD11.qA9.YOJX3cols3u54nmlzCogY4N/8FLi.P/qh1y2w6.1Ze",
       "username": null,
       "id": 2,
-      "created_at": "2025-10-18T14:49:23.281Z"
+      "created_at": "2025-10-18T14:49:23.281Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
     },
     {
       "email": "vaulttest@test.com",
       "password_hash": "$2b$10$uLMDTwR7Qai6FO3nmkjt2u9nukxhAjpW/BHIyaz.kQIPpleWB5g1G",
       "username": "VaultTest",
       "id": 3,
-      "created_at": "2025-10-18T19:20:20.875Z"
+      "created_at": "2025-10-18T19:20:20.875Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
     },
     {
       "email": "test1@example.com",
       "password_hash": "$2b$10$KrQhsjdJ.QpcZ88cBeih9.oDto4fgdHaihrIu0xWzHDpAIFR6dAt6",
       "username": null,
       "id": 4,
-      "created_at": "2025-10-19T03:26:48.586Z"
+      "created_at": "2025-10-19T03:26:48.586Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
     },
     {
       "email": "admin@chatbox.local",
       "password_hash": "$2b$10$m1avELs3vBUAIDYq4MRXc.Ff9p8x3mjg6b9tFZY7me.OlQSQ5zg8S",
       "username": null,
       "id": 5,
-      "created_at": "2025-10-19T12:35:10.919Z"
+      "created_at": "2025-10-19T12:35:10.919Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
+    },
+    {
+      "email": "123@qq.com",
+      "password_hash": "$2b$10$1.sT6LZslbMjcObrJU6wSO6Oj60sDky6MSI/kkLqkALgVwTUhX69.",
+      "username": "123_1761078502126",
+      "id": 6,
+      "created_at": "2025-10-21T20:28:22.126Z"
     }
   ],
   "oauth_accounts": [],
@@ -96,6 +115,15 @@
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "id": 6,
       "created_at": "2025-10-19T12:35:10.920Z"
+    },
+    {
+      "user_id": 6,
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYsImVtYWlsIjoiMTIzQHFxLmNvbSIsImlhdCI6MTc2MTA3ODUwMiwiZXhwIjoxNzYxNjgzMzAyfQ.1Uacp_TCOhBRVUQyPmFy6DoJA_0tkMGuY-5JwDPBrFo",
+      "expires_at": "2025-10-28T20:28:22.128Z",
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "id": 7,
+      "created_at": "2025-10-21T20:28:22.128Z"
     }
   ],
   "login_history": [
@@ -164,6 +192,59 @@
       "success": 1,
       "id": 8,
       "created_at": "2025-10-19T12:35:10.920Z"
+    },
+    {
+      "user_id": 2,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "success": 0,
+      "failure_reason": "Invalid password",
+      "id": 9,
+      "created_at": "2025-10-21T20:25:05.815Z"
+    },
+    {
+      "user_id": 2,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "success": 0,
+      "failure_reason": "Invalid password",
+      "id": 10,
+      "created_at": "2025-10-21T20:25:06.828Z"
+    },
+    {
+      "user_id": 2,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "success": 0,
+      "failure_reason": "Invalid password",
+      "id": 11,
+      "created_at": "2025-10-21T20:25:07.147Z"
+    },
+    {
+      "user_id": 2,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "success": 0,
+      "failure_reason": "Invalid password",
+      "id": 12,
+      "created_at": "2025-10-21T20:25:18.334Z"
+    },
+    {
+      "user_id": 2,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "success": 0,
+      "failure_reason": "Account locked due to multiple failed attempts",
+      "id": 13,
+      "created_at": "2025-10-21T20:25:57.827Z"
+    },
+    {
+      "user_id": 6,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "success": 1,
+      "id": 14,
+      "created_at": "2025-10-21T20:28:22.129Z"
     }
   ],
   "conversations": [],

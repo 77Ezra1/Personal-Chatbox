@@ -8,7 +8,7 @@ const logger = require('../utils/logger.cjs');
 router.get('/', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { workbook_id, search, tags, favorite } = req.query;
 
     if (!workbook_id) {
@@ -61,7 +61,13 @@ router.get('/', authMiddleware, async (req, res) => {
 
     query += ` ORDER BY t.created_at DESC`;
 
-    const templates = db.prepare(query).all(...params);
+    let templates = db.prepare(query).all(...params);
+
+    // Ensure templates is an array (handle JSON fallback mode)
+    if (!Array.isArray(templates)) {
+      logger.warn('Templates query did not return array, returning empty array');
+      templates = [];
+    }
 
     // Parse JSON fields
     const parsed = templates.map(t => ({
@@ -87,7 +93,7 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { id } = req.params;
 
     const template = db.prepare(`
@@ -127,7 +133,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { workbook_id, name, content, fields_data } = req.body;
 
     if (!workbook_id || !name || !content) {
@@ -183,7 +189,7 @@ router.post('/', authMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { id } = req.params;
     const { name, content, fields_data } = req.body;
 
@@ -242,7 +248,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { id } = req.params;
 
     const template = db.prepare(`
@@ -285,7 +291,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 router.post('/batch-delete', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { ids } = req.body;
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -321,7 +327,7 @@ router.post('/batch-delete', authMiddleware, async (req, res) => {
 router.post('/fork', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { template_ids, target_workbook_id } = req.body;
 
     if (!Array.isArray(template_ids) || template_ids.length === 0 || template_ids.length > 3) {
@@ -395,7 +401,7 @@ router.post('/fork', authMiddleware, async (req, res) => {
 router.post('/move', authMiddleware, async (req, res) => {
   try {
     
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const { template_ids, target_workbook_id, operation } = req.body; // operation: 'move' or 'copy'
 
     if (!Array.isArray(template_ids) || template_ids.length === 0) {

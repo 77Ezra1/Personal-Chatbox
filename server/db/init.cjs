@@ -46,6 +46,98 @@ if (!fs.existsSync(dataDir)) {
 
 console.log('[DB Init] Connected to database:', db._driver === 'pg' || db._driver === 'postgresql' ? 'PostgreSQL' : DB_PATH, 'driver=', db._driver || 'unknown');
 
+// 同步运行数据库迁移（用于 better-sqlite3）
+function runMigrationsSync() {
+  const migrationsDir = path.join(__dirname, 'migrations');
+
+  // 检查迁移目录是否存在
+  if (!fs.existsSync(migrationsDir)) {
+    console.log('[DB Migrations] No migrations directory found, skipping...');
+    return Promise.resolve();
+  }
+
+  // 读取所有迁移文件
+  const files = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
+
+  if (files.length === 0) {
+    console.log('[DB Migrations] No migration files found');
+    return Promise.resolve();
+  }
+
+  console.log(`[DB Migrations] Found ${files.length} migration(s)`);
+
+  // 创建migrations表用于跟踪已执行的迁移
+  try {
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS migrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        applied_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+  } catch (err) {
+    console.error('[DB Migrations] Error creating migrations table:', err);
+  }
+
+  // 逐个执行迁移
+  let executed = 0;
+  files.forEach((file) => {
+    try {
+      // 检查是否已执行
+      const exists = db.prepare('SELECT name FROM migrations WHERE name = ?').get(file);
+      if (exists) {
+        console.log(`[DB Migrations] ⏭️  Skipping ${file} (already applied)`);
+        return;
+      }
+
+      const filePath = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(filePath, 'utf8');
+
+      console.log(`[DB Migrations] ⚙️  Executing ${file}...`);
+
+      // 使用exec执行整个SQL文件（支持多条语句）
+      if (db._raw && db._raw.exec) {
+        db._raw.exec(sql);
+      } else {
+        // Fallback: 手动分割并执行每条语句
+        const statements = sql
+          .split(';')
+          .map(s => s.trim())
+          .filter(s => s && !s.startsWith('--'));
+
+        statements.forEach(stmt => {
+          if (stmt) db.prepare(stmt).run();
+        });
+      }
+
+      // 记录迁移已执行
+      db.prepare('INSERT INTO migrations (name) VALUES (?)').run(file);
+      executed++;
+      console.log(`[DB Migrations] ✅ ${file} completed`);
+    } catch (err) {
+      if (err.message.includes('already exists') || err.message.includes('duplicate')) {
+        console.log(`[DB Migrations] ⏭️  ${file} (tables already exist)`);
+        // 即使表已存在，也记录为已执行
+        try {
+          db.prepare('INSERT OR IGNORE INTO migrations (name) VALUES (?)').run(file);
+        } catch (e) { /* ignore */ }
+      } else {
+        console.error(`[DB Migrations] ❌ Error in ${file}:`, err.message);
+      }
+    }
+  });
+
+  if (executed > 0) {
+    console.log(`[DB Migrations] ✅ Executed ${executed} new migration(s)`);
+  } else {
+    console.log('[DB Migrations] ✅ All migrations up to date');
+  }
+
+  return Promise.resolve();
+}
+
 // 运行数据库迁移
 function runMigrations() {
   // PostgreSQL表结构已经通过migration脚本创建，跳过
@@ -54,9 +146,10 @@ function runMigrations() {
     return Promise.resolve();
   }
 
-  // 临时禁用迁移 - better-sqlite3同步问题
-  console.log('[DB Migrations] Migrations disabled for better-sqlite3 compatibility');
-  return Promise.resolve();
+  // better-sqlite3 需要同步执行迁移
+  if (db._driver === 'better-sqlite3') {
+    return runMigrationsSync();
+  }
 
   return new Promise((resolve, reject) => {
     const migrationsDir = path.join(__dirname, 'migrations');

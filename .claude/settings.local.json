@@ -250,7 +250,13 @@
       "Bash(if [ -f ./start-dev.sh ])",
       "Bash(then bash ./start-dev.sh)",
       "Bash(else echo \"启动脚本不存在\")",
-      "Bash(wmic process where \"name=''node.exe''\" delete)"
+      "Bash(wmic process where \"name=''node.exe''\" delete)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEzLCJlbWFpbCI6Indvcmtib29rX3Rlc3RfZGVmQGV4YW1wbGUuY29tIiwiaWF0IjoxNzYxMDc5NjEwLCJleHAiOjE3NjE2ODQ0MTB9.qQRGP-U-Q0AjASy_olyqBaW2tQOiDV-LnVl5L2wEYlg\" curl -s http://localhost:3001/api/prompt-workbooks -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(tee:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0LCJlbWFpbCI6InRlc3RfZmluYWxfNzg5QGV4YW1wbGUuY29tIiwiaWF0IjoxNzYxMDc5OTExLCJleHAiOjE3NjE2ODQ3MTF9.uzueZ-MiHqaLKdQgwtjuwfmPnFJ414ceYEBqQ3cKH6Y\" curl -s http://localhost:3001/api/prompt-workbooks -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6InRlc3RfdWlfY2hlY2tAZXhhbXBsZS5jb20iLCJpYXQiOjE3NjEwODAyNjEsImV4cCI6MTc2MTY4NTA2MX0.HoXWRaFGwnNYfsBQq-9g0kfjMMiO7tIvVAncHLR_BOo\" curl -s http://localhost:3001/api/prompt-workbooks -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(ps:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": [],
     "ask": []

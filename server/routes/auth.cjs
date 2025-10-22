@@ -107,10 +107,10 @@ router.post('/register', async (req, res) => {
       // 如果没有提供用户名，从邮箱生成一个（避免重复，添加时间戳）
       const finalUsername = username || `${email.split('@')[0]}_${Date.now()}`;
 
-      // 创建用户
+      // 创建用户（同时插入 password 和 password_hash 以兼容不同表结构）
       const result = await db.prepare(
-        `INSERT INTO users (email, password, username) VALUES (?, ?, ?)`
-      ).run(email.toLowerCase(), passwordHash, finalUsername);
+        `INSERT INTO users (email, password, password_hash, username) VALUES (?, ?, ?, ?)`
+      ).run(email.toLowerCase(), passwordHash, passwordHash, finalUsername);
 
       const userId = result.lastInsertRowid || result.lastID || result.rows?.[0]?.id;
 
@@ -227,7 +227,7 @@ router.post('/login', async (req, res) => {
     }
 
     // 验证密码
-    const isValid = await verifyPassword(password, user.password);
+    const isValid = await verifyPassword(password, user.password_hash);
 
     if (!isValid) {
       // 登录失败，增加失败次数

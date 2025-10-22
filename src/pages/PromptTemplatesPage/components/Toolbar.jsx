@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { debounce } from 'lodash';
-import { Search, Table, Grid3X3, List, Kanban, Plus, Columns, Copy, Star } from 'lucide-react';
+import { Search, Table, Grid3X3, List, Kanban, Plus, Columns, Copy, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
@@ -19,7 +19,8 @@ export default function Toolbar({
   onBatchDelete,
   onCreate,
   onAddField,
-  onForkTemplates
+  onForkTemplates,
+  onClearSelection
 }) {
   // Debounced search handler (300ms delay)
   const debouncedFilterChange = useMemo(
@@ -95,6 +96,19 @@ export default function Toolbar({
               </Button>
             )}
 
+            {/* Clear selection button */}
+            {onClearSelection && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearSelection}
+                title="取消选择"
+              >
+                <X className="h-4 w-4 mr-2" />
+                取消选择
+              </Button>
+            )}
+
             {/* Batch delete - not for system workbook */}
             {!workbook.is_system && (
               <Button
@@ -155,7 +169,7 @@ export default function Toolbar({
 
         {/* Create button */}
         {!workbook.is_system && (
-          <Button onClick={handleCreate}>
+          <Button variant="outline" onClick={handleCreate}>
             <Plus className="h-4 w-4 mr-2" />
             新建模板
           </Button>

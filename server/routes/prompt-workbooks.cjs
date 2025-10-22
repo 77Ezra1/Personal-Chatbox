@@ -7,14 +7,20 @@ const logger = require('../utils/logger.cjs');
 // Get all workbooks for current user
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
     // Get system workbooks + user's workbooks
-    const workbooks = db.prepare(`
+    let workbooks = db.prepare(`
       SELECT * FROM prompt_workbooks
       WHERE is_system = 1 OR user_id = ?
       ORDER BY is_system DESC, created_at DESC
     `).all(userId);
+
+    // Ensure workbooks is an array (handle JSON fallback mode)
+    if (!Array.isArray(workbooks)) {
+      logger.warn('Workbooks query did not return array, returning empty array');
+      workbooks = [];
+    }
 
     // Parse JSON fields
     const parsed = workbooks.map(wb => ({
@@ -40,8 +46,8 @@ router.get('/', authMiddleware, async (req, res) => {
 // Get single workbook
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    
-    const userId = req.user.userId;
+
+    const userId = req.user.id;
     const { id } = req.params;
 
     const workbook = db.prepare(`
@@ -77,8 +83,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 // Create new workbook
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    
-    const userId = req.user.userId;
+    const userId = req.user?.id;
     const { name, description, icon, field_schema, view_config } = req.body;
 
     if (!name) {
@@ -138,8 +143,8 @@ router.post('/', authMiddleware, async (req, res) => {
 // Update workbook
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    
-    const userId = req.user.userId;
+
+    const userId = req.user.id;
     const { id } = req.params;
     const { name, description, icon, field_schema, view_config } = req.body;
 
@@ -191,8 +196,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // Delete workbook
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    
-    const userId = req.user.userId;
+
+    const userId = req.user.id;
     const { id } = req.params;
 
     // Check ownership (cannot delete system workbooks)
@@ -226,8 +231,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 // Duplicate workbook
 router.post('/:id/duplicate', authMiddleware, async (req, res) => {
   try {
-    
-    const userId = req.user.userId;
+
+    const userId = req.user.id;
     const { id } = req.params;
 
     const workbook = db.prepare(`
@@ -258,7 +263,12 @@ router.post('/:id/duplicate', authMiddleware, async (req, res) => {
     const newWorkbookId = result.lastInsertRowid;
 
     // Copy all templates
-    const templates = db.prepare('SELECT * FROM prompt_templates WHERE workbook_id = ?').all(id);
+    let templates = db.prepare('SELECT * FROM prompt_templates WHERE workbook_id = ?').all(id);
+
+    // Ensure templates is an array (handle JSON fallback mode)
+    if (!Array.isArray(templates)) {
+      templates = [];
+    }
 
     for (const template of templates) {
       db.prepare(`

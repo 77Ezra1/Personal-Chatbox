@@ -64,6 +64,9 @@ export default function PromptTemplatesPage() {
   // Search input ref for keyboard shortcuts
   const searchInputRef = useRef(null);
 
+  // Table view ref for clearing selection
+  const tableViewRef = useRef(null);
+
   // Keyboard shortcuts
   useKeyboardShortcuts([
     {
@@ -132,12 +135,12 @@ export default function PromptTemplatesPage() {
   // Handle add field
   const handleAddField = async (newField) => {
     try {
-      const currentSchema = currentWorkbook.field_schema || [];
+      const currentSchema = currentWorkbook.field_schema?.fields || [];
 
       const updatedSchema = [...currentSchema, newField];
 
       await updateWorkbook(currentWorkbook.id, {
-        field_schema: JSON.stringify(updatedSchema)
+        field_schema: JSON.stringify({ fields: updatedSchema })
       });
 
       setShowAddFieldModal(false);
@@ -151,7 +154,7 @@ export default function PromptTemplatesPage() {
   // Handle insert field (at specific position)
   const handleInsertField = async (referenceField, position, newField) => {
     try {
-      const currentSchema = currentWorkbook.field_schema || [];
+      const currentSchema = currentWorkbook.field_schema?.fields || [];
 
       const index = currentSchema.findIndex(f => f.name === referenceField);
       const insertIndex = position === 'left' ? index : index + 1;
@@ -160,7 +163,7 @@ export default function PromptTemplatesPage() {
       updatedSchema.splice(insertIndex, 0, newField);
 
       await updateWorkbook(currentWorkbook.id, {
-        field_schema: JSON.stringify(updatedSchema)
+        field_schema: JSON.stringify({ fields: updatedSchema })
       });
       toast.success('字段插入成功');
     } catch (error) {
@@ -172,7 +175,7 @@ export default function PromptTemplatesPage() {
   // Handle rename field
   const handleRenameField = async (oldName, newName) => {
     try {
-      const currentSchema = currentWorkbook.field_schema || [];
+      const currentSchema = currentWorkbook.field_schema?.fields || [];
 
       // Check if new name already exists
       if (currentSchema.some(f => f.name === newName && f.name !== oldName)) {
@@ -185,7 +188,7 @@ export default function PromptTemplatesPage() {
       );
 
       await updateWorkbook(currentWorkbook.id, {
-        field_schema: JSON.stringify(updatedSchema)
+        field_schema: JSON.stringify({ fields: updatedSchema })
       });
 
       // Reload templates to reflect the change
@@ -200,12 +203,12 @@ export default function PromptTemplatesPage() {
   // Handle delete field
   const handleDeleteField = async (fieldName) => {
     try {
-      const currentSchema = currentWorkbook.field_schema || [];
+      const currentSchema = currentWorkbook.field_schema?.fields || [];
 
       const updatedSchema = currentSchema.filter(f => f.name !== fieldName);
 
       await updateWorkbook(currentWorkbook.id, {
-        field_schema: JSON.stringify(updatedSchema)
+        field_schema: JSON.stringify({ fields: updatedSchema })
       });
 
       // Reload templates
@@ -267,12 +270,12 @@ export default function PromptTemplatesPage() {
       // 如果需要添加新字段，先更新目标工作簿的 field_schema
       if (newFieldsToAdd.length > 0) {
         const targetWorkbook = workbooks.find(wb => wb.id === targetWorkbookId);
-        const currentSchema = targetWorkbook.field_schema || [];
+        const currentSchema = targetWorkbook.field_schema?.fields || [];
 
         const updatedSchema = [...currentSchema, ...newFieldsToAdd];
 
         await updateWorkbook(targetWorkbookId, {
-          field_schema: JSON.stringify(updatedSchema)
+          field_schema: JSON.stringify({ fields: updatedSchema })
         });
       }
 
@@ -344,6 +347,14 @@ export default function PromptTemplatesPage() {
           onCreate={() => handleOpenTemplateDialog()}
           onAddField={() => setShowAddFieldModal(true)}
           onForkTemplates={handleOpenForkDialog}
+          onClearSelection={() => {
+            // Clear selection in table view
+            if (tableViewRef.current?.clearSelection) {
+              tableViewRef.current.clearSelection();
+            }
+            // Also clear the state
+            setSelectedTemplates([]);
+          }}
         />
       )}
 
@@ -357,6 +368,7 @@ export default function PromptTemplatesPage() {
           <>
             {viewType === 'table' && (
               <TableView
+                ref={tableViewRef}
                 workbook={currentWorkbook}
                 templates={templates}
                 loading={templatesLoading}

@@ -56,12 +56,12 @@ export default function ForkTemplatesDialog({
 
   // 源工作簿字段
   const sourceFields = useMemo(() => {
-    return sourceWorkbook?.field_schema || [];
+    return sourceWorkbook?.field_schema?.fields || [];
   }, [sourceWorkbook]);
 
   // 目标工作簿字段
   const targetFields = useMemo(() => {
-    return targetWorkbook?.field_schema || [];
+    return targetWorkbook?.field_schema?.fields || [];
   }, [targetWorkbook]);
 
   // 分析字段匹配
