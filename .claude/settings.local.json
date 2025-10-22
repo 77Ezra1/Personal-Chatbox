@@ -1,4 +1,4 @@
-{
+﻿{
   "permissions": {
     "allow": [
       "Bash(sqlite3:*)",
@@ -151,7 +151,7 @@
       "Bash(TERM=xterm ./test-all-features.sh:*)",
       "Bash(PGPASSWORD=chatbox2025 psql:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: optimize notes and documents features with PostgreSQL compatibility\n\n## 新功能\n- ✨ 完整的笔记管理功能（Notes）\n  - 创建、编辑、删除、搜索笔记\n  - 分类和标签管理\n  - 收藏和归档支持\n  - 导入导出功能\n  \n- ✨ 文档管理功能（Documents）\n  - 文档的增删改查\n  - 分类和标签系统\n  - 访问计数和统计\n  - 列表和卡片视图切换\n\n## 优化改进\n- 🔧 PostgreSQL适配器优化\n  - 添加 datetime(''now'') → CURRENT_TIMESTAMP 自动转换\n  - 增强SQL执行日志便于调试\n  - 改进错误处理\n\n- 📝 完整的测试套件\n  - 自动化测试脚本 (test-notes-documents.cjs)\n  - 31个测试用例覆盖所有CRUD操作\n  - 详细的测试报告 (NOTES_DOCUMENTS_TEST_REPORT.md)\n\n- 📚 文档更新\n  - 笔记功能文档 (docs/NOTES_FEATURE.md)\n  - 文档管理文档 (docs/DOCUMENTS_FEATURE.md)\n  - PostgreSQL兼容性问题和解决方案\n\n## 技术债务\n- ⚠️ PostgreSQL兼容性待修复\n  - INSERT RETURNING 支持\n  - Boolean类型比较\n  - 全文搜索语法转换\n\n## 文件变更\n- 新增: 笔记和文档的完整前后端实现\n- 优化: PostgreSQL数据库适配器\n- 测试: 完整的功能测试脚本\n- 文档: 详细的功能说明和测试报告\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: optimize notes and documents features with PostgreSQL compatibility\n\n## 鏂板姛鑳絓n- 鉁?瀹屾暣鐨勭瑪璁扮鐞嗗姛鑳斤紙Notes锛塡n  - 鍒涘缓銆佺紪杈戙€佸垹闄ゃ€佹悳绱㈢瑪璁癨n  - 鍒嗙被鍜屾爣绛剧鐞哱n  - 鏀惰棌鍜屽綊妗ｆ敮鎸乗n  - 瀵煎叆瀵煎嚭鍔熻兘\n  \n- 鉁?鏂囨。绠＄悊鍔熻兘锛圖ocuments锛塡n  - 鏂囨。鐨勫鍒犳敼鏌n  - 鍒嗙被鍜屾爣绛剧郴缁焅n  - 璁块棶璁℃暟鍜岀粺璁n  - 鍒楄〃鍜屽崱鐗囪鍥惧垏鎹n\n## 浼樺寲鏀硅繘\n- 馃敡 PostgreSQL閫傞厤鍣ㄤ紭鍖朶n  - 娣诲姞 datetime(''now'') 鈫?CURRENT_TIMESTAMP 鑷姩杞崲\n  - 澧炲己SQL鎵ц鏃ュ織渚夸簬璋冭瘯\n  - 鏀硅繘閿欒澶勭悊\n\n- 馃摑 瀹屾暣鐨勬祴璇曞浠禱n  - 鑷姩鍖栨祴璇曡剼鏈?(test-notes-documents.cjs)\n  - 31涓祴璇曠敤渚嬭鐩栨墍鏈塁RUD鎿嶄綔\n  - 璇︾粏鐨勬祴璇曟姤鍛?(NOTES_DOCUMENTS_TEST_REPORT.md)\n\n- 馃摎 鏂囨。鏇存柊\n  - 绗旇鍔熻兘鏂囨。 (docs/NOTES_FEATURE.md)\n  - 鏂囨。绠＄悊鏂囨。 (docs/DOCUMENTS_FEATURE.md)\n  - PostgreSQL鍏煎鎬ч棶棰樺拰瑙ｅ喅鏂规\n\n## 鎶€鏈€哄姟\n- 鈿狅笍 PostgreSQL鍏煎鎬у緟淇\n  - INSERT RETURNING 鏀寔\n  - Boolean绫诲瀷姣旇緝\n  - 鍏ㄦ枃鎼滅储璇硶杞崲\n\n## 鏂囦欢鍙樻洿\n- 鏂板: 绗旇鍜屾枃妗ｇ殑瀹屾暣鍓嶅悗绔疄鐜癨n- 浼樺寲: PostgreSQL鏁版嵁搴撻€傞厤鍣╘n- 娴嬭瘯: 瀹屾暣鐨勫姛鑳芥祴璇曡剼鏈琝n- 鏂囨。: 璇︾粏鐨勫姛鑳借鏄庡拰娴嬭瘯鎶ュ憡\n\n馃 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
       "Bash(git commit:*)",
       "Bash(npm --version)",
@@ -188,7 +188,7 @@
       "Bash(kill:*)",
       "Bash(timeout 120 npm run build:*)",
       "Bash(for file in /Users/ezra/Personal-Chatbox/src/components/notes/*.css /Users/ezra/Personal-Chatbox/src/pages/NotesPage.css)",
-      "Bash(do echo \"📄 $file\")",
+      "Bash(do echo \"馃搫 $file\")",
       "Bash(done)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDAsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTcxMDY0OTc2NiwiZXhwIjoxNzYxMjU0NTY2fQ.aBH0K8mC7P-scqQVzxe5WMt2kvrhhMlz6vh5a0oRdHg\")",
       "Bash(attrib -R \"d:\\Personal-Chatbox\\SQLSERVER_IMPLEMENTATION_SUMMARY.md\")",
@@ -221,7 +221,7 @@
       "Bash(wait:*)",
       "Bash(if [ -f /Users/ezra/Personal-Chatbox/data/user-config.json ])",
       "Bash(then cat /Users/ezra/Personal-Chatbox/data/user-config.json)",
-      "Bash(else echo \"配置文件不存在\")",
+      "Bash(else echo \"閰嶇疆鏂囦欢涓嶅瓨鍦╘")",
       "Bash(fi)",
       "Bash(for file in server/routes/*.cjs)",
       "Bash(/Users/ezra/Personal-Chatbox/test-api-config.sh)",
@@ -249,14 +249,13 @@
       "Bash(timeout:*)",
       "Bash(if [ -f ./start-dev.sh ])",
       "Bash(then bash ./start-dev.sh)",
-      "Bash(else echo \"启动脚本不存在\")",
+      "Bash(else echo \"鍚姩鑴氭湰涓嶅瓨鍦╘")",
       "Bash(wmic process where \"name=''node.exe''\" delete)",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEzLCJlbWFpbCI6Indvcmtib29rX3Rlc3RfZGVmQGV4YW1wbGUuY29tIiwiaWF0IjoxNzYxMDc5NjEwLCJleHAiOjE3NjE2ODQ0MTB9.qQRGP-U-Q0AjASy_olyqBaW2tQOiDV-LnVl5L2wEYlg\" curl -s http://localhost:3001/api/prompt-workbooks -H \"Authorization: Bearer $TOKEN\")",
-      "Bash(tee:*)",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0LCJlbWFpbCI6InRlc3RfZmluYWxfNzg5QGV4YW1wbGUuY29tIiwiaWF0IjoxNzYxMDc5OTExLCJleHAiOjE3NjE2ODQ3MTF9.uzueZ-MiHqaLKdQgwtjuwfmPnFJ414ceYEBqQ3cKH6Y\" curl -s http://localhost:3001/api/prompt-workbooks -H \"Authorization: Bearer $TOKEN\")",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE1LCJlbWFpbCI6InRlc3RfdWlfY2hlY2tAZXhhbXBsZS5jb20iLCJpYXQiOjE3NjEwODAyNjEsImV4cCI6MTc2MTY4NTA2MX0.HoXWRaFGwnNYfsBQq-9g0kfjMMiO7tIvVAncHLR_BOo\" curl -s http://localhost:3001/api/prompt-workbooks -H \"Authorization: Bearer $TOKEN\")",
-      "Bash(ps:*)",
-      "Bash(npx eslint:*)"
+      "Bash(if [ -n \"$OneDrive\" ])",
+      "Bash(then echo \"OneDrive璺緞: $OneDrive\")",
+      "Bash(else echo \"OneDrive鐜鍙橀噺鏈缃甛")",
+      "Bash(stat:*)",
+      "Read(//c/Users/Administrator/OneDrive/ChatboxBackup/**)"
     ],
     "deny": [],
     "ask": []
