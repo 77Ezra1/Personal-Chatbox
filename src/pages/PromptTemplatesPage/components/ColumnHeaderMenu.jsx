@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,12 +23,11 @@ import {
   ArrowRightToLine,
   Pencil,
   Trash2,
-  EyeOff
+  EyeOff,
 } from 'lucide-react';
 
 /**
- * Column Header Menu Component
- * 列头的下拉菜单（用于自定义字段的操作）
+ * Column header dropdown menu for field operations.
  */
 export default function ColumnHeaderMenu({
   fieldName,
@@ -38,47 +37,56 @@ export default function ColumnHeaderMenu({
   onInsertRight,
   onRename,
   onDelete,
-  onHide
+  onHide,
+  isBuiltIn = false,
 }) {
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newName, setNewName] = useState('');
   const [open, setOpen] = useState(false);
 
   const handleRename = () => {
+    if (isBuiltIn || !onRename) {
+      return;
+    }
     setNewName(fieldName);
     setShowRenameDialog(true);
     setOpen(false);
   };
 
   const handleConfirmRename = () => {
-    if (!newName.trim() || newName === fieldName) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === fieldName) {
       setShowRenameDialog(false);
       return;
     }
-    onRename(fieldName, newName.trim());
+    onRename?.(fieldName, trimmed);
     setShowRenameDialog(false);
   };
 
   const handleDelete = () => {
+    if (isBuiltIn || !onDelete) {
+      return;
+    }
     setOpen(false);
-    if (confirm(`确定要删除字段 "${fieldName}" 吗？\n\n此操作将：\n1. 删除所有记录中该字段的数据\n2. 无法撤销`)) {
+    const message = `\u786e\u5b9a\u8981\u5220\u9664\u5b57\u6bb5 \u201c${fieldName}\u201d \u5417\uff1f\n\n\u6b64\u64cd\u4f5c\u5c06\u5220\u9664\u6240\u6709\u8bb0\u5f55\u4e2d\u8be5\u5b57\u6bb5\u7684\u6570\u636e\uff0c\u4e14\u65e0\u6cd5\u64a4\u9500\u3002`;
+    if (window.confirm(message)) {
       onDelete(fieldName);
     }
   };
 
   const handleInsertLeft = () => {
     setOpen(false);
-    onInsertLeft(fieldName);
+    onInsertLeft?.(fieldName);
   };
 
   const handleInsertRight = () => {
     setOpen(false);
-    onInsertRight(fieldName);
+    onInsertRight?.(fieldName);
   };
 
   const handleHide = () => {
     setOpen(false);
-    onHide(fieldName);
+    onHide?.(fieldName);
   };
 
   return (
@@ -87,58 +95,57 @@ export default function ColumnHeaderMenu({
         <span className="flex-1">{fieldName}</span>
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 hover:bg-accent ml-2"
-            >
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-accent ml-2">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={handleInsertLeft}>
               <ArrowLeftToLine className="h-4 w-4 mr-2" />
-              在左侧插入列
+              {'\u5728\u5de6\u4fa7\u63d2\u5165\u5217'}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleInsertRight}>
               <ArrowRightToLine className="h-4 w-4 mr-2" />
-              在右侧插入列
+              {'\u5728\u53f3\u4fa7\u63d2\u5165\u5217'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleRename}>
+            <DropdownMenuItem onClick={handleRename} disabled={isBuiltIn || !onRename}>
               <Pencil className="h-4 w-4 mr-2" />
-              重命名
+              {'\u91cd\u547d\u540d'}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleHide}>
+            <DropdownMenuItem onClick={handleHide} disabled={!onHide}>
               <EyeOff className="h-4 w-4 mr-2" />
-              隐藏列
+              {'\u9690\u85cf\u5217'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+            <DropdownMenuItem
+              onClick={handleDelete}
+              className="text-destructive"
+              disabled={isBuiltIn || !onDelete}
+            >
               <Trash2 className="h-4 w-4 mr-2" />
-              删除字段
+              {'\u5220\u9664\u5b57\u6bb5'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* 重命名对话框 */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>重命名字段</DialogTitle>
+            <DialogTitle>{'\u91cd\u547d\u540d\u5b57\u6bb5'}</DialogTitle>
             <DialogDescription>
-              为字段 "{fieldName}" 设置新名称
+              {'\u4e3a\u5b57\u6bb5 \u201c'}{fieldName}{'\u201d \u8bbe\u7f6e\u65b0\u540d\u79f0'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="new-name">新名称</Label>
+              <Label htmlFor="new-name">{'\u65b0\u540d\u79f0'}</Label>
               <Input
                 id="new-name"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="请输入新名称"
+                placeholder={'\u8bf7\u8f93\u5165\u65b0\u540d\u79f0'}
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -150,11 +157,9 @@ export default function ColumnHeaderMenu({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
-              取消
+              {'\u53d6\u6d88'}
             </Button>
-            <Button onClick={handleConfirmRename}>
-              确定
-            </Button>
+            <Button onClick={handleConfirmRename}>{'\u786e\u5b9a'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

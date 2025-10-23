@@ -242,6 +242,34 @@
   border-top: 1px solid var(--border);
 }
 
+/* Custom context menu (rows) — match DropdownMenu style */
+.custom-context-menu {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  padding: 4px;
+  color: var(--foreground);
+}
+
+.custom-context-menu .context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.custom-context-menu .context-menu-item:hover {
+  background: var(--accent);
+}
+
+.custom-context-menu .context-menu-item.text-destructive {
+  color: var(--destructive);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .page-header {
