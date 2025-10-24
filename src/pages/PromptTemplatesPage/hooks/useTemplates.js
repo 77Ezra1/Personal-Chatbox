@@ -42,7 +42,7 @@ export function useTemplates(workbookId) {
   }, [workbookId]);
 
   // Create template
-  const createTemplate = useCallback(async (data) => {
+  const createTemplate = useCallback(async (data, options = {}) => {
     try {
       const response = await axios.post('/api/prompt-templates', {
         workbook_id: workbookId,
@@ -173,3 +173,4 @@ export function useTemplates(workbookId) {
     moveOrCopyTemplates
   };
 }
+

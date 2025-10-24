@@ -109,14 +109,15 @@ export default function Toolbar({
               </Button>
             )}
 
-            {/* Batch delete - not for system workbook */}
+            {/* Delete actions - not for system workbook */}
             {!workbook.is_system && (
               <Button
-                variant="destructive"
+                variant="outline"
                 size="sm"
                 onClick={onBatchDelete}
+                title={selectedCount > 1 ? '批量删除' : '删除'}
               >
-                批量删除
+                {selectedCount > 1 ? '批量删除' : '删除'}
               </Button>
             )}
           </div>
