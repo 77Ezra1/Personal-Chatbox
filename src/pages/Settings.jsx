@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ApiConfig from '@/components/settings/ApiConfig';
 import ProfileSettings from '@/components/settings/ProfileSettings';
+import { AgentRuntimeConfig } from '@/components/settings/AgentRuntimeConfig';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -31,6 +32,16 @@ const Settings = () => {
             >
               API 配置
             </button>
+            <button
+              onClick={() => setActiveTab('agent')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'agent'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Agent 运行时
+            </button>
           </nav>
         </div>
 
@@ -38,6 +49,7 @@ const Settings = () => {
         <div>
           {activeTab === 'profile' && <ProfileSettings />}
           {activeTab === 'api' && <ApiConfig />}
+          {activeTab === 'agent' && <AgentRuntimeConfig />}
         </div>
       </div>
     </div>

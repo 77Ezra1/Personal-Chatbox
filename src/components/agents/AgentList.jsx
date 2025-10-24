@@ -28,6 +28,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
+const brandButtonClasses = 'border border-transparent bg-[#4F6DFF] text-white shadow-sm hover:bg-[#3D58D4] hover:shadow-md focus-visible:ring-[#4F6DFF]/50'
+
 const EmptyState = memo(({ translate, onCreateAgent }) => (
   <div className="flex flex-col items-center justify-center py-16 px-4">
     <div className="rounded-full bg-muted p-6 mb-4">
@@ -39,7 +41,7 @@ const EmptyState = memo(({ translate, onCreateAgent }) => (
     <p className="text-muted-foreground text-center max-w-md mb-6">
       {translate('agents.noAgentsDescription', 'Create your first AI agent to automate tasks and workflows')}
     </p>
-    <Button onClick={onCreateAgent}>
+    <Button onClick={onCreateAgent} className={cn('gap-2', brandButtonClasses)}>
       <Plus className="size-4" />
       {translate('agents.createAgent', 'Create Agent')}
     </Button>
@@ -55,6 +57,7 @@ export const AgentList = memo(({
   onEdit,
   onDelete,
   onViewDetails,
+  onViewHistory,
   loading = false,
   className,
   translate = (key, fallback) => fallback
@@ -118,8 +121,49 @@ export const AgentList = memo(({
     return count
   }, [statusFilter, selectedCapabilities])
 
+  let content
+  if (loading) {
+    content = (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    )
+  } else if (filteredAgents.length === 0) {
+    content = (
+      <div className="h-full overflow-y-auto">
+        <div className="flex h-full items-center justify-center">
+          <EmptyState translate={translate} onCreateAgent={onCreateAgent} />
+        </div>
+      </div>
+    )
+  } else {
+    content = (
+      <div className="h-full overflow-y-auto pr-1">
+        <div
+          className={cn(
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'
+              : 'flex flex-col gap-3'
+          )}
+        >
+          {filteredAgents.map(agent => (
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              onExecute={onExecute}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onViewDetails={onViewDetails}
+              onViewHistory={onViewHistory}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn('flex h-full flex-col space-y-4', className)}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
@@ -130,7 +174,7 @@ export const AgentList = memo(({
             {translate('agents.subtitle', 'Manage and execute your intelligent agents')}
           </p>
         </div>
-        <Button onClick={onCreateAgent}>
+        <Button onClick={onCreateAgent} className={cn('gap-2', brandButtonClasses)}>
           <Plus className="size-4" />
           {translate('agents.createAgent', 'Create Agent')}
         </Button>
@@ -276,33 +320,9 @@ export const AgentList = memo(({
           .replace('{total}', agents.length)} {translate('agents.agents', 'agents')}
       </div>
 
-      {/* Agent Grid/List */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : filteredAgents.length === 0 ? (
-        <EmptyState translate={translate} onCreateAgent={onCreateAgent} />
-      ) : (
-        <div
-          className={cn(
-            viewMode === 'grid'
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-              : "flex flex-col gap-3"
-          )}
-        >
-          {filteredAgents.map(agent => (
-            <AgentCard
-              key={agent.id}
-              agent={agent}
-              onExecute={onExecute}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onViewDetails={onViewDetails}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex-1 min-h-0">
+        {content}
+      </div>
     </div>
   )
 })

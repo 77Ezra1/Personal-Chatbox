@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>笔记 AI 功能测试</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #2563eb;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .test-section h2 {
+      margin-bottom: 15px;
+      color: #1f2937;
+      font-size: 18px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 100px;
+      margin-bottom: 12px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button.primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    button.primary:hover {
+      background: #1d4ed8;
+    }
+
+    button.secondary {
+      background: #6b7280;
+      color: white;
+    }
+
+    button.secondary:hover {
+      background: #4b5563;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .result {
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result.success {
+      background: #d1fae5;
+      border: 1px solid #34d399;
+      color: #065f46;
+    }
+
+    .result.error {
+      background: #fee2e2;
+      border: 1px solid #f87171;
+      color: #991b1b;
+    }
+
+    .result.loading {
+      background: #dbeafe;
+      border: 1px solid #60a5fa;
+      color: #1e40af;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-left: 10px;
+    }
+
+    .status-badge.online {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.offline {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 笔记 AI 功能测试</h1>
+    <p class="subtitle">在此页面测试笔记AI功能是否正常工作</p>
+
+    <!-- Test 1: AI Rewrite -->
+    <div class="test-section">
+      <h2>✨ 测试 1: AI 改写功能 <span id="rewrite-status" class="status-badge">未测试</span></h2>
+      <textarea id="rewrite-input" placeholder="输入要改写的文本（至少10个字符）...">巷口的老榕树，守了这条街三十年。常水还在，作轻得怕惊了枝头的蜜蜂。</textarea>
+      <div class="button-group">
+        <button class="primary" onclick="testRewrite('professional')">专业化</button>
+        <button class="primary" onclick="testRewrite('casual')">口语化</button>
+        <button class="primary" onclick="testRewrite('concise')">简洁版</button>
+        <button class="primary" onclick="testRewrite('detailed')">详细版</button>
+      </div>
+      <div id="rewrite-result"></div>
+    </div>
+
+    <!-- Test 2: AI Q&A -->
+    <div class="test-section">
+      <h2>💬 测试 2: AI 问答功能 <span id="qa-status" class="status-badge">未测试</span></h2>
+      <textarea id="qa-content" placeholder="笔记内容...">巷口的老榕树，守了这条街三十年。常水还在，作轻得怕惊了枝头的蜜蜂。</textarea>
+      <textarea id="qa-question" placeholder="输入问题..." style="min-height: 60px;">这段文字的主要内容是什么？</textarea>
+      <div class="button-group">
+        <button class="primary" onclick="testQA()">发送问题</button>
+      </div>
+      <div id="qa-result"></div>
+    </div>
+
+    <!-- Test 3: Auth Check -->
+    <div class="test-section">
+      <h2>🔐 测试 3: 登录状态检查 <span id="auth-status" class="status-badge">未测试</span></h2>
+      <div class="button-group">
+        <button class="secondary" onclick="checkAuth()">检查登录状态</button>
+      </div>
+      <div id="auth-result"></div>
+    </div>
+  </div>
+
+  <script>
+    // Test AI Rewrite
+    async function testRewrite(style) {
+      const input = document.getElementById('rewrite-input').value.trim();
+      const resultDiv = document.getElementById('rewrite-result');
+      const statusBadge = document.getElementById('rewrite-status');
+
+      if (input.length < 10) {
+        resultDiv.className = 'result error';
+        resultDiv.textContent = '❌ 错误：文本太短，至少需要10个字符';
+        return;
+      }
+
+      resultDiv.className = 'result loading';
+      resultDiv.textContent = '⏳ 正在改写（' + style + '）...';
+      statusBadge.className = 'status-badge';
+      statusBadge.textContent = '测试中...';
+
+      try {
+        const response = await fetch('/api/ai/notes/rewrite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ text: input, style })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          resultDiv.className = 'result success';
+          resultDiv.textContent = '✅ 改写成功（' + style + '）\n\n原文：\n' + input + '\n\n改写后：\n' + data.text;
+          statusBadge.className = 'status-badge online';
+          statusBadge.textContent = '✅ 正常';
+        } else {
+          throw new Error(data.error || '改写失败');
+        }
+      } catch (error) {
+        resultDiv.className = 'result error';
+        resultDiv.textContent = '❌ 错误：' + error.message;
+        statusBadge.className = 'status-badge offline';
+        statusBadge.textContent = '❌ 失败';
+      }
+    }
+
+    // Test AI Q&A
+    async function testQA() {
+      const content = document.getElementById('qa-content').value.trim();
+      const question = document.getElementById('qa-question').value.trim();
+      const resultDiv = document.getElementById('qa-result');
+      const statusBadge = document.getElementById('qa-status');
+
+      if (!content || !question) {
+        resultDiv.className = 'result error';
+        resultDiv.textContent = '❌ 错误：请输入笔记内容和问题';
+        return;
+      }
+
+      resultDiv.className = 'result loading';
+      resultDiv.textContent = '⏳ AI 思考中...';
+      statusBadge.className = 'status-badge';
+      statusBadge.textContent = '测试中...';
+
+      try {
+        const response = await fetch('/api/ai/notes/qa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ content, question })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          resultDiv.className = 'result success';
+          resultDiv.textContent = '✅ 回答成功\n\n问题：\n' + question + '\n\n回答：\n' + data.answer;
+          statusBadge.className = 'status-badge online';
+          statusBadge.textContent = '✅ 正常';
+        } else {
+          throw new Error(data.error || '问答失败');
+        }
+      } catch (error) {
+        resultDiv.className = 'result error';
+        resultDiv.textContent = '❌ 错误：' + error.message;
+        statusBadge.className = 'status-badge offline';
+        statusBadge.textContent = '❌ 失败';
+      }
+    }
+
+    // Check Auth
+    async function checkAuth() {
+      const resultDiv = document.getElementById('auth-result');
+      const statusBadge = document.getElementById('auth-status');
+
+      resultDiv.className = 'result loading';
+      resultDiv.textContent = '⏳ 检查登录状态...';
+
+      try {
+        const response = await fetch('/api/analytics/overview', {
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          resultDiv.className = 'result success';
+          resultDiv.textContent = '✅ 已登录\n\n用户数据：\n' + JSON.stringify(data.data, null, 2);
+          statusBadge.className = 'status-badge online';
+          statusBadge.textContent = '✅ 已登录';
+        } else if (response.status === 401) {
+          throw new Error('未登录或登录已过期');
+        } else {
+          throw new Error(data.message || '检查失败');
+        }
+      } catch (error) {
+        resultDiv.className = 'result error';
+        resultDiv.textContent = '❌ ' + error.message + '\n\n请先登录主应用：http://localhost:5173';
+        statusBadge.className = 'status-badge offline';
+        statusBadge.textContent = '❌ 未登录';
+      }
+    }
+
+    // Auto-check auth on load
+    window.addEventListener('load', () => {
+      console.log('🧪 笔记AI测试页面已加载');
+      console.log('📍 请确保已在主应用中登录：http://localhost:5173');
+    });
+  </script>
+</body>
+</html>

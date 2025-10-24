@@ -11,7 +11,8 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 30000 // 30秒超时
+  timeout: 30000, // 30秒超时
+  withCredentials: true // 始终携带 httpOnly 会话 Cookie
 })
 
 // 请求拦截器 - 自动添加认证token
@@ -78,18 +79,31 @@ export const agentAPI = {
   delete: (id) => apiClient.delete(`/agents/${id}`),
 
   // 任务执行
-  execute: (id, task) => apiClient.post(`/agents/${id}/execute`, { task }),
+  execute: (id, taskData) => apiClient.post(`/agents/${id}/execute`, { taskData }),
   stop: (id) => apiClient.post(`/agents/${id}/stop`),
   getProgress: (id) => apiClient.get(`/agents/${id}/progress`),
 
   // 任务管理
   getTasks: (id) => apiClient.get(`/agents/${id}/tasks`),
   getSubTasks: (id, taskId) => apiClient.get(`/agents/${id}/tasks/${taskId}/subtasks`),
-  getExecutions: (id) => apiClient.get(`/agents/${id}/executions`),
+  getExecutions: (id, params) => apiClient.get(`/agents/${id}/executions`, { params }),
+  exportExecutions: (id, params) => apiClient.get(`/agents/${id}/executions/export`, {
+    params,
+    responseType: String(params?.format || 'csv').toLowerCase() === 'json' ? 'json' : 'blob'
+  }),
+  getStats: (id, params) => apiClient.get(`/agents/${id}/stats`, { params }),
+  getQueueStatus: (id) => apiClient.get(`/agents/${id}/queue`),
+  cancelQueuedExecution: (id, executionId) => apiClient.post(`/agents/${id}/queue/${executionId}/cancel`),
+  updateQueuePriority: (id, executionId, priority) => apiClient.post(
+    `/agents/${id}/queue/${executionId}/priority`,
+    { priority }
+  ),
+  getRuntimeConfig: () => apiClient.get('/agents/runtime/config'),
+  updateRuntimeConfig: (config) => apiClient.put('/agents/runtime/config', config),
+  getSummaryMetrics: () => apiClient.get('/agents/metrics/summary'),
 
-  // 工具和统计
-  getTools: () => apiClient.get('/agents/tools'),
-  getStats: (id) => apiClient.get(`/agents/${id}/stats`)
+  // 工具
+  getTools: () => apiClient.get('/agents/tools')
 }
 
 /**

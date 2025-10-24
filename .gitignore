@@ -23,7 +23,7 @@ yarn-error.log*
 *.log
 logs/
 
-# 数据库文件
+# 数据库文件（敏感用户数据）
 data/app.db
 data/app.db-shm
 data/app.db-wal
@@ -32,6 +32,7 @@ data/chatbox.db-shm
 data/chatbox.db-wal
 
 # 数据库备份文件（不应提交到Git）
+backups/
 data/backups/
 data/*.db
 data/*.db-shm
@@ -50,9 +51,15 @@ nul
 # 锁文件（保留 package-lock.json，忽略 pnpm-lock.yaml）
 pnpm-lock.yaml
 
-# 临时测试文件
-test-*.html
-*-demo.html
+# 测试账号文件（包含敏感信息）
+test-accounts-*.json
+test-accounts-*.txt
 
-# 归档文件夹
-archive/
+# 编辑器备份文件
+*.backup
+*.bak
+*~
+
+# 上传文件目录
+data/uploads/
+uploads/

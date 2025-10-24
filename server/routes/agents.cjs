@@ -6,10 +6,18 @@ const express = require('express');
 const { authMiddleware } = require('../middleware/auth.cjs');
 const AgentEngine = require('../services/agentEngine.cjs');
 const TaskDecomposer = require('../services/taskDecomposer.cjs');
+const sseManager = require('../services/sseManager.cjs');
 
 const router = express.Router();
 const agentEngine = new AgentEngine();
 const taskDecomposer = new TaskDecomposer();
+
+function attachTokenFromQuery(req, res, next) {
+  if (!req.headers.authorization && req.query && req.query.token) {
+    req.headers.authorization = `Bearer ${req.query.token}`;
+  }
+  next();
+}
 
 /**
  * 获取 Agent 列表
@@ -44,6 +52,37 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/runtime/config', authMiddleware, async (req, res) => {
+  try {
+    const config = await agentEngine.getRuntimeConfig(req.user.id);
+    res.json({ config });
+  } catch (error) {
+    console.error('获取 Agent 运行时配置失败:', error);
+    res.status(500).json({ message: '获取运行时配置失败', error: error.message });
+  }
+});
+
+router.put('/runtime/config', authMiddleware, async (req, res) => {
+  try {
+    const updates = req.body || {};
+    const config = await agentEngine.updateRuntimeConfig(req.user.id, updates);
+    res.json({ message: '运行时配置已更新', config });
+  } catch (error) {
+    console.error('更新 Agent 运行时配置失败:', error);
+    res.status(500).json({ message: '更新运行时配置失败', error: error.message });
+  }
+});
+
+router.get('/metrics/summary', authMiddleware, async (req, res) => {
+  try {
+    const summary = await agentEngine.getDashboardSummary(req.user.id);
+    res.json({ summary });
+  } catch (error) {
+    console.error('获取 Agent 仪表盘统计失败:', error);
+    res.status(500).json({ message: '获取统计失败', error: error.message });
+  }
+});
+
 /**
  * 获取 Agent 详情
  * GET /api/agents/:id
@@ -66,6 +105,79 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/:id/events', attachTokenFromQuery, authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { db } = require('../db/init.cjs');
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  if (typeof res.flushHeaders === 'function') {
+    res.flushHeaders();
+  } else if (typeof res.flush === 'function') {
+    res.flush();
+  }
+
+  sseManager.addClient(id, res);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': keep-alive\n\n');
+    } catch (error) {
+      clearInterval(heartbeat);
+    }
+  }, 15000);
+
+  res.write(`data: ${JSON.stringify({ status: 'connected', timestamp: Date.now() })}\n\n`);
+
+  try {
+    const execution = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT * FROM agent_executions WHERE agent_id = ? ORDER BY started_at DESC LIMIT 1`,
+        [id],
+        (err, row) => (err ? reject(err) : resolve(row))
+      );
+    });
+
+    if (execution) {
+      res.write(
+        `data: ${JSON.stringify({
+          executionId: execution.id,
+          status: execution.status,
+          progress: execution.progress,
+          currentStep: execution.current_step,
+          startedAt: execution.started_at,
+          completedAt: execution.completed_at,
+          errorMessage: execution.error_message,
+          timestamp: Date.now()
+        })}\n\n`
+      );
+    }
+  } catch (error) {
+    console.error('SSE 初始化失败:', error);
+    res.write(`data: ${JSON.stringify({ error: 'initial_fetch_failed', message: error.message })}\n\n`);
+  }
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    sseManager.removeClient(id, res);
+  });
+});
+
+router.post('/tools/reload', authMiddleware, async (req, res) => {
+  try {
+    const result = await agentEngine.refreshTools();
+    res.json({
+      message: '工具库已刷新',
+      refreshedAt: result.refreshedAt,
+      tools: result.tools
+    });
+  } catch (error) {
+    console.error('刷新工具失败:', error);
+    res.status(500).json({ message: '刷新工具失败', error: error.message });
+  }
+});
+
 /**
  * 创建 Agent
  * POST /api/agents
@@ -74,6 +186,15 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     const agentData = req.body;
+    try {
+      const fs = require('fs');
+      fs.appendFileSync(
+        'logs/agent-create-debug.log',
+        `[${new Date().toISOString()}] ${JSON.stringify(agentData)}\n`
+      );
+    } catch (logError) {
+      console.warn('[AgentsRoute] Failed to persist debug payload:', logError.message);
+    }
 
     const agent = await agentEngine.createAgent(userId, agentData);
 
@@ -83,6 +204,9 @@ router.post('/', authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error('创建 Agent 失败:', error);
+    if (error && error.stack) {
+      console.error(error.stack);
+    }
     res.status(500).json({ message: '创建 Agent 失败', error: error.message });
   }
 });
@@ -146,11 +270,13 @@ router.post('/:id/execute', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: '任务数据不能为空' });
     }
 
-    const result = await agentEngine.executeTask(id, taskData, userId);
+    const { executionId, taskId } = await agentEngine.startTaskExecution(id, taskData, userId);
 
-    res.json({
-      message: '任务执行成功',
-      result
+    res.status(202).json({
+      message: '任务已开始执行',
+      executionId,
+      taskId,
+      agentId: id
     });
   } catch (error) {
     console.error('执行任务失败:', error);
@@ -261,6 +387,8 @@ router.get('/:id/progress', authMiddleware, async (req, res) => {
             progress: row.progress,
             status: row.status,
             currentStep: row.current_step,
+            executionId: row.id,
+            taskId: row.task_id,
             startedAt: row.started_at,
             completedAt: row.completed_at,
             durationMs: row.duration_ms,
@@ -325,44 +453,127 @@ router.get('/:id/executions', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const { page = 1, limit = 20 } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      start,
+      end,
+      order
+    } = req.query;
 
-    const { db } = require('../db/init.cjs');
+    const history = await agentEngine.getExecutionHistory(id, userId, {
+      page,
+      limit,
+      status,
+      start,
+      end,
+      order
+    });
 
-    db.all(
-      `SELECT ae.*, at.title as task_title
-       FROM agent_executions ae
-       JOIN agent_tasks at ON ae.task_id = at.id
-       WHERE ae.agent_id = ? AND ae.user_id = ?
-       ORDER BY ae.started_at DESC
-       LIMIT ? OFFSET ?`,
-      [id, userId, parseInt(limit), (parseInt(page) - 1) * parseInt(limit)],
-      (err, rows) => {
-        if (err) {
-          console.error('获取执行历史失败:', err);
-          res.status(500).json({ message: '获取执行历史失败', error: err.message });
-        } else {
-          const executions = rows.map(row => ({
-            id: row.id,
-            agentId: row.agent_id,
-            taskId: row.task_id,
-            taskTitle: row.task_title,
-            status: row.status,
-            progress: row.progress,
-            currentStep: row.current_step,
-            errorMessage: row.error_message,
-            startedAt: row.started_at,
-            completedAt: row.completed_at,
-            durationMs: row.duration_ms
-          }));
-
-          res.json({ executions });
-        }
-      }
-    );
+    res.json(history);
   } catch (error) {
     console.error('获取执行历史失败:', error);
     res.status(500).json({ message: '获取执行历史失败', error: error.message });
+  }
+});
+
+router.get('/:id/executions/export', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const format = String(req.query.format || 'csv').toLowerCase();
+    const data = await agentEngine.exportExecutionHistory(id, userId, req.query);
+
+    if (format === 'json') {
+      res
+        .setHeader('Content-Type', 'application/json')
+        .setHeader('Content-Disposition', `attachment; filename="agent-${id}-executions.json"`)
+        .send(data);
+    } else {
+      res
+        .setHeader('Content-Type', 'text/csv; charset=utf-8')
+        .setHeader('Content-Disposition', `attachment; filename="agent-${id}-executions.csv"`)
+        .send(data);
+    }
+  } catch (error) {
+    console.error('导出执行历史失败:', error);
+    res.status(500).json({ message: '导出执行历史失败', error: error.message });
+  }
+});
+
+router.get('/:id/stats', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const stats = await agentEngine.getAgentStats(id, userId, req.query);
+    res.json(stats);
+  } catch (error) {
+    console.error('获取 Agent 统计失败:', error);
+    res.status(500).json({ message: '获取统计失败', error: error.message });
+  }
+});
+
+router.get('/:id/queue', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const status = agentEngine.getQueueStatus(id);
+    res.json(status);
+  } catch (error) {
+    console.error('获取队列状态失败:', error);
+    res.status(500).json({ message: '获取队列状态失败', error: error.message });
+  }
+});
+
+router.post('/:id/queue/:executionId/cancel', authMiddleware, async (req, res) => {
+  try {
+    const { id, executionId } = req.params;
+    const result = await agentEngine.cancelQueuedExecution(id, executionId, req.user.id);
+
+    if (!result.cancelled) {
+      const statusMap = {
+        forbidden: 403,
+        not_found: 404,
+        invalid_parameters: 400
+      };
+      res.status(statusMap[result.reason] || 409).json({
+        message: '取消任务失败',
+        reason: result.reason
+      });
+      return;
+    }
+
+    res.json({ message: '任务已取消', phase: result.phase || 'queued' });
+  } catch (error) {
+    console.error('取消队列任务失败:', error);
+    res.status(500).json({ message: '取消任务失败', error: error.message });
+  }
+});
+
+router.post('/:id/queue/:executionId/priority', authMiddleware, async (req, res) => {
+  try {
+    const { id, executionId } = req.params;
+    const { priority } = req.body || {};
+
+    if (priority === undefined || priority === null) {
+      return res.status(400).json({ message: '缺少 priority 参数' });
+    }
+
+    const updated = await agentEngine.updateQueuedPriority(
+      id,
+      executionId,
+      req.user.id,
+      Number(priority)
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: '未找到等待中的任务' });
+    }
+
+    res.json({ message: '优先级已更新', job: updated });
+  } catch (error) {
+    console.error('调整队列优先级失败:', error);
+    res.status(500).json({ message: '调整优先级失败', error: error.message });
   }
 });
 

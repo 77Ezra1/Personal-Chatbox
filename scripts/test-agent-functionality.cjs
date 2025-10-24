@@ -7,6 +7,7 @@
 
 const path = require('path');
 const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
 
 // 设置数据库路径
 process.env.DB_PATH = path.join(__dirname, '..', 'data', 'chatbox.db');
@@ -14,6 +15,7 @@ process.env.DB_PATH = path.join(__dirname, '..', 'data', 'chatbox.db');
 const AgentEngine = require('../server/services/agentEngine.cjs');
 const TaskDecomposer = require('../server/services/taskDecomposer.cjs');
 const AIService = require('../server/services/aiService.cjs');
+const { db } = require('../server/db/init.cjs');
 
 // 测试配置
 const TEST_USER_ID = 1;
@@ -63,6 +65,62 @@ const testResults = {
   failed: 0,
   skipped: 0
 };
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function queryOne(sql, params = []) {
+  if (typeof db.prepare === 'function') {
+    const stmt = db.prepare(sql);
+    return stmt.get(...params);
+  }
+
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+async function executeRun(sql, params = []) {
+  if (typeof db.prepare === 'function') {
+    const stmt = db.prepare(sql);
+    return stmt.run(...params);
+  }
+
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve(this);
+    });
+  });
+}
+
+async function waitForExecutionStatus(executionId, predicate, timeoutMs = 10000) {
+  const start = Date.now();
+
+  while (Date.now() - start < timeoutMs) {
+    const execution = await queryOne('SELECT * FROM agent_executions WHERE id = ?', [executionId]);
+    if (execution && predicate(execution)) {
+      return execution;
+    }
+    await delay(100);
+  }
+
+  throw new Error(`等待执行状态超时: ${executionId}`);
+}
+
+async function markExecutionCancelled(executionId, agentId) {
+  await executeRun(
+    `UPDATE agent_executions SET status = 'cancelled', completed_at = datetime('now') WHERE id = ?`,
+    [executionId]
+  );
+
+  await executeRun(
+    `UPDATE agents SET status = 'active' WHERE id = ? AND user_id = ?`,
+    [agentId, TEST_USER_ID]
+  );
+}
 
 async function runTest(name, testFn) {
   testResults.total++;
@@ -446,6 +504,99 @@ async function testPerformance(agentId) {
   });
 }
 
+async function testExecutionFlow(agentId) {
+  logSection('测试 7: 队列执行与取消流程');
+
+  const createTestEngine = (defaultDelay = 200) => {
+    const engine = new AgentEngine();
+
+    engine.toolRegistry.set('delay_tool', {
+      name: 'delay_tool',
+      description: '用于测试的延迟工具',
+      source: 'test',
+      execute: async (parameters = {}) => {
+        const duration = parameters.duration ?? defaultDelay;
+        await delay(duration);
+        return {
+          success: true,
+          waited: duration,
+          timestamp: Date.now()
+        };
+      }
+    });
+
+    engine.taskDecomposer.decomposeTask = async function(task) {
+      const delayMs = task?.inputData?.delayMs ?? defaultDelay;
+      const subtaskId = uuidv4();
+      const subtask = {
+        id: subtaskId,
+        taskId: task.id,
+        title: '延迟执行子任务',
+        description: '调用测试延迟工具',
+        type: 'tool_call',
+        inputData: {},
+        config: {
+          toolName: 'delay_tool',
+          parameters: { duration: delayMs }
+        },
+        status: 'pending',
+        priority: 1,
+        dependencies: [],
+        createdAt: new Date().toISOString()
+      };
+
+      await this.saveSubtask(subtask);
+      return [subtask];
+    };
+
+    return engine;
+  };
+
+  await runTest('队列执行 - 完成流程', async () => {
+    const engine = createTestEngine(150);
+    const { taskId, executionId } = await engine.startTaskExecution(agentId, {
+      title: '队列执行测试',
+      description: '验证任务队列正常执行',
+      inputData: { delayMs: 200 }
+    });
+
+    const execution = await waitForExecutionStatus(executionId, exec => exec.status === 'completed', 10000);
+
+    if (!execution || execution.status !== 'completed') {
+      throw new Error('执行未成功完成');
+    }
+
+    const taskRow = await queryOne('SELECT status FROM agent_tasks WHERE id = ?', [taskId]);
+    if (!taskRow || taskRow.status !== 'completed') {
+      throw new Error('任务状态不是 completed');
+    }
+  });
+
+  await runTest('队列执行 - 取消流程', async () => {
+    const engine = createTestEngine(1500);
+    const { taskId, executionId } = await engine.startTaskExecution(agentId, {
+      title: '队列取消测试',
+      description: '验证执行取消逻辑',
+      inputData: { delayMs: 1500 }
+    });
+
+    await waitForExecutionStatus(executionId, exec => exec.status === 'running', 5000);
+
+    await markExecutionCancelled(executionId, agentId);
+
+    const cancelledExecution = await waitForExecutionStatus(executionId, exec => exec.status === 'cancelled', 10000);
+
+    if (!cancelledExecution || cancelledExecution.status !== 'cancelled') {
+      throw new Error('执行未被正确取消');
+    }
+
+    const taskRow = await queryOne('SELECT status FROM agent_tasks WHERE id = ?', [taskId]);
+    if (!taskRow || taskRow.status !== 'cancelled') {
+      throw new Error('任务状态不是 cancelled');
+    }
+  });
+}
+
 // ==================== 主测试流程 ====================
 
 async function main() {
@@ -475,7 +626,12 @@ async function main() {
     // 5. 数据完整性测试
     await testDataIntegrity();
 
-    // 6. 性能测试
+    // 6. 队列执行与取消
+    if (testAgentId) {
+      await testExecutionFlow(testAgentId);
+    }
+
+    // 7. 性能测试
     if (testAgentId) {
       await testPerformance(testAgentId);
     }

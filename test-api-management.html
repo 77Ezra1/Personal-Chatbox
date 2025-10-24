@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Management Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            width: 300px;
+        }
+        .token-input {
+            width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Management Feature Test</h1>
+
+    <div class="section">
+        <h2>1. Set Token</h2>
+        <input type="text" id="tokenInput" class="token-input"
+               placeholder="Enter JWT token here"
+               value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4YzI1MzIxZS03NzI2LTQ2M2ItYjgwOS1iZDFjMWIzZDc5M2EiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NjA2NDk3NjYsImV4cCI6MTc2MTI1NDU2Nn0.aBH0K8mC7P-scqQVzxe5WMt2kvrhhMlz6vh5a0oRdHg">
+        <button onclick="setToken()">Set Token</button>
+        <div id="tokenStatus"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Get Services List</h2>
+        <button onclick="getServices()">Get All Services</button>
+    </div>
+
+    <div class="section">
+        <h2>3. Save Service Config</h2>
+        <select id="serviceId">
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="braveSearch">Brave Search</option>
+            <option value="github">GitHub</option>
+            <option value="proxy">Proxy</option>
+        </select>
+        <br>
+        <input type="text" id="apiKey" placeholder="API Key / Token">
+        <br>
+        <button onclick="saveServiceConfig()">Save Config</button>
+    </div>
+
+    <div class="section">
+        <h2>4. Test Service Connection</h2>
+        <select id="testServiceId">
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="braveSearch">Brave Search</option>
+            <option value="github">GitHub</option>
+        </select>
+        <br>
+        <input type="text" id="testApiKey" placeholder="API Key / Token">
+        <br>
+        <button onclick="testService()">Test Connection</button>
+    </div>
+
+    <div class="section">
+        <h2>5. Delete Service Config</h2>
+        <select id="deleteServiceId">
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="braveSearch">Brave Search</option>
+            <option value="github">GitHub</option>
+            <option value="proxy">Proxy</option>
+        </select>
+        <br>
+        <button onclick="deleteServiceConfig()">Delete Config</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        let token = '';
+
+        function setToken() {
+            token = document.getElementById('tokenInput').value.trim();
+            if (token) {
+                document.getElementById('tokenStatus').innerHTML =
+                    '<span style="color: green;">✓ Token set</span>';
+            } else {
+                document.getElementById('tokenStatus').innerHTML =
+                    '<span style="color: red;">✗ Token is empty</span>';
+            }
+        }
+
+        function showResult(data) {
+            document.getElementById('result').textContent =
+                JSON.stringify(data, null, 2);
+        }
+
+        async function getServices() {
+            try {
+                const response = await fetch('http://localhost:3001/api/config/services', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.message });
+            }
+        }
+
+        async function saveServiceConfig() {
+            const serviceId = document.getElementById('serviceId').value;
+            const apiKey = document.getElementById('apiKey').value.trim();
+
+            if (!apiKey) {
+                alert('Please enter API Key');
+                return;
+            }
+
+            try {
+                const body = { enabled: true };
+
+                // Different services use different field names
+                if (serviceId === 'github') {
+                    body.token = apiKey;
+                } else if (serviceId === 'proxy') {
+                    body.protocol = 'http';
+                    body.host = apiKey;
+                    body.port = '8080';
+                } else {
+                    body.apiKey = apiKey;
+                }
+
+                const response = await fetch(`http://localhost:3001/api/config/service/${serviceId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.message });
+            }
+        }
+
+        async function testService() {
+            const serviceId = document.getElementById('testServiceId').value;
+            const apiKey = document.getElementById('testApiKey').value.trim();
+
+            if (!apiKey) {
+                alert('Please enter API Key');
+                return;
+            }
+
+            try {
+                const body = {};
+
+                // Different services use different field names
+                if (serviceId === 'github') {
+                    body.token = apiKey;
+                } else {
+                    body.apiKey = apiKey;
+                }
+
+                const response = await fetch(`http://localhost:3001/api/config/service/${serviceId}/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.message });
+            }
+        }
+
+        async function deleteServiceConfig() {
+            const serviceId = document.getElementById('deleteServiceId').value;
+
+            if (!confirm(`Delete config for ${serviceId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/config/service/${serviceId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.message });
+            }
+        }
+
+        // Auto-set token on page load
+        window.onload = function() {
+            setToken();
+        };
+    </script>
+</body>
+</html>

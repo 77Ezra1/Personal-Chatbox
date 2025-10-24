@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AG Grid Test</title>
+
+  <!-- AG Grid Styles -->
+  <link rel="stylesheet" href="/node_modules/ag-grid-community/styles/ag-grid.min.css">
+  <link rel="stylesheet" href="/node_modules/ag-grid-community/styles/ag-theme-alpine.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #myGrid {
+      height: 500px;
+      width: 100%;
+    }
+    .test-info {
+      background: #f0f0f0;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-info">
+    <h1>🧪 AG Grid CSS 测试</h1>
+    <p>如果表格显示正常（有边框、样式），说明 AG Grid CSS 加载成功</p>
+  </div>
+
+  <div id="myGrid" class="ag-theme-alpine"></div>
+
+  <script type="module">
+    import { createGrid } from 'https://cdn.jsdelivr.net/npm/ag-grid-community@34.2.0/dist/package/main.esm.mjs';
+
+    // Sample data
+    const rowData = [
+      { id: 1, name: '测试模板1', content: '这是一个测试内容', tags: 'test, demo' },
+      { id: 2, name: '测试模板2', content: '另一个测试内容', tags: 'test' },
+      { id: 3, name: '测试模板3', content: '第三个测试', tags: 'demo' },
+    ];
+
+    // Column definitions
+    const columnDefs = [
+      { field: 'id', headerName: 'ID', width: 80 },
+      { field: 'name', headerName: '名称', width: 200 },
+      { field: 'content', headerName: '内容', flex: 1 },
+      { field: 'tags', headerName: '标签', width: 150 },
+    ];
+
+    // Grid options
+    const gridOptions = {
+      columnDefs: columnDefs,
+      rowData: rowData,
+      defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true,
+      },
+    };
+
+    // Create grid
+    const gridDiv = document.querySelector('#myGrid');
+    const gridApi = createGrid(gridDiv, gridOptions);
+
+    console.log('✅ AG Grid initialized successfully');
+  </script>
+</body>
+</html>

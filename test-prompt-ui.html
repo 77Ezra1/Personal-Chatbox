@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Templates API Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .warning { background: #fff3cd; color: #856404; }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0056b3; }
+    pre {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th { background: #f8f9fa; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Prompt Templates API 测试</h1>
+
+  <div class="test-section">
+    <h2>1. 用户认证</h2>
+    <div id="auth-status" class="status warning">未测试</div>
+    <button onclick="testAuth()">测试认证</button>
+    <button onclick="register()">注册新用户</button>
+    <pre id="auth-result"></pre>
+  </div>
+
+  <div class="test-section">
+    <h2>2. 工作簿列表</h2>
+    <div id="workbooks-status" class="status warning">未测试</div>
+    <button onclick="testWorkbooks()">获取工作簿</button>
+    <pre id="workbooks-result"></pre>
+    <div id="workbooks-table"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>3. 模板列表</h2>
+    <div id="templates-status" class="status warning">未测试</div>
+    <input type="number" id="workbook-id" placeholder="工作簿ID" value="1" style="padding: 8px; margin: 5px;">
+    <button onclick="testTemplates()">获取模板</button>
+    <pre id="templates-result"></pre>
+    <div id="templates-table"></div>
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('test_token');
+
+    function setStatus(id, type, message) {
+      const el = document.getElementById(id);
+      el.className = `status ${type}`;
+      el.textContent = message;
+    }
+
+    function displayJSON(id, data) {
+      document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function testAuth() {
+      try {
+        const response = await fetch('http://localhost:3001/api/auth/me', {
+          credentials: 'include',
+          headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+        });
+        const data = await response.json();
+
+        if (data.authenticated) {
+          setStatus('auth-status', 'success', `✅ 已登录：${data.user.email}`);
+        } else {
+          setStatus('auth-status', 'warning', '⚠️ 未登录');
+        }
+        displayJSON('auth-result', data);
+      } catch (err) {
+        setStatus('auth-status', 'error', '❌ 请求失败：' + err.message);
+      }
+    }
+
+    async function register() {
+      const email = `test_${Date.now()}@example.com`;
+      try {
+        const response = await fetch('http://localhost:3001/api/auth/register', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            password: 'Pass123#',
+            inviteCode: 'WELCOME2025'
+          })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          authToken = data.token;
+          localStorage.setItem('test_token', data.token);
+          setStatus('auth-status', 'success', `✅ 注册成功：${email}`);
+          displayJSON('auth-result', data);
+        } else {
+          setStatus('auth-status', 'error', '❌ 注册失败：' + data.message);
+        }
+      } catch (err) {
+        setStatus('auth-status', 'error', '❌ 请求失败：' + err.message);
+      }
+    }
+
+    async function testWorkbooks() {
+      if (!authToken) {
+        setStatus('workbooks-status', 'error', '❌ 请先登录');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3001/api/prompt-workbooks', {
+          credentials: 'include',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setStatus('workbooks-status', 'success', `✅ 获取成功：${data.data.length} 个工作簿`);
+          displayJSON('workbooks-result', data);
+
+          // Display table
+          const table = `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>名称</th>
+                  <th>图标</th>
+                  <th>系统</th>
+                  <th>字段数</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.data.map(wb => `
+                  <tr>
+                    <td>${wb.id}</td>
+                    <td>${wb.name}</td>
+                    <td>${wb.icon}</td>
+                    <td>${wb.is_system ? '✓' : ''}</td>
+                    <td>${wb.field_schema?.fields?.length || 0}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          document.getElementById('workbooks-table').innerHTML = table;
+        } else {
+          setStatus('workbooks-status', 'error', '❌ 请求失败：' + data.message);
+        }
+      } catch (err) {
+        setStatus('workbooks-status', 'error', '❌ 请求失败：' + err.message);
+      }
+    }
+
+    async function testTemplates() {
+      if (!authToken) {
+        setStatus('templates-status', 'error', '❌ 请先登录');
+        return;
+      }
+
+      const workbookId = document.getElementById('workbook-id').value;
+
+      try {
+        const response = await fetch(`http://localhost:3001/api/prompt-templates?workbook_id=${workbookId}`, {
+          credentials: 'include',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setStatus('templates-status', 'success', `✅ 获取成功：${data.data.length} 个模板`);
+          displayJSON('templates-result', data);
+
+          // Display table
+          const table = `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>名称</th>
+                  <th>内容预览</th>
+                  <th>标签</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.data.map(t => `
+                  <tr>
+                    <td>${t.id}</td>
+                    <td>${t.name}</td>
+                    <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                      ${t.content.substring(0, 50)}...
+                    </td>
+                    <td>${t.fields_data?.tags?.join(', ') || ''}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          document.getElementById('templates-table').innerHTML = table;
+        } else {
+          setStatus('templates-status', 'error', '❌ 请求失败：' + data.message);
+        }
+      } catch (err) {
+        setStatus('templates-status', 'error', '❌ 请求失败：' + err.message);
+      }
+    }
+
+    // Auto-test on load if token exists
+    if (authToken) {
+      testAuth();
+    }
+  </script>
+</body>
+</html>

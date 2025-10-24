@@ -364,6 +364,7 @@ export const TRANSLATIONS = {
         edit: 'Edit',
         delete: 'Delete',
         viewDetails: 'View Details',
+        viewHistory: 'View History',
         executeTask: 'Execute Task'
       },
       status: {
@@ -381,9 +382,17 @@ export const TRANSLATIONS = {
         totalRuns: 'Total Runs',
         successRate: 'Success Rate',
         lastRun: 'Last run',
+        avgDuration: 'Avg duration',
         untitledAgent: 'Untitled Agent',
         noDescription: 'No description available',
         openMenu: 'Open menu'
+      },
+      dashboard: {
+        totalExecutions: 'Total Executions',
+        successRate: 'Success Rate',
+        avgDuration: 'Avg Duration',
+        recentTrend: 'Recent 7-day trend',
+        completedVsTotal: 'Completed vs total'
       },
       editor: {
         createTitle: 'Create New Agent',
@@ -462,6 +471,70 @@ export const TRANSLATIONS = {
       deleteConfirm: {
         title: 'Delete Agent',
         description: 'Are you sure you want to delete "{name}"? This action cannot be undone.'
+      },
+      executor: {
+        title: 'Execute Task - {name}',
+        description: 'Run tasks using your AI agent\'s capabilities',
+        taskLabel: 'Task Description',
+        taskPlaceholder: 'Describe the task you want the agent to perform...',
+        progress: 'Progress',
+        subtaskFallback: 'Subtask',
+        buttons: {
+          execute: 'Execute Task',
+          stop: 'Stop Execution',
+          retry: 'Retry Task',
+          clear: 'Clear',
+          retryNow: 'Retry Now',
+          hideRaw: 'Hide Raw JSON',
+          showRaw: 'View Raw JSON'
+        },
+        status: {
+          idle: 'Idle',
+          running: 'Running',
+          completed: 'Completed',
+          failed: 'Failed',
+          stopped: 'Stopped',
+          taskId: 'Task: {id}',
+          executionId: 'Exec: {id}',
+          durationSeconds: '{seconds}s'
+        },
+        result: {
+          successTitle: 'Task Completed Successfully',
+          tokens: 'Tokens: {usage}',
+          failureTitle: 'Task Failed'
+        },
+        tabs: {
+          subtasks: 'Subtasks ({count})',
+          logs: 'Logs ({count})'
+        },
+        empty: {
+          subtasks: 'No subtasks yet',
+          logs: 'No logs yet'
+        },
+        logs: {
+          connected: 'Connected to realtime task stream',
+          disconnected: 'Realtime channel disconnected, switching to polling',
+          currentStep: 'Current step: {step}',
+          fetchSubtasksFailed: 'Failed to fetch subtasks: {message}',
+          completed: 'Task execution completed',
+          failed: 'Task execution failed',
+          cancelled: 'Task execution cancelled',
+          pollingFailed: 'Progress polling failed: {message}',
+          start: 'Starting task execution for agent: {name}',
+          retry: 'Retrying task execution for agent: {name}',
+          taskLine: 'Task: {task}',
+          sending: 'Sending task to agent...',
+          queued: 'Execution queued (task {id})',
+          executionStatus: 'Execution status: {status}',
+          error: 'Error: {message}',
+          stop: 'Task execution stopped by user',
+          stopFailed: 'Failed to stop task: {message}',
+          unknownError: 'Unknown error'
+        },
+        errors: {
+          incompleteResponse: 'Task execution response is incomplete',
+          executionFailed: 'Task execution failed'
+        }
       },
       toasts: {
         createSuccess: 'Agent created successfully',
@@ -1046,6 +1119,7 @@ export const TRANSLATIONS = {
         edit: '编辑',
         delete: '删除',
         viewDetails: '查看详情',
+        viewHistory: '查看历史',
         executeTask: '执行任务'
       },
       status: {
@@ -1063,9 +1137,17 @@ export const TRANSLATIONS = {
         totalRuns: '总运行次数',
         successRate: '成功率',
         lastRun: '最后运行',
+        avgDuration: '平均时长',
         untitledAgent: '未命名代理',
         noDescription: '暂无描述',
         openMenu: '打开菜单'
+      },
+      dashboard: {
+        totalExecutions: '总执行次数',
+        successRate: '成功率',
+        avgDuration: '平均时长',
+        recentTrend: '最近 7 日趋势',
+        completedVsTotal: '完成 / 总次数'
       },
       editor: {
         createTitle: '创建新代理',
@@ -1144,6 +1226,70 @@ export const TRANSLATIONS = {
       deleteConfirm: {
         title: '删除代理',
         description: '确定要删除"{name}"吗？此操作无法撤销。'
+      },
+      executor: {
+        title: '执行任务 - {name}',
+        description: '借助智能代理运行任务',
+        taskLabel: '任务描述',
+        taskPlaceholder: '描述您希望代理执行的任务...',
+        progress: '执行进度',
+        subtaskFallback: '子任务',
+        buttons: {
+          execute: '执行任务',
+          stop: '停止执行',
+          retry: '重新执行',
+          clear: '清空',
+          retryNow: '立即重试',
+          hideRaw: '隐藏原始 JSON',
+          showRaw: '查看原始 JSON'
+        },
+        status: {
+          idle: '待机',
+          running: '执行中',
+          completed: '已完成',
+          failed: '已失败',
+          stopped: '已停止',
+          taskId: '任务: {id}',
+          executionId: '执行: {id}',
+          durationSeconds: '{seconds}秒'
+        },
+        result: {
+          successTitle: '任务执行成功',
+          tokens: 'Tokens：{usage}',
+          failureTitle: '任务执行失败'
+        },
+        tabs: {
+          subtasks: '子任务 ({count})',
+          logs: '日志 ({count})'
+        },
+        empty: {
+          subtasks: '暂无子任务',
+          logs: '暂无日志'
+        },
+        logs: {
+          connected: '已连接实时任务通道',
+          disconnected: '实时通道断开，切换为轮询',
+          currentStep: '当前步骤: {step}',
+          fetchSubtasksFailed: '获取子任务失败: {message}',
+          completed: '任务执行完成',
+          failed: '任务执行失败',
+          cancelled: '任务执行已取消',
+          pollingFailed: '轮询进度失败: {message}',
+          start: '开始执行代理任务: {name}',
+          retry: '重新执行代理任务: {name}',
+          taskLine: '任务: {task}',
+          sending: '正在发送任务到代理...',
+          queued: '任务已排队 (ID {id})',
+          executionStatus: '执行状态: {status}',
+          error: '错误: {message}',
+          stop: '任务执行已由用户停止',
+          stopFailed: '停止任务失败: {message}',
+          unknownError: '未知错误'
+        },
+        errors: {
+          incompleteResponse: '任务执行返回数据不完整',
+          executionFailed: '任务执行失败'
+        }
       },
       toasts: {
         createSuccess: '代理创建成功',
@@ -1483,4 +1629,3 @@ export function getTranslationValue(language, key) {
   }
   return typeof current === 'string' ? current : undefined
 }
-

@@ -226,8 +226,9 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // 验证密码
-    const isValid = await verifyPassword(password, user.password_hash);
+    // 验证密码 - 兼容 password 和 password_hash 字段
+    const storedPassword = user.password || user.password_hash;
+    const isValid = await verifyPassword(password, storedPassword);
 
     if (!isValid) {
       // 登录失败，增加失败次数

@@ -47,6 +47,24 @@ function createDatabaseAdapter() {
     console.log('[Unified DB] ✅ Using better-sqlite3, 数据库路径:', DB_PATH);
 
     // 返回标准接口
+    const invokeCallback = (callback, err, info) => {
+      if (!callback) return;
+      if (err) {
+        callback.call({ lastID: undefined, changes: undefined }, err);
+        return;
+      }
+
+      const lastInsertRowid = info?.lastInsertRowid ?? info?.lastInsertRowId ?? info?.lastID ?? null;
+      if (info && lastInsertRowid !== undefined) {
+        info.lastID = lastInsertRowid;
+      }
+      const context = {
+        lastID: lastInsertRowid,
+        changes: info?.changes ?? 0
+      };
+      callback.call(context, null, info);
+    };
+
     return {
       run(sql, params, callback) {
         if (typeof params === 'function') {
@@ -55,10 +73,11 @@ function createDatabaseAdapter() {
         }
         try {
           const info = db.prepare(sql).run(...(Array.isArray(params) ? params : []));
-          if (callback) callback(null, info);
-          return info;
+          const result = info || {};
+          invokeCallback(callback, null, result);
+          return result;
         } catch (err) {
-          if (callback) callback(err);
+          if (callback) invokeCallback(callback, err);
           else throw err;
         }
       },
@@ -805,4 +824,3 @@ module.exports = {
   DB_PATH,
   JSON_DB_PATH
 };
-

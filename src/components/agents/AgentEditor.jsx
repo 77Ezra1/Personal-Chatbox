@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -36,6 +36,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { X, Plus, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useModelConfigDB } from '@/hooks/useModelConfigDB'
 
 // Agent schema
 const agentSchema = z.object({
@@ -44,6 +45,7 @@ const agentSchema = z.object({
   type: z.enum(['conversational', 'task-based', 'analytical', 'creative']),
   capabilities: z.array(z.string()).min(1, 'At least one capability required'),
   config: z.object({
+    provider: z.string().optional(),
     model: z.string().optional(),
     temperature: z.number().min(0).max(2).optional(),
     maxTokens: z.number().min(100).max(100000).optional(),
@@ -54,29 +56,123 @@ const agentSchema = z.object({
   }).optional(),
 })
 
-// Capability keys for translation
-const CAPABILITY_KEYS = [
-  'textGeneration',
-  'codeAnalysis',
-  'dataProcessing',
-  'webSearch',
-  'fileOperations',
-  'apiIntegration',
-  'taskAutomation',
-  'knowledgeRetrieval',
-  'imageAnalysis',
-  'documentParsing'
+const CAPABILITY_OPTIONS = [
+  { value: 'research', labelKey: 'agents.capabilities.research', fallback: 'Research' },
+  { value: 'data_processing', labelKey: 'agents.capabilities.dataProcessing', fallback: 'Data Processing' },
+  { value: 'writing', labelKey: 'agents.capabilities.writing', fallback: 'Writing' },
+  { value: 'analysis', labelKey: 'agents.capabilities.analysis', fallback: 'Analysis' },
+  { value: 'automation', labelKey: 'agents.capabilities.automation', fallback: 'Automation' }
 ]
 
-// Tool keys for translation
-const TOOL_KEYS = [
-  { key: 'webSearch', value: 'web_search' },
-  { key: 'fileReader', value: 'file_reader' },
-  { key: 'codeExecutor', value: 'code_executor' },
-  { key: 'apiCaller', value: 'api_caller' },
-  { key: 'dataAnalyzer', value: 'data_analyzer' },
-  { key: 'imageProcessor', value: 'image_processor' }
+const LEGACY_CAPABILITY_ALIASES = {
+  research: 'research',
+  'text generation': 'writing',
+  text_generation: 'writing',
+  '文本生成': 'writing',
+  writing: 'writing',
+  'code analysis': 'analysis',
+  code_analysis: 'analysis',
+  '代码分析': 'analysis',
+  analysis: 'analysis',
+  'data processing': 'data_processing',
+  data_processing: 'data_processing',
+  '数据处理': 'data_processing',
+  'web search': 'research',
+  web_search: 'research',
+  '网页搜索': 'research',
+  'task automation': 'automation',
+  task_automation: 'automation',
+  automation: 'automation',
+  '自动化': 'automation',
+  'knowledge retrieval': 'research',
+  knowledge_retrieval: 'research',
+  'image analysis': 'analysis',
+  image_analysis: 'analysis',
+  'document parsing': 'analysis',
+  document_parsing: 'analysis'
+}
+
+const TOOL_DEFINITIONS = [
+  { value: 'web_search', labelKey: 'agents.editor.tools.webSearch', fallback: 'Web Search' },
+  { value: 'read_file', labelKey: 'agents.editor.tools.readFile', fallback: 'Read File' },
+  { value: 'write_file', labelKey: 'agents.editor.tools.writeFile', fallback: 'Write File' },
+  { value: 'validate_data', labelKey: 'agents.editor.tools.validateData', fallback: 'Validate Data' },
+  { value: 'data_transform', labelKey: 'agents.editor.tools.dataTransform', fallback: 'Data Transform' }
 ]
+
+const LEGACY_TOOL_ALIASES = {
+  web_search: 'web_search',
+  'web search': 'web_search',
+  file_reader: 'read_file',
+  'file reader': 'read_file',
+  '文件读取': 'read_file',
+  file_writer: 'write_file',
+  'file writer': 'write_file',
+  '文件写入': 'write_file',
+  code_executor: 'data_transform',
+  'code executor': 'data_transform',
+  data_analyzer: 'data_transform',
+  'data analyzer': 'data_transform',
+  image_processor: 'data_transform',
+  api_caller: 'web_search'
+}
+
+const toTitleCase = (value = '') =>
+  value
+    .split(/[\s_]+/)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+
+const normalizeCapabilityValue = (value) => {
+  if (!value) return ''
+  const trimmed = value.toString().trim()
+  const lower = trimmed.toLowerCase()
+  if (LEGACY_CAPABILITY_ALIASES[lower]) return LEGACY_CAPABILITY_ALIASES[lower]
+  const underscored = lower.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+  if (LEGACY_CAPABILITY_ALIASES[underscored]) return LEGACY_CAPABILITY_ALIASES[underscored]
+  return underscored || trimmed
+}
+
+const normalizeToolValue = (value) => {
+  if (!value) return ''
+  const trimmed = value.toString().trim()
+  const lower = trimmed.toLowerCase()
+  if (LEGACY_TOOL_ALIASES[lower]) return LEGACY_TOOL_ALIASES[lower]
+  const underscored = lower.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+  if (LEGACY_TOOL_ALIASES[underscored]) return LEGACY_TOOL_ALIASES[underscored]
+  return underscored || trimmed
+}
+
+const normalizeCapabilityList = (capabilities = []) => {
+  const normalized = capabilities
+    .map(cap => normalizeCapabilityValue(cap))
+    .filter(Boolean)
+  return Array.from(new Set(normalized))
+}
+
+const normalizeToolList = (tools = []) => {
+  const normalized = tools
+    .map(tool => normalizeToolValue(tool))
+    .filter(Boolean)
+  return Array.from(new Set(normalized))
+}
+
+const getCapabilityLabel = (translateFn, value) => {
+  const option = CAPABILITY_OPTIONS.find(item => item.value === value)
+  if (option) {
+    return translateFn(option.labelKey, option.fallback)
+  }
+  return toTitleCase(value)
+}
+
+const getToolLabel = (translateFn, value) => {
+  const option = TOOL_DEFINITIONS.find(item => item.value === value)
+  if (option) {
+    return translateFn(option.labelKey, option.fallback)
+  }
+  return toTitleCase(value)
+}
 
 export function AgentEditor({
   agent = null,
@@ -86,8 +182,58 @@ export function AgentEditor({
   loading = false
 }) {
   const { translate } = useTranslation()
+  const {
+    modelConfig: globalModelConfig,
+    currentProvider: currentProviderFromSettings,
+    getProviderModels,
+    loading: modelConfigLoading
+  } = useModelConfigDB()
   const [customCapability, setCustomCapability] = useState('')
   const isEditing = !!agent
+  const resolvedProvider = agent?.config?.provider || currentProviderFromSettings || 'openai'
+  const defaultSystemPrompt = useMemo(() => (
+    agent?.config?.systemPrompt
+      || translate('agents.editor.defaults.systemPrompt', 'You are a helpful AI assistant. Please follow user instructions carefully and ask questions when clarification is needed.')
+  ), [agent?.config?.systemPrompt, translate])
+
+  const providerModels = useMemo(() => {
+    if (typeof getProviderModels !== 'function') return []
+    try {
+      const list = getProviderModels(resolvedProvider)
+      return Array.isArray(list) ? list.filter(Boolean) : []
+    } catch (error) {
+      console.error('[AgentEditor] Failed to load provider models:', error)
+      return []
+    }
+  }, [getProviderModels, resolvedProvider])
+
+  const availableModels = useMemo(() => {
+    const baseModels = [
+      'gpt-4o',
+      'gpt-4o-mini',
+      'gpt-4-turbo',
+      'gpt-4',
+      'gpt-3.5-turbo',
+      'claude-3-opus',
+      'claude-3-sonnet',
+      'deepseek-chat'
+    ]
+    const candidates = new Set(providerModels)
+    if (agent?.config?.model) {
+      candidates.add(agent.config.model)
+    }
+    if (globalModelConfig?.model) {
+      candidates.add(globalModelConfig.model)
+    }
+    baseModels.forEach(model => candidates.add(model))
+    return Array.from(candidates)
+  }, [providerModels, agent?.config?.model, globalModelConfig?.model])
+
+  const resolvedDefaultModel = agent?.config?.model
+    || globalModelConfig?.model
+    || providerModels[0]
+    || availableModels[0]
+    || 'gpt-4o'
 
   const form = useForm({
     resolver: zodResolver(agentSchema),
@@ -95,13 +241,14 @@ export function AgentEditor({
       name: agent?.name || '',
       description: agent?.description || '',
       type: agent?.type || 'conversational',
-      capabilities: agent?.capabilities || [],
+      capabilities: normalizeCapabilityList(agent?.capabilities || []),
       config: {
-        model: agent?.config?.model || 'gpt-4',
+        provider: resolvedProvider,
+        model: resolvedDefaultModel,
         temperature: agent?.config?.temperature || 0.7,
         maxTokens: agent?.config?.maxTokens || 4000,
-        systemPrompt: agent?.config?.systemPrompt || '',
-        tools: agent?.config?.tools || [],
+        systemPrompt: defaultSystemPrompt,
+        tools: normalizeToolList(agent?.tools || agent?.config?.tools || []),
         autoRetry: agent?.config?.autoRetry || false,
         maxRetries: agent?.config?.maxRetries || 3,
       }
@@ -114,65 +261,92 @@ export function AgentEditor({
         name: agent.name || '',
         description: agent.description || '',
         type: agent.type || 'conversational',
-        capabilities: agent.capabilities || [],
+        capabilities: normalizeCapabilityList(agent.capabilities || []),
         config: {
-          model: agent.config?.model || 'gpt-4',
+          provider: agent.config?.provider || resolvedProvider,
+          model: agent.config?.model || resolvedDefaultModel,
           temperature: agent.config?.temperature || 0.7,
           maxTokens: agent.config?.maxTokens || 4000,
-          systemPrompt: agent.config?.systemPrompt || '',
-          tools: agent.config?.tools || [],
+          systemPrompt: agent.config?.systemPrompt || defaultSystemPrompt,
+          tools: normalizeToolList(agent.tools || agent.config?.tools || []),
           autoRetry: agent.config?.autoRetry || false,
           maxRetries: agent.config?.maxRetries || 3,
         }
       })
+    } else {
+      if (form.getValues('config.provider') !== resolvedProvider) {
+        form.setValue('config.provider', resolvedProvider)
+      }
+      if (form.getValues('config.model') !== resolvedDefaultModel) {
+        form.setValue('config.model', resolvedDefaultModel)
+      }
+      if (!form.getValues('config.systemPrompt')) {
+        form.setValue('config.systemPrompt', defaultSystemPrompt)
+      }
     }
-  }, [agent, form])
+  }, [agent, form, resolvedDefaultModel, resolvedProvider, defaultSystemPrompt])
 
   const onSubmit = (data) => {
     // 转换为后端期望的格式
+    const normalizedCapabilities = normalizeCapabilityList(data.capabilities || [])
+    const normalizedTools = normalizeToolList(data.config?.tools || [])
+
     const agentData = {
       name: data.name,
       description: data.description || '',
       systemPrompt: data.config?.systemPrompt || '',
-      capabilities: data.capabilities || [],
-      tools: data.config?.tools || [],
+      capabilities: normalizedCapabilities,
+      tools: normalizedTools,
       config: {
         maxConcurrentTasks: 3,
         stopOnError: false,
         retryAttempts: data.config?.autoRetry ? (data.config?.maxRetries || 3) : 0,
-        model: data.config?.model || 'gpt-4o-mini',
+        provider: resolvedProvider,
+        model: data.config?.model || resolvedDefaultModel || 'gpt-4o-mini',
         temperature: data.config?.temperature || 0.7,
         maxTokens: data.config?.maxTokens || 4000,
+        systemPrompt: data.config?.systemPrompt || defaultSystemPrompt,
+        autoRetry: data.config?.autoRetry || false,
+        maxRetries: data.config?.maxRetries || 3,
       }
     }
     onSave?.(agentData)
   }
 
   const addCapability = (capability) => {
-    const current = form.getValues('capabilities')
-    if (!current.includes(capability)) {
-      form.setValue('capabilities', [...current, capability])
+    const normalized = normalizeCapabilityValue(capability)
+    if (!normalized) return
+    const current = form.getValues('capabilities') || []
+    if (!current.includes(normalized)) {
+      form.setValue('capabilities', [...current, normalized], { shouldValidate: true, shouldDirty: true })
     }
   }
 
   const removeCapability = (capability) => {
     const current = form.getValues('capabilities')
-    form.setValue('capabilities', current.filter(c => c !== capability))
+    form.setValue('capabilities', current.filter(c => c !== capability), { shouldDirty: true, shouldValidate: true })
   }
 
   const addCustomCapability = () => {
     if (customCapability.trim()) {
-      addCapability(customCapability.trim())
+      const normalized = normalizeCapabilityValue(customCapability)
+      addCapability(normalized)
       setCustomCapability('')
     }
   }
 
   const toggleTool = (tool) => {
+    const normalized = normalizeToolValue(tool)
+    if (!normalized) return
     const current = form.getValues('config.tools') || []
-    if (current.includes(tool)) {
-      form.setValue('config.tools', current.filter(t => t !== tool))
+    if (current.includes(normalized)) {
+      form.setValue(
+        'config.tools',
+        current.filter(t => t !== normalized),
+        { shouldDirty: true, shouldValidate: true }
+      )
     } else {
-      form.setValue('config.tools', [...current, tool])
+      form.setValue('config.tools', [...current, normalized], { shouldDirty: true, shouldValidate: true })
     }
   }
 
@@ -300,7 +474,7 @@ export function AgentEditor({
                           ) : (
                             field.value.map(cap => (
                               <Badge key={cap} variant="secondary" className="gap-1">
-                                {cap}
+                                {getCapabilityLabel(translate, cap)}
                                 <button
                                   type="button"
                                   onClick={() => removeCapability(cap)}
@@ -322,20 +496,21 @@ export function AgentEditor({
                       {translate('agents.editor.fields.availableCapabilities', 'Available Capabilities')}
                     </FormLabel>
                     <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-md">
-                      {CAPABILITY_KEYS.map(capKey => {
-                        const capLabel = translate(`agents.editor.capabilities.${capKey}`, capKey)
-                        const isSelected = form.watch('capabilities').includes(capLabel)
+                      {CAPABILITY_OPTIONS.map(option => {
+                        const selectedCapabilities = form.watch('capabilities') || []
+                        const isSelected = selectedCapabilities.includes(option.value)
+                        const label = translate(option.labelKey, option.fallback)
                         return (
                           <Button
-                            key={capKey}
+                            key={option.value}
                             type="button"
                             variant={isSelected ? 'default' : 'outline'}
                             size="sm"
-                            onClick={() => isSelected ? removeCapability(capLabel) : addCapability(capLabel)}
+                            onClick={() => isSelected ? removeCapability(option.value) : addCapability(option.value)}
                             className="gap-1"
                           >
                             {isSelected && <Plus className="size-3 rotate-45" />}
-                            {capLabel}
+                            {label}
                           </Button>
                         )
                       })}
@@ -367,8 +542,9 @@ export function AgentEditor({
                   <div className="space-y-2">
                     <FormLabel>{translate('agents.editor.fields.tools', 'Tools')}</FormLabel>
                     <div className="grid grid-cols-2 gap-2">
-                      {TOOL_KEYS.map(({ key, value }) => {
-                        const isSelected = (form.watch('config.tools') || []).includes(value)
+                      {TOOL_DEFINITIONS.map(({ value }) => {
+                        const tools = form.watch('config.tools') || []
+                        const isSelected = tools.includes(value)
                         return (
                           <Button
                             key={value}
@@ -382,7 +558,7 @@ export function AgentEditor({
                               "size-4 rounded-full border-2",
                               isSelected ? "bg-primary-foreground" : "bg-transparent"
                             )} />
-                            {translate(`agents.editor.tools.${key}`, value.replace(/_/g, ' '))}
+                            {getToolLabel(translate, value)}
                           </Button>
                         )
                       })}
@@ -398,20 +574,30 @@ export function AgentEditor({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{translate('agents.editor.fields.model', 'Model')}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={modelConfigLoading && availableModels.length === 0}
+                        >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder={translate('agents.editor.fields.modelPlaceholder', 'Select a model')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="gpt-4">GPT-4</SelectItem>
-                            <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                            <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                            <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                            <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
+                            {availableModels.map(model => (
+                              <SelectItem key={model} value={model}>
+                                {model}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
+                        <FormDescription>
+                          {translate(
+                            'agents.editor.fields.modelHint',
+                            'Models reflect your settings (provider: {provider}). Add more under Settings > Models.'
+                          ).replace('{provider}', resolvedProvider || 'default')}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

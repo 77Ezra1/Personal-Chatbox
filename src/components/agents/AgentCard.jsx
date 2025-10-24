@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Play,
-  Pause,
   Edit,
   Trash2,
   MoreVertical,
@@ -12,7 +11,9 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
+  Loader2,
+  History
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -29,17 +30,19 @@ const StatusBadge = memo(({ status }) => {
 
   const variants = {
     active: { variant: 'default', icon: CheckCircle2, label: translate('agents.status.active', 'Active') },
+    inactive: { variant: 'secondary', icon: Clock, label: translate('agents.status.inactive', 'Inactive') },
     idle: { variant: 'secondary', icon: Clock, label: translate('agents.status.idle', 'Idle') },
-    running: { variant: 'default', icon: Play, label: translate('agents.status.running', 'Running') },
+    busy: { variant: 'default', icon: Loader2, label: translate('agents.status.busy', 'Busy'), spin: true },
+    running: { variant: 'default', icon: Loader2, label: translate('agents.status.running', 'Running'), spin: true },
     error: { variant: 'destructive', icon: AlertCircle, label: translate('agents.status.error', 'Error') }
   }
 
-  const config = variants[status] || variants.idle
+  const config = variants[status] || variants.inactive
   const Icon = config.icon
 
   return (
     <Badge variant={config.variant} className="gap-1">
-      <Icon className="size-3" />
+      <Icon className={cn('size-3', config.spin && 'animate-spin')} />
       {config.label}
     </Badge>
   )
@@ -53,21 +56,32 @@ export const AgentCard = memo(({
   onEdit,
   onDelete,
   onViewDetails,
+  onViewHistory,
   className
 }) => {
   const { translate } = useTranslation()
   const {
-    id,
     name,
     description,
-    status = 'idle',
+    status = 'inactive',
     capabilities = [],
     lastRun,
     successRate = 0,
-    totalRuns = 0
+    totalRuns = 0,
+    avgDurationMs = 0
   } = agent || {}
 
-  const isRunning = status === 'running'
+  const isRunning = status === 'running' || status === 'busy'
+
+  const formatAverageDuration = (value) => {
+    if (!value && value !== 0) return '—'
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(2)}s`
+    }
+    return `${Math.round(value)} ms`
+  }
+
+  const avgDurationDisplay = formatAverageDuration(avgDurationMs)
 
   return (
     <Card
@@ -99,6 +113,10 @@ export const AgentCard = memo(({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onViewHistory?.(agent)}>
+                <History className="size-4" />
+                {translate('agents.actions.viewHistory', 'View History')}
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onViewDetails?.(agent)}>
                 {translate('agents.actions.viewDetails', 'View Details')}
               </DropdownMenuItem>
@@ -166,6 +184,11 @@ export const AgentCard = memo(({
           </div>
         </div>
 
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{translate('agents.card.avgDuration', 'Avg duration')}</span>
+          <span className="text-sm font-medium text-foreground">{avgDurationDisplay}</span>
+        </div>
+
         {/* Last Run */}
         {lastRun && (
           <div className="text-xs text-muted-foreground flex items-center gap-1">
@@ -183,8 +206,11 @@ export const AgentCard = memo(({
         >
           {isRunning ? (
             <>
-              <Pause className="size-4" />
-              {translate('agents.status.running', 'Running')}...
+              <Loader2 className="size-4 animate-spin" />
+              {status === 'busy'
+                ? translate('agents.status.busy', 'Busy')
+                : translate('agents.status.running', 'Running')
+              }...
             </>
           ) : (
             <>
