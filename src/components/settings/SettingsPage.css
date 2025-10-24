@@ -126,7 +126,8 @@
 }
 
 .settings-section {
-  max-width: 800px;
+  max-width: 100%;
+  /* 原来的 800px 限制太小，改为 100% 充分利用空间 */
 }
 
 .settings-section-title {

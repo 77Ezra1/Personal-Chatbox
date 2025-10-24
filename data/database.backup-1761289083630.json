@@ -3,14 +3,14 @@
     {
       "id": 1,
       "email": "test@example.com",
-      "password_hash": "$2b$10$f9swgb5xTXsQhw9DTiZ1y.jF.ZF.TnWo7sV23Ijk1hD80xBxvtT0O",
+      "password_hash": "$2b$10$9NPNG87IybEZMhJAAB9ewunQ8Org.jFK3kWS7GfFnZ5bn46DmdRjK",
       "username": "测试用户",
       "avatar_url": null,
       "created_at": "2025-10-17T18:07:58.406Z",
-      "last_login_at": "2025-10-24T07:05:08.744Z",
+      "last_login_at": null,
       "is_locked": 0,
       "locked_until": null,
-      "failed_login_attempts": "0"
+      "failed_login_attempts": 0
     }
   ],
   "oauth_accounts": [],
@@ -77,15 +77,6 @@
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "id": 7,
       "created_at": "2025-10-21T20:28:22.128Z"
-    },
-    {
-      "user_id": 1,
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc2MTI4OTUwOCwiZXhwIjoxNzYxODk0MzA4fQ.XkGC3mV0vrmbnF7WxDaomzQUBO96GKwEIDLYWoQ5Jsw",
-      "expires_at": "2025-10-31T07:05:08.747Z",
-      "ip_address": "127.0.0.1",
-      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 QuarkPC/4.6.0.558",
-      "id": 8,
-      "created_at": "2025-10-24T07:05:08.752Z"
     }
   ],
   "login_history": [
@@ -207,14 +198,6 @@
       "success": 1,
       "id": 14,
       "created_at": "2025-10-21T20:28:22.129Z"
-    },
-    {
-      "user_id": 1,
-      "ip_address": "127.0.0.1",
-      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 QuarkPC/4.6.0.558",
-      "success": 1,
-      "id": 15,
-      "created_at": "2025-10-24T07:05:08.753Z"
     }
   ],
   "conversations": [],
@@ -466,27 +449,7 @@
       "updated_at": "2025-10-19T12:02:02.008Z"
     }
   ],
-  "agent_tasks": [
-    {
-      "id": "70098e14-f852-4fd7-8402-74683c0ed10c",
-      "agent_id": "92d2cfcc-8c78-4476-be62-87da5dcef6c0",
-      "user_id": 1,
-      "title": "1111",
-      "description": "1111",
-      "input_data": "{}",
-      "status": "running",
-      "priority": 0,
-      "created_at": "2025-10-24T07:12:58.270Z",
-      "queued_at": "2025-10-24T07:12:58.297Z",
-      "attempts": 2,
-      "started_at": "2025-10-24T07:12:59.803Z",
-      "completed_at": "2025-10-24T07:12:59.805Z",
-      "duration_ms": null,
-      "last_error_type": "default",
-      "last_error_message": "Agent 不存在或无权限修改",
-      "output_data": "null"
-    }
-  ],
+  "agent_tasks": [],
   "context_memories": [],
   "conversation_summaries": [],
   "prompt_templates": [],
@@ -841,10 +804,6 @@
     {
       "id": 6,
       "created_at": "2025-10-24T05:36:36.205Z"
-    },
-    {
-      "id": 7,
-      "created_at": "2025-10-24T07:00:12.118Z"
     }
   ],
   "documents_fts": [
@@ -871,31 +830,6 @@
     {
       "id": 6,
       "created_at": "2025-10-24T05:36:36.209Z"
-    },
-    {
-      "id": 7,
-      "created_at": "2025-10-24T07:00:12.121Z"
-    }
-  ],
-  "agent_executions": [
-    {
-      "id": "2d25b525-b660-450c-b183-b3df6a7fa361",
-      "agent_id": "92d2cfcc-8c78-4476-be62-87da5dcef6c0",
-      "task_id": "70098e14-f852-4fd7-8402-74683c0ed10c",
-      "user_id": 1,
-      "status": "failed",
-      "progress": 0,
-      "started_at": "2025-10-24T07:12:59.803Z",
-      "queued_at": "2025-10-24T07:12:58.297Z",
-      "attempts": 2,
-      "retry_delay_ms": 1500,
-      "created_at": "2025-10-24T07:12:58.272Z",
-      "current_step": null,
-      "error_message": "Agent 不存在或无权限修改",
-      "last_error_type": "default",
-      "last_error_message": "Agent 不存在或无权限修改",
-      "completed_at": "2025-10-24T07:12:59.805Z",
-      "duration_ms": null
     }
   ]
 }

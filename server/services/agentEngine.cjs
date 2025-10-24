@@ -18,7 +18,7 @@ class AgentEngine {
     this.toolsLoaded = false;
     this.toolsLoadingPromise = null;
     this.lastToolRefresh = null;
-    
+
     // 性能优化：任务分解缓存 (Zero-cost optimization)
     this.taskCache = new Map();
     this.cacheMaxSize = parseInt(process.env.AGENT_CACHE_MAX_SIZE || '100', 10);
@@ -32,7 +32,7 @@ class AgentEngine {
       intervalMs: this.#parseInt(process.env.AGENT_TOOL_REFRESH_INTERVAL_MS, 600000)
     };
     console.log(`[AgentEngine] 任务缓存已启用: 最大${this.cacheMaxSize}项, TTL ${this.cacheTTL/1000}秒`);
-    
+
     this.registerDefaultTools();
     this.loadToolsFromDatabase().catch(error => {
       console.error('[AgentEngine] 初始化加载工具失败:', error);
@@ -1207,6 +1207,20 @@ class AgentEngine {
   async executeToolCall(subtask, agent) {
     const { toolName, parameters } = subtask.config;
     await this.ensureToolsLoaded();
+
+    // 检查是否是 MCP 工具（格式：serviceId_toolName）
+    if (toolName && toolName.includes('_')) {
+      // 尝试调用 MCP 工具
+      try {
+        const mcpResult = await this.callMcpTool(toolName, parameters);
+        return mcpResult;
+      } catch (mcpError) {
+        // 如果不是 MCP 工具或调用失败，继续使用本地工具
+        console.warn(`[AgentEngine] MCP 工具调用失败，尝试本地工具: ${toolName}`, mcpError.message);
+      }
+    }
+
+    // 使用本地注册的工具
     const tool = this.toolRegistry.get(toolName);
 
     if (!tool) {
@@ -1219,6 +1233,44 @@ class AgentEngine {
     };
 
     return await tool.execute(mergedParams, subtask.inputData || {}, { agent, subtask, tool });
+  }
+
+  /**
+   * 调用 MCP 工具
+   * @param {String} toolName - 工具名称（格式：serviceId_toolName）
+   * @param {Object} parameters - 工具参数
+   */
+  async callMcpTool(toolName, parameters = {}) {
+    const axios = require('axios');
+    const config = require('../config.cjs');
+
+    const baseURL = `http://localhost:${config.server.port}`;
+
+    try {
+      const response = await axios.post(`${baseURL}/api/mcp/call`, {
+        toolName,
+        parameters
+      }, {
+        timeout: 30000 // 30 秒超时
+      });
+
+      if (response.data.success) {
+        return {
+          type: 'mcp_tool_call',
+          toolName,
+          parameters,
+          result: response.data.content,
+          serviceId: response.data.serviceId,
+          actualToolName: response.data.actualToolName,
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        throw new Error(response.data.error || 'MCP 工具调用失败');
+      }
+    } catch (error) {
+      console.error('[AgentEngine] MCP 工具调用错误:', error.message);
+      throw new Error(`MCP 工具调用失败: ${error.message}`);
+    }
   }
 
   /**
@@ -2841,19 +2893,19 @@ AgentEngine.prototype.generateCacheKey = function(task, agent) {
  */
 AgentEngine.prototype.getFromCache = function(cacheKey) {
   const cached = this.taskCache.get(cacheKey);
-  
+
   if (!cached) {
     this.cacheStats.misses++;
     return null;
   }
-  
+
   // 检查是否过期
   if (Date.now() - cached.timestamp > this.cacheTTL) {
     this.taskCache.delete(cacheKey);
     this.cacheStats.misses++;
     return null;
   }
-  
+
   this.cacheStats.hits++;
   console.log(`[Cache] Hit! 命中率: ${(this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses) * 100).toFixed(2)}%`);
   return cached.data;
@@ -2868,7 +2920,7 @@ AgentEngine.prototype.saveToCache = function(cacheKey, data) {
     const firstKey = this.taskCache.keys().next().value;
     this.taskCache.delete(firstKey);
   }
-  
+
   this.taskCache.set(cacheKey, {
     data,
     timestamp: Date.now()

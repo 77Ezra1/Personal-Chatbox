@@ -81,13 +81,13 @@ router.post('/conversations', authMiddleware, async (req, res) => {
       return res.json({ message: '没有对话需要保存', count: 0 });
     }
 
-    // 获取数据库中现有的对话 ID
+    // 获取数据库中现有的对话 ID（TEXT 类型）
     const existingConversations = await db.prepare(
       'SELECT id FROM conversations WHERE user_id = ?'
     ).all(userId);
 
-    // 创建现有对话 ID 的 Set
-    const existingIds = new Set(existingConversations.map(c => c.id));
+    // 创建现有对话 ID 的 Set（支持 TEXT ID）
+    const existingIds = new Set(existingConversations.map(c => c.id).filter(id => id !== null));
 
     let totalMessages = 0;
     let updatedCount = 0;
@@ -99,13 +99,12 @@ router.post('/conversations', authMiddleware, async (req, res) => {
         const title = conv.title || '新对话';
         let dbId = null;
 
-        // 判断 conv.id 是否是数据库整数 ID（从数据库加载的）还是前端临时 ID（新创建的）
-        const isDbId = typeof conv.id === 'number' || (typeof conv.id === 'string' && /^\d+$/.test(conv.id));
-        const convIdAsInt = isDbId ? parseInt(conv.id, 10) : null;
+        // conversations 表的 id 是 TEXT 类型，直接使用字符串 ID
+        const convId = conv.id;
 
-        // 如果 ID 是数据库 ID 且存在于数据库中，则更新
-        if (convIdAsInt && existingIds.has(convIdAsInt)) {
-          dbId = convIdAsInt;
+        // 如果 ID 存在于数据库中，则更新；否则插入
+        if (convId && existingIds.has(convId)) {
+          dbId = convId;
           await db.prepare(
             `UPDATE conversations
              SET title = ?, updated_at = ?
@@ -120,19 +119,22 @@ router.post('/conversations', authMiddleware, async (req, res) => {
           logger.info(`[User Data] Updated conversation: ${title} (ID: ${dbId})`);
         } else {
           // 插入新对话（前端临时 ID，或者数据库中不存在的 ID）
-          const result = await db.prepare(
-            `INSERT INTO conversations (user_id, title, created_at, updated_at)
-             VALUES (?, ?, ?, ?)`
+          // 对话表的 id 是 TEXT 类型，使用前端提供的 ID
+          dbId = conv.id || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+
+          await db.prepare(
+            `INSERT INTO conversations (id, user_id, title, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?)`
           ).run(
+            dbId,
             userId,
             title,
             conv.createdAt || new Date().toISOString(),
             conv.updatedAt || new Date().toISOString()
           );
-          dbId = result.lastInsertRowid || result.lastID;
           existingIds.add(dbId);
           insertedCount++;
-          logger.info(`[User Data] Inserted new conversation: ${title} (ID: ${dbId}, frontend ID: ${conv.id})`);
+          logger.info(`[User Data] Inserted new conversation: ${title} (ID: ${dbId})`);
         }
 
         // 获取该对话现有消息的时间戳列表（用于去重）

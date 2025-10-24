@@ -214,18 +214,35 @@ async function callDeepSeekMCP({
   temperature = 0.7,
   maxTokens = 1024,
   onToken,
-  signal
+  signal,
+  tools = []  // ✅ 新增 tools 参数
 }) {
   try {
     logger.log('[callDeepSeekMCP] Calling backend MCP API')
     logger.log('[callDeepSeekMCP] Model:', model)
     logger.log('[callDeepSeekMCP] Messages:', messages.length)
+    logger.log('[callDeepSeekMCP] Tools:', tools.length)  // ✅ 记录工具数量
 
-    // 转换消息格式
-    const formattedMessages = messages.map(msg => ({
-      role: msg.role,
-      content: msg.content || ''
-    }))
+    // 转换消息格式，保留工具调用相关字段
+    const formattedMessages = messages.map(msg => {
+      const formatted = {
+        role: msg.role,
+        content: msg.content || ''
+      }
+
+      // ✅ 保留工具调用相关字段
+      if (msg.tool_calls) {
+        formatted.tool_calls = msg.tool_calls
+      }
+      if (msg.tool_call_id) {
+        formatted.tool_call_id = msg.tool_call_id
+      }
+      if (msg.name) {
+        formatted.name = msg.name
+      }
+
+      return formatted
+    })
 
     // 判断是否使用流式输出
     const useStream = !!onToken
@@ -243,6 +260,8 @@ async function callDeepSeekMCP({
         temperature,
         max_tokens: maxTokens,
         stream: useStream  // 启用流式输出
+        // ✅ 不需要传递 tools，后端会自动获取所有可用工具
+        // 后端的 /api/chat 路由会自动调用 mcpManager.getAllTools() 和其他服务工具
       }),
       signal
     })
@@ -446,11 +465,11 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
 
   const openAICompatibleConfig = OPENAI_COMPATIBLE_PROVIDER_CONFIG[provider]
   let result
-  
+
   // ========== DeepSeek MCP 路由 ==========
   if (provider === 'deepseek') {
     logger.log('[aiClient] DeepSeek detected, using MCP backend')
-    
+
     // 确定目标模型
     let targetModel = model || openAICompatibleConfig.defaultModel
     if (thinkingMode === THINKING_MODE.ADAPTIVE || thinkingMode === THINKING_MODE.ALWAYS_ON) {
@@ -458,7 +477,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
     } else {
       targetModel = deepThinking ? 'deepseek-reasoner' : 'deepseek-chat'
     }
-    
+
     // 调用后端 MCP API
     result = await callDeepSeekMCP({
       messages: requestMessages,
@@ -472,7 +491,7 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   // ========== 其他服务商使用原有逻辑 ==========
   else if (openAICompatibleConfig) {
     const endpoint = getProviderEndpoint(provider, modelConfig.endpoint)
-    
+
     result = await callOpenAICompatible({
       messages: requestMessages,
       model: model || openAICompatibleConfig.defaultModel,
@@ -489,13 +508,13 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   } else {
     switch (provider) {
       case 'anthropic':
-        result = await callAnthropic({ 
-          messages: requestMessages, 
-          model, 
-          apiKey, 
-          temperature, 
-          maxTokens, 
-          onToken, 
+        result = await callAnthropic({
+          messages: requestMessages,
+          model,
+          apiKey,
+          temperature,
+          maxTokens,
+          onToken,
           signal,
           endpoint: getProviderEndpoint('anthropic', modelConfig.endpoint),
           deepThinking,
@@ -503,13 +522,13 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
         })
         break
       case 'google':
-        result = await callGoogle({ 
-          messages: requestMessages, 
-          model, 
-          apiKey, 
-          temperature, 
-          maxTokens, 
-          onToken, 
+        result = await callGoogle({
+          messages: requestMessages,
+          model,
+          apiKey,
+          temperature,
+          maxTokens,
+          onToken,
           signal,
           baseUrl: getProviderEndpoint('google', modelConfig.endpoint),
           deepThinking,
@@ -517,13 +536,13 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
         })
         break
       case 'volcengine':
-        result = await callVolcengine({ 
-          messages: requestMessages, 
-          model, 
-          apiKey, 
-          temperature, 
-          maxTokens, 
-          onToken, 
+        result = await callVolcengine({
+          messages: requestMessages,
+          model,
+          apiKey,
+          temperature,
+          maxTokens,
+          onToken,
           signal,
           endpoint: getProviderEndpoint('volcengine', modelConfig.endpoint),
           deepThinking,
@@ -574,7 +593,7 @@ function sanitizeMessages(messages) {
         content: baseContent,
         attachments
       }
-      
+
       // 保留工具相关字段
       if (msg.tool_calls) {
         result.tool_calls = msg.tool_calls
@@ -585,7 +604,7 @@ function sanitizeMessages(messages) {
       if (msg.name) {
         result.name = msg.name
       }
-      
+
       return result
     })
 }
@@ -630,7 +649,7 @@ export function extractReasoningSegments(content) {
     .trim()
 
   const reasoning = reasoningMatches.join('\n\n')
-  
+
   // 如果有 answer 标签,使用标签内容;否则使用移除标签后的内容
   const answer = answerMatches.length > 0
     ? answerMatches.join('\n\n').trim()
@@ -764,7 +783,7 @@ async function callOpenAICompatible({
       const textParts = parts.filter(p => p.type === 'text').map(p => p.text)
       const imageParts = parts.filter(p => p.type === 'image_url').map(p => '[图片内容]')
       const allText = [...textParts, ...imageParts].join('\n\n')
-      
+
       const result = {
         role: msg.role,
         content: allText || ''
@@ -801,7 +820,7 @@ async function callOpenAICompatible({
   if (maxTokens !== -1) {
     requestBody.max_tokens = maxTokens
   }
-  
+
   // 输出完整的请求体用于调试
   logger.log('[AI] Request body:', JSON.stringify(requestBody, null, 2))
 
@@ -825,7 +844,7 @@ async function callOpenAICompatible({
     let fullText = ''
     let reasoningText = ''
     let toolCalls = []
-    
+
     try {
       await processEventStream(response.body, (event) => {
         const deltaText = extractOpenAIText(event?.choices?.[0]?.delta?.content)
@@ -856,17 +875,17 @@ async function callOpenAICompatible({
           })
         }
       })
-      
+
       const reasoning = normalizeReasoningContent(reasoningText)
       const result = { role: 'assistant', content: fullText, raw: null, reasoning }
       if (toolCalls.length > 0) {
         result.tool_calls = toolCalls.filter(tc => tc && tc.id)
       }
       return result
-      
+
     } catch (streamError) {
       logger.warn('[AI] Stream processing failed, falling back to non-stream:', streamError.message)
-      
+
       // Fallback: 重新发送非流式请求
       const fallbackRequestBody = {
         model,
@@ -876,13 +895,13 @@ async function callOpenAICompatible({
         ...(enableReasoning ? { reasoning: { effort: 'medium' } } : {}),
         ...(tools && tools.length > 0 ? { tools, tool_choice: 'auto' } : {})
       }
-      
+
       if (maxTokens !== -1) {
         fallbackRequestBody.max_tokens = maxTokens
       }
-      
+
       logger.log('[AI] Fallback request body:', JSON.stringify(fallbackRequestBody, null, 2))
-      
+
       const fallbackResponse = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -892,19 +911,19 @@ async function callOpenAICompatible({
         body: JSON.stringify(fallbackRequestBody),
         signal
       })
-      
+
       await ensureResponseOk(fallbackResponse)
-      
+
       const fallbackData = await fallbackResponse.json()
       const fallbackMessage = fallbackData?.choices?.[0]?.message ?? {}
       const fallbackContent = extractOpenAIText(fallbackMessage?.content)
       const fallbackReasoning = normalizeReasoningContent(fallbackMessage?.reasoning)
-      
+
       // 模拟流式输出
       if (onToken && fallbackContent) {
         onToken(fallbackContent, fallbackContent)
       }
-      
+
       const fallbackResult = { role: 'assistant', content: fallbackContent, raw: fallbackData, reasoning: fallbackReasoning }
       if (fallbackMessage.tool_calls && Array.isArray(fallbackMessage.tool_calls)) {
         fallbackResult.tool_calls = fallbackMessage.tool_calls
@@ -949,7 +968,7 @@ function extractOpenAIText(content) {
 async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', apiKey, temperature, maxTokens, onToken, signal, endpoint, deepThinking = false, thinkingMode = null }) {
   const shouldStream = !!onToken
   const apiUrl = endpoint || getProviderEndpoint('anthropic')
-  
+
   const requestBody = {
     model,
     temperature,
@@ -1016,7 +1035,7 @@ async function callAnthropic({ messages, model = 'claude-3-sonnet-20240229', api
     // 分离 thinking 和 text 内容块
     const thinkingBlocks = data.content.filter(block => block?.type === 'thinking')
     const textBlocks = data.content.filter(block => block?.type === 'text')
-    
+
     reasoning = thinkingBlocks.map(block => block?.thinking ?? '').join('\n').trim() || null
     content = textBlocks.map(block => block?.text ?? '').join('')
   } else {
@@ -1083,14 +1102,14 @@ async function callGoogle({ messages, model = 'gemini-pro', apiKey, temperature,
 
   const data = await response.json()
   const parts = data?.candidates?.[0]?.content?.parts ?? []
-  
+
   // 分离 thought 和普通 text
   const thoughtParts = parts.filter(part => part?.thought === true)
   const textParts = parts.filter(part => part?.thought !== true)
-  
+
   const reasoning = thoughtParts.map(part => part?.text ?? '').join('\n').trim() || null
   const content = textParts.map(part => part?.text ?? '').join('')
-  
+
   return { role: 'assistant', content, raw: data, reasoning }
 }
 

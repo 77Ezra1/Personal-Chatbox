@@ -5,6 +5,8 @@ import { PROVIDERS } from '@/lib/constants'
 import { toast } from 'sonner'
 import { TokenInfoDialog } from './TokenInfoDialog'
 import { detectThinkingMode } from '@/lib/modelThinkingDetector'
+import ModelCompatibilityInfo from '../settings/ModelCompatibilityInfo'
+import RecommendedModelsGuide from '../settings/RecommendedModelsGuide'
 
 /**
  * 配置面板组件
@@ -39,12 +41,12 @@ export function ConfigPanel({
       return
     }
     setModelInput(trimmedValue)
-    
+
     // 自动检测思考模式
     const detectedMode = detectThinkingMode(trimmedValue)
-    
-    setDraftConfig(prev => ({ 
-      ...prev, 
+
+    setDraftConfig(prev => ({
+      ...prev,
       model: trimmedValue,
       thinkingMode: detectedMode,  // 自动设置思考模式
       supportsDeepThinking: detectedMode !== 'disabled'  // 自动设置是否支持深度思考
@@ -70,7 +72,7 @@ export function ConfigPanel({
   }
 
   return (
-    <aside className={`config-panel ${isOpen ? 'open' : ''}`}>
+    <div className={showHeader ? `config-panel ${isOpen ? 'open' : ''}` : 'w-full'}>
       {/* 头部 */}
       {showHeader && (
         <div className="config-header">
@@ -82,7 +84,7 @@ export function ConfigPanel({
       )}
 
       {/* 配置表单 */}
-      <div className="config-form">
+      <div className={showHeader ? "config-form" : "space-y-4"}>
         {/* 提供商选择 */}
         <div className="config-field">
           <label>{translate('labels.provider', 'Provider')}</label>
@@ -155,7 +157,18 @@ export function ConfigPanel({
               ))}
             </div>
           )}
+
+          {/* 模型兼容性信息 */}
+          {currentModel && (
+            <ModelCompatibilityInfo
+              provider={currentProvider}
+              model={currentModel}
+            />
+          )}
         </div>
+
+        {/* 推荐模型指南 */}
+        <RecommendedModelsGuide />
 
         {/* API Key */}
         <div className="config-field">
@@ -169,10 +182,10 @@ export function ConfigPanel({
               placeholder="sk-..."
               style={{ paddingRight: '80px' }}
             />
-            <div style={{ 
-              position: 'absolute', 
-              right: '8px', 
-              top: '50%', 
+            <div style={{
+              position: 'absolute',
+              right: '8px',
+              top: '50%',
               transform: 'translateY(-50%)',
               display: 'flex',
               gap: '4px'
@@ -264,7 +277,7 @@ export function ConfigPanel({
             </Button>
           </div>
           <p className="config-hint">
-            {draftConfig.maxTokens === -1 
+            {draftConfig.maxTokens === -1
               ? translate?.('config.currentUnlimited', 'Current: Unlimited (using model maximum output tokens)')
               : `Current: ${draftConfig.maxTokens || 1024} tokens`}
           </p>
@@ -329,7 +342,7 @@ export function ConfigPanel({
         language={language}
         translate={translate}
       />
-    </aside>
+    </div>
   )
 }
 

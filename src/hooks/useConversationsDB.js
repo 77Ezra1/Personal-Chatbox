@@ -120,7 +120,7 @@ export function useConversationsDB() {
       }
 
       const { conversations: conversationList } = await response.json();
-      
+
       // 转换为对象格式
       const conversationsObj = {};
       conversationList.forEach(conv => {
@@ -132,8 +132,30 @@ export function useConversationsDB() {
       // 如果没有对话,创建一个新对话
       if (conversationList.length === 0) {
         const newConv = createConversation(DEFAULT_TITLE, 0);
-        setConversations({ [newConv.id]: newConv });
+        const newConversations = { [newConv.id]: newConv };
+        setConversations(newConversations);
         setCurrentConversationId(newConv.id);
+        setLoading(false);
+
+        // 立即保存新创建的对话到数据库（不等待 loading 状态更新）
+        logger.log('[useConversationsDB] Saving initial empty conversation to database...');
+        fetch('/api/user-data/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ conversations: newConversations })
+        })
+          .then(response => {
+            if (response.ok) {
+              logger.log('[useConversationsDB] Initial conversation saved successfully');
+            } else {
+              logger.error('[useConversationsDB] Failed to save initial conversation:', response.status);
+            }
+          })
+          .catch(err => {
+            logger.error('[useConversationsDB] Error saving initial conversation:', err);
+          });
+        return;
       } else {
         // 选择最新的对话
         const latestConv = conversationList.reduce((latest, conv) => {
@@ -219,13 +241,13 @@ export function useConversationsDB() {
   const addConversation = useCallback((title = DEFAULT_TITLE) => {
     const existingCount = Object.keys(conversations).length;
     const newConv = createConversation(title, existingCount);
-    
+
     setConversations(prev => {
       const updated = { ...prev, [newConv.id]: newConv };
       debouncedSave(updated);
       return updated;
     });
-    
+
     setCurrentConversationId(newConv.id);
     return newConv.id;
   }, [conversations, debouncedSave]);

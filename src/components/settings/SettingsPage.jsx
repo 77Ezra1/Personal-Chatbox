@@ -3,7 +3,7 @@ import { X, Settings as SettingsIcon, Palette, Globe, User, Info, MessageSquare,
 import { Button } from '@/components/ui/button'
 import { ConfigPanel } from '../config/ConfigPanel'
 import { SystemPromptConfigNew } from '../config/SystemPromptConfigNew'
-import McpServiceConfig from '../mcp/McpServiceConfig_Simple'
+import McpServicesPanel from '../mcp/McpServicesPanel'
 import { ApiKeysConfig } from './ApiKeysConfig'
 import ProxyConfig from './ProxyConfig'
 import { ShortcutSettings } from './ShortcutSettings'
@@ -155,7 +155,7 @@ export function SettingsPage({
                 <p className="settings-section-description">
                   {translate('settings.mcpServices.description', 'Configure external services to enhance AI capabilities with real-time information')}
                 </p>
-                <McpServiceConfig
+                <McpServicesPanel
                   language={language}
                   translate={translate}
                 />

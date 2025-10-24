@@ -6,6 +6,7 @@ import { CodePreview } from './CodePreview'
 import { CommandPalette } from '@/components/common/CommandPalette'
 import { commandManager } from '@/lib/commands'
 import { shortcutManager } from '@/lib/shortcuts'
+import ModelWarningBanner from './ModelWarningBanner'
 
 /**
  * 聊天容器组件
@@ -22,6 +23,7 @@ export const ChatContainer = memo(function ChatContainer({
   isDeepThinkingAvailable,
   isButtonDisabled,      // 新增
   thinkingMode,          // 新增
+  modelConfig,           // 新增：用于显示模型警告
   onSendMessage,
   onStopGeneration,
   onAddAttachment,
@@ -257,6 +259,8 @@ export const ChatContainer = memo(function ChatContainer({
     }
   }, [messages, devMode])
 
+  const [dismissedWarning, setDismissedWarning] = useState(false);
+
   return (
     <main className={`chat-area ${devMode ? 'chat-area--dev' : ''} ${isFullscreen ? 'chat-area--fullscreen' : ''}`}>
       {/* 头部 */}
@@ -270,6 +274,15 @@ export const ChatContainer = memo(function ChatContainer({
         onToggleDevMode={() => setDevMode(v => !v)}
         isDevMode={devMode}
       />
+
+      {/* 模型兼容性警告 */}
+      {modelConfig && !dismissedWarning && (
+        <ModelWarningBanner
+          provider={modelConfig.provider}
+          model={modelConfig.model}
+          onDismiss={() => setDismissedWarning(true)}
+        />
+      )}
 
       <div className="chat-split">
         <div className="chat-split-left">

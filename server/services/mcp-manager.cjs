@@ -419,30 +419,54 @@ class MCPManager extends EventEmitter {
 
   /**
    * 获取MCP服务信息（用于前端显示）
+   * 返回所有配置的服务，不仅仅是正在运行的
    * @returns {Object} 服务信息
    */
   getInfo() {
+    // 获取所有配置的服务（从config.services）
+    const config = require('../config.cjs');
+    const allConfiguredServices = [];
+
+    // 遍历配置文件中的所有服务
+    for (const [serviceId, serviceConfig] of Object.entries(config.services || {})) {
+      // 跳过原有的非MCP服务（它们在别的地方管理）
+      const nonMcpServices = ['weather', 'time', 'search', 'fetch', 'playwright'];
+      if (nonMcpServices.includes(serviceId)) {
+        continue;
+      }
+
+      // 检查服务是否正在运行
+      const runningService = this.services.get(serviceId);
+      const status = runningService ? runningService.status : 'stopped';
+      const tools = runningService ? runningService.tools : [];
+
+      allConfiguredServices.push({
+        id: serviceId,
+        name: serviceConfig.name || serviceId,
+        description: serviceConfig.description || '',
+        enabled: serviceConfig.enabled !== false,
+        status: status, // 'running' or 'stopped'
+        loaded: status === 'running',
+        requiresConfig: serviceConfig.requiresConfig || false,
+        signupUrl: serviceConfig.signupUrl || null,
+        apiKeyPlaceholder: serviceConfig.apiKeyPlaceholder || '输入 API Key',
+        toolCount: tools.length,
+        tools: tools.map(t => ({
+          name: t.name,
+          description: t.description || ''
+        })),
+        category: serviceConfig.category || 'other',
+        icon: serviceConfig.icon || null
+      });
+    }
+
     return {
       id: 'mcp',
       name: 'MCP服务管理器',
       description: '管理所有MCP服务',
       enabled: true,
       loaded: true,
-      services: Array.from(this.services.entries()).map(([serviceId, service]) => ({
-        id: serviceId,
-        name: service.config.name || serviceId,
-        description: service.config.description || '',
-        enabled: service.config.enabled !== false,
-        loaded: service.status === 'ready',
-        requiresConfig: service.config.requiresConfig || false,
-        signupUrl: service.config.signupUrl || null,
-        apiKeyPlaceholder: service.config.apiKeyPlaceholder || '输入 API Key',
-        toolCount: service.tools.length,
-        tools: service.tools.map(t => ({
-          name: t.name,
-          description: t.description || ''
-        }))
-      }))
+      services: allConfiguredServices
     };
   }
 }

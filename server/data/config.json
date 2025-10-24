@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "services": {
+    "openai": {
+      "enabled": false,
+      "apiKey": "",
+      "baseUrl": "https://api.openai.com/v1"
+    },
+    "deepseek": {
+      "enabled": true,
+      "apiKey": "",
+      "baseUrl": "https://api.deepseek.com",
+      "model": "deepseek-chat"
+    },
+    "proxy": {
+      "enabled": false,
+      "protocol": "http",
+      "host": "127.0.0.1",
+      "port": 7890
+    },
+    "braveSearch": {
+      "enabled": false,
+      "apiKey": ""
+    },
+    "github": {
+      "enabled": false,
+      "token": ""
+    },
+    "notion": {
+      "enabled": false,
+      "token": ""
+    },
+    "gmail": {
+      "enabled": false,
+      "clientId": "",
+      "clientSecret": "",
+      "refreshToken": ""
+    },
+    "googleCalendar": {
+      "enabled": false,
+      "clientId": "",
+      "clientSecret": "",
+      "refreshToken": ""
+    }
+  },
+  "createdAt": "2025-10-24T07:21:29.504Z",
+  "updatedAt": "2025-10-24T07:21:29.504Z"
+}

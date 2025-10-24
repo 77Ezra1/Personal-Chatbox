@@ -601,7 +601,11 @@ class TaskDecomposer {
       '  - dependencies: 依赖的子任务 ID 列表（使用数组）',
       '  - priority: 数字越大代表越重要/越晚执行',
       '- 如果无法明确输入数据，可使用空对象 {} 作为占位。',
-      '- 如果需要调用工具，请在 config 中提供必要参数。',
+      '- 如果需要调用工具，请优先使用 agent.tools 中已配置的 MCP 工具。',
+      '- 对于 type: tool_call 的子任务，请在 config 中指定：',
+      '  - toolName: 工具名称（从 agent.tools 列表中选择）',
+      '  - parameters: 工具参数对象',
+      '- MCP 工具格式为 serviceId_toolName，例如 wikipedia_findPage、filesystem_read_file。',
       '- 所有返回内容必须是有效的 JSON，禁止包含额外文本。'
     ];
 

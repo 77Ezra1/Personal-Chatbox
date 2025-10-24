@@ -3,14 +3,61 @@
     {
       "id": 1,
       "email": "test@example.com",
-      "password_hash": "$2b$10$f9swgb5xTXsQhw9DTiZ1y.jF.ZF.TnWo7sV23Ijk1hD80xBxvtT0O",
+      "password_hash": "$2b$10$9NPNG87IybEZMhJAAB9ewunQ8Org.jFK3kWS7GfFnZ5bn46DmdRjK",
       "username": "测试用户",
       "avatar_url": null,
       "created_at": "2025-10-17T18:07:58.406Z",
-      "last_login_at": "2025-10-24T07:05:08.744Z",
-      "is_locked": 0,
-      "locked_until": null,
-      "failed_login_attempts": "0"
+      "last_login_at": null,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z",
+      "failed_login_attempts": 5
+    },
+    {
+      "email": "your@email.com",
+      "password_hash": "$2b$10$2uBD11.qA9.YOJX3cols3u54nmlzCogY4N/8FLi.P/qh1y2w6.1Ze",
+      "username": null,
+      "id": 2,
+      "created_at": "2025-10-18T14:49:23.281Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
+    },
+    {
+      "email": "vaulttest@test.com",
+      "password_hash": "$2b$10$uLMDTwR7Qai6FO3nmkjt2u9nukxhAjpW/BHIyaz.kQIPpleWB5g1G",
+      "username": "VaultTest",
+      "id": 3,
+      "created_at": "2025-10-18T19:20:20.875Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
+    },
+    {
+      "email": "test1@example.com",
+      "password_hash": "$2b$10$KrQhsjdJ.QpcZ88cBeih9.oDto4fgdHaihrIu0xWzHDpAIFR6dAt6",
+      "username": null,
+      "id": 4,
+      "created_at": "2025-10-19T03:26:48.586Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
+    },
+    {
+      "email": "admin@chatbox.local",
+      "password_hash": "$2b$10$m1avELs3vBUAIDYq4MRXc.Ff9p8x3mjg6b9tFZY7me.OlQSQ5zg8S",
+      "username": null,
+      "id": 5,
+      "created_at": "2025-10-19T12:35:10.919Z",
+      "failed_login_attempts": 5,
+      "is_locked": "1",
+      "locked_until": "2025-10-21T20:40:57.825Z"
+    },
+    {
+      "email": "123@qq.com",
+      "password_hash": "$2b$10$1.sT6LZslbMjcObrJU6wSO6Oj60sDky6MSI/kkLqkALgVwTUhX69.",
+      "username": "123_1761078502126",
+      "id": 6,
+      "created_at": "2025-10-21T20:28:22.126Z"
     }
   ],
   "oauth_accounts": [],
@@ -34,7 +81,7 @@
       "created_at": "2025-10-17T19:09:01.856Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImVtYWlsIjoieW91ckBlbWFpbC5jb20iLCJpYXQiOjE3NjA3OTg5NjMsImV4cCI6MTc2MTQwMzc2M30.ATf4843IDKVY4Y3c-LmRSe-5l2bBRqGTP9yDE9XwGeg",
       "expires_at": "2025-10-25T14:49:23.283Z",
       "ip_address": "127.0.0.1",
@@ -43,7 +90,7 @@
       "created_at": "2025-10-18T14:49:23.283Z"
     },
     {
-      "user_id": 1,
+      "user_id": 3,
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImVtYWlsIjoidmF1bHR0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzYwODE1MjIwLCJleHAiOjE3NjE0MjAwMjB9.3WgxgwEdEEZIDAdAEuyJErtur-JJ2YROIzc3cTfyiMk",
       "expires_at": "2025-10-25T19:20:20.876Z",
       "ip_address": "127.0.0.1",
@@ -52,7 +99,7 @@
       "created_at": "2025-10-18T19:20:20.876Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImVtYWlsIjoidGVzdDFAZXhhbXBsZS5jb20iLCJpYXQiOjE3NjA4NDQ0MDgsImV4cCI6MTc2MTQ0OTIwOH0.d26WjNpTBBXWm2uTDpNIqZ8WgV6Au-9Y8dBsKbRMyvE",
       "expires_at": "2025-10-26T03:26:48.598Z",
       "ip_address": "127.0.0.1",
@@ -61,7 +108,7 @@
       "created_at": "2025-10-19T03:26:48.599Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsImVtYWlsIjoiYWRtaW5AY2hhdGJveC5sb2NhbCIsImlhdCI6MTc2MDg3NzMxMCwiZXhwIjoxNzYxNDgyMTEwfQ.zIIdua08SzYz1AdB3ZOe8U8qeS-NSmvpfGEqOyRMTmA",
       "expires_at": "2025-10-26T12:35:10.920Z",
       "ip_address": "127.0.0.1",
@@ -70,22 +117,13 @@
       "created_at": "2025-10-19T12:35:10.920Z"
     },
     {
-      "user_id": 1,
+      "user_id": 6,
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYsImVtYWlsIjoiMTIzQHFxLmNvbSIsImlhdCI6MTc2MTA3ODUwMiwiZXhwIjoxNzYxNjgzMzAyfQ.1Uacp_TCOhBRVUQyPmFy6DoJA_0tkMGuY-5JwDPBrFo",
       "expires_at": "2025-10-28T20:28:22.128Z",
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "id": 7,
       "created_at": "2025-10-21T20:28:22.128Z"
-    },
-    {
-      "user_id": 1,
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc2MTI4OTUwOCwiZXhwIjoxNzYxODk0MzA4fQ.XkGC3mV0vrmbnF7WxDaomzQUBO96GKwEIDLYWoQ5Jsw",
-      "expires_at": "2025-10-31T07:05:08.747Z",
-      "ip_address": "127.0.0.1",
-      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 QuarkPC/4.6.0.558",
-      "id": 8,
-      "created_at": "2025-10-24T07:05:08.752Z"
     }
   ],
   "login_history": [
@@ -106,7 +144,7 @@
       "created_at": "2025-10-17T19:09:01.857Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 1,
@@ -132,7 +170,7 @@
       "created_at": "2025-10-18T19:19:56.059Z"
     },
     {
-      "user_id": 1,
+      "user_id": 3,
       "ip_address": "127.0.0.1",
       "user_agent": "curl/8.7.1",
       "success": 1,
@@ -140,7 +178,7 @@
       "created_at": "2025-10-18T19:20:20.877Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 QuarkPC/4.5.5.535",
       "success": 1,
@@ -148,7 +186,7 @@
       "created_at": "2025-10-19T03:26:48.601Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 1,
@@ -156,7 +194,7 @@
       "created_at": "2025-10-19T12:35:10.920Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 0,
@@ -165,7 +203,7 @@
       "created_at": "2025-10-21T20:25:05.815Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 0,
@@ -174,7 +212,7 @@
       "created_at": "2025-10-21T20:25:06.828Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 0,
@@ -183,7 +221,7 @@
       "created_at": "2025-10-21T20:25:07.147Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 0,
@@ -192,7 +230,7 @@
       "created_at": "2025-10-21T20:25:18.334Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 0,
@@ -201,20 +239,12 @@
       "created_at": "2025-10-21T20:25:57.827Z"
     },
     {
-      "user_id": 1,
+      "user_id": 6,
       "ip_address": "127.0.0.1",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       "success": 1,
       "id": 14,
       "created_at": "2025-10-21T20:28:22.129Z"
-    },
-    {
-      "user_id": 1,
-      "ip_address": "127.0.0.1",
-      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 QuarkPC/4.6.0.558",
-      "success": 1,
-      "id": 15,
-      "created_at": "2025-10-24T07:05:08.753Z"
     }
   ],
   "conversations": [],
@@ -466,34 +496,14 @@
       "updated_at": "2025-10-19T12:02:02.008Z"
     }
   ],
-  "agent_tasks": [
-    {
-      "id": "70098e14-f852-4fd7-8402-74683c0ed10c",
-      "agent_id": "92d2cfcc-8c78-4476-be62-87da5dcef6c0",
-      "user_id": 1,
-      "title": "1111",
-      "description": "1111",
-      "input_data": "{}",
-      "status": "running",
-      "priority": 0,
-      "created_at": "2025-10-24T07:12:58.270Z",
-      "queued_at": "2025-10-24T07:12:58.297Z",
-      "attempts": 2,
-      "started_at": "2025-10-24T07:12:59.803Z",
-      "completed_at": "2025-10-24T07:12:59.805Z",
-      "duration_ms": null,
-      "last_error_type": "default",
-      "last_error_message": "Agent 不存在或无权限修改",
-      "output_data": "null"
-    }
-  ],
+  "agent_tasks": [],
   "context_memories": [],
   "conversation_summaries": [],
   "prompt_templates": [],
   "user_mcp_configs": [],
   "notes": [
     {
-      "user_id": 1,
+      "user_id": 2,
       "title": "你好",
       "content": "",
       "category": "default",
@@ -503,7 +513,7 @@
       "updated_at": "2025-10-18T16:51:32.402Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "title": "你好",
       "content": "",
       "category": "default",
@@ -513,7 +523,7 @@
       "updated_at": "2025-10-18T16:51:39.318Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "title": "少爷阿闯",
       "content": "<ol><li><p>我们之间还能再见吗？</p></li><li><p>应该是不会了</p><ol><li><p>可能</p></li></ol></li></ol><p></p>",
       "category": "default",
@@ -523,7 +533,7 @@
       "updated_at": "2025-10-18T19:06:04.779Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "title": "你好",
       "content": "",
       "category": "default",
@@ -533,7 +543,7 @@
       "updated_at": "2025-10-19T01:26:04.696Z"
     },
     {
-      "user_id": 1,
+      "user_id": 2,
       "title": "一个",
       "content": "<p>一个</p><p></p>",
       "category": "个人",
@@ -543,7 +553,7 @@
       "updated_at": "2025-10-19T18:47:27.249Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "111",
       "content": "<p></p><p></p>",
       "category": "default",
@@ -553,7 +563,7 @@
       "updated_at": "2025-10-19T08:19:17.912Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "11111",
       "content": "",
       "category": "default",
@@ -563,7 +573,7 @@
       "updated_at": "2025-10-19T08:19:50.475Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "1111",
       "content": "",
       "category": "default",
@@ -573,7 +583,7 @@
       "updated_at": "2025-10-19T08:55:40.727Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "111",
       "content": "",
       "category": "default",
@@ -583,7 +593,7 @@
       "updated_at": "2025-10-19T08:55:59.062Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "1111",
       "content": "",
       "category": "default",
@@ -593,7 +603,7 @@
       "updated_at": "2025-10-19T09:12:57.540Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "222222",
       "content": "",
       "category": "default",
@@ -603,7 +613,7 @@
       "updated_at": "2025-10-19T09:20:13.298Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "33333333",
       "content": "",
       "category": "default",
@@ -613,7 +623,7 @@
       "updated_at": "2025-10-19T09:20:18.931Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "666666",
       "content": "",
       "category": "default",
@@ -623,7 +633,7 @@
       "updated_at": "2025-10-19T09:20:27.098Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "555555",
       "content": "",
       "category": "default",
@@ -633,7 +643,7 @@
       "updated_at": "2025-10-19T09:21:06.591Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "777777",
       "content": "",
       "category": "default",
@@ -643,7 +653,7 @@
       "updated_at": "2025-10-19T09:21:14.448Z"
     },
     {
-      "user_id": 1,
+      "user_id": 4,
       "title": "888888",
       "content": "",
       "category": "default",
@@ -653,7 +663,7 @@
       "updated_at": "2025-10-19T09:21:23.862Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "一个",
       "content": "<p>一个</p><p></p>",
       "category": "default",
@@ -663,7 +673,7 @@
       "updated_at": "2025-10-19T14:43:52.844Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "1个",
       "content": "",
       "category": "default",
@@ -673,7 +683,7 @@
       "updated_at": "2025-10-19T14:50:19.765Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "2个",
       "content": "",
       "category": "default",
@@ -683,7 +693,7 @@
       "updated_at": "2025-10-19T14:51:44.714Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "1111",
       "content": "",
       "category": "default",
@@ -693,7 +703,7 @@
       "updated_at": "2025-10-19T15:10:11.619Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "111",
       "content": "",
       "category": "default",
@@ -703,7 +713,7 @@
       "updated_at": "2025-10-19T15:20:25.000Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "111",
       "content": "",
       "category": "default",
@@ -713,7 +723,7 @@
       "updated_at": "2025-10-19T15:39:58.540Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "111",
       "content": "",
       "category": "default",
@@ -723,7 +733,7 @@
       "updated_at": "2025-10-19T15:50:31.183Z"
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "title": "99999",
       "content": "<p>9999999</p>",
       "category": "公司",
@@ -776,7 +786,7 @@
   ],
   "note_categories": [
     {
-      "user_id": 1,
+      "user_id": 5,
       "name": "一个",
       "color": "#6366f1",
       "description": "",
@@ -787,7 +797,7 @@
       "id": 1
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "name": "个人",
       "color": "#6366f1",
       "description": "",
@@ -798,7 +808,7 @@
       "id": 2
     },
     {
-      "user_id": 1,
+      "user_id": 5,
       "name": "公司",
       "color": "#6366f1",
       "description": "",
@@ -841,10 +851,6 @@
     {
       "id": 6,
       "created_at": "2025-10-24T05:36:36.205Z"
-    },
-    {
-      "id": 7,
-      "created_at": "2025-10-24T07:00:12.118Z"
     }
   ],
   "documents_fts": [
@@ -871,31 +877,6 @@
     {
       "id": 6,
       "created_at": "2025-10-24T05:36:36.209Z"
-    },
-    {
-      "id": 7,
-      "created_at": "2025-10-24T07:00:12.121Z"
-    }
-  ],
-  "agent_executions": [
-    {
-      "id": "2d25b525-b660-450c-b183-b3df6a7fa361",
-      "agent_id": "92d2cfcc-8c78-4476-be62-87da5dcef6c0",
-      "task_id": "70098e14-f852-4fd7-8402-74683c0ed10c",
-      "user_id": 1,
-      "status": "failed",
-      "progress": 0,
-      "started_at": "2025-10-24T07:12:59.803Z",
-      "queued_at": "2025-10-24T07:12:58.297Z",
-      "attempts": 2,
-      "retry_delay_ms": 1500,
-      "created_at": "2025-10-24T07:12:58.272Z",
-      "current_step": null,
-      "error_message": "Agent 不存在或无权限修改",
-      "last_error_type": "default",
-      "last_error_message": "Agent 不存在或无权限修改",
-      "completed_at": "2025-10-24T07:12:59.805Z",
-      "duration_ms": null
     }
   ]
 }

@@ -37,6 +37,7 @@ import { X, Plus, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useModelConfigDB } from '@/hooks/useModelConfigDB'
+import { useMcpTools } from '@/hooks/useMcpTools'
 
 // Agent schema
 const agentSchema = z.object({
@@ -188,7 +189,9 @@ export function AgentEditor({
     getProviderModels,
     loading: modelConfigLoading
   } = useModelConfigDB()
+  const { flatTools, toolsByCategory, toolsByService, loading: mcpToolsLoading } = useMcpTools()
   const [customCapability, setCustomCapability] = useState('')
+  const [showMcpTools, setShowMcpTools] = useState(true)
   const isEditing = !!agent
   const resolvedProvider = agent?.config?.provider || currentProviderFromSettings || 'openai'
   const defaultSystemPrompt = useMemo(() => (
@@ -539,30 +542,116 @@ export function AgentEditor({
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <FormLabel>{translate('agents.editor.fields.tools', 'Tools')}</FormLabel>
-                    <div className="grid grid-cols-2 gap-2">
-                      {TOOL_DEFINITIONS.map(({ value }) => {
-                        const tools = form.watch('config.tools') || []
-                        const isSelected = tools.includes(value)
-                        return (
-                          <Button
-                            key={value}
-                            type="button"
-                            variant={isSelected ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => toggleTool(value)}
-                            className="justify-start gap-2"
-                          >
-                            <div className={cn(
-                              "size-4 rounded-full border-2",
-                              isSelected ? "bg-primary-foreground" : "bg-transparent"
-                            )} />
-                            {getToolLabel(translate, value)}
-                          </Button>
-                        )
-                      })}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <FormLabel>{translate('agents.editor.fields.tools', 'Tools')}</FormLabel>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Switch
+                          checked={showMcpTools}
+                          onCheckedChange={setShowMcpTools}
+                          className="scale-75"
+                        />
+                        <span>MCP Services</span>
+                      </div>
                     </div>
+
+                    {mcpToolsLoading ? (
+                      <div className="text-sm text-muted-foreground text-center py-4">
+                        加载 MCP 工具中...
+                      </div>
+                    ) : showMcpTools && flatTools.length > 0 ? (
+                      <div className="space-y-3">
+                        {/* 按类别分组显示 MCP 工具 */}
+                        <ScrollArea className="h-[300px] rounded-md border p-3">
+                          {Object.entries(toolsByCategory).map(([category, { name, tools: categoryTools }]) => (
+                            <div key={category} className="mb-4 last:mb-0">
+                              <div className="text-xs font-medium text-muted-foreground mb-2 px-1">
+                                {name} ({categoryTools.length})
+                              </div>
+                              <div className="grid grid-cols-1 gap-1.5">
+                                {categoryTools.map((tool) => {
+                                  const selectedTools = form.watch('config.tools') || []
+                                  const isSelected = selectedTools.includes(tool.value)
+                                  return (
+                                    <Button
+                                      key={tool.value}
+                                      type="button"
+                                      variant={isSelected ? 'default' : 'ghost'}
+                                      size="sm"
+                                      onClick={() => toggleTool(tool.value)}
+                                      className="justify-start gap-2 h-auto py-2 px-3"
+                                    >
+                                      <div className={cn(
+                                        "size-3 rounded-full border-2 flex-shrink-0",
+                                        isSelected ? "bg-primary-foreground border-primary-foreground" : "bg-transparent border-muted-foreground/50"
+                                      )} />
+                                      <div className="flex-1 text-left min-w-0">
+                                        <div className="font-medium text-xs truncate">{tool.toolName}</div>
+                                        <div className="text-xs text-muted-foreground line-clamp-1">{tool.description}</div>
+                                      </div>
+                                    </Button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </ScrollArea>
+
+                        {/* 选中的工具统计 */}
+                        {(() => {
+                          const selectedTools = form.watch('config.tools') || []
+                          return selectedTools.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {selectedTools.map(toolId => {
+                                const tool = flatTools.find(t => t.value === toolId)
+                                if (!tool) return null
+                                return (
+                                  <Badge
+                                    key={toolId}
+                                    variant="secondary"
+                                    className="text-xs gap-1"
+                                  >
+                                    {tool.toolName}
+                                    <X
+                                      className="size-3 cursor-pointer hover:text-destructive"
+                                      onClick={() => toggleTool(toolId)}
+                                    />
+                                  </Badge>
+                                )
+                              })}
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    ) : showMcpTools ? (
+                      <div className="text-sm text-muted-foreground text-center py-8 border rounded-md bg-muted/30">
+                        <p className="mb-2">暂无可用的 MCP 工具</p>
+                        <p className="text-xs">请先在设置中启用 MCP Services</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {TOOL_DEFINITIONS.map(({ value }) => {
+                          const tools = form.watch('config.tools') || []
+                          const isSelected = tools.includes(value)
+                          return (
+                            <Button
+                              key={value}
+                              type="button"
+                              variant={isSelected ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => toggleTool(value)}
+                              className="justify-start gap-2"
+                            >
+                              <div className={cn(
+                                "size-4 rounded-full border-2",
+                                isSelected ? "bg-primary-foreground" : "bg-transparent"
+                              )} />
+                              {getToolLabel(translate, value)}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
 

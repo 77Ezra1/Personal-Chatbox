@@ -38,6 +38,7 @@ import { generateAIResponse, extractReasoningSegments } from '@/lib/aiClient'
 import { readFileAsDataUrl, createAttachmentId } from '@/lib/utils'
 import { PROVIDERS } from '@/lib/constants'
 import { createLogger } from '@/lib/logger'
+import { supportsFunctionCalling } from '@/lib/modelCompatibility'
 
 import './App.css'
 
@@ -46,10 +47,10 @@ const logger = createLogger('App')
 
 function App() {
   // ==================== Hooks ====================
-  
+
   // 数据迁移
   const { migrationStatus } = useDataMigration()
-  
+
   // 对话管理
   const {
     conversations,
@@ -112,7 +113,7 @@ function App() {
   const { getAllTools, callTool, loading: mcpLoading, error: mcpError } = useMcpManager()
 
   // ==================== 本地状态 ====================
-  
+
   const [showSettings, setShowSettings] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
@@ -125,13 +126,13 @@ function App() {
     onConfirm: null,
     variant: 'default'
   })
-  
+
   const abortControllerRef = useRef(null)
 
   // ==================== 初始化 ====================
 
   // ==================== 附件处理 ====================
-  
+
   const handleAddAttachment = useCallback(async (file) => {
     try {
       const dataUrl = await readFileAsDataUrl(file)
@@ -154,19 +155,31 @@ function App() {
   }, [])
 
   // ==================== 优化: 缓存 MCP 工具列表 ====================
-  
+
   // 缓存工具列表，避免每次渲染都重新获取
+  // 同时检查模型是否支持 Function Calling
   const mcpTools = useMemo(() => {
+    // 检查当前模型是否支持 Function Calling
+    const modelSupportsFc = supportsFunctionCalling(modelConfig.provider, modelConfig.model)
+
+    // 如果不支持，返回空数组，禁用工具调用
+    if (!modelSupportsFc) {
+      logger.warn(`[App] Model ${modelConfig.provider}/${modelConfig.model} does not support Function Calling, tools disabled`)
+      return []
+    }
+
     try {
-      return getAllTools()
+      const tools = getAllTools()
+      logger.log(`[App] Loaded ${tools.length} MCP tools for model ${modelConfig.model}`)
+      return tools
     } catch (error) {
       logger.error('[App] Failed to get MCP tools:', error)
       return []
     }
-  }, [getAllTools])
+  }, [getAllTools, modelConfig.provider, modelConfig.model, supportsFunctionCalling])
 
   // ==================== 消息处理 ====================
-  
+
   const regenerateAssistantReply = useCallback(async ({ messages, placeholderMessage }) => {
     if (!currentConversationId) return
 
@@ -232,7 +245,7 @@ function App() {
       // 检查是否有工具调用
       if (response?.tool_calls && Array.isArray(response.tool_calls) && response.tool_calls.length > 0) {
         logger.log('[App] 检测到工具调用，开始处理MCP服务请求')
-        
+
         // 更新消息显示工具调用正在进行
         updateMessage(currentConversationId, placeholderMessage.id, () => ({
           content: '正在调用MCP服务获取信息...',
@@ -243,21 +256,21 @@ function App() {
             ...(usageData ? { usage: usageData } : {})
           }
         }))
-        
+
         // 执行工具调用
         const toolResults = []
         let toolCallReasoning = accumulatedReasoning || ''
-        
+
         for (const toolCall of response.tool_calls) {
           try {
             logger.log('[App] Processing tool call:', toolCall)
             const args = JSON.parse(toolCall.function.arguments)
-            
+
             // 在思考过程中记录工具调用
             toolCallReasoning += `\n\n[MCP服务调用] ${toolCall.function.name}\n参数: ${JSON.stringify(args, null, 2)}\n`
-            
+
             const result = await callTool(toolCall.function.name, args)
-            
+
             // 在思考过程中记录工具调用结果
             if (result.success) {
               toolCallReasoning += `[搜索结果获取成功]\n${result.content}\n`
@@ -286,7 +299,7 @@ function App() {
             })
           }
         }
-        
+
         // 将工具调用和结果添加到消息历史
         const messagesWithTools = [
           ...messages,
@@ -297,7 +310,7 @@ function App() {
           },
           ...toolResults
         ]
-        
+
         // 添加系统提示，指导AI如何处理工具结果
         const systemPromptForToolResult = `
 你现在已经获得了详细的搜索结果。请立即基于这些信息生成一个完整的回复：
@@ -313,7 +326,7 @@ function App() {
 
 **现在就开始生成完整的回复，基于搜索结果提供有价值的分析。**
 `
-        
+
         // 使用工具结果重新生成回复，不再允许再次调用工具
         const finalResponse = await generateAIResponse({
           messages: [
@@ -352,7 +365,7 @@ function App() {
                 currentReasoning = toolCallReasoning + '\n\n[分析整理过程]\n' + segments.reasoning
               }
             }
-            
+
             updateMessage(currentConversationId, placeholderMessage.id, () => ({
               content: displayContent,
               status: 'loading',
@@ -365,7 +378,7 @@ function App() {
             }))
           }
         })
-        
+
         // 处理最终响应
         let finalContent = typeof finalResponse?.content === 'string'
           ? finalResponse.content
@@ -386,7 +399,7 @@ function App() {
           }
           logger.log('[App] Tool call final usage:', usageData)
         }
-        
+
         // 提取最终的推理内容
         const contentForExtraction = finalContent || accumulatedContent
         if (contentForExtraction) {
@@ -396,7 +409,7 @@ function App() {
             finalReasoning = toolCallReasoning + '\n\n[分析整理过程]\n' + segments.reasoning
           }
         }
-        
+
         updateMessage(currentConversationId, placeholderMessage.id, () => ({
           content: finalContent,
           status: 'done',
@@ -444,18 +457,18 @@ function App() {
           modelConfig,
           tools: tools?.length || 0
         })
-        
+
         // 显示更具体的错误信息
         if (error.message?.includes('API key') || error.message?.includes('configure')) {
           toast.error(language === 'zh' ? '请先在设置中配置 API 密钥' : 'Please configure API key in settings first')
         } else {
           toast.error(translate('toasts.failedToGenerate'))
         }
-        
+
         updateMessage(currentConversationId, placeholderMessage.id, () => ({
           status: 'error',
-          content: error.message?.includes('API key') 
-            ? (language === 'zh' ? '⚠️ 请先配置 API 密钥\n\n请点击左侧设置图标，选择 AI 服务提供商（如 DeepSeek），并输入您的 API 密钥。' 
+          content: error.message?.includes('API key')
+            ? (language === 'zh' ? '⚠️ 请先配置 API 密钥\n\n请点击左侧设置图标，选择 AI 服务提供商（如 DeepSeek），并输入您的 API 密钥。'
               : '⚠️ Please configure API key first\n\nClick the settings icon on the left, select an AI provider (e.g., DeepSeek), and enter your API key.')
             : undefined
         }))
@@ -544,15 +557,15 @@ function App() {
     // 找到要重新生成的消息
     const messageIndex = currentConversation.messages.findIndex(m => m.id === messageId)
     if (messageIndex === -1) return
-    
+
     // 找到对应的用户消息
     let userMessageIndex = messageIndex - 1
     while (userMessageIndex >= 0 && currentConversation.messages[userMessageIndex].role !== 'user') {
       userMessageIndex--
     }
-    
+
     if (userMessageIndex < 0) return
-    
+
     // 删除旧的助手回复
     deleteMessage(currentConversationId, messageId)
 
@@ -584,7 +597,7 @@ function App() {
   ])
 
   // ==================== 对话操作 ====================
-  
+
   const handleNewConversation = useCallback(() => {
     addConversation(translate('buttons.newConversation'))
   }, [addConversation, translate])
@@ -600,8 +613,8 @@ function App() {
     const defaultModels = PROVIDERS[currentProvider]?.models || []
     if (defaultModels.includes(modelId)) {
       toast.error(
-        language === 'zh' 
-          ? '无法删除默认模型' 
+        language === 'zh'
+          ? '无法删除默认模型'
           : 'Cannot remove default model'
       )
       return
@@ -617,27 +630,27 @@ function App() {
       variant: 'danger',
       onConfirm: () => {
         removeCustomModel(currentProvider, modelId)
-        
+
         // 如果删除的是当前选中的模型，切换到默认模型
         if (currentModel === modelId) {
           const remainingModels = currentProviderModels.filter(m => m !== modelId)
           const nextModel = remainingModels[0] || defaultModels[0] || ''
           setModel(nextModel)
         }
-        
+
         toast.success(
-          language === 'zh' 
-            ? `已删除模型 "${modelId}"` 
+          language === 'zh'
+            ? `已删除模型 "${modelId}"`
             : `Model "${modelId}" removed`
         )
-        
+
         setConfirmDialog(prev => ({ ...prev, isOpen: false }))
       }
     })
   }, [currentProvider, currentModel, currentProviderModels, removeCustomModel, setModel, language])
 
   // ==================== 快捷键 ====================
-  
+
   useKeyboardShortcuts([
     {
       ...DEFAULT_SHORTCUTS.NEW_CONVERSATION,
@@ -665,7 +678,7 @@ function App() {
   ])
 
   // ==================== 渲染 ====================
-  
+
   // 转换对话对象为数组
   const conversationList = Object.values(conversations || {})
 
@@ -713,6 +726,7 @@ function App() {
                   isDeepThinkingAvailable={isDeepThinkingAvailable}
                   isButtonDisabled={isButtonDisabled}
                   thinkingMode={thinkingMode}
+                  modelConfig={modelConfig}
                   onSendMessage={handleSendMessage}
                   onStopGeneration={handleStopGeneration}
                   onAddAttachment={handleAddAttachment}
