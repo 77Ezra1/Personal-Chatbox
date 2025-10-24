@@ -66,21 +66,7 @@ module.exports = {
       ]
     },
 
-    // Git - 版本控制操作
-    git: {
-      id: 'git',
-      name: 'Git版本控制',
-      enabled: false,  // 暂时禁用：未安装 mcp_server_git（Python 模块）
-      autoLoad: true,
-      description: 'Git版本控制操作,支持状态查询、提交、分支管理',
-      command: 'python3',
-      args: [
-        '-m',
-        'mcp_server_git',
-        '--repository',
-        process.cwd() // 使用当前工作目录,跨平台兼容
-      ]
-    },
+    // Git - 版本控制操作 (NPM包不存在，已移除)
 
     // Sequential Thinking - 推理增强
     sequential_thinking: {
@@ -102,14 +88,14 @@ module.exports = {
     sqlite: {
       id: 'sqlite',
       name: 'SQLite数据库',
-      enabled: false, // 暂时禁用：本机缺少 sqlite3 原生绑定，待修复后再启用
+      enabled: true,  // ✅ 已编译成功，可以启用
       autoLoad: true,
       description: 'SQLite数据库操作,支持CRUD和自定义SQL查询',
       command: 'npx',
       args: [
         '-y',
         'mcp-sqlite',
-        require('path').join(process.cwd(), 'data', 'app.db') // 跨平台路径
+        require('path').join(process.cwd(), 'app.db') // 使用项目根目录的数据库
       ],
       // 动态配置支持
       configurable: true,
@@ -118,7 +104,7 @@ module.exports = {
           key: 'databasePath',
           label: '数据库文件路径',
           type: 'string',
-          default: require('path').join(process.cwd(), 'data', 'app.db'),
+          default: require('path').join(process.cwd(), 'app.db'),
           description: 'SQLite数据库文件的完整路径'
         }
       ]
@@ -228,23 +214,14 @@ module.exports = {
     puppeteer: {
       id: 'puppeteer',
       name: 'Puppeteer浏览器控制',
-      enabled: true,
+      enabled: true,  // ✅ 已启用（首次运行会下载Chromium，可能需要几分钟）
       autoLoad: true,
       description: '轻量级浏览器自动化,支持截图、PDF生成、表单填写',
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-puppeteer']
     },
 
-    // Fetch - 官方网页抓取服务
-    fetch_official: {
-      id: 'fetch_official',
-      name: 'Fetch网页抓取(官方)',
-      enabled: true,
-      autoLoad: true,
-      description: '官方网页内容提取服务,支持Markdown转换、元数据提取',
-      command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-fetch']
-    },
+    // Fetch - 官方网页抓取服务 (NPM包不存在，已移除)
 
     // Google Maps - 位置服务
     google_maps: {
@@ -372,42 +349,7 @@ module.exports = {
       ]
     },
 
-    // Qdrant - 向量数据库(RAG)
-    qdrant: {
-      id: 'qdrant',
-      name: 'Qdrant向量数据库',
-      enabled: false,
-      autoLoad: false,
-      requiresConfig: false,
-      description: '高性能向量数据库,支持语义搜索、RAG应用',
-      command: 'npx',
-      args: ['-y', 'mcp-qdrant'],
-      env: {
-        QDRANT_URL: process.env.QDRANT_URL || 'http://localhost:6333',
-        QDRANT_API_KEY: '' // 可选,本地部署不需要
-      },
-      configFields: [
-        {
-          key: 'QDRANT_URL',
-          label: 'Qdrant服务地址',
-          type: 'string',
-          default: 'http://localhost:6333',
-          description: 'Qdrant服务器URL'
-        },
-        {
-          key: 'QDRANT_API_KEY',
-          label: 'API Key',
-          type: 'string',
-          required: false,
-          description: '云端部署需要,本地部署留空'
-        }
-      ],
-      notes: [
-        '本地部署: docker run -p 6333:6333 qdrant/qdrant',
-        '完全免费(自托管)',
-        '用于构建RAG(检索增强生成)应用'
-      ]
-    },
+    // Qdrant - 向量数据库(RAG) (NPM包不存在，已移除)
 
     // PostgreSQL - 生产级关系数据库
     postgresql: {
@@ -439,24 +381,154 @@ module.exports = {
       ]
     },
 
-    // ========== 暂时禁用的服务 ==========
+    // ========== 方案A：核心能力增强服务 ==========
 
-    // YouTube字幕服务
-    youtube: {
-      id: 'youtube',
+    // YouTube Transcript - 视频内容学习
+    youtube_transcript: {
+      id: 'youtube_transcript',
       name: 'YouTube字幕提取',
-      enabled: false,
-      autoLoad: false,
-      description: '获取YouTube视频的字幕和转录文本'
+      enabled: true,  // ✅ 免费，无需API Key
+      autoLoad: true,
+      description: '获取YouTube视频的字幕和转录文本，支持视频内容分析和学习',
+      command: 'npx',
+      args: ['-y', '@kimtaeyoon83/mcp-server-youtube-transcript']
     },
 
-    // 加密货币服务
-    coincap: {
-      id: 'coincap',
-      name: '加密货币数据',
+    // Notion - 知识库管理
+    notion: {
+      id: 'notion',
+      name: 'Notion知识管理',
+      enabled: false,  // 默认禁用，需要API Token
+      autoLoad: false,
+      requiresConfig: true,
+      description: '创建、更新、搜索Notion页面和数据库，构建结构化知识库',
+      signupUrl: 'https://www.notion.so/my-integrations',
+      apiKeyPlaceholder: '输入 Notion Integration Token',
+      command: 'npx',
+      args: ['-y', '@notionhq/client'],
+      env: {
+        NOTION_API_KEY: ''  // 从配置系统读取
+      },
+      configFields: [
+        {
+          key: 'NOTION_API_KEY',
+          label: 'Notion Integration Token',
+          type: 'string',
+          required: true,
+          description: '从 https://www.notion.so/my-integrations 创建Integration获取'
+        }
+      ],
+      notes: [
+        '个人版Notion完全免费（1000个block）',
+        '创建Integration后需要分享页面给Integration',
+        '支持页面创建、更新、搜索、数据库操作'
+      ]
+    },
+
+    // Google Calendar - 日程管理
+    google_calendar: {
+      id: 'google_calendar',
+      name: 'Google Calendar日程管理',
+      enabled: false,  // 默认禁用，需要OAuth2凭据
+      autoLoad: false,
+      requiresConfig: true,
+      description: '创建、查询、管理Google日历事件，实现智能日程安排',
+      signupUrl: 'https://console.cloud.google.com/apis/credentials',
+      apiKeyPlaceholder: '输入 Google OAuth2 凭证 JSON',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-google-calendar'],
+      env: {
+        GOOGLE_CALENDAR_CREDENTIALS: ''  // OAuth2 JSON凭证
+      },
+      configFields: [
+        {
+          key: 'GOOGLE_CALENDAR_CREDENTIALS',
+          label: 'Google OAuth2 凭证',
+          type: 'json',
+          required: true,
+          description: '从Google Cloud Console创建OAuth2凭证并下载JSON文件'
+        }
+      ],
+      notes: [
+        '完全免费',
+        '需要启用Google Calendar API',
+        '首次使用需要授权'
+      ]
+    },
+
+    // Gmail - 邮件处理
+    gmail: {
+      id: 'gmail',
+      name: 'Gmail邮件服务',
+      enabled: false,  // 默认禁用，需要OAuth2凭据
+      autoLoad: false,
+      requiresConfig: true,
+      description: '读取、发送、搜索、管理Gmail邮件，实现邮件自动化处理',
+      signupUrl: 'https://console.cloud.google.com/apis/credentials',
+      apiKeyPlaceholder: '输入 Gmail OAuth2 凭证 JSON',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-gmail'],
+      env: {
+        GMAIL_CREDENTIALS: ''  // OAuth2 JSON凭证
+      },
+      configFields: [
+        {
+          key: 'GMAIL_CREDENTIALS',
+          label: 'Gmail OAuth2 凭证',
+          type: 'json',
+          required: true,
+          description: '从Google Cloud Console创建OAuth2凭证（与Calendar可共用）'
+        }
+      ],
+      notes: [
+        '完全免费',
+        '需要启用Gmail API',
+        '可与Google Calendar共用OAuth2凭证'
+      ]
+    },
+
+    // ========== 方案B：扩展服务（待集成） ==========
+
+    // Bilibili - 国内视频内容
+    bilibili: {
+      id: 'bilibili',
+      name: 'Bilibili视频服务',
       enabled: false,
       autoLoad: false,
-      description: '获取实时加密货币价格和市场数据'
+      description: '搜索B站视频、获取热门内容、UP主信息',
+      command: 'npx',
+      args: ['-y', 'bilibili-mcp']
+    },
+
+    // CoinGecko - 加密货币数据
+    coingecko: {
+      id: 'coingecko',
+      name: 'CoinGecko加密货币',
+      enabled: false,
+      autoLoad: false,
+      description: '全球加密货币价格、市场数据、历史数据',
+      command: 'npx',
+      args: ['-y', 'mcp-coingecko']
+    },
+
+    // ========== 暂时禁用的服务 ==========
+
+    // YouTube字幕服务（旧配置，已被youtube_transcript替代）
+    youtube: {
+      id: 'youtube',
+      name: 'YouTube字幕提取（旧）',
+      enabled: false,
+      autoLoad: false,
+      description: '获取YouTube视频的字幕和转录文本（已废弃，请使用youtube_transcript）'
+    },
+
+    // 加密货币服务（旧配置，已被coingecko替代）
+    coincap: {
+      id: 'coincap',
+      name: '加密货币数据（旧）',
+      enabled: false,
+      autoLoad: false,
+      description: '获取实时加密货币价格和市场数据（已废弃，请使用coingecko）'
     }
   },
 

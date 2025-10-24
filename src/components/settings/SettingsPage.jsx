@@ -9,6 +9,7 @@ import ProxyConfig from './ProxyConfig'
 import { ShortcutSettings } from './ShortcutSettings'
 import ProfileSettings from './ProfileSettings'
 import { ThemeSelector } from './ThemeSelector'
+import ServicesManager from './ServicesManager'
 import './SettingsPage.css'
 
 /**
@@ -49,6 +50,7 @@ export function SettingsPage({
     { id: 'model', icon: SettingsIcon, label: translate('settings.tabs.model', 'Model Configuration') },
     { id: 'systemPrompt', icon: MessageSquare, label: translate('settings.tabs.systemPrompt', 'System Prompt') },
     { id: 'apiKeys', icon: Key, label: translate('settings.tabs.apiKeys', 'API Keys') },
+    { id: 'services', icon: Plug, label: '服务管理' },
     { id: 'shortcuts', icon: Keyboard, label: translate('settings.tabs.shortcuts', 'Shortcuts') },
     { id: 'proxy', icon: Wifi, label: translate('settings.tabs.proxy', 'Proxy Settings') },
     { id: 'mcpServices', icon: Plug, label: translate('settings.tabs.mcpServices', 'MCP Services') },
@@ -138,6 +140,12 @@ export function SettingsPage({
                 <ApiKeysConfig
                   translate={translate}
                 />
+              </div>
+            )}
+
+            {activeTab === 'services' && (
+              <div className="settings-section">
+                <ServicesManager />
               </div>
             )}
 
