@@ -42,6 +42,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { agentAPI } from '@/lib/apiClient'
+import { getAgentStatusLabel, normalizeAgentStatus } from '@/lib/agentsUtils'
 
 export default function AgentsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth()
@@ -73,6 +74,10 @@ export default function AgentsPage() {
   const [dashboard, setDashboard] = useState(null)
   const [dashboardLoading, setDashboardLoading] = useState(false)
   const [queuePriorityDraft, setQueuePriorityDraft] = useState({})
+
+  // ✅ 批量执行状态
+  const [batchExecuteOpen, setBatchExecuteOpen] = useState(false)
+  const [batchExecuting, setBatchExecuting] = useState(false)
 
   const dashboardCards = useMemo(() => {
     if (!dashboard?.totals) return []
@@ -258,10 +263,10 @@ export default function AgentsPage() {
   const handleStopTask = async (agentId) => {
     try {
       await agentAPI.stop(agentId)
-      toast.info('Task execution stopped')
+      toast.info(translate('agents.toasts.stopInfo', 'Task execution stopped'))
     } catch (error) {
       console.error('Failed to stop task:', error)
-      toast.error('Failed to stop task')
+      toast.error(translate('agents.toasts.stopFailed', 'Failed to stop task'))
     }
   }
 
@@ -441,6 +446,49 @@ export default function AgentsPage() {
     }
   }, [historyAgent, fetchQueueState, translate])
 
+  // ✅ 批量执行 Agents
+  const handleBatchExecute = useCallback(async (batchTasks) => {
+    if (!batchTasks || batchTasks.length === 0) {
+      toast.error(translate('agents.batch.missingSelection', 'Please select at least one agent and task'))
+      return
+    }
+
+    setBatchExecuting(true)
+    try {
+      const response = await agentAPI.batchExecute(batchTasks)
+      const { results, errors, successCount, errorCount } = response.data
+
+      if (errorCount === 0) {
+        toast.success(
+          translate('agents.batch.success', 'Batch executed successfully! {count} tasks submitted', {
+            count: successCount
+          })
+        )
+      } else if (successCount === 0) {
+        toast.error(
+          translate('agents.batch.failure', 'Batch execution failed! {count} tasks failed', {
+            count: errorCount
+          })
+        )
+      } else {
+        toast.warning(
+          translate('agents.batch.partial', 'Partially completed: {success} succeeded, {failed} failed', {
+            success: successCount,
+            failed: errorCount
+          })
+        )
+      }
+
+      setBatchExecuteOpen(false)
+      fetchAgents()
+    } catch (error) {
+      console.error('Batch execute failed:', error)
+      toast.error(error.response?.data?.message || translate('agents.batch.error', 'Batch execution failed'))
+    } finally {
+      setBatchExecuting(false)
+    }
+  }, [fetchAgents])
+
   const handleStatusFilterChange = (value) => {
     setHistoryFilters(prev => ({ ...prev, status: value }))
   }
@@ -454,7 +502,7 @@ export default function AgentsPage() {
   }
 
   const renderStatusBadge = (status) => {
-    const normalized = (status || '').toLowerCase()
+    const normalized = normalizeAgentStatus(status)
     const statusStyles = {
       completed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
       running: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
@@ -467,7 +515,7 @@ export default function AgentsPage() {
 
     return (
       <Badge variant="outline" className={cn('capitalize', statusStyles[normalized])}>
-        {normalized || 'unknown'}
+        {getAgentStatusLabel(translate, normalized, 'unknown')}
       </Badge>
     )
   }

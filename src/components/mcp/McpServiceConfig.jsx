@@ -9,6 +9,7 @@ import { McpPathConfigDialog } from './McpPathConfig'
 import './McpServiceConfig.css'
 
 import { createLogger } from '../../lib/logger'
+import { useTranslation } from '@/hooks/useTranslation'
 const logger = createLogger('McpServiceConfig')
 
 
@@ -18,7 +19,8 @@ const logger = createLogger('McpServiceConfig')
  */
 export function McpServiceConfig({ language, translate }) {
   // 使用新的 MCP Manager Hook
-  const { services, loading, error, toggleService, reload } = useMcpManager()
+  const { services, loading, error, toggleService } = useMcpManager()
+  const { translate } = useTranslation()
   
   const [expandedServer, setExpandedServer] = useState(null)
   const [showApiKey, setShowApiKey] = useState({})
@@ -28,12 +30,12 @@ export function McpServiceConfig({ language, translate }) {
     try {
       const service = services.find(s => s.id === serverId)
       const newEnabled = !service.enabled
-      
+
       // 调用后端API更新服务状态
-      await toggleService(serverId, newEnabled)
+      await toggleService(service, newEnabled)
     } catch (err) {
       logger.error('Failed to toggle server:', err)
-      alert('操作失败，请重试')
+      alert(translate('mcp.common.operationFailed', '操作失败，请重试'))
     }
   }
 
@@ -42,10 +44,10 @@ export function McpServiceConfig({ language, translate }) {
       // 目前的预设服务都不需要API Key，所以这个函数暂时简化
       logger.log('API Key saved for', serverId, apiKey)
       setExpandedServer(null)
-      alert('保存成功！')
+      alert(translate('mcp.configPanel.saveSuccess', '保存成功！'))
     } catch (err) {
       logger.error('Failed to save API key:', err)
-      alert('保存失败，请重试')
+      alert(translate('mcp.common.operationFailed', '保存失败，请重试'))
     }
   }
 
@@ -71,7 +73,7 @@ export function McpServiceConfig({ language, translate }) {
   }
 
   if (loading) {
-    return <div className="mcp-loading">加载中...</div>
+    return <div className="mcp-loading">{translate('mcp.configPanel.loading', '加载中...')}</div>
   }
 
   if (error) {
@@ -87,13 +89,17 @@ export function McpServiceConfig({ language, translate }) {
     <div className="mcp-service-config">
       <div className="mcp-intro">
         <p>
-          通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询、网页抓取等功能。
-          所有服务都是免费的，无需API密钥即可使用。
+          {translate(
+            'mcp.configPanel.intro',
+            '通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询、网页抓取等功能。所有服务都是免费的，无需API密钥即可使用。'
+          )}
         </p>
       </div>
 
       <div className="mcp-service-list">
-        <h3 className="text-lg font-semibold mb-4">可用服务</h3>
+        <h3 className="text-lg font-semibold mb-4">
+          {translate('mcp.configPanel.toolsLabel', '可用服务')}
+        </h3>
         <div className="mcp-service-grid">
           {services.map(service => (
             <ServiceCard
@@ -134,6 +140,7 @@ function ServiceCard({
   onCopyKey,
   onSaveKey
 }) {
+  const { translate } = useTranslation()
   const [apiKeyInput, setApiKeyInput] = useState(server.apiKey || '')
 
   useEffect(() => {
@@ -195,27 +202,28 @@ function ServiceCard({
             {requiresConfig ? (
               <>
                 <Badge variant="outline" className="mcp-limit-badge">
-                  需要配置
+                  {translate('mcp.common.badgeNeedsConfig', '需要配置')}
                 </Badge>
                 {hasApiKey && (
                   <Badge variant="secondary" className="mcp-ready-badge">
-                    ✓ 已配置
+                    ✓ {translate('mcp.common.badgeConfigured', '已配置')}
                   </Badge>
                 )}
               </>
             ) : (
               <>
                 <Badge variant="secondary" className="mcp-free-badge">
-                  免费
+                  {translate('mcp.common.badgeFree', '免费')}
                 </Badge>
                 <Badge variant="outline" className="mcp-limit-badge">
-                  无需配置
+                  {translate('mcp.common.badgeFreeNoConfig', '无需配置')}
                 </Badge>
               </>
             )}
             {server.toolCount > 0 && (
               <Badge variant="outline" className="mcp-lang-badge">
-                {server.toolCount} 个工具
+                {translate('mcp.common.badgeTools', '{count} 个工具')
+                  .replace('{count}', server.toolCount.toString())}
               </Badge>
             )}
           </div>
@@ -238,7 +246,9 @@ function ServiceCard({
             className="mcp-expand-button"
             onClick={onExpand}
           >
-            {expanded ? '收起配置' : '配置 API Key'}
+            {expanded
+              ? translate('mcp.configPanel.toggleButton.collapse', '收起配置')
+              : translate('mcp.configPanel.toggleButton.expand', '配置 API Key')}
           </button>
 
           {expanded && (
@@ -254,7 +264,9 @@ function ServiceCard({
                 <button
                   className="mcp-icon-button"
                   onClick={onToggleShowKey}
-                  title={showApiKey ? '隐藏' : '显示'}
+                  title={showApiKey
+                    ? translate('mcp.configPanel.tooltip.hide', '隐藏')
+                    : translate('mcp.configPanel.tooltip.show', '显示')}
                 >
                   {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -262,7 +274,7 @@ function ServiceCard({
                   <button
                     className="mcp-icon-button"
                     onClick={onCopyKey}
-                    title="复制"
+                  title={translate('mcp.configPanel.tooltip.copy', '复制')}
                   >
                     {copiedKey ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
@@ -275,7 +287,7 @@ function ServiceCard({
                   onClick={handleSave}
                   disabled={!apiKeyInput.trim()}
                 >
-                  保存
+                  {translate('mcp.configPanel.actions.save', '保存')}
                 </Button>
                 {server.signupUrl && (
                   <Button
@@ -283,7 +295,7 @@ function ServiceCard({
                     variant="outline"
                     onClick={() => window.open(server.signupUrl, '_blank')}
                   >
-                    获取 API Key
+                    {translate('mcp.configPanel.actions.getKey', '获取 API Key')}
                     <ExternalLink className="w-3 h-3 ml-1" />
                   </Button>
                 )}

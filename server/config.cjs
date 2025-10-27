@@ -228,7 +228,7 @@ module.exports = {
       id: 'google_maps',
       name: 'Google Maps位置服务',
       enabled: false, // 默认禁用,需要API Key
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: true,
       description: '地点搜索、路线规划、地理编码服务',
       command: 'npx',
@@ -252,7 +252,7 @@ module.exports = {
       id: 'everart',
       name: 'EverArt图像生成',
       enabled: false, // 默认禁用,需要API Key
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: true,
       description: '免费AI图像生成服务,支持多种艺术风格',
       command: 'npx',
@@ -278,7 +278,7 @@ module.exports = {
       id: 'magg',
       name: 'Magg元服务器',
       enabled: false, // 默认禁用,需要Python 3.12+
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: false,
       description: 'AI自主管理MCP服务器,可搜索、添加、配置其他MCP服务',
       command: 'uv',
@@ -317,7 +317,7 @@ module.exports = {
       id: 'slack',
       name: 'Slack消息服务',
       enabled: false,
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: true,
       description: 'Slack集成,支持发送消息、读取频道、文件上传',
       command: 'npx',
@@ -356,7 +356,7 @@ module.exports = {
       id: 'postgresql',
       name: 'PostgreSQL数据库',
       enabled: false,
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: true,
       description: '生产级关系数据库,支持复杂查询、事务、全文搜索',
       command: 'npx',
@@ -399,7 +399,7 @@ module.exports = {
       id: 'notion',
       name: 'Notion知识管理',
       enabled: false,  // 默认禁用，需要API Token
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: true,
       description: '创建、更新、搜索Notion页面和数据库，构建结构化知识库',
       signupUrl: 'https://www.notion.so/my-integrations',
@@ -430,7 +430,7 @@ module.exports = {
       id: 'google_calendar',
       name: 'Google Calendar日程管理',
       enabled: false,  // 默认禁用，需要OAuth2凭据
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: true,
       description: '创建、查询、管理Google日历事件，实现智能日程安排',
       signupUrl: 'https://console.cloud.google.com/apis/credentials',
@@ -461,7 +461,7 @@ module.exports = {
       id: 'gmail',
       name: 'Gmail邮件服务',
       enabled: false,  // 默认禁用，需要OAuth2凭据
-      autoLoad: false,
+      autoLoad: true,
       requiresConfig: true,
       description: '读取、发送、搜索、管理Gmail邮件，实现邮件自动化处理',
       signupUrl: 'https://console.cloud.google.com/apis/credentials',
@@ -494,7 +494,7 @@ module.exports = {
       id: 'bilibili',
       name: 'Bilibili视频服务',
       enabled: false,
-      autoLoad: false,
+      autoLoad: true,
       description: '搜索B站视频、获取热门内容、UP主信息',
       command: 'npx',
       args: ['-y', 'bilibili-mcp']
@@ -505,7 +505,7 @@ module.exports = {
       id: 'coingecko',
       name: 'CoinGecko加密货币',
       enabled: false,
-      autoLoad: false,
+      autoLoad: true,
       description: '全球加密货币价格、市场数据、历史数据',
       command: 'npx',
       args: ['-y', 'mcp-coingecko']

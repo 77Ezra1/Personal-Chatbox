@@ -285,6 +285,71 @@ router.post('/:id/execute', authMiddleware, async (req, res) => {
 });
 
 /**
+ * ✅ 批量执行 Agent 任务
+ * POST /api/agents/batch/execute
+ */
+router.post('/batch/execute', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { tasks } = req.body;
+
+    if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+      return res.status(400).json({ message: '任务列表不能为空' });
+    }
+
+    // 验证每个任务
+    for (const task of tasks) {
+      if (!task.agentId || !task.taskData || !task.taskData.title) {
+        return res.status(400).json({
+          message: '每个任务必须包含 agentId 和 taskData.title'
+        });
+      }
+    }
+
+    // 批量启动任务
+    const results = [];
+    const errors = [];
+
+    for (const task of tasks) {
+      try {
+        const { executionId, taskId } = await agentEngine.startTaskExecution(
+          task.agentId,
+          task.taskData,
+          userId
+        );
+
+        results.push({
+          agentId: task.agentId,
+          executionId,
+          taskId,
+          status: 'queued',
+          taskName: task.taskData.title
+        });
+      } catch (error) {
+        console.error(`批量执行任务失败 (Agent: ${task.agentId}):`, error);
+        errors.push({
+          agentId: task.agentId,
+          taskName: task.taskData.title,
+          error: error.message
+        });
+      }
+    }
+
+    res.status(202).json({
+      message: `批量任务已提交: ${results.length} 个成功, ${errors.length} 个失败`,
+      results,
+      errors,
+      totalTasks: tasks.length,
+      successCount: results.length,
+      errorCount: errors.length
+    });
+  } catch (error) {
+    console.error('批量执行任务失败:', error);
+    res.status(500).json({ message: '批量执行任务失败', error: error.message });
+  }
+});
+
+/**
  * 获取任务列表
  * GET /api/agents/:id/tasks
  */
@@ -611,6 +676,36 @@ router.get('/tools', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('获取工具列表失败:', error);
     res.status(500).json({ message: '获取工具列表失败', error: error.message });
+  }
+});
+
+/**
+ * 获取 Agent 可用的工具列表（应用过滤器）
+ * GET /api/agents/:id/tools
+ */
+router.get('/:id/tools', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // 获取 Agent
+    const agent = await agentEngine.getAgent(id, userId);
+
+    // 获取可用工具（应用过滤器）
+    const tools = agentEngine.getAvailableTools(agent);
+
+    res.json({
+      tools,
+      filter: agent.config?.toolFilter || null,
+      count: tools.length
+    });
+  } catch (error) {
+    console.error('获取 Agent 可用工具失败:', error);
+    if (error.message.includes('不存在')) {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: '获取可用工具失败', error: error.message });
+    }
   }
 });
 

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { WorkflowList } from '@/components/workflows/WorkflowList'
+import { WorkflowEditorDialog } from '@/components/workflows/WorkflowEditorDialog'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
@@ -13,7 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Info } from 'lucide-react'
+import { AlertCircle, Info, Download, Upload } from 'lucide-react'
 
 /**
  * WorkflowsPage - 工作流管理主页面
@@ -32,6 +33,13 @@ export default function WorkflowsPage() {
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [workflowToDelete, setWorkflowToDelete] = useState(null)
+
+  // ✅ 编辑器状态
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingWorkflow, setEditingWorkflow] = useState(null)
+
+  // ✅ 文件上传引用
+  const fileInputRef = useRef(null)
 
   // Fetch workflows from backend
   const fetchWorkflows = useCallback(async () => {
@@ -55,12 +63,10 @@ export default function WorkflowsPage() {
     }
   }, [token, fetchWorkflows])
 
-  // Create new workflow
+  // ✅ Create new workflow
   const handleCreateWorkflow = () => {
-    // TODO: 在Phase 2.2中实现WorkflowEditor后，这里将打开编辑器
-    toast.info(translate('workflows.toasts.editorComingSoon'), {
-      duration: 5000
-    })
+    setEditingWorkflow(null)
+    setEditorOpen(true)
   }
 
   // Execute workflow
@@ -85,12 +91,36 @@ export default function WorkflowsPage() {
     }
   }
 
-  // Edit workflow
+  // ✅ Edit workflow
   const handleEdit = (workflow) => {
-    // TODO: 在Phase 2.2中实现WorkflowEditor后，这里将打开编辑器
-    toast.info(translate('workflows.toasts.editWorkflow').replace('{name}', workflow.name), {
-      duration: 4000
-    })
+    setEditingWorkflow(workflow)
+    setEditorOpen(true)
+  }
+
+  // ✅ Save workflow (创建或更新)
+  const handleSaveWorkflow = async (workflowData) => {
+    try {
+      const isNew = !workflowData.id
+
+      if (isNew) {
+        // 创建新工作流
+        const response = await axios.post('/api/workflows', workflowData, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        toast.success('工作流创建成功!')
+      } else {
+        // 更新现有工作流
+        await axios.put(`/api/workflows/${workflowData.id}`, workflowData, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        toast.success('工作流更新成功!')
+      }
+
+      fetchWorkflows()
+    } catch (error) {
+      console.error('Failed to save workflow:', error)
+      throw error
+    }
   }
 
   // Delete workflow
@@ -151,41 +181,99 @@ export default function WorkflowsPage() {
     })
   }
 
-  // Import workflow
+  // ✅ Import workflow
   const handleImport = () => {
-    // TODO: 实现导入功能
-    toast.info(translate('workflows.toasts.importComingSoon'), {
-      duration: 4000
-    })
+    fileInputRef.current?.click()
   }
 
-  // Export workflow
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const importedData = JSON.parse(text)
+
+      // 验证导入的数据
+      if (!importedData.name || !importedData.definition) {
+        toast.error('无效的工作流文件格式')
+        return
+      }
+
+      // 创建导入的工作流（去掉 id 以创建新的）
+      const { id, ...workflowData } = importedData
+      workflowData.name = `${workflowData.name} (导入)`
+
+      const response = await axios.post('/api/workflows', workflowData, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      toast.success('工作流导入成功!')
+      fetchWorkflows()
+    } catch (error) {
+      console.error('Failed to import workflow:', error)
+      toast.error('导入失败: ' + (error.message || '文件格式错误'))
+    } finally {
+      // 清空文件输入
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  // ✅ Export workflow
   const handleExport = () => {
-    // TODO: 实现导出功能
     if (workflows.length === 0) {
-      toast.warning(translate('workflows.toasts.noWorkflowsToExport'))
+      toast.warning('没有可导出的工作流')
       return
     }
 
-    toast.info(translate('workflows.toasts.exportComingSoon'), {
-      duration: 4000
-    })
+    try {
+      // 导出所有工作流为 JSON 文件
+      const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        workflows: workflows
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `workflows-export-${Date.now()}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast.success(`已导出 ${workflows.length} 个工作流`)
+    } catch (error) {
+      console.error('Failed to export workflows:', error)
+      toast.error('导出失败: ' + error.message)
+    }
   }
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-7xl">
-      {/* 页面头部说明 */}
+      {/* ✅ 页面头部说明 - 使用指南 */}
       <div className="mb-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
         <div className="flex items-start gap-3">
           <Info className="size-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-          <div className="space-y-1">
+          <div className="space-y-2">
             <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-              {translate('workflows.phaseInfo.title')}
+              如何使用工作流
             </h3>
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              {translate('workflows.phaseInfo.ready')}
-              <br />
-              {translate('workflows.phaseInfo.coming')}
+            <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-decimal list-inside">
+              <li><strong>创建工作流</strong> - 点击"创建新工作流"按钮，填写基本信息</li>
+              <li><strong>添加节点</strong> - 在可视化编辑器中，从左侧添加节点（开始、AI分析、Agent等）</li>
+              <li><strong>连接节点</strong> - 点击"连接节点"按钮，依次点击源节点和目标节点创建连接线</li>
+              <li><strong>配置节点</strong> - 双击节点或点击配置按钮，设置AI模型、提示词等参数</li>
+              <li><strong>保存并执行</strong> - 保存工作流后，在列表中点击"Run"按钮执行</li>
+            </ol>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+              💡 提示：确保在设置页面中已配置好AI模型、MCP服务和Agent，才能在工作流中使用它们。
             </p>
           </div>
         </div>
@@ -234,6 +322,23 @@ export default function WorkflowsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ✅ Workflow Editor Dialog */}
+      <WorkflowEditorDialog
+        workflow={editingWorkflow}
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        onSave={handleSaveWorkflow}
+      />
+
+      {/* ✅ Hidden File Input for Import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
     </div>
   )
 }

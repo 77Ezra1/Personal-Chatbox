@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { getToolTranslatedName, getToolTranslatedDescription } from '@/i18n/mcpToolsTranslations'
 import './McpCustomPage.css'
 
 /**
@@ -50,8 +51,20 @@ export default function McpCustomPage() {
   const loadData = async () => {
     setLoading(true)
     try {
+      const token = localStorage.getItem('token')
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+
+      // 并行加载所有数据
+      const [templatesRes, configsRes, servicesRes] = await Promise.all([
+        fetch('/api/mcp/templates', { headers }),
+        fetch('/api/mcp/user-configs', { headers }),
+        fetch('/api/mcp/services', { headers }) // ✅ 获取运行状态
+      ])
+
       // 加载模板
-      const templatesRes = await fetch('/api/mcp/templates')
       const templatesData = await templatesRes.json()
       if (templatesData.success) {
         setTemplates(templatesData.templates)
@@ -59,13 +72,47 @@ export default function McpCustomPage() {
       }
 
       // 加载用户配置
-      const configsRes = await fetch('/api/mcp/user-configs')
       const configsData = await configsRes.json()
-      if (configsData.success) {
+
+      // 加载运行状态
+      const servicesData = await servicesRes.json()
+
+      // ✅ 合并配置和运行状态
+      if (configsData.success && servicesData.success) {
+        // 创建运行中服务的映射表
+        const runningServicesMap = new Map()
+        if (servicesData.services) {
+          servicesData.services.forEach(service => {
+            runningServicesMap.set(service.id, {
+              status: service.status,
+              loaded: service.loaded,
+              toolCount: service.toolCount || 0,
+              tools: service.tools || []
+            })
+          })
+        }
+
+        // 增强配置数据：添加运行状态和工具信息
+        const enrichedConfigs = configsData.configs.map(config => {
+          const runningInfo = runningServicesMap.get(config.mcp_id)
+          return {
+            ...config,
+            // 运行状态信息
+            status: runningInfo?.status || 'stopped',
+            loaded: runningInfo?.loaded || false,
+            toolCount: runningInfo?.toolCount || 0,
+            tools: runningInfo?.tools || []
+          }
+        })
+
+        setUserConfigs(enrichedConfigs)
+      } else if (configsData.success) {
+        // 如果获取运行状态失败，至少显示配置数据
         setUserConfigs(configsData.configs)
       }
     } catch (error) {
       console.error('加载数据失败:', error)
+      alert('加载失败，请确保已登录')
     } finally {
       setLoading(false)
     }
@@ -74,15 +121,19 @@ export default function McpCustomPage() {
   // 从模板添加服务
   const handleAddFromTemplate = async (templateId, envVars = {}) => {
     try {
+      const token = localStorage.getItem('token')
       const res = await fetch('/api/mcp/user-configs/from-template', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ templateId, customEnvVars: envVars })
       })
 
       const data = await res.json()
       if (data.success) {
-        alert('MCP服务添加成功!')
+        alert('MCP服务添加成功! 下次对话时将自动加载。')
         loadData()
       } else {
         alert(data.message || '添加失败')
@@ -96,16 +147,25 @@ export default function McpCustomPage() {
   // 切换服务启用状态
   const handleToggleConfig = async (configId) => {
     try {
+      const token = localStorage.getItem('token')
       const res = await fetch(`/api/mcp/user-configs/${configId}/toggle`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       const data = await res.json()
       if (data.success) {
+        alert(`服务已${data.enabled ? '启用' : '禁用'}。下次对话时生效。`)
         loadData()
+      } else {
+        alert(data.message || '操作失败')
       }
     } catch (error) {
       console.error('切换服务失败:', error)
+      alert('操作失败，请重试')
     }
   }
 
@@ -114,14 +174,20 @@ export default function McpCustomPage() {
     if (!confirm('确定要删除此MCP服务配置吗?')) return
 
     try {
+      const token = localStorage.getItem('token')
       const res = await fetch(`/api/mcp/user-configs/${configId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       const data = await res.json()
       if (data.success) {
         alert('删除成功')
         loadData()
+      } else {
+        alert(data.message || '删除失败')
       }
     } catch (error) {
       console.error('删除配置失败:', error)
@@ -353,23 +419,59 @@ function TemplateCard({ template, category, onAdd }) {
 function ConfigCard({ config, category, onToggle, onDelete, onEdit }) {
   const [showDetails, setShowDetails] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [showEnvDialog, setShowEnvDialog] = useState(false)
 
   const handleTest = async () => {
     setTesting(true)
     try {
+      const token = localStorage.getItem('token')
       const res = await fetch(`/api/mcp/user-configs/${config.id}/test`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       const data = await res.json()
       if (data.success) {
-        alert(`连接成功! 延迟: ${data.latency}ms`)
+        alert(`连接成功! 服务: ${data.service}\n延迟: ${data.latency}ms`)
       } else {
-        alert('连接失败: ' + data.message)
+        alert('连接失败: ' + (data.message || '未知错误'))
       }
     } catch (error) {
       alert('测试失败: ' + error.message)
     } finally {
       setTesting(false)
+    }
+  }
+
+  // ✅ 快速配置按钮处理
+  const handleQuickConfig = () => {
+    setShowEnvDialog(true)
+  }
+
+  const handleUpdateEnvVars = async (envVars) => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/mcp/user-configs/${config.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          env_vars: envVars
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        alert('环境变量更新成功! 下次对话时生效。')
+        window.location.reload()  // 刷新页面以显示最新状态
+      } else {
+        alert(data.message || '更新失败')
+      }
+    } catch (error) {
+      console.error('更新环境变量失败:', error)
+      alert('更新失败，请重试')
     }
   }
 
@@ -399,9 +501,56 @@ function ConfigCard({ config, category, onToggle, onDelete, onEdit }) {
       <div className="mcp-card-badges">
         {config.official && <Badge variant="default">官方</Badge>}
         {category && <Badge variant="outline">{category.icon} {category.name}</Badge>}
+
+        {/* ✅ 配置状态徽章 */}
+        {config.isConfigured === false && (
+          <Badge variant="destructive" className="mcp-config-badge">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            未配置
+          </Badge>
+        )}
+        {config.isConfigured === true && (
+          <Badge variant="success" className="mcp-config-badge">
+            <Check className="w-3 h-3 mr-1" />
+            已配置
+          </Badge>
+        )}
+
+        {/* ✅ 运行状态徽章 */}
+        {config.status === 'running' && config.loaded && (
+          <Badge variant="default" className="bg-green-600">
+            <Zap className="w-3 h-3 mr-1" />
+            运行中
+          </Badge>
+        )}
+        {config.enabled && config.status !== 'running' && (
+          <Badge variant="secondary" className="bg-yellow-600">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            未运行
+          </Badge>
+        )}
+
+        {/* ✅ 工具数量徽章 */}
+        {config.toolCount > 0 && (
+          <Badge variant="outline" title={`${config.toolCount} 个可用工具`}>
+            {config.toolCount} 工具
+          </Badge>
+        )}
       </div>
 
       <div className="mcp-card-actions">
+        {/* ✅ 快速配置按钮 - 当服务未配置时高亮显示 */}
+        {config.isConfigured === false && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleQuickConfig}
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+          >
+            <Settings className="w-4 h-4 mr-1" />
+            快速配置
+          </Button>
+        )}
         <Button
           variant={config.enabled ? 'secondary' : 'default'}
           size="sm"
@@ -412,6 +561,11 @@ function ConfigCard({ config, category, onToggle, onDelete, onEdit }) {
         <Button variant="ghost" size="sm" onClick={handleTest} disabled={testing || !config.enabled}>
           <RefreshCw className={`w-4 h-4 ${testing ? 'animate-spin' : ''}`} />
         </Button>
+        {config.isConfigured === true && (
+          <Button variant="ghost" size="sm" onClick={handleQuickConfig} title="编辑环境变量">
+            <Settings className="w-4 h-4" />
+          </Button>
+        )}
         <Button variant="ghost" size="sm" onClick={() => setShowDetails(true)}>
           <Info className="w-4 h-4" />
         </Button>
@@ -426,6 +580,17 @@ function ConfigCard({ config, category, onToggle, onDelete, onEdit }) {
         category={category}
         open={showDetails}
         onOpenChange={setShowDetails}
+      />
+
+      {/* ✅ 环境变量编辑对话框 */}
+      <ConfigEnvEditDialog
+        config={config}
+        open={showEnvDialog}
+        onOpenChange={setShowEnvDialog}
+        onConfirm={(envVars) => {
+          handleUpdateEnvVars(envVars)
+          setShowEnvDialog(false)
+        }}
       />
     </div>
   )
@@ -549,7 +714,7 @@ function ConfigDetailDialog({ config, category, open, onOpenChange }) {
           {/* 状态信息 */}
           <div>
             <h4 className="font-semibold mb-3">状态</h4>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {config.enabled ? (
                 <Badge variant="default">
                   <Power className="w-3 h-3 mr-1" />
@@ -561,8 +726,75 @@ function ConfigDetailDialog({ config, category, open, onOpenChange }) {
                   已禁用
                 </Badge>
               )}
+
+              {/* 配置状态 */}
+              {config.isConfigured === false && (
+                <Badge variant="destructive">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  未配置
+                </Badge>
+              )}
+              {config.isConfigured === true && (
+                <Badge variant="success" className="bg-green-600">
+                  <Check className="w-3 h-3 mr-1" />
+                  已配置
+                </Badge>
+              )}
+
+              {/* 运行状态 */}
+              {config.status === 'running' && config.loaded && (
+                <Badge variant="default" className="bg-green-600">
+                  <Zap className="w-3 h-3 mr-1" />
+                  运行中
+                </Badge>
+              )}
+              {config.enabled && config.status !== 'running' && (
+                <Badge variant="secondary" className="bg-yellow-600">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  未运行
+                </Badge>
+              )}
+
+              {/* 工具数量 */}
+              {config.toolCount > 0 && (
+                <Badge variant="outline">
+                  {config.toolCount} 个工具
+                </Badge>
+              )}
             </div>
           </div>
+
+          {/* 工具列表 */}
+          {config.tools && config.tools.length > 0 && (
+            <div>
+              <h4 className="font-semibold mb-3">可用工具 ({config.tools.length})</h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {config.tools.map((tool, index) => {
+                  // ✅ 应用翻译
+                  const toolName = tool.name || tool.displayName
+                  const translatedName = getToolTranslatedName(toolName)
+                  const translatedDescription = getToolTranslatedDescription(toolName, tool.description || '')
+
+                  return (
+                    <div key={index} className="flex items-start gap-2 p-2 bg-muted rounded text-sm">
+                      <Zap className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium">{translatedName}</div>
+                        {translatedDescription && (
+                          <div className="text-xs text-muted-foreground mt-1">{translatedDescription}</div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          {config.enabled && config.toolCount === 0 && (
+            <div className="text-sm text-muted-foreground italic">
+              该服务当前没有可用工具。可能需要先配置必需的环境变量或等待服务启动完成。
+            </div>
+          )}
 
           {/* 配置信息 */}
           <div>
@@ -773,9 +1005,13 @@ function AddCustomDialog({ open, onOpenChange, onSuccess }) {
         }
       }
 
+      const token = localStorage.getItem('token')
       const res = await fetch('/api/mcp/user-configs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...formData,
           args,
@@ -921,6 +1157,219 @@ function AddCustomDialog({ open, onOpenChange, onSuccess }) {
             <Plus className="w-4 h-4 mr-2" />
             添加
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/**
+ * ✅ 配置环境变量编辑对话框
+ * 用于编辑现有服务的环境变量
+ */
+function ConfigEnvEditDialog({ config, open, onOpenChange, onConfirm }) {
+  const [envVars, setEnvVars] = useState({})
+  const [showValues, setShowValues] = useState({})
+  const [validating, setValidating] = useState(false)
+  const [validationResult, setValidationResult] = useState(null)
+
+  useEffect(() => {
+    if (open && config) {
+      // 重置验证状态
+      setValidationResult(null)
+
+      // 解析现有的环境变量
+      try {
+        const parsed = typeof config.env_vars === 'string'
+          ? JSON.parse(config.env_vars)
+          : (config.env_vars || {})
+        setEnvVars(parsed)
+      } catch (e) {
+        console.error('解析环境变量失败:', e)
+        setEnvVars({})
+      }
+
+      // 获取服务模板以了解需要哪些环境变量
+      const loadTemplate = async () => {
+        try {
+          const token = localStorage.getItem('token')
+          const res = await fetch(`/api/mcp/templates/${config.mcp_id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          const data = await res.json()
+          if (data.success && data.template.env) {
+            // 合并模板环境变量和现有值
+            const merged = {}
+            Object.keys(data.template.env).forEach(key => {
+              merged[key] = envVars[key] || ''
+            })
+            setEnvVars(merged)
+          }
+        } catch (error) {
+          console.error('加载模板失败:', error)
+        }
+      }
+      loadTemplate()
+    }
+  }, [open, config])
+
+  // ✅ 实时验证 API Key 功能
+  const handleValidate = async () => {
+    setValidating(true)
+    setValidationResult(null)
+
+    try {
+      const token = localStorage.getItem('token')
+
+      // 临时更新配置以进行测试
+      const testConfig = {
+        ...config,
+        env_vars: envVars
+      }
+
+      // 调用验证API（使用现有的测试端点，但传递新的环境变量）
+      const res = await fetch(`/api/mcp/user-configs/${config.id}/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ env_vars: envVars })
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        setValidationResult({
+          success: true,
+          message: data.message || 'API Key 验证成功!'
+        })
+      } else {
+        setValidationResult({
+          success: false,
+          message: data.message || '验证失败，请检查配置'
+        })
+      }
+    } catch (error) {
+      console.error('验证失败:', error)
+      setValidationResult({
+        success: false,
+        message: '验证请求失败: ' + error.message
+      })
+    } finally {
+      setValidating(false)
+    }
+  }
+
+  const handleSubmit = () => {
+    // 过滤掉空值的环境变量
+    const filteredEnvVars = Object.fromEntries(
+      Object.entries(envVars).filter(([key, value]) => value && value.trim() !== '')
+    )
+
+    if (Object.keys(filteredEnvVars).length === 0) {
+      if (!confirm('没有设置任何环境变量，确定要继续吗？')) {
+        return
+      }
+    }
+
+    onConfirm(filteredEnvVars)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="mcp-dialog">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            编辑环境变量
+          </DialogTitle>
+          <DialogDescription>
+            配置 <strong>{config?.name}</strong> 的环境变量。请填写必需的配置信息。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 max-h-[400px] overflow-y-auto">
+          {Object.keys(envVars).length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              此服务不需要配置环境变量，或加载配置失败。
+            </div>
+          ) : (
+            Object.entries(envVars).map(([key, value]) => (
+              <div key={key}>
+                <label className="text-sm font-medium flex items-center justify-between">
+                  <span>{key}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2"
+                    onClick={() => setShowValues(prev => ({ ...prev, [key]: !prev[key] }))}
+                  >
+                    {showValues[key] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  </Button>
+                </label>
+                <Input
+                  type={showValues[key] ? 'text' : 'password'}
+                  value={value}
+                  onChange={(e) => {
+                    setEnvVars(prev => ({ ...prev, [key]: e.target.value }))
+                    setValidationResult(null) // 清除验证结果
+                  }}
+                  placeholder={`请输入 ${key}`}
+                  className="font-mono text-sm mt-1"
+                />
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* ✅ 验证结果显示 */}
+        {validationResult && (
+          <div className={`p-3 rounded-md text-sm ${
+            validationResult.success
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+          }`}>
+            <div className="flex items-center gap-2">
+              {validationResult.success ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <X className="w-4 h-4" />
+              )}
+              <span>{validationResult.message}</span>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          {/* ✅ 验证按钮 */}
+          <Button
+            variant="outline"
+            onClick={handleValidate}
+            disabled={validating || Object.keys(envVars).length === 0}
+            className="w-full sm:w-auto"
+          >
+            {validating ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                验证中...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                验证配置
+              </>
+            )}
+          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
+              取消
+            </Button>
+            <Button onClick={handleSubmit} className="flex-1 sm:flex-none">
+              <Check className="w-4 h-4 mr-2" />
+              保存
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

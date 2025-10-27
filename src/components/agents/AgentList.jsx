@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { getAgentStatusLabel } from '@/lib/agentsUtils'
 
 const brandButtonClasses = 'border border-transparent bg-[#4F6DFF] text-white shadow-sm hover:bg-[#3D58D4] hover:shadow-md focus-visible:ring-[#4F6DFF]/50'
 
@@ -121,6 +122,13 @@ export const AgentList = memo(({
     return count
   }, [statusFilter, selectedCapabilities])
 
+  const statusFilterLabel = useMemo(() => {
+    if (statusFilter === 'all') {
+      return translate('agents.filters.allStatus', 'All Status')
+    }
+    return getAgentStatusLabel(translate, statusFilter)
+  }, [statusFilter, translate])
+
   let content
   if (loading) {
     content = (
@@ -196,7 +204,7 @@ export const AgentList = memo(({
         {/* Status Filter */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[160px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={translate('agents.filters.allStatus', 'All Status')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{translate('agents.filters.allStatus', 'All Status')}</SelectItem>
@@ -290,7 +298,7 @@ export const AgentList = memo(({
           <span className="text-muted-foreground">{translate('agents.activeFilters', 'Active filters:')}</span>
           {statusFilter !== 'all' && (
             <Badge variant="secondary">
-              Status: {statusFilter}
+              {translate('agents.filters.statusLabel', 'Status')}: {statusFilterLabel}
               <button
                 onClick={() => setStatusFilter('all')}
                 className="ml-1 hover:text-destructive"

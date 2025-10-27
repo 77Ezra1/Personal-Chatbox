@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import * as mcpApi from '../lib/mcpApiClient'
+import { emitMcpServicesUpdated } from '../lib/mcpEvents'
 
 import { createLogger } from '../lib/logger'
 const logger = createLogger('useMcpManager')
@@ -21,10 +22,10 @@ export function useMcpManager() {
   const [error, setError] = useState(null)
 
   // 加载服务列表
-  const loadServices = useCallback(async () => {
+  const loadServices = useCallback(async (options = {}) => {
     try {
       setLoading(true)
-      const serviceList = await mcpApi.getServices()
+      const serviceList = await mcpApi.getServices({ refresh: options.refresh ?? false })
       logger.log('[MCP Manager] Loaded services:', serviceList)
       setServices(serviceList)
       setError(null)
@@ -48,10 +49,15 @@ export function useMcpManager() {
   }, [])
 
   // 初始加载
-  useEffect(() => {
-    loadServices()
-    loadTools()
+  const refresh = useCallback(async (options = {}) => {
+    await loadServices({ refresh: options.refresh ?? false })
+    await loadTools()
+    emitMcpServicesUpdated()
   }, [loadServices, loadTools])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
   // 获取所有可用工具
   const getAllTools = useCallback(() => {
@@ -74,17 +80,21 @@ export function useMcpManager() {
   }, [])
 
   // 启用/禁用服务
-  const toggleService = useCallback(async (serviceId, enabled) => {
+  const toggleService = useCallback(async (service, enabled) => {
     try {
-      await mcpApi.toggleService(serviceId, enabled)
+      if (service?.dbId) {
+        await mcpApi.toggleUserConfig(service.dbId, enabled)
+      } else {
+        await mcpApi.toggleService(service.id, enabled)
+      }
       // 重新加载服务和工具列表
-      await loadServices()
-      await loadTools()
+      await refresh({ refresh: true })
     } catch (err) {
-      logger.error(`[MCP Manager] Failed to toggle service ${serviceId}:`, err)
+      const identifier = service?.dbId || service?.id || 'unknown'
+      logger.error(`[MCP Manager] Failed to toggle service ${identifier}:`, err)
       throw err
     }
-  }, [loadServices, loadTools])
+  }, [refresh])
 
   // 获取已启用的服务列表(兼容旧接口)
   const enabledServers = services.filter(s => s.enabled)
@@ -106,7 +116,7 @@ export function useMcpManager() {
     getAllTools,
     callTool,
     toggleService,
-    reload: loadServices
+    reload: refresh,
+    refresh
   }
 }
-

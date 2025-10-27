@@ -6,6 +6,7 @@ import { McpPathConfigDialog } from './McpPathConfig'
 
 import { createLogger } from '../../lib/logger'
 const logger = createLogger('McpServiceConfigSimple')
+import { useTranslation } from '@/hooks/useTranslation'
 
 
 /**
@@ -13,16 +14,23 @@ const logger = createLogger('McpServiceConfigSimple')
  */
 export default function McpServiceConfigSimple() {
   const { services, loading, error, toggleService } = useMcpManager()
+  const { translate } = useTranslation()
 
-  const handleToggleServer = async (serverId) => {
+  const handleToggleServer = async (targetService) => {
     try {
-      const service = services.find(s => s.id === serverId)
+      const service = typeof targetService === 'string'
+        ? services.find(s => s.id === targetService)
+        : targetService
+
+      if (!service) {
+        throw new Error('未找到服务')
+      }
       const newEnabled = !service.enabled
       
-      await toggleService(serverId, newEnabled)
+      await toggleService(service, newEnabled)
     } catch (err) {
       logger.error('Failed to toggle server:', err)
-      alert('操作失败，请重试')
+      alert(translate('mcp.common.operationFailed', '操作失败，请重试'))
     }
   }
 
@@ -54,7 +62,7 @@ export default function McpServiceConfigSimple() {
   }
 
   if (loading) {
-    return <div className="p-4">加载中...</div>
+    return <div className="p-4">{translate('mcp.configPanel.loading', '加载中...')}</div>
   }
 
   if (error) {
@@ -70,8 +78,10 @@ export default function McpServiceConfigSimple() {
     <div className="p-4">
       <div className="mb-4">
         <p className="text-sm text-gray-600">
-          通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询、网页抓取等功能。
-          所有服务都是免费的，无需API密钥即可使用。
+          {translate(
+            'mcp.configPanel.intro',
+            '通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询、网页抓取等功能。所有服务都是免费的，无需API密钥即可使用。'
+          )}
         </p>
       </div>
 
@@ -80,7 +90,7 @@ export default function McpServiceConfigSimple() {
           <ServiceCard
             key={service.id}
             server={service}
-            onToggle={() => handleToggleServer(service.id)}
+            onToggle={() => handleToggleServer(service)}
             getServiceIcon={getServiceIcon}
           />
         ))}
@@ -93,6 +103,7 @@ export default function McpServiceConfigSimple() {
  * 简化的服务卡片组件
  */
 function ServiceCard({ server, onToggle, getServiceIcon }) {
+  const { translate } = useTranslation()
   // 判断服务是否需要配置
   const requiresConfig = server.requiresConfig || (server.id === 'brave_search' || server.id === 'github')
   const hasApiKey = server.apiKey && server.apiKey.length > 0
@@ -116,25 +127,34 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
             <div className="flex gap-2 mt-2">
               {requiresConfig ? (
                 <>
-                  <Badge variant="outline">需要配置</Badge>
+                  <Badge variant="outline">
+                    {translate('mcp.common.badgeNeedsConfig', '需要配置')}
+                  </Badge>
                   {hasApiKey && (
                     <Badge variant="secondary" style={{ 
                       color: 'var(--foreground)', 
                       backgroundColor: 'color-mix(in srgb, var(--border) 15%, transparent)',
                       opacity: 0.9
                     }}>
-                      ✓ 已配置
+                      ✓ {translate('mcp.common.badgeConfigured', '已配置')}
                     </Badge>
                   )}
                 </>
               ) : (
                 <>
-                  <Badge variant="secondary">免费</Badge>
-                  <Badge variant="outline">无需配置</Badge>
+                  <Badge variant="secondary">
+                    {translate('mcp.common.badgeFree', '免费')}
+                  </Badge>
+                  <Badge variant="outline">
+                    {translate('mcp.common.badgeFreeNoConfig', '无需配置')}
+                  </Badge>
                 </>
               )}
               {server.tools && server.tools.length > 0 && (
-                <Badge variant="outline">{server.tools.length} 个工具</Badge>
+                <Badge variant="outline">
+                  {translate('mcp.common.badgeTools', '{count} 个工具')
+                    .replace('{count}', server.tools.length.toString())}
+                </Badge>
               )}
             </div>
           </div>
@@ -168,4 +188,3 @@ function ServiceCard({ server, onToggle, getServiceIcon }) {
     </div>
   )
 }
-

@@ -1208,11 +1208,17 @@ class AgentEngine {
     const { toolName, parameters } = subtask.config;
     await this.ensureToolsLoaded();
 
+    // ✅ 工具过滤检查
+    if (!this.isToolAllowed(toolName, agent)) {
+      throw new Error(`工具 "${toolName}" 未被 Agent "${agent.name}" 授权使用`);
+    }
+
     // 检查是否是 MCP 工具（格式：serviceId_toolName）
     if (toolName && toolName.includes('_')) {
       // 尝试调用 MCP 工具
       try {
-        const mcpResult = await this.callMcpTool(toolName, parameters);
+        // 🔥 关键修复：传递agent.userId给callMcpTool
+        const mcpResult = await this.callMcpTool(toolName, parameters, agent.userId);
         return mcpResult;
       } catch (mcpError) {
         // 如果不是 MCP 工具或调用失败，继续使用本地工具
@@ -1236,21 +1242,107 @@ class AgentEngine {
   }
 
   /**
+   * 检查工具是否被 Agent 允许使用
+   * @param {string} toolName - 工具名称
+   * @param {Object} agent - Agent 对象
+   * @returns {boolean} 是否允许
+   */
+  isToolAllowed(toolName, agent) {
+    // 如果 Agent 没有配置工具过滤，允许所有工具
+    if (!agent.config || !agent.config.toolFilter) {
+      return true;
+    }
+
+    const filter = agent.config.toolFilter;
+
+    // 支持两种过滤模式：
+    // 1. allowList（白名单）：只允许列表中的工具
+    // 2. blockList（黑名单）：禁止列表中的工具，其他都允许
+
+    if (filter.mode === 'allowList') {
+      const allowedTools = filter.tools || [];
+      return allowedTools.includes(toolName);
+    } else if (filter.mode === 'blockList') {
+      const blockedTools = filter.tools || [];
+      return !blockedTools.includes(toolName);
+    }
+
+    // 默认允许所有工具
+    return true;
+  }
+
+  /**
+   * 获取 Agent 可用的工具列表（应用过滤器）
+   * @param {Object} agent - Agent 对象
+   * @returns {Array} 可用工具列表
+   */
+  getAvailableTools(agent) {
+    const allTools = [];
+
+    // 获取本地注册的工具
+    for (const [toolName, tool] of this.toolRegistry.entries()) {
+      if (this.isToolAllowed(toolName, agent)) {
+        allTools.push({
+          name: toolName,
+          description: tool.description,
+          source: tool.source || 'built-in',
+          parameters: tool.parameters || {}
+        });
+      }
+    }
+
+    // 获取 MCP 工具（如果有）
+    try {
+      const mcpManager = require('./mcp-manager.cjs');
+      if (mcpManager && typeof mcpManager.getAllTools === 'function') {
+        const mcpTools = mcpManager.getAllTools(agent.userId);
+        for (const mcpTool of mcpTools) {
+          const toolName = mcpTool.function.name;
+          if (this.isToolAllowed(toolName, agent)) {
+            allTools.push({
+              name: toolName,
+              description: mcpTool.function.description,
+              source: 'mcp',
+              parameters: mcpTool.function.parameters
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[AgentEngine] 获取 MCP 工具失败:', error.message);
+    }
+
+    return allTools;
+  }
+
+  /**
    * 调用 MCP 工具
    * @param {String} toolName - 工具名称（格式：serviceId_toolName）
    * @param {Object} parameters - 工具参数
+   * @param {Number} userId - 用户ID（可选）
    */
-  async callMcpTool(toolName, parameters = {}) {
+  async callMcpTool(toolName, parameters = {}, userId = null) {
     const axios = require('axios');
     const config = require('../config.cjs');
 
     const baseURL = `http://localhost:${config.server.port}`;
 
     try {
-      const response = await axios.post(`${baseURL}/api/mcp/call`, {
+      // 🔥 关键修复：在请求体中包含userId，确保调用正确的用户服务
+      const requestBody = {
         toolName,
         parameters
-      }, {
+      };
+
+      // 如果提供了userId，添加到请求体
+      if (userId) {
+        requestBody.userId = userId;
+        console.log(`[AgentEngine] 调用MCP工具 ${toolName}，userId: ${userId}`);
+      } else {
+        console.log(`[AgentEngine] 调用MCP工具 ${toolName}，无userId（全局模式）`);
+      }
+
+      const response = await axios.post(`${baseURL}/api/mcp/call`, requestBody, {
         timeout: 30000 // 30 秒超时
       });
 
@@ -1262,6 +1354,7 @@ class AgentEngine {
           result: response.data.content,
           serviceId: response.data.serviceId,
           actualToolName: response.data.actualToolName,
+          userId: response.data.userId, // 记录实际使用的userId
           timestamp: new Date().toISOString()
         };
       } else {

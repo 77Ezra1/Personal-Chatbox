@@ -63,3 +63,19 @@ test-accounts-*.txt
 # 上传文件目录
 data/uploads/
 uploads/
+
+# 进程ID文件
+*.pid
+.backend.pid
+.frontend.pid
+
+# 备份压缩文件
+*.tar.gz
+*.zip
+*.rar
+
+# 测试文件
+test-*.cjs
+test-*.html
+test-*.js
+verify-*.html

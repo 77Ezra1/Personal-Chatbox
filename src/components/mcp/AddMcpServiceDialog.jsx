@@ -2,12 +2,13 @@ import React, { useState } from 'react'
 import { X, Plus, Search, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * 添加 MCP 服务对话框
  * 支持从模板添加或手动配置
  */
-export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, onAdd }) {
+export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, onAdd, onSuccess }) {
   const [activeTab, setActiveTab] = useState('templates') // templates or custom
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -15,6 +16,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
   const [envVars, setEnvVars] = useState({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const { translate } = useTranslation()
 
   // 手动配置表单
   const [customConfig, setCustomConfig] = useState({
@@ -99,7 +101,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
 
       // 验证必填字段
       if (!customConfig.mcp_id || !customConfig.name || !customConfig.command) {
-        throw new Error('请填写所有必填字段')
+        throw new Error(translate('mcp.addDialog.errors.required', '请填写所有必填字段'))
       }
 
       // 解析参数和环境变量
@@ -111,33 +113,42 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
         if (customConfig.args) {
           args = JSON.parse(customConfig.args)
           if (!Array.isArray(args)) {
-            throw new Error('参数必须是数组格式')
+            throw new Error(translate('mcp.addDialog.errors.argsMustArray', '参数必须是数组格式'))
           }
         }
       } catch (e) {
-        throw new Error('参数格式错误：' + e.message)
+        const message =
+          translate('mcp.addDialog.errors.argsInvalid', { message: e.message }) ||
+          `参数格式错误：${e.message}`
+        throw new Error(message)
       }
 
       try {
         if (customConfig.env_vars) {
           env_vars = JSON.parse(customConfig.env_vars)
           if (typeof env_vars !== 'object' || Array.isArray(env_vars)) {
-            throw new Error('环境变量必须是对象格式')
+            throw new Error(translate('mcp.addDialog.errors.envMustObject', '环境变量必须是对象格式'))
           }
         }
       } catch (e) {
-        throw new Error('环境变量格式错误：' + e.message)
+        const message =
+          translate('mcp.addDialog.errors.envInvalid', { message: e.message }) ||
+          `环境变量格式错误：${e.message}`
+        throw new Error(message)
       }
 
       try {
         if (customConfig.features) {
           features = JSON.parse(customConfig.features)
           if (!Array.isArray(features)) {
-            throw new Error('功能列表必须是数组格式')
+            throw new Error(translate('mcp.addDialog.errors.featuresMustArray', '功能列表必须是数组格式'))
           }
         }
       } catch (e) {
-        throw new Error('功能列表格式错误：' + e.message)
+        const message =
+          translate('mcp.addDialog.errors.featuresInvalid', { message: e.message }) ||
+          `功能列表格式错误：${e.message}`
+        throw new Error(message)
       }
 
       // 构建配置对象
@@ -156,18 +167,24 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
       }
 
       // 调用API创建配置
+      const token = localStorage.getItem('token')
+      const headers = {
+        'Content-Type': 'application/json'
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+
       const response = await fetch('/api/mcp/user-configs', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify(configData)
       })
 
       const data = await response.json()
 
       if (!data.success) {
-        throw new Error(data.message || '创建失败')
+        throw new Error(data.message || translate('mcp.addDialog.error', '创建失败'))
       }
 
       // 重置表单
@@ -183,11 +200,15 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
         features: ''
       })
 
+      if (onSuccess) {
+        await onSuccess()
+      }
+
       // 关闭对话框
       onClose()
 
       // 提示成功
-      alert('自定义 MCP 服务创建成功！')
+      alert(translate('mcp.addDialog.customSuccess', '自定义 MCP 服务创建成功！'))
 
     } catch (err) {
       setError(err.message)
@@ -222,9 +243,12 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
             <div className="flex items-center gap-3">
               <span className="text-3xl">{selectedTemplate.icon}</span>
               <div>
-                <h2 className="text-xl font-semibold">配置 {selectedTemplate.name}</h2>
+                <h2 className="text-xl font-semibold">
+                  {translate('mcp.addDialog.configTitle', { name: selectedTemplate.name }) ||
+                    `配置 ${selectedTemplate.name}`}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  填写必要的配置信息以启用此服务
+                  {translate('mcp.addDialog.configSubtitle', '填写必要的配置信息以启用此服务')}
                 </p>
               </div>
             </div>
@@ -245,17 +269,23 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
 
             {/* 环境变量配置 */}
             <div className="space-y-4">
-              <h3 className="font-medium">环境变量配置</h3>
+              <h3 className="font-medium">
+                {translate('mcp.addDialog.envConfigTitle', '环境变量配置')}
+              </h3>
 
               {Object.keys(selectedTemplate.env || {}).map(key => (
                 <div key={key} className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
                     {key}
-                    <span className="text-destructive">*</span>
+                    <span className="text-destructive">
+                      {translate('mcp.addDialog.requiredMark', '*')}
+                    </span>
                   </label>
                   <Input
                     type={key.toLowerCase().includes('token') || key.toLowerCase().includes('key') || key.toLowerCase().includes('password') ? 'password' : 'text'}
-                    placeholder={`请输入 ${key}`}
+                    placeholder={
+                      translate('mcp.addDialog.envPlaceholder', { key }) || `请输入 ${key}`
+                    }
                     value={envVars[key] || ''}
                     onChange={(e) => setEnvVars({ ...envVars, [key]: e.target.value })}
                   />
@@ -269,7 +299,9 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                 <div className="flex items-start gap-2">
                   <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">设置说明</h4>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                      {translate('mcp.addDialog.setupInstructions', '设置说明')}
+                    </h4>
                     <pre className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap font-sans">
                       {selectedTemplate.setupInstructions.zh || selectedTemplate.setupInstructions.en}
                     </pre>
@@ -287,7 +319,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                 className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
               >
                 <ExternalLink className="w-4 h-4" />
-                查看官方文档
+                {translate('mcp.addDialog.viewDocs', '查看官方文档')}
               </a>
             )}
 
@@ -307,14 +339,16 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
               disabled={loading}
               className="px-4 py-2 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              取消
+              {translate('mcp.addDialog.cancel', '取消')}
             </button>
             <button
               onClick={handleConfirmAdd}
               disabled={loading || Object.values(envVars).some(v => !v)}
               className="px-4 py-2 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '添加中...' : '确认添加'}
+              {loading
+                ? translate('mcp.addDialog.loadingAdd', '添加中...')
+                : translate('mcp.addDialog.confirmAdd', '确认添加')}
             </button>
           </div>
         </div>
@@ -329,11 +363,13 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div>
-            <h2 className="text-xl font-semibold">添加 MCP 服务</h2>
+            <h2 className="text-xl font-semibold">
+              {translate('mcp.addDialog.title', '添加 MCP 服务')}
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">
-            从模板库选择服务或手动配置自定义服务
-          </p>
-        </div>
+              {translate('mcp.addDialog.subtitle', '从模板库选择服务或手动配置自定义服务')}
+            </p>
+          </div>
         <button
           onClick={onClose}
           className="p-1 rounded-md hover:bg-accent transition-colors"
@@ -353,7 +389,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              从模板添加
+              {translate('mcp.addDialog.tabTemplates', '从模板添加')}
             </button>
             <button
               onClick={() => setActiveTab('custom')}
@@ -363,7 +399,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              手动配置
+              {translate('mcp.addDialog.tabCustom', '手动配置')}
             </button>
           </div>
         </div>
@@ -378,13 +414,13 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                 <div className="inline-flex rounded-lg border p-1 bg-muted/30 overflow-x-auto">
                   <button
                     onClick={() => setSelectedCategory('all')}
-                    className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap transition-colors ${
+                  className={`px-3 py-1.5 text-sm rounded-md whitespace-nowrap transition-colors ${
                       selectedCategory === 'all'
                         ? 'bg-background shadow-sm font-medium'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    全部
+                    {translate('mcp.addDialog.categoryAll', '全部')}
                   </button>
                   {Object.entries(categories || {}).map(([id, cat]) => (
                     <button
@@ -405,7 +441,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                 <div className="relative flex-1 max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索服务..."
+                    placeholder={translate('mcp.addDialog.searchPlaceholder', '搜索服务...')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 h-9"
@@ -427,7 +463,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
 
               {filteredTemplates.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
-                  <p>没有找到匹配的服务模板</p>
+                  <p>{translate('mcp.addDialog.noTemplates', '没有找到匹配的服务模板')}</p>
                 </div>
               )}
             </div>
@@ -436,27 +472,33 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
               <div className="max-w-3xl mx-auto space-y-6">
                 {/* 基本信息 */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">基本信息</h3>
+                  <h3 className="text-lg font-semibold">
+                    {translate('mcp.addDialog.customSectionTitle', '基本信息')}
+                  </h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
-                        服务 ID <span className="text-red-500">*</span>
+                        {translate('mcp.addDialog.customLabels.id', '服务 ID')}{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        placeholder="例如: my-custom-service"
+                        placeholder={translate('mcp.addDialog.customPlaceholders.id', '例如: my-custom-service')}
                         value={customConfig.mcp_id}
                         onChange={(e) => setCustomConfig({ ...customConfig, mcp_id: e.target.value })}
                       />
-                      <p className="text-xs text-muted-foreground">唯一标识，只能包含字母、数字、下划线和连字符</p>
+                      <p className="text-xs text-muted-foreground">
+                        {translate('mcp.addDialog.customHints.id', '唯一标识，只能包含字母、数字、下划线和连字符')}
+                      </p>
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
-                        服务名称 <span className="text-red-500">*</span>
+                        {translate('mcp.addDialog.customLabels.name', '服务名称')}{' '}
+                        <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        placeholder="例如: 我的自定义服务"
+                        placeholder={translate('mcp.addDialog.customPlaceholders.name', '例如: 我的自定义服务')}
                         value={customConfig.name}
                         onChange={(e) => setCustomConfig({ ...customConfig, name: e.target.value })}
                       />
@@ -464,9 +506,11 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">服务描述</label>
+                    <label className="text-sm font-medium">
+                      {translate('mcp.addDialog.customLabels.description', '服务描述')}
+                    </label>
                     <textarea
-                      placeholder="描述这个服务的功能和用途..."
+                      placeholder={translate('mcp.addDialog.customPlaceholders.description', '描述这个服务的功能和用途...')}
                       value={customConfig.description}
                       onChange={(e) => setCustomConfig({ ...customConfig, description: e.target.value })}
                       className="w-full min-h-[80px] px-3 py-2 text-sm rounded-md border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
@@ -475,82 +519,106 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">分类</label>
+                      <label className="text-sm font-medium">
+                        {translate('mcp.addDialog.customLabels.category', '分类')}
+                      </label>
                       <select
                         value={customConfig.category}
                         onChange={(e) => setCustomConfig({ ...customConfig, category: e.target.value })}
                         className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                       >
                         {Object.entries(categories || {}).map(([id, cat]) => (
-                          <option key={id} value={id}>{cat.icon} {cat.name}</option>
+                          <option key={id} value={id}>
+                            {cat.icon} {cat.name}
+                          </option>
                         ))}
                       </select>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">图标</label>
+                      <label className="text-sm font-medium">
+                        {translate('mcp.addDialog.customLabels.icon', '图标')}
+                      </label>
                       <Input
-                        placeholder="🔧"
+                        placeholder={translate('mcp.addDialog.customPlaceholders.icon', '🔧')}
                         value={customConfig.icon}
                         onChange={(e) => setCustomConfig({ ...customConfig, icon: e.target.value })}
                       />
-                      <p className="text-xs text-muted-foreground">使用一个表情符号作为图标</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 命令配置 */}
                 <div className="space-y-4 pt-4 border-t">
-                  <h3 className="text-lg font-semibold">命令配置</h3>
+                  <h3 className="text-lg font-semibold">
+                    {translate('mcp.addDialog.commandSectionTitle', '命令配置')}
+                  </h3>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      执行命令 <span className="text-red-500">*</span>
+                      {translate('mcp.addDialog.customLabels.command', '执行命令')}{' '}
+                      <span className="text-red-500">*</span>
                     </label>
                     <Input
-                      placeholder="例如: npx, node, python"
+                      placeholder={translate('mcp.addDialog.customPlaceholders.command', '例如: npx, node, python')}
                       value={customConfig.command}
                       onChange={(e) => setCustomConfig({ ...customConfig, command: e.target.value })}
                     />
-                    <p className="text-xs text-muted-foreground">用于启动服务的命令</p>
+                    <p className="text-xs text-muted-foreground">
+                      {translate('mcp.addDialog.customHints.command', '用于启动服务的命令')}
+                    </p>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">命令参数（JSON 数组）</label>
+                    <label className="text-sm font-medium">
+                      {translate('mcp.addDialog.customLabels.args', '命令参数（JSON 数组）')}
+                    </label>
                     <textarea
-                      placeholder='例如: ["-y", "@modelcontextprotocol/server-github"]'
+                      placeholder={translate('mcp.addDialog.customPlaceholders.args', '例如: ["-y", "@modelcontextprotocol/server-github"]')}
                       value={customConfig.args}
                       onChange={(e) => setCustomConfig({ ...customConfig, args: e.target.value })}
                       className="w-full min-h-[60px] px-3 py-2 text-sm font-mono rounded-md border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
                     />
-                    <p className="text-xs text-muted-foreground">必须是有效的 JSON 数组格式，留空表示无参数</p>
+                    <p className="text-xs text-muted-foreground">
+                      {translate('mcp.addDialog.customHints.args', '必须是有效的 JSON 数组格式，留空表示无参数')}
+                    </p>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">环境变量（JSON 对象）</label>
+                    <label className="text-sm font-medium">
+                      {translate('mcp.addDialog.customLabels.envVars', '环境变量（JSON 对象）')}
+                    </label>
                     <textarea
-                      placeholder='例如: {"API_KEY": "your-key", "TIMEOUT": "30000"}'
+                      placeholder={translate('mcp.addDialog.customPlaceholders.envVars', '例如: {"API_KEY": "your-key", "TIMEOUT": "30000"}')}
                       value={customConfig.env_vars}
                       onChange={(e) => setCustomConfig({ ...customConfig, env_vars: e.target.value })}
                       className="w-full min-h-[80px] px-3 py-2 text-sm font-mono rounded-md border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
                     />
-                    <p className="text-xs text-muted-foreground">必须是有效的 JSON 对象格式，留空表示无环境变量</p>
+                    <p className="text-xs text-muted-foreground">
+                      {translate('mcp.addDialog.customHints.envVars', '必须是有效的 JSON 对象格式，留空表示无环境变量')}
+                    </p>
                   </div>
                 </div>
 
                 {/* 功能列表 */}
                 <div className="space-y-4 pt-4 border-t">
-                  <h3 className="text-lg font-semibold">功能列表（可选）</h3>
+                  <h3 className="text-lg font-semibold">
+                    {translate('mcp.addDialog.customFeaturesTitle', '功能列表（可选）')}
+                  </h3>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">功能描述（JSON 数组）</label>
+                    <label className="text-sm font-medium">
+                      {translate('mcp.addDialog.customLabels.features', '功能描述（JSON 数组）')}
+                    </label>
                     <textarea
-                      placeholder='例如: ["文件读写", "目录管理", "文件搜索"]'
+                      placeholder={translate('mcp.addDialog.customPlaceholders.features', '例如: ["文件读写", "目录管理", "文件搜索"]')}
                       value={customConfig.features}
                       onChange={(e) => setCustomConfig({ ...customConfig, features: e.target.value })}
                       className="w-full min-h-[60px] px-3 py-2 text-sm font-mono rounded-md border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
                     />
-                    <p className="text-xs text-muted-foreground">必须是有效的 JSON 数组格式</p>
+                    <p className="text-xs text-muted-foreground">
+                      {translate('mcp.addDialog.customHints.features', '必须是有效的 JSON 数组格式')}
+                    </p>
                   </div>
                 </div>
 
@@ -569,14 +637,16 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
                     disabled={loading}
                     className="px-4 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    重置
+                    {translate('mcp.addDialog.customReset', '重置')}
                   </button>
                   <button
                     onClick={handleCustomSubmit}
                     disabled={loading || !customConfig.mcp_id || !customConfig.name || !customConfig.command}
                     className="px-4 py-2 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {loading ? '创建中...' : '创建服务'}
+                    {loading
+                      ? translate('mcp.addDialog.customCreating', '创建中...')
+                      : translate('mcp.addDialog.customCreate', '创建服务')}
                   </button>
                 </div>
               </div>
@@ -592,6 +662,7 @@ export function AddMcpServiceDialog({ isOpen, onClose, templates, categories, on
  * 模板卡片组件
  */
 function TemplateCard({ template, onAdd, loading }) {
+  const { translate } = useTranslation()
   const popularityColors = {
     high: 'text-green-600 bg-green-100 dark:bg-green-900/30',
     medium: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
@@ -599,9 +670,9 @@ function TemplateCard({ template, onAdd, loading }) {
   }
 
   const popularityLabels = {
-    high: '热门',
-    medium: '推荐',
-    low: '冷门'
+    high: translate('mcp.addDialog.popularity.high', '热门'),
+    medium: translate('mcp.addDialog.popularity.medium', '推荐'),
+    low: translate('mcp.addDialog.popularity.low', '冷门')
   }
 
   return (
@@ -613,13 +684,15 @@ function TemplateCard({ template, onAdd, loading }) {
             <h3 className="font-medium truncate">{template.name}</h3>
             <div className="flex items-center gap-2 mt-1">
               {template.official && (
-                <Badge variant="secondary" className="text-xs">官方</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {translate('mcp.addDialog.officialBadge', '官方')}
+                </Badge>
               )}
               <Badge
                 variant="outline"
                 className={`text-xs ${popularityColors[template.popularity] || popularityColors.medium}`}
               >
-                {popularityLabels[template.popularity] || '推荐'}
+                {popularityLabels[template.popularity] || translate('mcp.addDialog.popularity.medium', '推荐')}
               </Badge>
             </div>
           </div>
@@ -630,7 +703,7 @@ function TemplateCard({ template, onAdd, loading }) {
           className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="w-4 h-4" />
-          添加
+          {translate('mcp.addDialog.templateButton', '添加')}
         </button>
       </div>
 
@@ -655,4 +728,3 @@ function TemplateCard({ template, onAdd, loading }) {
     </div>
   )
 }
-

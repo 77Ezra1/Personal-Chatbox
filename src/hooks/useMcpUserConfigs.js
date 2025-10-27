@@ -17,7 +17,17 @@ export function useMcpUserConfigs() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/mcp/user-configs')
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/mcp/user-configs', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
 
       if (data.success) {
@@ -36,13 +46,19 @@ export function useMcpUserConfigs() {
   // 创建新配置
   const createConfig = async (configData) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/mcp/user-configs', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(configData)
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const data = await response.json()
 
@@ -61,13 +77,19 @@ export function useMcpUserConfigs() {
   // 更新配置
   const updateConfig = async (configId, updates) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`/api/mcp/user-configs/${configId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updates)
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const data = await response.json()
 
@@ -86,9 +108,17 @@ export function useMcpUserConfigs() {
   // 删除配置
   const deleteConfig = async (configId) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`/api/mcp/user-configs/${configId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const data = await response.json()
 
@@ -107,9 +137,18 @@ export function useMcpUserConfigs() {
   // 切换启用状态
   const toggleConfig = async (configId) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`/api/mcp/user-configs/${configId}/toggle`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const data = await response.json()
 
@@ -128,9 +167,18 @@ export function useMcpUserConfigs() {
   // 测试连接
   const testConfig = async (configId) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`/api/mcp/user-configs/${configId}/test`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const data = await response.json()
       return data

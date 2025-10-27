@@ -1,5 +1,11 @@
 import { PROVIDERS, THINKING_MODE } from './constants.js'
 import { shouldSendThinkingParam } from './modelThinkingDetector.js'
+import {
+  generateEnhancedSystemPrompt,
+  selectBestPrompt,
+  toolCallHistory,
+  DEEP_THINKING_SYSTEM_PROMPT as LEGACY_DEEP_THINKING_PROMPT
+} from './promptTemplates.js'
 
 import { createLogger } from '../lib/logger'
 const logger = createLogger('extractReasoningSegments')
@@ -41,12 +47,10 @@ const OPENAI_COMPATIBLE_PROVIDER_CONFIG = {
 }
 
 const DEFAULT_MAX_TOKENS = 1024
-const DEEP_THINKING_SYSTEM_PROMPT = [
-  'Deep thinking mode is enabled.',
-  'Carefully reason through the request step by step before answering and explore multiple angles when helpful.',
-  'IMPORTANT: Use the SAME LANGUAGE as the user\'s message in your reasoning process. If the user writes in Chinese, think in Chinese. If in English, think in English.',
-  'If possible, expose your internal reasoning inside <reasoning></reasoning> tags and place your final response inside <answer></answer> tags so it can be rendered separately.'
-].join(' ')
+
+// 注意：旧的DEEP_THINKING_SYSTEM_PROMPT已移至 promptTemplates.js
+// 这里保留一个简化版本以防某些地方还在使用
+const DEEP_THINKING_SYSTEM_PROMPT = LEGACY_DEEP_THINKING_PROMPT
 const TEXT_MIME_PREFIXES = [
   'text/',
   'application/json',
@@ -316,6 +320,19 @@ async function callDeepSeekMCP({
 
               try {
                 const parsed = JSON.parse(data)
+
+                // 处理工具调用通知
+                if (parsed.type === 'tool_calls' && parsed.tool_calls) {
+                  const toolNames = parsed.tool_calls.map(tc => tc.function.name).join(', ')
+                  logger.log(`[callDeepSeekMCP] Tool calls detected: ${toolNames}`)
+                  console.log('🔧 正在调用工具:', toolNames)
+
+                  // 发送工具调用提示给前端（通过特殊格式）
+                  // 前端可以显示"正在调用工具: xxx"的提示
+                  const toolMessage = `\n\n🔧 正在调用工具: ${toolNames}...\n`
+                  fullContent += toolMessage
+                  onToken(toolMessage, fullContent, fullReasoning)
+                }
 
                 // 处理思考内容
                 if (parsed.type === 'reasoning' && parsed.content) {
@@ -609,13 +626,24 @@ function sanitizeMessages(messages) {
     })
 }
 
-function injectDeepThinkingPrompt(messages) {
+/**
+ * 注入增强的Deep Thinking Prompt
+ * 新版本：使用智能场景识别和Few-shot Learning
+ * @param {Array} messages - 消息历史
+ * @param {Object} options - 额外选项
+ * @returns {Array} 注入Prompt后的消息
+ */
+function injectDeepThinkingPrompt(messages, options = {}) {
   if (!Array.isArray(messages) || messages.length === 0) {
     return messages
   }
+
+  // 🔥 新功能：智能选择最佳Prompt模板
+  const enhancedPromptContent = generateEnhancedSystemPrompt(messages, options)
+
   const systemPrompt = {
     role: 'system',
-    content: DEEP_THINKING_SYSTEM_PROMPT,
+    content: enhancedPromptContent,
     attachments: []
   }
 

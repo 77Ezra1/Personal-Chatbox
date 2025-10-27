@@ -119,19 +119,19 @@ router.post('/conversations', authMiddleware, async (req, res) => {
           logger.info(`[User Data] Updated conversation: ${title} (ID: ${dbId})`);
         } else {
           // 插入新对话（前端临时 ID，或者数据库中不存在的 ID）
-          // 对话表的 id 是 TEXT 类型，使用前端提供的 ID
-          dbId = conv.id || `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
-
-          await db.prepare(
-            `INSERT INTO conversations (id, user_id, title, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?)`
+          // 对话表的 id 是 INTEGER 自增主键，不指定 id 让数据库自动生成
+          const insertResult = await db.prepare(
+            `INSERT INTO conversations (user_id, title, created_at, updated_at)
+             VALUES (?, ?, ?, ?)`
           ).run(
-            dbId,
             userId,
             title,
             conv.createdAt || new Date().toISOString(),
             conv.updatedAt || new Date().toISOString()
           );
+
+          // 获取新插入的自增 ID
+          dbId = insertResult.lastInsertRowid;
           existingIds.add(dbId);
           insertedCount++;
           logger.info(`[User Data] Inserted new conversation: ${title} (ID: ${dbId})`);
@@ -367,6 +367,53 @@ router.post('/config', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[User Data] Error saving config:', err);
     return res.status(500).json({ message: '保存配置失败' });
+  }
+});
+
+/**
+ * 获取用户配置的模型列表
+ * GET /api/user-data/models
+ * 用于工作流编辑器等功能选择模型
+ */
+router.get('/models', authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const config = await db.prepare(
+      'SELECT model_config FROM user_configs WHERE user_id = ?'
+    ).get(userId);
+
+    if (!config || !config.model_config) {
+      return res.json({ models: [] });
+    }
+
+    const modelConfig = safeJSONParse(config.model_config, {});
+    const models = [];
+
+    // 解析 modelConfig，提取所有配置的模型
+    // modelConfig 格式: { providers: { openai: { models: {...}, selectedModel: '...' } } }
+    if (modelConfig.providers) {
+      for (const [provider, providerConfig] of Object.entries(modelConfig.providers)) {
+        if (providerConfig && providerConfig.models) {
+          // 遍历该提供商的所有模型
+          for (const [modelName, modelSettings] of Object.entries(providerConfig.models)) {
+            models.push({
+              id: `${provider}_${modelName}`,
+              provider: provider,
+              model: modelName,
+              displayName: `${provider} - ${modelName}`,
+              settings: modelSettings || {}
+            });
+          }
+        }
+      }
+    }
+
+    logger.info(`[User Data] Loaded ${models.length} models for user ${userId}`);
+    res.json({ models });
+  } catch (err) {
+    logger.error('[User Data] Error fetching models:', err);
+    res.status(500).json({ message: '获取模型列表失败' });
   }
 });
 

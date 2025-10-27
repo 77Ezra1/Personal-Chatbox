@@ -15,13 +15,13 @@ class TimeService extends BaseService {
         type: 'function',
         function: {
           name: 'get_current_time',
-          description: '获取指定时区的当前时间',
+          description: '获取准确的当前时间。当用户询问"现在几点"、"今天日期"或需要时间戳时，调用此工具获取真实时间，不要猜测。',
           parameters: {
             type: 'object',
             properties: {
               timezone: {
                 type: 'string',
-                description: '时区，例如：Asia/Shanghai、America/New_York',
+                description: '时区标识符。常用: Asia/Shanghai(中国), America/New_York(纽约), Europe/London(伦敦), UTC(世界标准)',
                 default: 'Asia/Shanghai'
               }
             }
@@ -32,21 +32,21 @@ class TimeService extends BaseService {
         type: 'function',
         function: {
           name: 'convert_time',
-          description: '在不同时区之间转换时间',
+          description: '转换不同时区的时间。当用户需要知道"北京时间对应纽约几点"这类问题时使用。',
           parameters: {
             type: 'object',
             properties: {
               source_timezone: {
                 type: 'string',
-                description: '源时区'
+                description: '源时区，如: Asia/Shanghai'
               },
               time: {
                 type: 'string',
-                description: '时间（HH:MM格式）'
+                description: '要转换的时间，格式: HH:MM，如: 14:30'
               },
               target_timezone: {
                 type: 'string',
-                description: '目标时区'
+                description: '目标时区，如: America/New_York'
               }
             },
             required: ['source_timezone', 'time', 'target_timezone']

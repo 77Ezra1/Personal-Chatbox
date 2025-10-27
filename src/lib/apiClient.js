@@ -80,6 +80,7 @@ export const agentAPI = {
 
   // 任务执行
   execute: (id, taskData) => apiClient.post(`/agents/${id}/execute`, { taskData }),
+  batchExecute: (tasks) => apiClient.post('/agents/batch/execute', { tasks }), // ✅ 批量执行
   stop: (id) => apiClient.post(`/agents/${id}/stop`),
   getProgress: (id) => apiClient.get(`/agents/${id}/progress`),
 

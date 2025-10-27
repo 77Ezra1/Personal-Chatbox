@@ -19,13 +19,13 @@ class DexscreenerService extends BaseService {
         type: 'function',
         function: {
           name: 'search_token',
-          description: '搜索加密货币代币,获取价格和交易对信息',
+          description: '[必须调用] 获取代币的实时价格数据。当用户询问任何代币的价格、市值、交易量时，必须先调用此工具获取真实数据，不要猜测或使用过时信息。',
           parameters: {
             type: 'object',
             properties: {
               query: {
                 type: 'string',
-                description: '搜索查询词,可以是代币名称、符号或地址,例如: BTC, ETH, SOL'
+                description: '代币符号或名称。例如: BTC, ETH, SOL, USDT。直接使用用户提到的代币名称。'
               }
             },
             required: ['query']
@@ -36,18 +36,18 @@ class DexscreenerService extends BaseService {
         type: 'function',
         function: {
           name: 'get_token_price',
-          description: '获取指定代币的详细价格信息',
+          description: '[高级查询] 通过合约地址获取特定链上代币的详细价格信息。仅在用户提供合约地址或需要特定链数据时使用。',
           parameters: {
             type: 'object',
             properties: {
               chainId: {
                 type: 'string',
-                description: '区块链ID,例如: ethereum, bsc, solana, polygon',
+                description: '区块链标识。可选值: ethereum, bsc, solana, polygon, arbitrum, avalanche',
                 default: 'ethereum'
               },
               tokenAddress: {
                 type: 'string',
-                description: '代币合约地址'
+                description: '代币的智能合约地址(40位十六进制字符串)'
               }
             },
             required: ['tokenAddress']
@@ -58,7 +58,7 @@ class DexscreenerService extends BaseService {
         type: 'function',
         function: {
           name: 'get_trending_tokens',
-          description: '获取最新的热门代币列表',
+          description: '[市场概览] 获取当前热门代币列表。当用户询问"市场热点"、"什么币在涨"、"热门代币"时使用。',
           parameters: {
             type: 'object',
             properties: {}

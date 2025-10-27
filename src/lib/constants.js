@@ -191,6 +191,254 @@ export const TRANSLATIONS = {
       migrationFailed: 'Data migration failed. Please refresh the page and try again.',
       migrationError: 'Data migration error. Please refresh the page and try again.'
     },
+    agents: {
+      title: 'AI Agents',
+      subtitle: 'Manage and execute your intelligent agents',
+      createAgent: 'Create Agent',
+      searchPlaceholder: 'Search agents...',
+      noAgents: 'No agents found',
+      noAgentsDescription: 'Create your first AI agent to automate tasks and workflows',
+      filters: {
+        allStatus: 'All Status',
+        active: 'Active',
+        inactive: 'Inactive',
+        busy: 'Busy',
+        error: 'Error',
+        capabilities: 'Capabilities',
+        statusLabel: 'Status'
+      },
+      status: {
+        active: 'Active',
+        inactive: 'Inactive',
+        idle: 'Idle',
+        busy: 'Busy',
+        running: 'Running',
+        error: 'Error'
+      },
+      card: {
+        untitledAgent: 'Untitled Agent',
+        noDescription: 'No description available',
+        openMenu: 'Open menu',
+        status: 'Status',
+        capabilities: 'Capabilities',
+        more: 'more',
+        totalRuns: 'Total Runs',
+        successRate: 'Success Rate',
+        avgDuration: 'Avg duration',
+        lastRun: 'Last run'
+      },
+      toasts: {
+        loadFailed: 'Failed to load agents',
+        createSuccess: 'Agent created successfully',
+        updateSuccess: 'Agent updated successfully',
+        saveFailed: 'Failed to save agent',
+        deleteSuccess: 'Agent deleted successfully',
+        deleteFailed: 'Failed to delete agent',
+        executeSuccess: 'Task execution started',
+        executeFailed: 'Failed to execute task',
+        stopInfo: 'Task execution stopped',
+        stopFailed: 'Failed to stop task'
+      },
+      actions: {
+        execute: 'Execute',
+        edit: 'Edit',
+        delete: 'Delete',
+        viewDetails: 'View Details',
+        viewHistory: 'View History'
+      },
+      selector: {
+        loading: 'Loading...',
+        select: 'Select Agent',
+        availableAgents: 'Available Agents',
+        noneAvailable: 'No agents available',
+        clearSelection: 'Do not use Agent',
+        refresh: 'Refresh list',
+        loadFailed: 'Failed to load agents',
+        statusUnknown: 'unknown'
+      },
+      editor: {
+        fields: {
+          mcpToggle: 'MCP Services'
+        },
+        mcp: {
+          loading: 'Loading MCP tools...',
+          noToolsTitle: 'No available MCP tools',
+          noToolsHint: 'Please enable MCP Services in settings first',
+          categories: {
+            search: 'Search & Retrieval',
+            file: 'File Operations',
+            data: 'Data Processing',
+            api: 'API & Network',
+            automation: 'Automation',
+            analysis: 'Analysis',
+            other: 'Other'
+          }
+        }
+      },
+      batch: {
+        missingSelection: 'Please select at least one agent and task',
+        success: 'Batch executed successfully! {count} tasks submitted',
+        failure: 'Batch execution failed! {count} tasks failed',
+        partial: 'Partially completed: {success} succeeded, {failed} failed',
+        error: 'Batch execution failed'
+      },
+      history: {
+        detailsPlaceholder: 'Detailed view for "{name}" is coming soon.',
+        exportSuccess: 'Execution history exported',
+        exportFailed: 'Failed to export history',
+        queue: {
+          cancelSuccess: 'Queued task cancelled',
+          cancelFailed: 'Failed to cancel task',
+          priorityInvalid: 'Priority must be a number',
+          prioritySuccess: 'Priority updated',
+          priorityFailed: 'Failed to update priority'
+        }
+      }
+    },
+    mcp: {
+      common: {
+        operationFailed: 'Operation failed, please try again',
+        addSuccess: 'MCP service added successfully!',
+        loading: 'Loading service list...',
+        loadFailedTitle: 'Load failed',
+        toggleLabel: 'MCP Services',
+        noToolsTitle: 'No available MCP tools',
+        noToolsHint: 'Please enable MCP Services in settings first',
+        badgeCustom: 'Custom',
+        badgeNeedsConfig: 'Requires configuration',
+        badgeConfigured: 'Configured',
+        badgeFree: 'Free',
+        badgeFreeNoConfig: 'No configuration required',
+        badgeTools: '{count} tools'
+      },
+      servicesPanel: {
+        intro: 'By enabling MCP services, your AI assistant can access real-time information including web search, weather queries, web scraping, and more.',
+        stats: 'Enabled {enabled} / {total}',
+        addButton: 'Add Service',
+        filterAll: 'All ({count})',
+        filterSystem: 'System ({count})',
+        filterCustom: 'Custom ({count})',
+        searchPlaceholder: 'Search services...',
+        gridView: 'Card view',
+        listView: 'List view',
+        emptyTitle: 'No matching services',
+        emptyHint: 'Try adjusting filters or search keywords'
+      },
+      addDialog: {
+        title: 'Add MCP Service',
+        subtitle: 'Choose from templates or configure your own service',
+        tabTemplates: 'From Template',
+        tabCustom: 'Custom Configuration',
+        categoryAll: 'All',
+        searchPlaceholder: 'Search services...',
+        envConfigTitle: 'Environment Variables',
+        setupInstructions: 'Setup Instructions',
+        viewDocs: 'View documentation',
+        cancel: 'Cancel',
+        confirmAdd: 'Confirm Add',
+        loadingAdd: 'Adding...',
+        templateSuccess: 'MCP service added successfully!',
+        customSuccess: 'Custom MCP service created successfully!',
+        noTemplates: 'No matching service templates',
+        templateButton: 'Add',
+        popularity: {
+          high: 'Popular',
+          medium: 'Recommended',
+          low: 'Less used'
+        },
+        officialBadge: 'Official',
+        requiredMark: '*',
+        envPlaceholder: 'Enter {key}',
+        configTitle: 'Configure {name}',
+        configSubtitle: 'Fill in the required configuration to enable this service',
+        customSectionTitle: 'Basic Information',
+        customPlaceholders: {
+          id: 'e.g. my-custom-service',
+          name: 'e.g. My Custom Service',
+          description: 'Describe what this service does...',
+          icon: '🔧',
+          command: 'e.g. npx, node, python',
+          args: 'e.g. ["-y", "my-service"]',
+          envVars: 'e.g. {"API_KEY": "value"}',
+          features: 'e.g. ["Read files", "List directory"]'
+        },
+        customHints: {
+          id: 'Must be unique, only letters, numbers, underscores, and hyphens',
+          command: 'Command used to start the service',
+          args: 'Must be a valid JSON array. Leave empty if no additional arguments are required.',
+          envVars: 'Must be a valid JSON object. Leave empty if no environment variables are required.',
+          features: 'Must be a valid JSON array.'
+        },
+        commandSectionTitle: 'Command Configuration',
+        customLabels: {
+          id: 'Service ID',
+          name: 'Service Name',
+          description: 'Service Description',
+          category: 'Category',
+          icon: 'Icon',
+          command: 'Command',
+          args: 'Arguments (JSON array)',
+          envVars: 'Environment variables (JSON object)',
+          features: 'Feature descriptions (JSON array)'
+        },
+        customEnvTitle: 'Environment Variables (JSON object)',
+        customFeaturesTitle: 'Feature List (optional)',
+        customReset: 'Reset',
+        customCreate: 'Create Service',
+        customCreating: 'Creating...',
+        error: 'Failed to add service',
+        templateConfirm: 'Confirm',
+        templateCancel: 'Cancel',
+        errors: {
+          required: 'Please fill in all required fields',
+          argsMustArray: 'Arguments must be an array',
+          argsInvalid: 'Invalid arguments JSON: {message}',
+          envMustObject: 'Environment variables must be an object',
+          envInvalid: 'Invalid environment variables JSON: {message}',
+          featuresMustArray: 'Features must be an array',
+          featuresInvalid: 'Invalid features JSON: {message}'
+        }
+      },
+      configPanel: {
+        intro: 'By enabling MCP services, your AI assistant can access real-time information including web search, weather data, web scraping, and more. All services are free to start.',
+        toolsLabel: 'Tools',
+        toggleLabel: 'MCP Services',
+        loading: 'Loading MCP tools...',
+        emptyTitle: 'No available MCP tools',
+        emptyHint: 'Please enable MCP Services in settings first',
+        copySuccess: 'Copied',
+        saveSuccess: 'Saved successfully!',
+        toggleButton: {
+          expand: 'Configure API Key',
+          collapse: 'Hide configuration'
+        },
+        actions: {
+          save: 'Save',
+          saving: 'Saving...',
+          getKey: 'Get API Key'
+        },
+        tooltip: {
+          show: 'Show',
+          hide: 'Hide',
+          copy: 'Copy'
+        }
+      },
+      pathDialog: {
+        sqliteLabel: 'Database file path',
+        sqlitePlaceholder: '/path/to/database.db',
+        sqliteHint: 'Enter the full path to the SQLite database file',
+        filesystemLabel: 'Allowed directories',
+        filesystemPlaceholder: '/path/to/directory',
+        filesystemHint: 'Add directories that the filesystem service can access',
+        addDirectory: 'Add',
+        removeDirectory: 'Remove',
+        cancel: 'Cancel',
+        save: 'Save configuration',
+        saving: 'Saving...',
+        success: 'Configuration saved successfully! The service will take effect on the next restart.',
+        loadError: 'Failed to load configuration'
+      }
+    },
     config: {
       modelInputHint: 'Enter model ID directly or click recommended items below.',
       deleteModel: 'Delete this model',
@@ -945,6 +1193,254 @@ export const TRANSLATIONS = {
       migrating: '正在迁移数据...',
       migrationFailed: '数据迁移失败，请刷新页面重试。',
       migrationError: '数据迁移出错，请刷新页面重试。'
+    },
+    agents: {
+      title: 'AI Agents',
+      subtitle: '管理和执行你的 AI Agent',
+      createAgent: '新建 Agent',
+      searchPlaceholder: '搜索 Agent...',
+      noAgents: '暂无 Agent',
+      noAgentsDescription: '创建你的第一个 AI Agent，用于自动化任务和工作流',
+      filters: {
+        allStatus: '全部状态',
+        active: '运行中',
+        inactive: '未启用',
+        busy: '忙碌',
+        error: '错误',
+        capabilities: '能力筛选',
+        statusLabel: '状态'
+      },
+      status: {
+        active: '运行中',
+        inactive: '未启用',
+        idle: '空闲',
+        busy: '忙碌',
+        running: '执行中',
+        error: '错误'
+      },
+      card: {
+        untitledAgent: '未命名 Agent',
+        noDescription: '暂无描述',
+        openMenu: '打开菜单',
+        status: '状态',
+        capabilities: '能力',
+        more: '更多',
+        totalRuns: '总执行次数',
+        successRate: '成功率',
+        avgDuration: '平均时长',
+        lastRun: '最近执行'
+      },
+      toasts: {
+        loadFailed: '加载 Agent 列表失败',
+        createSuccess: 'Agent 创建成功',
+        updateSuccess: 'Agent 更新成功',
+        saveFailed: 'Agent 保存失败',
+        deleteSuccess: 'Agent 删除成功',
+        deleteFailed: '删除 Agent 失败',
+        executeSuccess: '任务已提交执行',
+        executeFailed: '任务执行失败',
+        stopInfo: '任务执行已停止',
+        stopFailed: '停止任务失败'
+      },
+      actions: {
+        execute: '执行',
+        edit: '编辑',
+        delete: '删除',
+        viewDetails: '查看详情',
+        viewHistory: '执行历史'
+      },
+      selector: {
+        loading: '加载中...',
+        select: '选择 Agent',
+        availableAgents: '可用的 Agents',
+        noneAvailable: '暂无可用的 Agent',
+        clearSelection: '不使用 Agent',
+        refresh: '刷新列表',
+        loadFailed: '加载 Agent 列表失败',
+        statusUnknown: '未知'
+      },
+      editor: {
+        fields: {
+          mcpToggle: 'MCP 服务'
+        },
+        mcp: {
+          loading: '加载 MCP 工具中...',
+          noToolsTitle: '暂无可用的 MCP 工具',
+          noToolsHint: '请先在设置中启用 MCP Services',
+          categories: {
+            search: '搜索与检索',
+            file: '文件操作',
+            data: '数据处理',
+            api: 'API 与网络',
+            automation: '自动化',
+            analysis: '分析',
+            other: '其他'
+          }
+        }
+      },
+      batch: {
+        missingSelection: '请选择至少一个 Agent 和任务',
+        success: '批量执行成功！已提交 {count} 个任务',
+        failure: '批量执行失败！{count} 个任务提交失败',
+        partial: '部分成功：{success} 个成功，{failed} 个失败',
+        error: '批量执行失败'
+      },
+      history: {
+        detailsPlaceholder: 'Agent「{name}」的详细视图即将上线',
+        exportSuccess: '执行历史导出成功',
+        exportFailed: '执行历史导出失败',
+        queue: {
+          cancelSuccess: '已取消排队任务',
+          cancelFailed: '取消任务失败',
+          priorityInvalid: '优先级必须是数字',
+          prioritySuccess: '优先级已更新',
+          priorityFailed: '更新优先级失败'
+        }
+      }
+    },
+    mcp: {
+      common: {
+        operationFailed: '操作失败，请重试',
+        addSuccess: 'MCP 服务添加成功！',
+        loading: '加载服务列表中...',
+        loadFailedTitle: '加载失败',
+        toggleLabel: 'MCP 服务',
+        noToolsTitle: '暂无可用的 MCP 工具',
+        noToolsHint: '请先在设置中启用 MCP Services',
+        badgeCustom: '自定义',
+        badgeNeedsConfig: '需要配置',
+        badgeConfigured: '已配置',
+        badgeFree: '免费',
+        badgeFreeNoConfig: '无需配置',
+        badgeTools: '{count} 个工具'
+      },
+      servicesPanel: {
+        intro: '通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询、网页抓取等功能。',
+        stats: '已启用 {enabled} / {total}',
+        addButton: '添加服务',
+        filterAll: '全部 ({count})',
+        filterSystem: '系统内置 ({count})',
+        filterCustom: '用户自定义 ({count})',
+        searchPlaceholder: '搜索服务...',
+        gridView: '卡片视图',
+        listView: '列表视图',
+        emptyTitle: '没有找到匹配的服务',
+        emptyHint: '尝试调整筛选条件或搜索关键词'
+      },
+      addDialog: {
+        title: '添加 MCP 服务',
+        subtitle: '从模板库选择服务或手动配置自定义服务',
+        tabTemplates: '从模板添加',
+        tabCustom: '手动配置',
+        categoryAll: '全部',
+        searchPlaceholder: '搜索服务...',
+        envConfigTitle: '环境变量配置',
+        setupInstructions: '设置说明',
+        viewDocs: '查看官方文档',
+        cancel: '取消',
+        confirmAdd: '确认添加',
+        loadingAdd: '添加中...',
+        templateSuccess: 'MCP 服务添加成功！',
+        customSuccess: '自定义 MCP 服务创建成功！',
+        noTemplates: '没有找到匹配的服务模板',
+        templateButton: '添加',
+        popularity: {
+          high: '热门',
+          medium: '推荐',
+          low: '冷门'
+        },
+        officialBadge: '官方',
+        requiredMark: '*',
+        envPlaceholder: '请输入 {key}',
+        configTitle: '配置 {name}',
+        configSubtitle: '填写必要的配置信息以启用此服务',
+        customSectionTitle: '基本信息',
+        customPlaceholders: {
+          id: '例如: my-custom-service',
+          name: '例如: 我的自定义服务',
+          description: '描述这个服务的功能和用途...',
+          icon: '🔧',
+          command: '例如: npx, node, python',
+          args: '例如: ["-y", "my-service"]',
+          envVars: '例如: {"API_KEY": "value"}',
+          features: '例如: ["文件读写", "目录管理"]'
+        },
+        customHints: {
+          id: '唯一标识，只能包含字母、数字、下划线和连字符',
+          command: '用于启动服务的命令',
+          args: '必须是有效的 JSON 数组格式，留空表示无参数',
+          envVars: '必须是有效的 JSON 对象格式，留空表示无环境变量',
+          features: '必须是有效的 JSON 数组格式'
+        },
+        commandSectionTitle: '命令配置',
+        customLabels: {
+          id: '服务 ID',
+          name: '服务名称',
+          description: '服务描述',
+          category: '分类',
+          icon: '图标',
+          command: '命令',
+          args: '执行参数（JSON 数组）',
+          envVars: '环境变量（JSON 对象）',
+          features: '功能描述（JSON 数组）'
+        },
+        customEnvTitle: '环境变量（JSON 对象）',
+        customFeaturesTitle: '功能列表（可选）',
+        customReset: '重置',
+        customCreate: '创建服务',
+        customCreating: '创建中...',
+        error: '创建失败',
+        templateConfirm: '确认',
+        templateCancel: '取消',
+        errors: {
+          required: '请填写所有必填字段',
+          argsMustArray: '参数必须是数组格式',
+          argsInvalid: '参数格式错误：{message}',
+          envMustObject: '环境变量必须是对象格式',
+          envInvalid: '环境变量格式错误：{message}',
+          featuresMustArray: '功能列表必须是数组格式',
+          featuresInvalid: '功能列表格式错误：{message}'
+        }
+      },
+      configPanel: {
+        intro: '通过启用 MCP 服务，您的 AI 助手将能够访问实时信息，包括网络搜索、天气查询、网页抓取等功能。所有服务均可免费启用。',
+        toolsLabel: '工具',
+        toggleLabel: 'MCP 服务',
+        loading: '加载 MCP 工具中...',
+        emptyTitle: '暂无可用的 MCP 工具',
+        emptyHint: '请先在设置中启用 MCP Services',
+        copySuccess: '已复制',
+        saveSuccess: '保存成功！',
+        toggleButton: {
+          expand: '配置 API Key',
+          collapse: '收起配置'
+        },
+        actions: {
+          save: '保存',
+          saving: '保存中...',
+          getKey: '获取 API Key'
+        },
+        tooltip: {
+          show: '显示',
+          hide: '隐藏',
+          copy: '复制'
+        }
+      },
+      pathDialog: {
+        sqliteLabel: '数据库文件路径',
+        sqlitePlaceholder: '/path/to/database.db',
+        sqliteHint: '请输入 SQLite 数据库文件的完整路径',
+        filesystemLabel: '允许访问的目录',
+        filesystemPlaceholder: '/path/to/directory',
+        filesystemHint: '添加文件系统服务可以访问的目录',
+        addDirectory: '添加',
+        removeDirectory: '移除',
+        cancel: '取消',
+        save: '保存配置',
+        saving: '保存中...',
+        success: '配置保存成功！服务将在下次重启时生效。',
+        loadError: '加载配置失败'
+      }
     },
     config: {
       modelInputHint: '直接输入模型 ID，或点击下方推荐项快速填入。',

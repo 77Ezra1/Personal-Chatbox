@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createLogger } from '../lib/logger'
+import { getToolTranslatedName, getToolTranslatedDescription } from '../i18n/mcpToolsTranslations'
+import { subscribeMcpServicesUpdated } from '../lib/mcpEvents'
 
 const logger = createLogger('useMcpTools')
 
@@ -14,30 +16,39 @@ export function useMcpTools() {
   const [error, setError] = useState(null)
 
   // 加载服务和工具列表
-  const loadTools = async () => {
+  const loadTools = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
+      const token = localStorage.getItem('token')
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      }
+
       // 并行请求服务列表和工具列表
       const [servicesRes, toolsRes] = await Promise.all([
-        fetch('/api/mcp/services'),
-        fetch('/api/mcp/tools')
+        fetch('/api/mcp/services?refresh=true', { headers }),
+        fetch('/api/mcp/tools', { headers })
       ])
+
+      if (!servicesRes.ok || !toolsRes.ok) {
+        throw new Error(`HTTP Error: services ${servicesRes.status}, tools ${toolsRes.status}`)
+      }
 
       const servicesData = await servicesRes.json()
       const toolsData = await toolsRes.json()
 
       if (servicesData.success) {
-        // 只保留已启用且有工具的服务
+        // 只保留已启用、已配置且有工具的服务
         // 这样确保显示的服务都是真正可用的
         const enabledServices = servicesData.services.filter(s => {
-          // 已启用 且 有工具（toolCount > 0）
-          return s.enabled === true && s.toolCount > 0
+          // 已启用 且 已配置（有必需的API Keys）且 有工具（toolCount > 0）
+          return s.enabled === true && s.isConfigured !== false && s.toolCount > 0
         })
         setServices(enabledServices)
 
-        logger.info(`Loaded ${enabledServices.length} enabled services with tools (total ${servicesData.services.length} services)`)
+        logger.info(`Loaded ${enabledServices.length} enabled and configured services with tools (total ${servicesData.services.length} services)`)
       }
 
       if (toolsData.success) {
@@ -54,11 +65,19 @@ export function useMcpTools() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadTools()
-  }, [])
+  }, [loadTools])
+
+  useEffect(() => {
+    const unsubscribe = subscribeMcpServicesUpdated(() => {
+      logger.info('[useMcpTools] 收到 mcp-services-updated 事件，重新加载工具列表')
+      loadTools()
+    })
+    return unsubscribe
+  }, [loadTools])
 
   // 按服务分组的工具（只包含已启用且运行中的服务）
   const toolsByService = useMemo(() => {
@@ -90,11 +109,20 @@ export function useMcpTools() {
         }
       }
 
+      const originalToolName = tool._toolName || toolName.split('_').slice(1).join('_')
+      const originalDescription = tool.function.description || ''
+
+      // 使用国际化翻译
+      const translatedName = getToolTranslatedName(originalToolName)
+      const translatedDescription = getToolTranslatedDescription(originalToolName, originalDescription)
+
       grouped[serviceId].tools.push({
         id: toolName,
         name: tool.function.name,
-        description: tool.function.description || '',
-        displayName: tool._toolName || toolName.split('_').slice(1).join('_'),
+        description: translatedDescription, // 显示翻译后的描述
+        originalDescription: originalDescription, // 保留原始描述
+        displayName: translatedName, // 显示翻译后的名称
+        originalDisplayName: originalToolName, // 保留原始名称
         serviceId: serviceId,
         parameters: tool.function.parameters || {}
       })
@@ -113,43 +141,80 @@ export function useMcpTools() {
         const serviceId = tool._serviceId || tool.function.name.split('_')[0]
         return enabledServiceIds.has(serviceId)
       })
-      .map(tool => ({
-        value: tool.function.name,
-        label: tool.function.description || tool.function.name,
-        serviceId: tool._serviceId || tool.function.name.split('_')[0],
-        toolName: tool._toolName || tool.function.name.split('_').slice(1).join('_'),
-        description: tool.function.description || '',
-        parameters: tool.function.parameters || {}
-      }))
+      .map(tool => {
+        const originalToolName = tool._toolName || tool.function.name.split('_').slice(1).join('_')
+        const originalDescription = tool.function.description || ''
+
+        // 使用国际化翻译
+        const translatedName = getToolTranslatedName(originalToolName)
+        const translatedDescription = getToolTranslatedDescription(originalToolName, originalDescription)
+
+        return {
+          value: tool.function.name, // 保持英文，用于API调用
+          label: translatedDescription || translatedName, // 显示翻译后的描述
+          serviceId: tool._serviceId || tool.function.name.split('_')[0],
+          toolName: translatedName, // 显示翻译后的名称
+          originalToolName: originalToolName, // 保留原始英文名称
+          description: translatedDescription, // 显示翻译后的描述
+          originalDescription: originalDescription, // 保留原始英文描述
+          parameters: tool.function.parameters || {}
+        }
+      })
   }, [tools, services])
 
   // 按类别分组的工具
   const toolsByCategory = useMemo(() => {
     const categories = {
-      search: { name: '搜索和检索', tools: [] },
-      file: { name: '文件操作', tools: [] },
-      data: { name: '数据处理', tools: [] },
-      api: { name: 'API 和网络', tools: [] },
-      automation: { name: '自动化', tools: [] },
-      analysis: { name: '分析', tools: [] },
-      other: { name: '其他', tools: [] }
+      search: { name: 'Search & Retrieval', tools: [] },
+      file: { name: 'File Operations', tools: [] },
+      data: { name: 'Data Processing', tools: [] },
+      api: { name: 'API & Network', tools: [] },
+      automation: { name: 'Automation', tools: [] },
+      analysis: { name: 'Analysis', tools: [] },
+      other: { name: 'Other', tools: [] }
     }
 
     flatTools.forEach(tool => {
-      const toolName = tool.toolName.toLowerCase()
-      const desc = tool.description.toLowerCase()
+      // 使用原始英文名称进行分类判断（更准确）
+      const originalName = tool.originalToolName.toLowerCase()
+      const translatedName = tool.toolName.toLowerCase()
+      const translatedDesc = tool.description.toLowerCase()
 
-      if (toolName.includes('search') || toolName.includes('find') || desc.includes('搜索') || desc.includes('查询')) {
+      // 检查英文和中文关键词
+      if (
+        originalName.includes('search') || originalName.includes('find') ||
+        translatedName.includes('搜索') || translatedName.includes('查找') ||
+        translatedDesc.includes('搜索') || translatedDesc.includes('查询')
+      ) {
         categories.search.tools.push(tool)
-      } else if (toolName.includes('file') || toolName.includes('read') || toolName.includes('write') || desc.includes('文件')) {
+      } else if (
+        originalName.includes('file') || originalName.includes('read') || originalName.includes('write') ||
+        originalName.includes('directory') || originalName.includes('create') || originalName.includes('edit') ||
+        translatedName.includes('文件') || translatedDesc.includes('文件') || translatedDesc.includes('目录')
+      ) {
         categories.file.tools.push(tool)
-      } else if (toolName.includes('data') || toolName.includes('transform') || toolName.includes('parse')) {
+      } else if (
+        originalName.includes('data') || originalName.includes('transform') || originalName.includes('parse') ||
+        originalName.includes('query') || originalName.includes('database') ||
+        translatedName.includes('数据') || translatedDesc.includes('数据库')
+      ) {
         categories.data.tools.push(tool)
-      } else if (toolName.includes('api') || toolName.includes('http') || toolName.includes('fetch') || toolName.includes('request')) {
+      } else if (
+        originalName.includes('api') || originalName.includes('http') || originalName.includes('fetch') ||
+        originalName.includes('request') || originalName.includes('get') || originalName.includes('post') ||
+        translatedName.includes('请求') || translatedDesc.includes('网络')
+      ) {
         categories.api.tools.push(tool)
-      } else if (toolName.includes('auto') || toolName.includes('run') || toolName.includes('execute')) {
+      } else if (
+        originalName.includes('auto') || originalName.includes('run') || originalName.includes('execute') ||
+        originalName.includes('puppeteer') || originalName.includes('click') || originalName.includes('fill') ||
+        translatedName.includes('自动') || translatedDesc.includes('自动化') || translatedDesc.includes('浏览器')
+      ) {
         categories.automation.tools.push(tool)
-      } else if (toolName.includes('analy') || toolName.includes('stat') || toolName.includes('calc')) {
+      } else if (
+        originalName.includes('analy') || originalName.includes('stat') || originalName.includes('calc') ||
+        translatedName.includes('分析') || translatedDesc.includes('统计')
+      ) {
         categories.analysis.tools.push(tool)
       } else {
         categories.other.tools.push(tool)
@@ -177,4 +242,3 @@ export function useMcpTools() {
     reload: loadTools
   }
 }
-

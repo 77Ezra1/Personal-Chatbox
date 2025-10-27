@@ -180,6 +180,9 @@ class WorkflowEngine {
         case 'api_call':
           result = await this.executeAPICall(node, inputData);
           break;
+        case 'agent':
+          result = await this.executeAgent(node, inputData, executionId);
+          break;
         case 'end':
           result = inputData;
           break;
@@ -356,6 +359,52 @@ class WorkflowEngine {
 
     const response = await fetch(url, options);
     const result = await response.json();
+
+    return result;
+  }
+
+  /**
+   * 执行 Agent 节点
+   * @param {Object} node - 节点定义
+   * @param {Object} inputData - 输入数据
+   * @param {string} executionId - 执行ID
+   */
+  async executeAgent(node, inputData, executionId) {
+    const { agentId, taskDescription, timeout } = node.config;
+
+    if (!agentId) {
+      throw new Error('Agent 节点必须配置 Agent ID');
+    }
+
+    if (!taskDescription) {
+      throw new Error('Agent 节点必须配置任务描述');
+    }
+
+    // 获取执行上下文以获取 userId
+    const execution = this.executions.get(executionId);
+    if (!execution) {
+      throw new Error('无法找到工作流执行上下文');
+    }
+
+    const userId = execution.userId;
+
+    // 导入 Agent Engine
+    const agentEngine = require('./agentEngine.cjs');
+
+    // 将输入数据转换为任务描述的上下文
+    const taskWithContext = typeof inputData === 'string'
+      ? `${taskDescription}\n\n上下文数据：${inputData}`
+      : `${taskDescription}\n\n上下文数据：${JSON.stringify(inputData, null, 2)}`;
+
+    // 创建 Agent 任务数据
+    const taskData = {
+      name: `工作流任务：${taskDescription}`,
+      description: taskWithContext,
+      timeout: timeout || 300000 // 默认5分钟
+    };
+
+    // 执行 Agent 任务
+    const result = await agentEngine.executeTask(agentId, taskData, userId);
 
     return result;
   }
@@ -631,6 +680,17 @@ class WorkflowEngine {
           method: 'GET',
           headers: {},
           body: ''
+        }
+      },
+      agent: {
+        name: 'Agent 执行',
+        icon: '🤖',
+        inputs: ['data'],
+        outputs: ['result'],
+        config: {
+          agentId: '',
+          taskDescription: '',
+          timeout: 300000 // 5分钟默认超时
         }
       },
       end: {

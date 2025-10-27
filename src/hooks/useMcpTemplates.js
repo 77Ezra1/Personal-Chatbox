@@ -18,7 +18,17 @@ export function useMcpTemplates() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/mcp/templates')
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/mcp/templates', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
 
       if (data.success) {
@@ -38,16 +48,22 @@ export function useMcpTemplates() {
   // 从模板创建用户配置
   const createFromTemplate = async (templateId, customEnvVars = {}) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/mcp/user-configs/from-template', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           templateId,
           customEnvVars
         })
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
 
       const data = await response.json()
 

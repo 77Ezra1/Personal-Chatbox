@@ -11,6 +11,7 @@ const {
   generateToken
 } = require('../lib/auth-utils.cjs');
 const { authMiddleware } = require('../middleware/auth.cjs');
+const mcpService = require('../services/mcp-service.cjs');
 
 /**
  * POST /api/auth/register
@@ -116,6 +117,15 @@ router.post('/register', async (req, res) => {
 
       if (!userId) {
         throw new Error('Failed to get user ID after registration');
+      }
+
+      // 初始化默认MCP服务配置
+      try {
+        await mcpService.initializeDefaultServicesForUser(userId);
+        logger.info(`[Auth] 为用户 ${userId} 初始化MCP服务成功`);
+      } catch (mcpError) {
+        logger.error(`[Auth] 初始化MCP服务失败:`, mcpError);
+        // 不阻断注册流程，允许用户后续手动配置
       }
 
       // 生成Token

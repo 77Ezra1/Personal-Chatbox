@@ -12,6 +12,12 @@ const { db } = require('../db/init.cjs');
 // OpenAI SDK
 const { OpenAI } = require('openai');
 
+// 🔥 新增：工具调用优化器
+const { toolCallOptimizer } = require('../services/tool-call-optimizer.cjs');
+
+// 🔥 新增：动态Prompt生成器
+const { generateDynamicSystemPrompt } = require('../utils/dynamic-prompt-generator.cjs');
+
 /**
  * 从数据库获取用户的 API key
  * @param {number} userId - 用户ID
@@ -79,18 +85,18 @@ async function callLegacyServiceTool(toolName, parameters) {
   // 遍历所有服务，查找拥有该工具的服务
   for (const [serviceId, service] of Object.entries(allServices)) {
     if (serviceId === 'mcpManager') continue;
-    
+
     if (service && service.enabled && typeof service.getTools === 'function') {
       const tools = service.getTools();
       const hasTool = tools.some(tool => tool.function.name === toolName);
-      
+
       if (hasTool && typeof service.execute === 'function') {
         logger.info(`使用服务 ${serviceId} 执行工具 ${toolName}`);
         return await service.execute(toolName, parameters);
       }
     }
   }
-  
+
   throw new Error(`未找到工具: ${toolName}`);
 }
 
@@ -123,19 +129,31 @@ router.post('/', authMiddleware, async (req, res) => {
 
     logger.info(`[User ${userId}] 收到对话请求: model=${model}, messages=${messages.length}条`);
 
+    // ✅ 按需加载：首次对话时自动加载用户的MCP服务
+    if (mcpManager && !mcpManager.userServicesLoaded.has(userId)) {
+      logger.info(`[Chat] 用户 ${userId} 的MCP服务未加载，开始自动加载...`);
+      try {
+        await mcpManager.loadUserServices(userId);
+        logger.info(`[Chat] 用户 ${userId} 的MCP服务自动加载完成`);
+      } catch (error) {
+        logger.warn(`[Chat] 加载用户 ${userId} 的MCP服务失败:`, error.message);
+        // 不阻断对话流程，继续使用已加载的服务
+      }
+    }
+
     // 获取所有可用的工具（包括MCP工具和原有服务工具）
     let allTools = [];
-    
-    // 1. 获取MCP工具
-    const mcpTools = mcpManager ? mcpManager.getAllTools() : [];
+
+    // 1. 获取MCP工具（传递userId以获取该用户的工具）
+    const mcpTools = mcpManager ? mcpManager.getAllTools(userId) : [];
     allTools.push(...mcpTools);
-    logger.info(`MCP工具数量: ${mcpTools.length}`);
-    
+    logger.info(`[User ${userId}] MCP工具数量: ${mcpTools.length}`);
+
     // 2. 获取原有服务的工具（weather, time, search, dexscreener, fetch, playwright等）
     for (const [serviceId, service] of Object.entries(allServices)) {
       // 跳过mcpManager（已经处理过了）
       if (serviceId === 'mcpManager') continue;
-      
+
       // 检查服务是否启用并且有getTools方法
       if (service && service.enabled && typeof service.getTools === 'function') {
         try {
@@ -149,8 +167,16 @@ router.post('/', authMiddleware, async (req, res) => {
         }
       }
     }
-    
+
     logger.info(`总工具数量: ${allTools.length}`);
+
+    // 🔥 使用优化器增强工具描述（添加成功示例和统计信息）
+    const enhancedTools = toolCallOptimizer.enhanceToolDescriptions(allTools);
+
+    // 🔥 生成动态System Prompt（基于可用工具）
+    const dynamicSystemPrompt = generateDynamicSystemPrompt(enhancedTools, {
+      scenario: 'general' // 可以根据用户设置或对话内容动态调整
+    });
 
     // 准备 API 请求参数
     const apiParams = {
@@ -158,12 +184,29 @@ router.post('/', authMiddleware, async (req, res) => {
       messages: [...messages]
     };
 
+    // 🔥 将动态System Prompt注入到消息开头
+    if (dynamicSystemPrompt && enhancedTools.length > 0) {
+      // 检查是否已有system消息
+      const hasSystemMessage = apiParams.messages.some(msg => msg.role === 'system');
+
+      if (!hasSystemMessage) {
+        // 在消息开头添加system prompt
+        apiParams.messages.unshift({
+          role: 'system',
+          content: dynamicSystemPrompt
+        });
+        logger.info(`[Chat] 注入动态System Prompt（${enhancedTools.length}个工具）`);
+      } else {
+        logger.warn('[Chat] 消息中已存在system prompt，跳过注入（用户可能设置了自定义prompt）');
+      }
+    }
+
     // 如果有工具,添加到请求中
-    if (allTools.length > 0) {
-      apiParams.tools = allTools.map(tool => {
+    if (enhancedTools.length > 0) {
+      apiParams.tools = enhancedTools.map(tool => {
         // 增强工具描述，帮助大模型更好地理解和选择工具
         let enhancedDescription = tool.function.description || '';
-        
+
         // 根据工具名称添加使用场景说明
         // MCP服务工具
         if (tool.function.name.includes('wikipedia')) {
@@ -197,7 +240,7 @@ router.post('/', authMiddleware, async (req, res) => {
         } else if (tool.function.name.includes('navigate') || tool.function.name.includes('click') || tool.function.name.includes('page')) {
           enhancedDescription = `[浏览器自动化] ${enhancedDescription}。适用于：模拟浏览器操作、网页交互、自动化测试等需要真实浏览器环境的场景。`;
         }
-        
+
         return {
           type: tool.type,
           function: {
@@ -207,7 +250,7 @@ router.post('/', authMiddleware, async (req, res) => {
         };
       });
       apiParams.tool_choice = 'auto';
-      
+
       // 记录增强后的工具描述
       logger.info(`工具列表: ${apiParams.tools.map(t => t.function.name).join(', ')}`);
     }
@@ -239,28 +282,45 @@ router.post('/', authMiddleware, async (req, res) => {
 
     // ============ 流式响应处理 ============
     if (stream && response[Symbol.asyncIterator]) {
-      logger.info('开始流式传输（无工具调用）');
+      logger.info('开始流式传输');
 
       try {
         let chunkCount = 0;
         let fullContent = '';
         let fullReasoning = '';
+        let toolCalls = [];
+        let currentFinishReason = null;
 
+        // 第一阶段：收集流式响应数据
         for await (const chunk of response) {
           chunkCount++;
           const delta = chunk.choices[0]?.delta;
 
+          // 收集工具调用信息
+          if (delta?.tool_calls) {
+            for (const toolCallDelta of delta.tool_calls) {
+              const index = toolCallDelta.index;
+              if (!toolCalls[index]) {
+                toolCalls[index] = {
+                  id: toolCallDelta.id || '',
+                  type: 'function',
+                  function: { name: '', arguments: '' }
+                };
+              }
+              if (toolCallDelta.id) toolCalls[index].id = toolCallDelta.id;
+              if (toolCallDelta.function?.name) toolCalls[index].function.name += toolCallDelta.function.name;
+              if (toolCallDelta.function?.arguments) toolCalls[index].function.arguments += toolCallDelta.function.arguments;
+            }
+          }
+
           // 处理思考内容（reasoning_content）
           if (delta?.reasoning_content) {
             fullReasoning += delta.reasoning_content;
-            // 发送思考内容增量
-            const payload = JSON.stringify({
+            res.write(`data: ${JSON.stringify({
               type: 'reasoning',
               content: delta.reasoning_content,
               fullReasoning: fullReasoning
-            });
-            res.write(`data: ${payload}\n\n`);
-
+            })}\n\n`);
             if (chunkCount <= 3) {
               logger.info(`发送reasoning chunk #${chunkCount}: ${delta.reasoning_content.substring(0, 20)}...`);
             }
@@ -269,14 +329,11 @@ router.post('/', authMiddleware, async (req, res) => {
           // 处理回答内容（content）
           if (delta?.content) {
             fullContent += delta.content;
-            // 发送内容增量
-            const payload = JSON.stringify({
+            res.write(`data: ${JSON.stringify({
               type: 'content',
               content: delta.content,
               fullContent: fullContent
-            });
-            res.write(`data: ${payload}\n\n`);
-
+            })}\n\n`);
             if (chunkCount <= 3) {
               logger.info(`发送content chunk #${chunkCount}: ${delta.content.substring(0, 20)}...`);
             }
@@ -284,27 +341,198 @@ router.post('/', authMiddleware, async (req, res) => {
 
           // 检查是否完成
           if (chunk.choices[0]?.finish_reason) {
-            logger.info(`流式传输完成: ${chunk.choices[0].finish_reason}, 总chunks: ${chunkCount}`);
+            currentFinishReason = chunk.choices[0].finish_reason;
+            logger.info(`流式传输完成: ${currentFinishReason}, 总chunks: ${chunkCount}`);
             logger.info(`总内容长度: ${fullContent.length}, 思考长度: ${fullReasoning.length}`);
-
-            // 包含 usage 信息（通常在最后一个 chunk 中）
             if (chunk.usage) {
               logger.info(`Token usage: prompt=${chunk.usage.prompt_tokens}, completion=${chunk.usage.completion_tokens}, total=${chunk.usage.total_tokens}`);
             }
-
-            res.write(`data: ${JSON.stringify({
-              type: 'done',
-              finish_reason: chunk.choices[0].finish_reason,
-              fullContent: fullContent,
-              fullReasoning: fullReasoning,
-              usage: chunk.usage || null  // 🔥 添加 usage 信息
-            })}\n\n`);
           }
         }
 
+        // 第二阶段：如果有工具调用，循环处理直到完成
+        let iterationCount = 0;
+        const maxIterations = 10; // 最多10轮工具调用
+
+        while (currentFinishReason === 'tool_calls' && toolCalls.length > 0 && iterationCount < maxIterations) {
+          iterationCount++;
+          logger.info(`工具调用迭代 ${iterationCount}/${maxIterations}，共 ${toolCalls.length} 个工具`);
+
+          // 发送工具调用通知
+          res.write(`data: ${JSON.stringify({
+            type: 'tool_calls',
+            tool_calls: toolCalls
+          })}\n\n`);
+
+          // 添加助手消息（包含工具调用）
+          apiParams.messages.push({
+            role: 'assistant',
+            content: fullContent || null,
+            tool_calls: toolCalls
+          });
+
+          // 执行所有工具调用
+          for (const toolCall of toolCalls) {
+            const toolName = toolCall.function.name;
+            const toolArgs = JSON.parse(toolCall.function.arguments);
+            const startTime = Date.now(); // 🔥 记录开始时间
+
+            try {
+              logger.info(`调用工具: ${toolName}, 参数: ${JSON.stringify(toolArgs)}`);
+
+              let toolResult = null;
+
+              // 智能判断工具类型：优先尝试MCP工具，失败则尝试原有服务工具
+              try {
+                // 1. 先尝试作为MCP工具调用（格式：serviceId_toolName）
+                if (toolName.includes('_')) {
+                  const { serviceId, toolName: actualToolName } = mcpManager.parseToolName(toolName);
+                  logger.info(`尝试MCP工具: ${serviceId}.${actualToolName} (User: ${userId})`);
+                  toolResult = await mcpManager.callTool(serviceId, actualToolName, toolArgs, userId);
+                  logger.info(`✅ MCP工具调用成功: ${toolName}`);
+                } else {
+                  // 2. 作为原有服务工具调用
+                  logger.info(`尝试原有服务工具: ${toolName}`);
+                  toolResult = await callLegacyServiceTool(toolName, toolArgs);
+                  logger.info(`✅ 原有服务工具调用成功: ${toolName}`);
+                }
+              } catch (firstError) {
+                // 3. 如果第一次失败，尝试另一种方式
+                logger.warn(`第一次工具调用失败，尝试备用方式: ${toolName}`, firstError.message);
+                if (toolName.includes('_')) {
+                  // MCP调用失败，尝试作为原有服务工具
+                  toolResult = await callLegacyServiceTool(toolName, toolArgs);
+                  logger.info(`✅ 使用原有服务工具调用成功: ${toolName}`);
+                } else {
+                  // 原有服务调用失败，抛出错误
+                  throw firstError;
+                }
+              }
+
+              // 🔥 记录成功的工具调用
+              const executionTime = Date.now() - startTime;
+              toolCallOptimizer.record({
+                toolName,
+                parameters: toolArgs,
+                success: true,
+                response: toolResult,
+                userQuery: apiParams.messages[apiParams.messages.length - 1]?.content,
+                executionTime,
+                userId
+              });
+
+              // 添加工具结果
+              apiParams.messages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult)
+              });
+
+              logger.info(`✅ 工具 ${toolName} 执行成功，结果长度: ${JSON.stringify(toolResult).length}，耗时: ${executionTime}ms`);
+            } catch (toolError) {
+              // 🔥 记录失败的工具调用
+              const executionTime = Date.now() - startTime;
+              toolCallOptimizer.record({
+                toolName,
+                parameters: toolArgs,
+                success: false,
+                error: toolError,
+                userQuery: apiParams.messages[apiParams.messages.length - 1]?.content,
+                executionTime,
+                userId
+              });
+
+              logger.error(`❌ 工具调用失败: ${toolCall.function.name}`, toolError);
+              apiParams.messages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: JSON.stringify({
+                  error: true,
+                  message: toolError.message || '工具调用失败',
+                  tool: toolCall.function.name
+                })
+              });
+            }
+          }
+
+          // 重新调用 API 获取回复（仍然使用流式）
+          logger.info('工具调用完成，重新请求回复');
+          const nextResponse = await openai.chat.completions.create(apiParams);
+
+          // 重置变量准备处理下一轮响应
+          chunkCount = 0;
+          fullContent = '';
+          toolCalls = [];
+          currentFinishReason = null;
+
+          // 处理流式响应
+          for await (const chunk of nextResponse) {
+            chunkCount++;
+            const delta = chunk.choices[0]?.delta;
+
+            // 处理思考内容
+            if (delta?.reasoning_content) {
+              fullReasoning += delta.reasoning_content;
+              res.write(`data: ${JSON.stringify({
+                type: 'reasoning',
+                content: delta.reasoning_content,
+                fullReasoning: fullReasoning
+              })}\n\n`);
+            }
+
+            // 处理常规内容
+            if (delta?.content) {
+              fullContent += delta.content;
+              res.write(`data: ${JSON.stringify({
+                type: 'content',
+                content: delta.content,
+                fullContent: fullContent
+              })}\n\n`);
+            }
+
+            // 收集工具调用
+            if (delta?.tool_calls) {
+              for (const tc of delta?.tool_calls) {
+                if (!toolCalls[tc.index]) {
+                  toolCalls[tc.index] = {
+                    id: tc.id || '',
+                    type: tc.type || 'function',
+                    function: { name: '', arguments: '' }
+                  };
+                }
+                if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name;
+                if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments;
+              }
+            }
+
+            // 检查结束原因
+            if (chunk.choices[0]?.finish_reason) {
+              currentFinishReason = chunk.choices[0].finish_reason;
+              logger.info(`流式传输完成: ${currentFinishReason}, 总chunks: ${chunkCount}`);
+              if (chunk.usage) {
+                logger.info(`Token usage: prompt=${chunk.usage.prompt_tokens}, completion=${chunk.usage.completion_tokens}, total=${chunk.usage.total_tokens}`);
+              }
+            }
+          }
+
+          // 如果没有更多工具调用，退出循环
+          if (currentFinishReason !== 'tool_calls' || toolCalls.length === 0) {
+            logger.info(`迭代完成: ${currentFinishReason}`);
+            break;
+          }
+        }
+
+        // 发送最终完成信号
+        res.write(`data: ${JSON.stringify({
+          type: 'done',
+          finish_reason: currentFinishReason || 'stop',
+          fullContent: fullContent,
+          fullReasoning: fullReasoning
+        })}\n\n`);
+
         res.write('data: [DONE]\n\n');
         res.end();
-        logger.info(`流式传输结束，共发送 ${chunkCount} 个chunks`);
+        logger.info(`流式传输结束`);
         return;
 
       } catch (streamError) {
@@ -344,21 +572,22 @@ router.post('/', authMiddleware, async (req, res) => {
       // 执行所有工具调用
       const toolResults = [];
       for (const toolCall of toolCalls) {
-        try {
-          const toolName = toolCall.function.name;
-          const toolArgs = JSON.parse(toolCall.function.arguments);
+        const toolName = toolCall.function.name;
+        const toolArgs = JSON.parse(toolCall.function.arguments);
+        const startTime = Date.now(); // 🔥 记录开始时间
 
+        try {
           logger.info(`调用工具: ${toolName}`);
           logger.info(`参数: ${JSON.stringify(toolArgs, null, 2)}`);
 
           let result;
-          
+
           // 判断是MCP工具还是原有服务工具
           if (toolName.includes('_') && mcpManager) {
             // 尝试作为MCP工具调用（格式：serviceId_toolName）
             try {
               const { serviceId, toolName: actualToolName } = mcpManager.parseToolName(toolName);
-              result = await mcpManager.callTool(serviceId, actualToolName, toolArgs);
+              result = await mcpManager.callTool(serviceId, actualToolName, toolArgs, userId);
             } catch (mcpError) {
               // 如果MCP调用失败，尝试作为原有服务工具
               logger.warn(`MCP工具调用失败，尝试原有服务: ${toolName}`);
@@ -369,6 +598,18 @@ router.post('/', authMiddleware, async (req, res) => {
             result = await callLegacyServiceTool(toolName, toolArgs);
           }
 
+          // 🔥 记录成功的工具调用
+          const executionTime = Date.now() - startTime;
+          toolCallOptimizer.record({
+            toolName,
+            parameters: toolArgs,
+            success: true,
+            response: result,
+            userQuery: messages[messages.length - 1]?.content,
+            executionTime,
+            userId
+          });
+
           // 构造工具结果消息
           toolResults.push({
             role: 'tool',
@@ -376,9 +617,21 @@ router.post('/', authMiddleware, async (req, res) => {
             content: JSON.stringify(result, null, 2)
           });
 
-          logger.info(`工具 ${toolName} 执行成功`);
+          logger.info(`工具 ${toolName} 执行成功，耗时: ${executionTime}ms`);
 
         } catch (error) {
+          // 🔥 记录失败的工具调用
+          const executionTime = Date.now() - startTime;
+          toolCallOptimizer.record({
+            toolName,
+            parameters: toolArgs,
+            success: false,
+            error: error,
+            userQuery: messages[messages.length - 1]?.content,
+            executionTime,
+            userId
+          });
+
           logger.error(`工具调用失败: ${toolCall.function.name}`, error);
 
           // 返回错误信息
@@ -517,14 +770,35 @@ router.post('/', authMiddleware, async (req, res) => {
  */
 router.get('/tools', (req, res) => {
   try {
-    if (!mcpManager) {
-      return res.json({ tools: [] });
+    let allTools = [];
+
+    // 1. 获取MCP工具
+    if (mcpManager) {
+      const mcpTools = mcpManager.getAllTools();
+      allTools.push(...mcpTools);
+      logger.info(`获取到 ${mcpTools.length} 个MCP工具`);
     }
 
-    const tools = mcpManager.getAllTools();
+    // 2. 获取原有服务的工具
+    for (const [serviceId, service] of Object.entries(allServices)) {
+      if (serviceId === 'mcpManager') continue;
+
+      if (service && service.enabled && typeof service.getTools === 'function') {
+        try {
+          const serviceTools = service.getTools();
+          if (Array.isArray(serviceTools) && serviceTools.length > 0) {
+            allTools.push(...serviceTools);
+            logger.info(`获取到 ${serviceTools.length} 个${serviceId}工具`);
+          }
+        } catch (error) {
+          logger.warn(`获取 ${serviceId} 工具失败:`, error.message);
+        }
+      }
+    }
+
     res.json({
-      count: tools.length,
-      tools: tools.map(tool => ({
+      count: allTools.length,
+      tools: allTools.map(tool => ({
         name: tool.function.name,
         description: tool.function.description,
         parameters: tool.function.parameters
@@ -535,6 +809,83 @@ router.get('/tools', (req, res) => {
     logger.error('获取工具列表失败:', error);
     res.status(500).json({
       error: '获取工具列表失败',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/chat/optimization-report
+ * 获取工具调用优化报告
+ * 🔥 新增：查看AI工具调用的统计和改进建议
+ */
+router.get('/optimization-report', authMiddleware, (req, res) => {
+  try {
+    const report = toolCallOptimizer.getOptimizationReport();
+    res.json(report);
+  } catch (error) {
+    logger.error('获取优化报告失败:', error);
+    res.status(500).json({
+      error: '获取优化报告失败',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/chat/tool-stats
+ * 获取工具调用详细统计
+ * 🔥 新增：查看特定工具的使用情况
+ */
+router.get('/tool-stats', authMiddleware, (req, res) => {
+  try {
+    const { toolName } = req.query;
+
+    if (toolName) {
+      // 获取特定工具的统计
+      const stats = toolCallOptimizer.getStats()[toolName];
+      const patterns = toolCallOptimizer.getSuccessPatterns(toolName);
+
+      res.json({
+        toolName,
+        stats: stats || { message: '暂无统计数据' },
+        successPatterns: patterns
+      });
+    } else {
+      // 获取所有工具的统计
+      const stats = toolCallOptimizer.getStats();
+      const mostUsed = toolCallOptimizer.getMostUsedTools(10);
+
+      res.json({
+        allStats: stats,
+        mostUsedTools: mostUsed
+      });
+    }
+  } catch (error) {
+    logger.error('获取工具统计失败:', error);
+    res.status(500).json({
+      error: '获取工具统计失败',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/chat/clear-tool-history
+ * 清空工具调用历史
+ * 🔥 新增：重置优化器
+ */
+router.post('/clear-tool-history', authMiddleware, (req, res) => {
+  try {
+    toolCallOptimizer.clear();
+    res.json({
+      success: true,
+      message: '工具调用历史已清空'
+    });
+  } catch (error) {
+    logger.error('清空历史失败:', error);
+    res.status(500).json({
+      error: '清空历史失败',
       message: error.message
     });
   }

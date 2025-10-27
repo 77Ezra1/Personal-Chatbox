@@ -172,24 +172,27 @@ async function initializeServices() {
     // ========== 初始化新的 MCP 服务 ==========
     logger.info('启动 MCP Manager...');
 
-    // 启动第一批 MCP 服务 (不需要 API Key) - 并行启动以提高速度
-    const mcpServices = [
-      'memory',
-      'filesystem',
-      'git',
-      'sequential_thinking',
-      'sqlite',
-      'wikipedia'
-    ];
+    // 自动发现所有 MCP 服务（从 config.services 中提取）
+    const allMcpServices = [];
+    const mcpServicesWithConfig = [];
 
-    // 启动第二批 MCP 服务 (需要 API Key,从配置系统读取)
-    const mcpServicesWithConfig = [
-      'brave_search',
-      'github'
-    ];
+    // 扫描所有服务配置
+    for (const [serviceId, serviceConfig] of Object.entries(config.services)) {
+      // 跳过非 MCP 服务（没有 command 字段的服务）
+      if (!serviceConfig.command) continue;
 
-    // 并行启动第一批服务
-    const startPromises = mcpServices.map(async (serviceId) => {
+      // 根据是否需要配置分类
+      if (serviceConfig.requiresConfig) {
+        mcpServicesWithConfig.push(serviceId);
+      } else {
+        allMcpServices.push(serviceId);
+      }
+    }
+
+    logger.info(`发现 ${allMcpServices.length} 个免费 MCP 服务, ${mcpServicesWithConfig.length} 个需要配置的 MCP 服务`);
+
+    // 并行启动免费服务
+    const startPromises = allMcpServices.map(async (serviceId) => {
       const serviceConfig = config.services[serviceId];
       if (serviceConfig && serviceConfig.enabled && serviceConfig.autoLoad) {
         try {
@@ -197,7 +200,7 @@ async function initializeServices() {
           await mcpManager.startService(serviceConfig);
           return { serviceId, success: true };
         } catch (error) {
-          logger.error(`MCP 服务 ${serviceConfig.name} 启动失败:`, error);
+          logger.error(`MCP 服务 ${serviceConfig.name} 启动失败:`, error.message);
           return { serviceId, success: false, error };
         }
       }
@@ -207,7 +210,7 @@ async function initializeServices() {
     // 等待所有服务启动完成
     const results = await Promise.all(startPromises);
     const successCount = results.filter(r => r.success).length;
-    logger.info(`MCP第一批服务启动完成: ${successCount}/${mcpServices.length} 个成功`);
+    logger.info(`免费 MCP 服务启动完成: ${successCount}/${allMcpServices.length} 个成功`);
 
     // 启动需要 API Key 的服务
     for (const serviceId of mcpServicesWithConfig) {
@@ -249,59 +252,15 @@ async function initializeServices() {
       }
     }
 
-    // ========== 加载用户自定义的 MCP 配置 ==========
-    logger.info('加载用户自定义 MCP 配置...');
-    try {
-      // 获取数据库实例
-      const { db } = require('./db/init.cjs');
-
-      // 查询所有启用的用户MCP配置
-      const userConfigs = await db.all(
-        'SELECT * FROM user_mcp_configs WHERE enabled = 1'
-      );
-
-      if (userConfigs && userConfigs.length > 0) {
-        logger.info(`找到 ${userConfigs.length} 个用户自定义的MCP服务配置`);
-
-        // 启动每个用户配置的MCP服务
-        for (const userConfig of userConfigs) {
-          try {
-            // 解析JSON字段
-            const args = userConfig.args ? JSON.parse(userConfig.args) : [];
-            const env_vars = userConfig.env_vars ? JSON.parse(userConfig.env_vars) : {};
-
-            // 构建MCP服务配置对象
-            const serviceConfig = {
-              id: userConfig.mcp_id,
-              name: userConfig.name,
-              description: userConfig.description || '',
-              command: userConfig.command,
-              args: args,
-              env: env_vars,
-              enabled: true,
-              autoLoad: true,
-              category: userConfig.category,
-              icon: userConfig.icon,
-              official: userConfig.official === 1,
-              popularity: userConfig.popularity
-            };
-
-            logger.info(`启动用户自定义 MCP 服务: ${userConfig.name} (ID: ${userConfig.mcp_id})`);
-            await mcpManager.startService(serviceConfig);
-            logger.info(`✅ 用户自定义 MCP 服务 ${userConfig.name} 启动成功`);
-
-          } catch (error) {
-            logger.error(`用户自定义 MCP 服务 ${userConfig.name} 启动失败:`, error);
-            // 继续启动其他服务,不中断流程
-          }
-        }
-      } else {
-        logger.info('没有找到启用的用户自定义 MCP 配置');
-      }
-    } catch (error) {
-      logger.error('加载用户自定义 MCP 配置失败:', error);
-      // 不中断服务器启动
-    }
+    // ========== 用户自定义的 MCP 配置 - 按需加载 ==========
+    // ✅ 优化：不再在服务器启动时加载所有用户的MCP配置
+    // 改为：用户首次访问时自动加载（在API路由中实现）
+    // 优点：
+    //   1. 启动速度更快
+    //   2. 内存占用更少（只加载活跃用户的服务）
+    //   3. 支持热重载（用户更新配置后无需重启服务器）
+    //   4. 更好的扩展性（支持大量用户）
+    logger.info('⚡ 用户MCP服务将按需加载（首次访问时自动启动）');
 
     // 将 MCP Manager 添加到 services 中
     services.mcpManager = mcpManager;
@@ -367,6 +326,8 @@ function registerRoutes() {
   app.use('/api/proxy', proxyRouter);
   app.use('/api/test-connection', require('./routes/test-connection.cjs')); // API连接测试路由
   app.use('/api/config', require('./routes/config.cjs')); // 配置管理路由（使用数据库）
+  app.use('/api/services', require('./routes/services.cjs')); // 服务管理路由
+  logger.info('✅ services 路由已注册');
 }
 
 // 健康检查

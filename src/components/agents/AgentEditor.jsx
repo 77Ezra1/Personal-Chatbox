@@ -551,13 +551,13 @@ export function AgentEditor({
                           onCheckedChange={setShowMcpTools}
                           className="scale-75"
                         />
-                        <span>MCP Services</span>
+                        <span>{translate('agents.editor.fields.mcpToggle', 'MCP Services')}</span>
                       </div>
                     </div>
 
                     {mcpToolsLoading ? (
                       <div className="text-sm text-muted-foreground text-center py-4">
-                        加载 MCP 工具中...
+                        {translate('agents.editor.mcp.loading', 'Loading MCP tools...')}
                       </div>
                     ) : showMcpTools && flatTools.length > 0 ? (
                       <div className="space-y-3">
@@ -565,8 +565,8 @@ export function AgentEditor({
                         <ScrollArea className="h-[300px] rounded-md border p-3">
                           {Object.entries(toolsByCategory).map(([category, { name, tools: categoryTools }]) => (
                             <div key={category} className="mb-4 last:mb-0">
-                              <div className="text-xs font-medium text-muted-foreground mb-2 px-1">
-                                {name} ({categoryTools.length})
+                        <div className="text-xs font-medium text-muted-foreground mb-2 px-1">
+                          {translate(`agents.editor.mcp.categories.${category}`, name)} ({categoryTools.length})
                               </div>
                               <div className="grid grid-cols-1 gap-1.5">
                                 {categoryTools.map((tool) => {
@@ -625,8 +625,12 @@ export function AgentEditor({
                       </div>
                     ) : showMcpTools ? (
                       <div className="text-sm text-muted-foreground text-center py-8 border rounded-md bg-muted/30">
-                        <p className="mb-2">暂无可用的 MCP 工具</p>
-                        <p className="text-xs">请先在设置中启用 MCP Services</p>
+                        <p className="mb-2">
+                          {translate('agents.editor.mcp.noToolsTitle', 'No available MCP tools')}
+                        </p>
+                        <p className="text-xs">
+                          {translate('agents.editor.mcp.noToolsHint', 'Please enable MCP Services in settings first')}
+                        </p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2">
