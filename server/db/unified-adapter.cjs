@@ -169,7 +169,9 @@ function createJsonDatabaseAdapter() {
     agent_tasks: [],
     context_memories: [],
     conversation_summaries: [],
-    prompt_templates: []
+    prompt_templates: [],
+    agent_templates: [],
+    agent_template_versions: []
   };
 
   // 加载现有数据
@@ -208,6 +210,12 @@ function createJsonDatabaseAdapter() {
   } catch (err) {
     console.error('[JSON DB] Error loading data:', err);
   }
+
+  // Ensure newly introduced collections exist
+  data.agent_templates = Array.isArray(data.agent_templates) ? data.agent_templates : [];
+  data.agent_template_versions = Array.isArray(data.agent_template_versions)
+    ? data.agent_template_versions
+    : [];
 
   // 保存数据
   function saveData() {

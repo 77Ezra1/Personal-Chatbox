@@ -102,6 +102,13 @@ export const agentAPI = {
   getRuntimeConfig: () => apiClient.get('/agents/runtime/config'),
   updateRuntimeConfig: (config) => apiClient.put('/agents/runtime/config', config),
   getSummaryMetrics: () => apiClient.get('/agents/metrics/summary'),
+  getTemplates: (params) => apiClient.get('/agents/templates', { params }),
+  getTemplate: (id) => apiClient.get(`/agents/templates/${id}`),
+  createTemplate: (data) => apiClient.post('/agents/templates', data),
+  deleteTemplate: (id) => apiClient.delete(`/agents/templates/${id}`),
+  applyTemplate: (id, overrides) => apiClient.post(`/agents/templates/${id}/apply`, overrides),
+  createAgentFromTemplate: (id, payload) => apiClient.post(`/agents/templates/${id}/create-agent`, payload),
+  saveTemplateFromAgent: (agentId, payload) => apiClient.post(`/agents/${agentId}/save-template`, payload),
 
   // 工具
   getTools: () => apiClient.get('/agents/tools')

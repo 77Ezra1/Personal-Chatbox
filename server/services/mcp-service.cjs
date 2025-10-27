@@ -299,6 +299,9 @@ class MCPService {
     }
 
     // 插入新服务
+    const officialFlag = serviceData.official ? 1 : 0;
+    const enabledFlag = serviceData.enabled ? 1 : 0;
+
     const result = await db.prepare(`
       INSERT INTO user_mcp_configs (
         user_id, mcp_id, name, description, category, icon,
@@ -317,12 +320,12 @@ class MCPService {
       JSON.stringify(serviceData.args || []),
       JSON.stringify(serviceData.env_vars || {}),
       JSON.stringify(serviceData.config_data || {}),
-      false, // official (用户自定义服务)
+      officialFlag, // official (用户自定义服务)
       'medium',
       JSON.stringify(serviceData.features || []),
       JSON.stringify(serviceData.setup_instructions || {}),
       serviceData.documentation || '',
-      false // enabled (默认禁用)
+      enabledFlag // enabled (默认禁用)
     );
 
     // 清除缓存
@@ -369,6 +372,8 @@ class MCPService {
         // JSON字段需要stringify
         if (['args', 'env_vars', 'config_data', 'features', 'setup_instructions'].includes(key)) {
           values.push(JSON.stringify(updates[key]));
+        } else if (key === 'enabled') {
+          values.push(updates[key] ? 1 : 0);
         } else {
           values.push(updates[key]);
         }

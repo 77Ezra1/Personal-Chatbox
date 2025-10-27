@@ -74,6 +74,8 @@ export default function AgentsPage() {
   const [dashboard, setDashboard] = useState(null)
   const [dashboardLoading, setDashboardLoading] = useState(false)
   const [queuePriorityDraft, setQueuePriorityDraft] = useState({})
+  const [templates, setTemplates] = useState([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
 
   // ✅ 批量执行状态
   const [batchExecuteOpen, setBatchExecuteOpen] = useState(false)
@@ -147,6 +149,23 @@ export default function AgentsPage() {
     }
   }, [authLoading, isAuthenticated])
 
+  const fetchTemplates = useCallback(async () => {
+    if (authLoading || !isAuthenticated) return
+    try {
+      setTemplatesLoading(true)
+      const response = await agentAPI.getTemplates({
+        includeSystem: true,
+        includeCustom: true,
+        limit: 100
+      })
+      setTemplates(response.data?.templates || [])
+    } catch (error) {
+      console.error('Failed to fetch agent templates:', error)
+    } finally {
+      setTemplatesLoading(false)
+    }
+  }, [authLoading, isAuthenticated])
+
   const fetchQueueState = useCallback(async (agentId) => {
     if (!agentId) return
     try {
@@ -180,13 +199,16 @@ export default function AgentsPage() {
     if (isAuthenticated) {
       fetchAgents()
       fetchDashboard()
+      fetchTemplates()
     } else {
       setAgents([])
       setDashboard(null)
+      setTemplates([])
       setLoading(false)
       setDashboardLoading(false)
+      setTemplatesLoading(false)
     }
-  }, [authLoading, isAuthenticated, fetchAgents, fetchDashboard])
+  }, [authLoading, isAuthenticated, fetchAgents, fetchDashboard, fetchTemplates])
 
   // Create new agent
   const handleCreateAgent = () => {
@@ -219,6 +241,29 @@ export default function AgentsPage() {
       toast.error(error.response?.data?.message || translate('agents.toasts.saveFailed', 'Failed to save agent'))
     }
   }
+
+  const handleCreateTemplateFromForm = useCallback(async (templatePayload) => {
+    try {
+      await agentAPI.createTemplate(templatePayload)
+      toast.success(translate('agents.templates.createSuccess', 'Template saved'))
+      fetchTemplates()
+    } catch (error) {
+      console.error('Failed to create template:', error)
+      toast.error(error.response?.data?.message || translate('agents.templates.createFailed', 'Failed to save template'))
+      throw error
+    }
+  }, [fetchTemplates, translate])
+
+  const handleApplyTemplateForEditor = useCallback(async (templateId) => {
+    try {
+      const response = await agentAPI.applyTemplate(templateId, {})
+      return response.data?.template
+    } catch (error) {
+      console.error('Failed to apply template:', error)
+      toast.error(error.response?.data?.message || translate('agents.templates.applyFailed', 'Failed to apply template'))
+      throw error
+    }
+  }, [translate])
 
   // Delete agent
   const handleDeleteAgent = (agent) => {
@@ -626,6 +671,10 @@ export default function AgentsPage() {
         open={editorOpen}
         onOpenChange={setEditorOpen}
         onSave={handleSaveAgent}
+        templates={templates}
+        templatesLoading={templatesLoading}
+        onApplyTemplate={handleApplyTemplateForEditor}
+        onCreateTemplate={handleCreateTemplateFromForm}
       />
 
       {/* Task Executor Dialog */}

@@ -454,6 +454,41 @@ CREATE TABLE IF NOT EXISTS agent_executions (
 CREATE INDEX IF NOT EXISTS idx_agent_executions_agent_id ON agent_executions(agent_id);
 CREATE INDEX IF NOT EXISTS idx_agent_executions_task_id ON agent_executions(task_id);
 CREATE INDEX IF NOT EXISTS idx_agent_executions_user_id ON agent_executions(user_id);
+
+-- Agent 模板表
+CREATE TABLE IF NOT EXISTS agent_templates (
+  id VARCHAR(36) PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  template_type VARCHAR(20) NOT NULL DEFAULT 'custom',
+  category VARCHAR(100),
+  tags JSONB,
+  config_snapshot JSONB NOT NULL,
+  latest_version_id VARCHAR(36),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  usage_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS agent_template_versions (
+  id VARCHAR(36) PRIMARY KEY,
+  template_id VARCHAR(36) NOT NULL REFERENCES agent_templates(id) ON DELETE CASCADE,
+  version INTEGER NOT NULL,
+  config_snapshot JSONB NOT NULL,
+  change_summary TEXT,
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (template_id, version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_templates_user_id ON agent_templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_agent_templates_type ON agent_templates(template_type);
+CREATE INDEX IF NOT EXISTS idx_agent_templates_updated_at ON agent_templates(updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_agent_template_versions_template_id ON agent_template_versions(template_id);
+CREATE INDEX IF NOT EXISTS idx_agent_template_versions_version ON agent_template_versions(template_id, version DESC);
 CREATE INDEX IF NOT EXISTS idx_agent_executions_status ON agent_executions(status);
 
 -- Agent工具注册表

@@ -88,6 +88,13 @@ const createError = {
       '请求超时',
       ErrorCodes.TIMEOUT,
       `${serviceName}服务响应超时,请稍后再试`
+    ),
+
+  notFound: (message = '资源未找到', details = null) =>
+    new McpError(
+      message,
+      ErrorCodes.SERVICE_NOT_FOUND,
+      details
     )
 };
 

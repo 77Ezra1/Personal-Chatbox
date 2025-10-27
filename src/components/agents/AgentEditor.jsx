@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -33,7 +33,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { X, Plus, Sparkles } from 'lucide-react'
+import { X, Plus, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useModelConfigDB } from '@/hooks/useModelConfigDB'
@@ -180,7 +180,11 @@ export function AgentEditor({
   open,
   onOpenChange,
   onSave,
-  loading = false
+  loading = false,
+  templates = [],
+  templatesLoading = false,
+  onApplyTemplate,
+  onCreateTemplate
 }) {
   const { translate } = useTranslation()
   const {
@@ -192,12 +196,28 @@ export function AgentEditor({
   const { flatTools, toolsByCategory, toolsByService, loading: mcpToolsLoading } = useMcpTools()
   const [customCapability, setCustomCapability] = useState('')
   const [showMcpTools, setShowMcpTools] = useState(true)
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const [applyingTemplate, setApplyingTemplate] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [templatePreview, setTemplatePreview] = useState(null)
   const isEditing = !!agent
   const resolvedProvider = agent?.config?.provider || currentProviderFromSettings || 'openai'
   const defaultSystemPrompt = useMemo(() => (
     agent?.config?.systemPrompt
       || translate('agents.editor.defaults.systemPrompt', 'You are a helpful AI assistant. Please follow user instructions carefully and ask questions when clarification is needed.')
   ), [agent?.config?.systemPrompt, translate])
+
+  const templateOptions = useMemo(
+    () => (Array.isArray(templates) ? templates : []),
+    [templates]
+  )
+
+  const getTemplateTypeLabel = useCallback(
+    (type) => (type === 'system'
+      ? translate('agents.editor.templates.system', 'System')
+      : translate('agents.editor.templates.custom', 'My Template')),
+    [translate]
+  )
 
   const providerModels = useMemo(() => {
     if (typeof getProviderModels !== 'function') return []
@@ -258,6 +278,139 @@ export function AgentEditor({
     }
   })
 
+  const submitting = loading || form.formState.isSubmitting
+
+  const buildFormValuesFromTemplate = useCallback((templateConfig) => {
+    if (!templateConfig) return null
+    const templatePayload = typeof templateConfig === 'object' ? templateConfig : {}
+    const normalizedCapabilities = normalizeCapabilityList(
+      templatePayload.capabilities
+        || templatePayload.config?.capabilities
+        || []
+    )
+    const normalizedTools = normalizeToolList(
+      templatePayload.tools
+        || templatePayload.config?.tools
+        || []
+    )
+
+    return {
+      name: templatePayload.name || '',
+      description: templatePayload.description || '',
+      type: templatePayload.type || 'conversational',
+      capabilities: normalizedCapabilities,
+      config: {
+        provider: templatePayload.config?.provider || resolvedProvider,
+        model: templatePayload.config?.model || resolvedDefaultModel,
+        temperature: templatePayload.config?.temperature ?? 0.7,
+        maxTokens: templatePayload.config?.maxTokens ?? 4000,
+        systemPrompt: templatePayload.systemPrompt
+          || templatePayload.config?.systemPrompt
+          || defaultSystemPrompt,
+        tools: normalizedTools,
+        autoRetry: templatePayload.config?.autoRetry || false,
+        maxRetries: templatePayload.config?.maxRetries ?? 3
+      }
+    }
+  }, [defaultSystemPrompt, resolvedDefaultModel, resolvedProvider])
+
+  const buildTemplatePayloadFromForm = useCallback((formValues, overrides = {}) => {
+    if (!formValues) return null
+    const normalizedCapabilities = normalizeCapabilityList(formValues.capabilities || [])
+    const normalizedTools = normalizeToolList(formValues.config?.tools || [])
+    const templateName = overrides.name ?? formValues.name ?? translate('agents.editor.templates.defaultName', 'New Template')
+    const templateDescription = overrides.description ?? formValues.description ?? ''
+
+    return {
+      name: templateName,
+      description: templateDescription,
+      tags: overrides.tags || [],
+      category: overrides.category || null,
+      config: {
+        name: formValues.name || templateName,
+        description: formValues.description || templateDescription,
+        systemPrompt: formValues.config?.systemPrompt || defaultSystemPrompt,
+        capabilities: normalizedCapabilities,
+        tools: normalizedTools,
+        config: {
+          provider: formValues.config?.provider || resolvedProvider,
+          model: formValues.config?.model || resolvedDefaultModel,
+          temperature: formValues.config?.temperature ?? 0.7,
+          maxTokens: formValues.config?.maxTokens ?? 4000,
+          systemPrompt: formValues.config?.systemPrompt || defaultSystemPrompt,
+          autoRetry: formValues.config?.autoRetry || false,
+          maxRetries: formValues.config?.maxRetries ?? 3
+        },
+        avatarUrl: overrides.avatarUrl || agent?.avatarUrl || null,
+        type: formValues.type || 'conversational'
+      }
+    }
+  }, [agent?.avatarUrl, defaultSystemPrompt, resolvedDefaultModel, resolvedProvider, translate])
+
+  const handleTemplateSelect = useCallback(async (value) => {
+    setSelectedTemplateId(value)
+    if (!value) {
+      setTemplatePreview(null)
+      return
+    }
+    if (typeof onApplyTemplate !== 'function') {
+      return
+    }
+    try {
+      setApplyingTemplate(true)
+      const result = await onApplyTemplate(value)
+      const payload = result?.config || result
+      const formValues = buildFormValuesFromTemplate(payload)
+      if (formValues) {
+        form.reset(formValues)
+      }
+      setTemplatePreview({
+        templateId: result?.templateId || value,
+        templateName: result?.templateName || payload?.name || '',
+        version: result?.version || 1,
+        config: payload
+      })
+    } catch (error) {
+      console.error('[AgentEditor] Failed to apply template:', error)
+    } finally {
+      setApplyingTemplate(false)
+    }
+  }, [onApplyTemplate, buildFormValuesFromTemplate, form])
+
+  const handleClearTemplate = useCallback(() => {
+    setSelectedTemplateId('')
+    setTemplatePreview(null)
+  }, [])
+
+  const handleSaveTemplate = useCallback(async () => {
+    if (typeof onCreateTemplate !== 'function') return
+    if (typeof window === 'undefined') return
+
+    const currentValues = form.getValues()
+    const suggestedName = currentValues.name || translate('agents.editor.templates.defaultName', 'New Template')
+    const promptLabel = translate('agents.editor.templates.savePrompt', 'Template name')
+    const input = window.prompt(promptLabel, suggestedName)
+    if (input === null) {
+      return
+    }
+    const trimmed = input.trim()
+    if (!trimmed) {
+      return
+    }
+
+    const payload = buildTemplatePayloadFromForm(currentValues, { name: trimmed })
+    if (!payload) return
+
+    try {
+      setSavingTemplate(true)
+      await onCreateTemplate(payload)
+    } catch (error) {
+      console.error('[AgentEditor] Failed to create template:', error)
+    } finally {
+      setSavingTemplate(false)
+    }
+  }, [onCreateTemplate, form, buildTemplatePayloadFromForm, translate])
+
   useEffect(() => {
     if (agent) {
       form.reset({
@@ -288,6 +441,27 @@ export function AgentEditor({
       }
     }
   }, [agent, form, resolvedDefaultModel, resolvedProvider, defaultSystemPrompt])
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedTemplateId('')
+      setTemplatePreview(null)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (isEditing) {
+      setSelectedTemplateId('')
+      setTemplatePreview(null)
+    }
+  }, [isEditing])
+
+  useEffect(() => {
+    if (selectedTemplateId && !templateOptions.some(item => item.id === selectedTemplateId)) {
+      setSelectedTemplateId('')
+      setTemplatePreview(null)
+    }
+  }, [selectedTemplateId, templateOptions])
 
   const onSubmit = (data) => {
     // 转换为后端期望的格式
@@ -371,6 +545,81 @@ export function AgentEditor({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {!isEditing && (
+              <div className="space-y-2 rounded-md border bg-muted/40 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-medium">
+                    {translate('agents.editor.templates.selectLabel', 'Start from template')}
+                  </div>
+                  {(templatesLoading || applyingTemplate) && (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                  <Select
+                    value={selectedTemplateId || undefined}
+                    onValueChange={handleTemplateSelect}
+                    disabled={
+                      templatesLoading
+                      || applyingTemplate
+                      || submitting
+                      || templateOptions.length === 0
+                    }
+                  >
+                    <SelectTrigger className="md:w-80">
+                      <SelectValue placeholder={translate('agents.editor.templates.placeholder', 'Choose a template...')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templateOptions.length === 0 ? (
+                        <SelectItem value="__empty" disabled>
+                          {translate('agents.editor.templates.empty', 'No templates available yet')}
+                        </SelectItem>
+                      ) : templateOptions.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name} · {getTemplateTypeLabel(item.templateType)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedTemplateId && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearTemplate}
+                      disabled={applyingTemplate}
+                    >
+                      {translate('agents.editor.templates.clear', 'Clear')}
+                    </Button>
+                  )}
+                </div>
+                {templatePreview && (
+                  <div className="rounded-md border border-dashed bg-background/60 p-3 text-xs text-muted-foreground">
+                    <div className="text-sm font-medium text-foreground">
+                      {templatePreview.templateName}
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+                        v{templatePreview.version}
+                      </span>
+                    </div>
+                    {templatePreview.config?.description && (
+                      <p className="mt-1 leading-relaxed">
+                        {templatePreview.config.description}
+                      </p>
+                    )}
+                    {(templatePreview.config?.capabilities || []).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {templatePreview.config.capabilities.map((cap) => (
+                          <Badge key={cap} variant="secondary" className="text-xs">
+                            {toTitleCase(cap)}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <ScrollArea className="h-[calc(90vh-200px)] pr-4">
               <Tabs defaultValue="basic" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
@@ -808,17 +1057,29 @@ export function AgentEditor({
               </Tabs>
             </ScrollArea>
 
-            <DialogFooter>
+            <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              {onCreateTemplate && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleSaveTemplate}
+                  disabled={submitting || savingTemplate}
+                >
+                  {savingTemplate
+                    ? translate('agents.editor.buttons.savingTemplate', 'Saving template...')
+                    : translate('agents.editor.buttons.saveTemplate', 'Save as Template')}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={loading}
+                disabled={submitting}
               >
                 {translate('agents.editor.buttons.cancel', 'Cancel')}
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading
+              <Button type="submit" disabled={submitting}>
+                {submitting
                   ? translate('agents.editor.buttons.saving', 'Saving...')
                   : isEditing
                     ? translate('agents.editor.buttons.save', 'Save Changes')

@@ -297,6 +297,8 @@ export default function McpServicesPanel() {
  * 服务卡片组件
  */
 function ServiceCard({ service, viewMode, onToggle, isSystemService }) {
+  const { translate } = useTranslation()
+
   const getServiceIcon = (id) => {
     const icons = {
       weather: '🌤️',

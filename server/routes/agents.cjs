@@ -6,11 +6,13 @@ const express = require('express');
 const { authMiddleware } = require('../middleware/auth.cjs');
 const AgentEngine = require('../services/agentEngine.cjs');
 const TaskDecomposer = require('../services/taskDecomposer.cjs');
+const AgentTemplateService = require('../services/agentTemplateService.cjs');
 const sseManager = require('../services/sseManager.cjs');
 
 const router = express.Router();
 const agentEngine = new AgentEngine();
 const taskDecomposer = new TaskDecomposer();
+const agentTemplateService = new AgentTemplateService();
 
 function attachTokenFromQuery(req, res, next) {
   if (!req.headers.authorization && req.query && req.query.token) {
@@ -80,6 +82,129 @@ router.get('/metrics/summary', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('获取 Agent 仪表盘统计失败:', error);
     res.status(500).json({ message: '获取统计失败', error: error.message });
+  }
+});
+
+router.get('/templates', authMiddleware, async (req, res) => {
+  try {
+    const includeSystem = req.query.includeSystem !== 'false';
+    const includeCustom = req.query.includeCustom !== 'false';
+    const search = req.query.search || '';
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
+
+    const templates = await agentTemplateService.listTemplates(req.user.id, {
+      includeSystem,
+      includeCustom,
+      search,
+      limit,
+      offset
+    });
+
+    res.json({
+      templates,
+      count: templates.length,
+      limit,
+      offset
+    });
+  } catch (error) {
+    console.error('获取 Agent 模板列表失败:', error);
+    res.status(500).json({ message: '获取模板列表失败', error: error.message });
+  }
+});
+
+router.post('/templates', authMiddleware, async (req, res) => {
+  try {
+    const template = await agentTemplateService.createTemplate(req.user.id, req.body || {});
+    res.status(201).json({ message: '模板创建成功', template });
+  } catch (error) {
+    console.error('创建 Agent 模板失败:', error);
+    res.status(400).json({ message: error.message || '创建模板失败' });
+  }
+});
+
+router.get('/templates/:templateId', authMiddleware, async (req, res) => {
+  try {
+    const template = await agentTemplateService.getTemplate(req.params.templateId, req.user.id);
+    if (!template) {
+      return res.status(404).json({ message: '模板不存在' });
+    }
+    res.json({ template });
+  } catch (error) {
+    console.error('获取 Agent 模板失败:', error);
+    res.status(500).json({ message: '获取模板失败', error: error.message });
+  }
+});
+
+router.delete('/templates/:templateId', authMiddleware, async (req, res) => {
+  try {
+    await agentTemplateService.deleteTemplate(req.params.templateId, req.user.id);
+    res.json({ message: '模板已删除' });
+  } catch (error) {
+    console.error('删除 Agent 模板失败:', error);
+    if (error.message.includes('不存在')) {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: '删除模板失败', error: error.message });
+    }
+  }
+});
+
+router.post('/templates/:templateId/apply', authMiddleware, async (req, res) => {
+  try {
+    const result = await agentTemplateService.applyTemplate(
+      req.params.templateId,
+      req.user.id,
+      req.body || {}
+    );
+    res.json({ template: result });
+  } catch (error) {
+    console.error('应用 Agent 模板失败:', error);
+    if (error.message.includes('不存在')) {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: '应用模板失败', error: error.message });
+    }
+  }
+});
+
+router.post('/templates/:templateId/create-agent', authMiddleware, async (req, res) => {
+  try {
+    const result = await agentTemplateService.createAgentFromTemplate(
+      req.params.templateId,
+      req.user.id,
+      req.body || {}
+    );
+    res.status(201).json({
+      message: 'Agent 已从模板创建',
+      agent: result.agent,
+      template: result.template
+    });
+  } catch (error) {
+    console.error('根据模板创建 Agent 失败:', error);
+    if (error.message.includes('不存在')) {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: '创建 Agent 失败', error: error.message });
+    }
+  }
+});
+
+router.post('/:id/save-template', authMiddleware, async (req, res) => {
+  try {
+    const template = await agentTemplateService.saveTemplateFromAgent(
+      req.params.id,
+      req.user.id,
+      req.body || {}
+    );
+    res.status(201).json({ message: '已从 Agent 保存模板', template });
+  } catch (error) {
+    console.error('从 Agent 保存模板失败:', error);
+    if (error.message.includes('不存在')) {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: '保存模板失败', error: error.message });
+    }
   }
 });
 

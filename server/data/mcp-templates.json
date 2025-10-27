@@ -221,7 +221,7 @@
       "documentation": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch"
     },
     {
-      "id": "brave-search",
+      "id": "brave_search",
       "name": "Brave Search",
       "category": "search",
       "description": "Brave搜索引擎API，提供隐私保护的网页搜索能力。支持网页搜索、新闻搜索、图片搜索等。",
