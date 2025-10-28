@@ -37,7 +37,8 @@ import { X, Plus, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useModelConfigDB } from '@/hooks/useModelConfigDB'
-import { useMcpTools } from '@/hooks/useMcpTools'
+import { useMcpManager } from '@/hooks/useMcpManager'
+import { subscribeMcpServicesUpdated } from '@/lib/mcpEvents'
 
 // Agent schema
 const agentSchema = z.object({
@@ -193,7 +194,7 @@ export function AgentEditor({
     getProviderModels,
     loading: modelConfigLoading
   } = useModelConfigDB()
-  const { flatTools, toolsByCategory, toolsByService, loading: mcpToolsLoading } = useMcpTools()
+  const { services: mcpServices, loading: mcpServicesLoading, refresh: refreshMcpServices } = useMcpManager()
   const [customCapability, setCustomCapability] = useState('')
   const [showMcpTools, setShowMcpTools] = useState(true)
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
@@ -463,6 +464,16 @@ export function AgentEditor({
     }
   }, [selectedTemplateId, templateOptions])
 
+  // 监听 MCP 服务更新事件，实时同步配置页面的修改
+  useEffect(() => {
+    const unsubscribe = subscribeMcpServicesUpdated(() => {
+      console.log('[AgentEditor] 收到 MCP 服务更新事件，刷新服务列表')
+      // emitEvent: false 防止触发新的事件，避免无限循环
+      refreshMcpServices({ refresh: true, emitEvent: false })
+    })
+    return unsubscribe
+  }, [refreshMcpServices])
+
   const onSubmit = (data) => {
     // 转换为后端期望的格式
     const normalizedCapabilities = normalizeCapabilityList(data.capabilities || [])
@@ -529,8 +540,8 @@ export function AgentEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="size-5 text-primary" />
             {isEditing
@@ -544,9 +555,9 @@ export function AgentEditor({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex flex-col flex-1 min-h-0">
             {!isEditing && (
-              <div className="space-y-2 rounded-md border bg-muted/40 p-4">
+              <div className="space-y-2 rounded-md border bg-muted/40 p-4 flex-shrink-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-medium">
                     {translate('agents.editor.templates.selectLabel', 'Start from template')}
@@ -620,22 +631,22 @@ export function AgentEditor({
               </div>
             )}
 
-            <ScrollArea className="h-[calc(90vh-200px)] pr-4">
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="basic">
-                    {translate('agents.editor.tabs.basic', 'Basic Info')}
-                  </TabsTrigger>
-                  <TabsTrigger value="capabilities">
-                    {translate('agents.editor.tabs.capabilities', 'Capabilities')}
-                  </TabsTrigger>
-                  <TabsTrigger value="advanced">
-                    {translate('agents.editor.tabs.advanced', 'Advanced')}
-                  </TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="basic" className="w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+                <TabsTrigger value="basic">
+                  {translate('agents.editor.tabs.basic', 'Basic Info')}
+                </TabsTrigger>
+                <TabsTrigger value="capabilities">
+                  {translate('agents.editor.tabs.capabilities', 'Capabilities')}
+                </TabsTrigger>
+                <TabsTrigger value="advanced">
+                  {translate('agents.editor.tabs.advanced', 'Advanced')}
+                </TabsTrigger>
+              </TabsList>
 
-                {/* Basic Info Tab */}
-                <TabsContent value="basic" className="space-y-4 mt-4">
+              {/* Basic Info Tab */}
+              <TabsContent value="basic" className="flex-1 mt-4 overflow-y-auto pr-4 data-[state=active]:block data-[state=inactive]:hidden">
+                <div className="space-y-4 pb-4">
                   <FormField
                     control={form.control}
                     name="name"
@@ -706,10 +717,12 @@ export function AgentEditor({
                       </FormItem>
                     )}
                   />
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                {/* Capabilities Tab */}
-                <TabsContent value="capabilities" className="space-y-4 mt-4">
+              {/* Capabilities Tab */}
+              <TabsContent value="capabilities" className="flex-1 mt-4 overflow-y-auto pr-4 data-[state=active]:block data-[state=inactive]:hidden">
+                <div className="space-y-4 pb-4">
                   <FormField
                     control={form.control}
                     name="capabilities"
@@ -804,66 +817,75 @@ export function AgentEditor({
                       </div>
                     </div>
 
-                    {mcpToolsLoading ? (
+                    {mcpServicesLoading ? (
                       <div className="text-sm text-muted-foreground text-center py-4">
-                        {translate('agents.editor.mcp.loading', 'Loading MCP tools...')}
+                        {translate('agents.editor.mcp.loading', 'Loading MCP services...')}
                       </div>
-                    ) : showMcpTools && flatTools.length > 0 ? (
+                    ) : showMcpTools && mcpServices && mcpServices.length > 0 ? (
                       <div className="space-y-3">
-                        {/* 按类别分组显示 MCP 工具 */}
-                        <ScrollArea className="h-[300px] rounded-md border p-3">
-                          {Object.entries(toolsByCategory).map(([category, { name, tools: categoryTools }]) => (
-                            <div key={category} className="mb-4 last:mb-0">
-                        <div className="text-xs font-medium text-muted-foreground mb-2 px-1">
-                          {translate(`agents.editor.mcp.categories.${category}`, name)} ({categoryTools.length})
-                              </div>
-                              <div className="grid grid-cols-1 gap-1.5">
-                                {categoryTools.map((tool) => {
-                                  const selectedTools = form.watch('config.tools') || []
-                                  const isSelected = selectedTools.includes(tool.value)
-                                  return (
-                                    <Button
-                                      key={tool.value}
-                                      type="button"
-                                      variant={isSelected ? 'default' : 'ghost'}
-                                      size="sm"
-                                      onClick={() => toggleTool(tool.value)}
-                                      className="justify-start gap-2 h-auto py-2 px-3"
-                                    >
-                                      <div className={cn(
-                                        "size-3 rounded-full border-2 flex-shrink-0",
-                                        isSelected ? "bg-primary-foreground border-primary-foreground" : "bg-transparent border-muted-foreground/50"
-                                      )} />
-                                      <div className="flex-1 text-left min-w-0">
-                                        <div className="font-medium text-xs truncate">{tool.toolName}</div>
-                                        <div className="text-xs text-muted-foreground line-clamp-1">{tool.description}</div>
-                                      </div>
-                                    </Button>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </ScrollArea>
+                        {/* MCP 服务列表 */}
+                        <div className="max-h-[250px] overflow-y-auto rounded-md border p-3 bg-muted/20">
+                          <div className="grid grid-cols-1 gap-1.5">
+                            {mcpServices.map((service) => {
+                              const selectedServices = form.watch('config.tools') || []
+                              const isSelected = selectedServices.includes(service.id)
+                              const isEnabled = service.enabled
+                              return (
+                                <Button
+                                  key={service.id}
+                                  type="button"
+                                  variant={isSelected ? 'default' : 'ghost'}
+                                  size="sm"
+                                  onClick={() => toggleTool(service.id)}
+                                  disabled={!isEnabled}
+                                  className="justify-start gap-2 h-auto py-2 px-3"
+                                >
+                                  <div className={cn(
+                                    "size-3 rounded-full border-2 flex-shrink-0",
+                                    isSelected ? "bg-primary-foreground border-primary-foreground" : "bg-transparent border-muted-foreground/50"
+                                  )} />
+                                  <div className="flex-1 text-left min-w-0">
+                                    <div className="font-medium text-xs truncate flex items-center gap-2">
+                                      {service.name}
+                                      {!isEnabled && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {translate('agents.editor.mcp.disabled', 'Disabled')}
+                                        </Badge>
+                                      )}
+                                      {service.toolCount > 0 && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          {service.toolCount} {translate('agents.editor.mcp.tools', 'tools')}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {service.description && (
+                                      <div className="text-xs text-muted-foreground line-clamp-1">{service.description}</div>
+                                    )}
+                                  </div>
+                                </Button>
+                              )
+                            })}
+                          </div>
+                        </div>
 
-                        {/* 选中的工具统计 */}
+                        {/* 选中的服务统计 */}
                         {(() => {
-                          const selectedTools = form.watch('config.tools') || []
-                          return selectedTools.length > 0 && (
+                          const selectedServices = form.watch('config.tools') || []
+                          return selectedServices.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
-                              {selectedTools.map(toolId => {
-                                const tool = flatTools.find(t => t.value === toolId)
-                                if (!tool) return null
+                              {selectedServices.map(serviceId => {
+                                const service = mcpServices.find(s => s.id === serviceId)
+                                if (!service) return null
                                 return (
                                   <Badge
-                                    key={toolId}
+                                    key={serviceId}
                                     variant="secondary"
                                     className="text-xs gap-1"
                                   >
-                                    {tool.toolName}
+                                    {service.name}
                                     <X
                                       className="size-3 cursor-pointer hover:text-destructive"
-                                      onClick={() => toggleTool(toolId)}
+                                      onClick={() => toggleTool(serviceId)}
                                     />
                                   </Badge>
                                 )
@@ -875,10 +897,10 @@ export function AgentEditor({
                     ) : showMcpTools ? (
                       <div className="text-sm text-muted-foreground text-center py-8 border rounded-md bg-muted/30">
                         <p className="mb-2">
-                          {translate('agents.editor.mcp.noToolsTitle', 'No available MCP tools')}
+                          {translate('agents.editor.mcp.noServicesTitle', 'No available MCP services')}
                         </p>
                         <p className="text-xs">
-                          {translate('agents.editor.mcp.noToolsHint', 'Please enable MCP Services in settings first')}
+                          {translate('agents.editor.mcp.noServicesHint', 'Please enable MCP Services in settings first')}
                         </p>
                       </div>
                     ) : (
@@ -906,10 +928,12 @@ export function AgentEditor({
                       </div>
                     )}
                   </div>
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                {/* Advanced Tab */}
-                <TabsContent value="advanced" className="space-y-4 mt-4">
+              {/* Advanced Tab */}
+              <TabsContent value="advanced" className="flex-1 mt-4 overflow-y-auto pr-4 data-[state=active]:block data-[state=inactive]:hidden">
+                <div className="space-y-4 pb-4">
                   <FormField
                     control={form.control}
                     name="config.model"
@@ -1053,11 +1077,11 @@ export function AgentEditor({
                       )}
                     />
                   )}
-                </TabsContent>
-              </Tabs>
-            </ScrollArea>
+                </div>
+              </TabsContent>
+            </Tabs>
 
-            <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end flex-shrink-0 pt-4 border-t">
               {onCreateTemplate && (
                 <Button
                   type="button"

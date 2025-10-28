@@ -83,7 +83,9 @@ class AIService {
   async generateResponse(prompt, context = '', options = {}) {
     // 确保服务已初始化
     if (!this.openai && !this.deepseek) {
+      console.log(`[AI Service] Services not initialized, initializing for userId: ${this.userId}`);
       await this.initializeServices();
+      console.log(`[AI Service] After init - deepseek:`, this.deepseek ? 'OK' : 'NULL', `openai:`, this.openai ? 'OK' : 'NULL');
     }
 
     // 智能选择默认模型：优先使用已配置的API
@@ -107,58 +109,86 @@ class AIService {
       let client = null;
       let actualModel = model;
 
-      console.log(`[AI Service] generateResponse called with model: ${model}`);
-      console.log(`[AI Service] this.deepseek:`, this.deepseek ? 'initialized' : 'null');
-      console.log(`[AI Service] this.openai:`, this.openai ? 'initialized' : 'null');
+      console.log(`[AI Service] generateResponse - userId: ${this.userId}, model: ${model}`);
+      console.log(`[AI Service] deepseek:`, this.deepseek ? 'initialized' : 'null');
+      console.log(`[AI Service] openai:`, this.openai ? 'initialized' : 'null');
 
-      // 判断模型类型
+      // 严格匹配模型，不自动降级
       if (model.includes('deepseek')) {
         client = this.deepseek;
         actualModel = 'deepseek-chat'; // DeepSeek的标准模型名
         console.log(`[AI Service] Selected DeepSeek client`);
-      } else if (model.includes('gpt')) {
+
+        if (!client) {
+          const error = new Error(`DeepSeek模型 "${model}" 需要配置DeepSeek API key。请在设置页面添加DeepSeek API密钥。`);
+          error.code = 'MISSING_API_KEY';
+          error.provider = 'deepseek';
+          throw error;
+        }
+      } else if (model.includes('gpt') || model.includes('o1') || model.includes('o3')) {
         client = this.openai;
-        console.log(`[AI Service] Selected OpenAI client`);
+        actualModel = model;
+        console.log(`[AI Service] Selected OpenAI client for model: ${model}`);
+
+        if (!client) {
+          const error = new Error(`OpenAI模型 "${model}" 需要配置OpenAI API key。请在设置页面添加OpenAI API密钥。`);
+          error.code = 'MISSING_API_KEY';
+          error.provider = 'openai';
+          throw error;
+        }
+      } else if (model.includes('claude')) {
+        const error = new Error(`Claude模型 "${model}" 需要配置Anthropic API key。请在设置页面添加Claude API密钥。`);
+        error.code = 'MISSING_API_KEY';
+        error.provider = 'anthropic';
+        throw error;
+      } else if (model.includes('gemini')) {
+        const error = new Error(`Gemini模型 "${model}" 需要配置Google API key。请在设置页面添加Gemini API密钥。`);
+        error.code = 'MISSING_API_KEY';
+        error.provider = 'google';
+        throw error;
       } else {
-        // 默认：有DeepSeek用DeepSeek，否则用OpenAI
+        // 未知模型，尝试使用可用的客户端
         client = this.deepseek || this.openai;
         actualModel = this.deepseek ? 'deepseek-chat' : model;
-        console.log(`[AI Service] Selected default client:`, client ? 'found' : 'null');
+        console.log(`[AI Service] Unknown model "${model}", using available client`);
+
+        if (!client) {
+          const error = new Error(`无法处理模型 "${model}"。请配置至少一个AI服务的API密钥（OpenAI、DeepSeek等）。`);
+          error.code = 'NO_API_KEY';
+          throw error;
+        }
       }
 
-      console.log(`[AI Service] Final client:`, client ? 'available' : 'null', `model: ${actualModel}`);
+      console.log(`[AI Service] Final client: available, model: ${actualModel}`);
 
-      if (client) {
-        const response = await client.chat.completions.create({
-          model: actualModel,
-          messages: [{ role: 'user', content: fullPrompt }],
-          max_tokens: maxTokens,
-          temperature
-        });
+      const response = await client.chat.completions.create({
+        model: actualModel,
+        messages: [{ role: 'user', content: fullPrompt }],
+        max_tokens: maxTokens,
+        temperature
+      });
 
-        // 返回包含token统计的完整信息
-        return {
-          content: response.choices[0].message.content,
-          usage: response.usage || null,
-          model: actualModel
-        };
-      }
-
-      // 回退到模拟响应
-      console.warn('[AI Service] No API key configured, using mock response');
-      const mockContent = this.generateMockResponse(fullPrompt);
+      // 返回包含token统计的完整信息
       return {
-        content: mockContent,
-        usage: null,
-        model: 'mock'
+        content: response.choices[0].message.content,
+        usage: response.usage || null,
+        model: actualModel
       };
     } catch (error) {
-      console.error('[AI Service] Generate response error:', error);
+      console.error('[AI Service] Generate response error:', error.message);
+
+      // 如果是API key缺失错误，直接抛出让调用方处理
+      if (error.code === 'MISSING_API_KEY' || error.code === 'NO_API_KEY') {
+        throw error;
+      }
+
+      // 其他错误返回模拟响应
       const mockContent = this.generateMockResponse(fullPrompt);
       return {
         content: mockContent,
         usage: null,
-        model: 'mock'
+        model: 'mock',
+        error: error.message
       };
     }
   }

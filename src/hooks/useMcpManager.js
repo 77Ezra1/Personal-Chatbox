@@ -3,7 +3,7 @@
  * 通过后端API管理MCP服务
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import * as mcpApi from '../lib/mcpApiClient'
 import { emitMcpServicesUpdated } from '../lib/mcpEvents'
 
@@ -20,6 +20,7 @@ export function useMcpManager() {
   const [tools, setTools] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const initializedRef = useRef(false)
 
   // 加载服务列表
   const loadServices = useCallback(async (options = {}) => {
@@ -52,12 +53,22 @@ export function useMcpManager() {
   const refresh = useCallback(async (options = {}) => {
     await loadServices({ refresh: options.refresh ?? false })
     await loadTools()
-    emitMcpServicesUpdated()
+    // 只在明确要求时才发出事件（避免无限循环）
+    if (options.emitEvent !== false) {
+      emitMcpServicesUpdated()
+    }
   }, [loadServices, loadTools])
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    // 防止重复初始化（React Strict Mode 会导致双重调用）
+    if (initializedRef.current) {
+      return
+    }
+    initializedRef.current = true
+
+    // 初始加载时不发出事件，避免触发监听器
+    refresh({ emitEvent: false })
+  }, [])
 
   // 获取所有可用工具
   const getAllTools = useCallback(() => {

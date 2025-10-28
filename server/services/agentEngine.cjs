@@ -1377,9 +1377,16 @@ class AgentEngine {
     const AIService = require('./aiService.cjs');
     // 传入用户ID以使用用户配置的API密钥
     const aiService = new AIService(agent.userId);
+
+    // 🔥 关键修复：使用agent的模型配置，不使用硬编码默认值
+    const finalModel = model || agent.config?.model || 'gpt-4o-mini';
+    const finalTemperature = temperature !== undefined ? temperature : (agent.config?.temperature || 0.7);
+
+    console.log(`[AgentEngine] AI分析 - Agent: ${agent.name}, 使用模型: ${finalModel}, Agent配置模型: ${agent.config?.model}`);
+
     const result = await aiService.generateResponse(prompt, JSON.stringify(subtask.inputData), {
-      model: model || 'gpt-4o-mini',
-      temperature: temperature || 0.7
+      model: finalModel,
+      temperature: finalTemperature
     });
 
     return {
