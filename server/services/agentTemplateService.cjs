@@ -115,10 +115,13 @@ class AgentTemplateService {
 
   async #seedSystemTemplates() {
     for (const tpl of this.SYSTEM_TEMPLATES) {
-      const existing = await this.db.get(
-        'SELECT id, latest_version_id FROM agent_templates WHERE id = ?',
-        [tpl.id]
-      );
+      const existing = await new Promise((resolve, reject) => {
+        this.db.get(
+          'SELECT id, latest_version_id FROM agent_templates WHERE id = ?',
+          [tpl.id],
+          (err, row) => err ? reject(err) : resolve(row)
+        );
+      });
 
       if (existing) {
         continue;
@@ -136,39 +139,45 @@ class AgentTemplateService {
         config: tpl.config
       });
 
-      await this.db.run(
-        `INSERT INTO agent_templates (
-          id, user_id, name, description, template_type, category, tags,
-          config_snapshot, latest_version_id, is_active, usage_count, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-        [
-          templateId,
-          0,
-          tpl.name,
-          tpl.description,
-          'system',
-          tpl.category || null,
-          JSON.stringify(tpl.tags || []),
-          configSnapshot,
-          versionId,
-          this.#boolToDb(true),
-          0
-        ]
-      );
+      await new Promise((resolve, reject) => {
+        this.db.run(
+          `INSERT INTO agent_templates (
+            id, user_id, name, description, template_type, category, tags,
+            config_snapshot, latest_version_id, is_active, usage_count, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [
+            templateId,
+            0,
+            tpl.name,
+            tpl.description,
+            'system',
+            tpl.category || null,
+            JSON.stringify(tpl.tags || []),
+            configSnapshot,
+            versionId,
+            this.#boolToDb(true),
+            0
+          ],
+          err => err ? reject(err) : resolve(true)
+        );
+      });
 
-      await this.db.run(
-        `INSERT INTO agent_template_versions (
-          id, template_id, version, config_snapshot, change_summary, created_by, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-        [
-          versionId,
-          templateId,
-          versionNumber,
-          configSnapshot,
-          '系统预置模板初始版本',
-          null
-        ]
-      );
+      await new Promise((resolve, reject) => {
+        this.db.run(
+          `INSERT INTO agent_template_versions (
+            id, template_id, version, config_snapshot, change_summary, created_by, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          [
+            versionId,
+            templateId,
+            versionNumber,
+            configSnapshot,
+            '系统预置模板初始版本',
+            null
+          ],
+          err => err ? reject(err) : resolve(true)
+        );
+      });
     }
   }
 
@@ -223,23 +232,28 @@ class AgentTemplateService {
 
     params.push(parseInt(limit, 10), parseInt(offset, 10));
 
-    const rows = await this.db.all(sql, params);
+    const rows = await new Promise((resolve, reject) => {
+      this.db.all(sql, params, (err, results) => err ? reject(err) : resolve(results || []));
+    });
     return rows.map(row => this.#formatTemplateRow(row));
   }
 
   async getTemplate(templateId, userId) {
     await this.ensureSystemTemplates();
-    const row = await this.db.get(
-      `SELECT
-         t.*,
-         v.version AS latest_version_number,
-         v.config_snapshot AS latest_config_snapshot
-       FROM agent_templates t
-       LEFT JOIN agent_template_versions v ON v.id = t.latest_version_id
-       WHERE t.id = ?
-         AND (t.template_type = 'system' OR t.user_id = ?)`,
-      [templateId, userId]
-    );
+    const row = await new Promise((resolve, reject) => {
+      this.db.get(
+        `SELECT
+           t.*,
+           v.version AS latest_version_number,
+           v.config_snapshot AS latest_config_snapshot
+         FROM agent_templates t
+         LEFT JOIN agent_template_versions v ON v.id = t.latest_version_id
+         WHERE t.id = ?
+           AND (t.template_type = 'system' OR t.user_id = ?)`,
+        [templateId, userId],
+        (err, result) => err ? reject(err) : resolve(result)
+      );
+    });
 
     if (!row) {
       return null;
@@ -251,13 +265,16 @@ class AgentTemplateService {
   }
 
   async listTemplateVersions(templateId, userId) {
-    const rows = await this.db.all(
-      `SELECT id, version, config_snapshot, change_summary, created_by, created_at
-       FROM agent_template_versions
-       WHERE template_id = ?
-       ORDER BY version DESC`,
-      [templateId]
-    );
+    const rows = await new Promise((resolve, reject) => {
+      this.db.all(
+        `SELECT id, version, config_snapshot, change_summary, created_by, created_at
+         FROM agent_template_versions
+         WHERE template_id = ?
+         ORDER BY version DESC`,
+        [templateId],
+        (err, results) => err ? reject(err) : resolve(results || [])
+      );
+    });
 
     return rows.map(row => ({
       id: row.id,
@@ -284,39 +301,45 @@ class AgentTemplateService {
     const configSnapshot = JSON.stringify(templateData.config);
     const tags = Array.isArray(templateData.tags) ? templateData.tags : [];
 
-    await this.db.run(
-      `INSERT INTO agent_templates (
-        id, user_id, name, description, template_type, category, tags,
-        config_snapshot, latest_version_id, is_active, usage_count, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [
-        templateId,
-        userId,
-        templateData.name,
-        templateData.description || '',
-        'custom',
-        templateData.category || null,
-        JSON.stringify(tags),
-        configSnapshot,
-        versionId,
-        this.#boolToDb(true),
-        0
-      ]
-    );
+    await new Promise((resolve, reject) => {
+      this.db.run(
+        `INSERT INTO agent_templates (
+          id, user_id, name, description, template_type, category, tags,
+          config_snapshot, latest_version_id, is_active, usage_count, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [
+          templateId,
+          userId,
+          templateData.name,
+          templateData.description || '',
+          'custom',
+          templateData.category || null,
+          JSON.stringify(tags),
+          configSnapshot,
+          versionId,
+          this.#boolToDb(true),
+          0
+        ],
+        err => err ? reject(err) : resolve(true)
+      );
+    });
 
-    await this.db.run(
-      `INSERT INTO agent_template_versions (
-        id, template_id, version, config_snapshot, change_summary, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      [
-        versionId,
-        templateId,
-        versionNumber,
-        configSnapshot,
-        templateData.changeSummary || '初始版本',
-        userId
-      ]
-    );
+    await new Promise((resolve, reject) => {
+      this.db.run(
+        `INSERT INTO agent_template_versions (
+          id, template_id, version, config_snapshot, change_summary, created_by, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [
+          versionId,
+          templateId,
+          versionNumber,
+          configSnapshot,
+          templateData.changeSummary || '初始版本',
+          userId
+        ],
+        err => err ? reject(err) : resolve(true)
+      );
+    });
 
     return this.getTemplate(templateId, userId);
   }
@@ -358,10 +381,13 @@ class AgentTemplateService {
       throw new Error('模板不存在或无权访问');
     }
 
-    await this.db.run(
-      'UPDATE agent_templates SET usage_count = usage_count + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [templateId]
-    );
+    await new Promise((resolve, reject) => {
+      this.db.run(
+        'UPDATE agent_templates SET usage_count = usage_count + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [templateId],
+        err => err ? reject(err) : resolve(true)
+      );
+    });
 
     const config = { ...template.latestConfig };
 
@@ -402,49 +428,68 @@ class AgentTemplateService {
   }
 
   async deleteTemplate(templateId, userId) {
-    const template = await this.db.get(
-      'SELECT id FROM agent_templates WHERE id = ? AND user_id = ?',
-      [templateId, userId]
-    );
+    const template = await new Promise((resolve, reject) => {
+      this.db.get(
+        'SELECT id FROM agent_templates WHERE id = ? AND user_id = ?',
+        [templateId, userId],
+        (err, row) => err ? reject(err) : resolve(row)
+      );
+    });
     if (!template) {
       throw new Error('模板不存在或无权访问');
     }
 
-    await this.db.run('DELETE FROM agent_templates WHERE id = ?', [templateId]);
-    await this.db.run('DELETE FROM agent_template_versions WHERE template_id = ?', [templateId]);
+    await new Promise((resolve, reject) => {
+      this.db.run('DELETE FROM agent_templates WHERE id = ?', [templateId], err => err ? reject(err) : resolve(true));
+    });
+    await new Promise((resolve, reject) => {
+      this.db.run('DELETE FROM agent_template_versions WHERE template_id = ?', [templateId], err => err ? reject(err) : resolve(true));
+    });
     return true;
   }
 
   async createNewVersion(templateId, userId, config, changeSummary = '更新版本') {
-    const template = await this.db.get(
-      'SELECT * FROM agent_templates WHERE id = ? AND (template_type = \'system\' OR user_id = ?)',
-      [templateId, userId]
-    );
+    const template = await new Promise((resolve, reject) => {
+      this.db.get(
+        'SELECT * FROM agent_templates WHERE id = ? AND (template_type = \'system\' OR user_id = ?)',
+        [templateId, userId],
+        (err, row) => err ? reject(err) : resolve(row)
+      );
+    });
     if (!template) {
       throw new Error('模板不存在或无权访问');
     }
 
-    const versionCountRow = await this.db.get(
-      'SELECT COUNT(*) as count FROM agent_template_versions WHERE template_id = ?',
-      [templateId]
-    );
+    const versionCountRow = await new Promise((resolve, reject) => {
+      this.db.get(
+        'SELECT COUNT(*) as count FROM agent_template_versions WHERE template_id = ?',
+        [templateId],
+        (err, row) => err ? reject(err) : resolve(row)
+      );
+    });
     const versionNumber = Number(versionCountRow?.count || 0) + 1;
     const versionId = uuidv4();
     const configSnapshot = JSON.stringify(config);
 
-    await this.db.run(
-      `INSERT INTO agent_template_versions (
-        id, template_id, version, config_snapshot, change_summary, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      [versionId, templateId, versionNumber, configSnapshot, changeSummary, userId]
-    );
+    await new Promise((resolve, reject) => {
+      this.db.run(
+        `INSERT INTO agent_template_versions (
+          id, template_id, version, config_snapshot, change_summary, created_by, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [versionId, templateId, versionNumber, configSnapshot, changeSummary, userId],
+        err => err ? reject(err) : resolve(true)
+      );
+    });
 
-    await this.db.run(
-      `UPDATE agent_templates
-       SET latest_version_id = ?, config_snapshot = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
-      [versionId, configSnapshot, templateId]
-    );
+    await new Promise((resolve, reject) => {
+      this.db.run(
+        `UPDATE agent_templates
+         SET latest_version_id = ?, config_snapshot = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [versionId, configSnapshot, templateId],
+        err => err ? reject(err) : resolve(true)
+      );
+    });
 
     // 保留最近 5 个版本
     await this.#trimTemplateVersions(templateId, 5);
@@ -453,22 +498,28 @@ class AgentTemplateService {
   }
 
   async #trimTemplateVersions(templateId, keep = 5) {
-    const rows = await this.db.all(
-      `SELECT id
-       FROM agent_template_versions
-       WHERE template_id = ?
-       ORDER BY version DESC
-       LIMIT -1 OFFSET ?`,
-      [templateId, keep]
-    );
+    const rows = await new Promise((resolve, reject) => {
+      this.db.all(
+        `SELECT id
+         FROM agent_template_versions
+         WHERE template_id = ?
+         ORDER BY version DESC
+         LIMIT -1 OFFSET ?`,
+        [templateId, keep],
+        (err, results) => err ? reject(err) : resolve(results || [])
+      );
+    });
 
     if (rows && rows.length > 0) {
       const ids = rows.map(row => row.id);
       const placeholders = ids.map(() => '?').join(', ');
-      await this.db.run(
-        `DELETE FROM agent_template_versions WHERE id IN (${placeholders})`,
-        ids
-      );
+      await new Promise((resolve, reject) => {
+        this.db.run(
+          `DELETE FROM agent_template_versions WHERE id IN (${placeholders})`,
+          ids,
+          err => err ? reject(err) : resolve(true)
+        );
+      });
     }
   }
 

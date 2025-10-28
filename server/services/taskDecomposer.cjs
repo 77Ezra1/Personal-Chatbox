@@ -64,7 +64,7 @@ class TaskDecomposer {
       }
 
       const subtaskData = this.parseJsonResponse(content);
-      subtasks = await this.createSubtasks(task.id, subtaskData);
+      subtasks = await this.createSubtasks(task.id, subtaskData, agent, options);
     } catch (error) {
       console.error('任务分解失败:', error);
       subtasks = await this.createDefaultSubtasks(task.id, task, agent, options, error.message);
@@ -101,18 +101,32 @@ class TaskDecomposer {
   /**
    * 创建子任务
    */
-  async createSubtasks(taskId, subtaskData) {
+  async createSubtasks(taskId, subtaskData, agent, options) {
     const subtasks = [];
+    const agentConfig = agent?.config || {};
+
+    // 确定子任务应该使用的模型配置
+    const defaultModel = agentConfig.model || options?.model || this.defaults.model;
+    const defaultTemperature = agentConfig.temperature || options?.temperature || this.defaults.temperature;
+
+    // 第一遍：创建所有子任务，生成UUID，但保留原始依赖（可能是字符串）
+    const titleToIdMap = new Map();
 
     for (const data of subtaskData) {
+      const subtaskId = uuidv4();
       const subtask = {
-        id: uuidv4(),
+        id: subtaskId,
         taskId,
         title: data.title || '未命名子任务',
         description: data.description || '',
         type: data.type || 'ai_analysis',
         inputData: data.inputData || {},
-        config: data.config || {},
+        config: {
+          ...(data.config || {}),
+          // 🔥 关键修复：确保子任务继承agent的model配置
+          model: data.config?.model || defaultModel,
+          temperature: data.config?.temperature !== undefined ? data.config.temperature : defaultTemperature
+        },
         status: 'pending',
         priority: data.priority || 0,
         dependencies: Array.isArray(data.dependencies) ? data.dependencies : [],
@@ -120,8 +134,66 @@ class TaskDecomposer {
       };
 
       subtasks.push(subtask);
+
+      // 建立标题到ID的映射（用于依赖解析）
+      titleToIdMap.set(subtask.title, subtaskId);
+
+      // 同时支持AI可能返回的标题变体（去除空格、标点等）
+      const normalizedTitle = subtask.title.replace(/[\s\-_、，。！？]/g, '').toLowerCase();
+      titleToIdMap.set(normalizedTitle, subtaskId);
     }
 
+    // 第二遍：解析依赖关系，将字符串依赖转换为UUID
+    for (const subtask of subtasks) {
+      const resolvedDependencies = [];
+
+      for (const dep of subtask.dependencies) {
+        if (!dep) continue;
+
+        // 如果依赖已经是有效的UUID格式，直接使用
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(dep)) {
+          resolvedDependencies.push(dep);
+          continue;
+        }
+
+        // 否则，尝试根据标题查找对应的UUID
+        // 1. 精确匹配
+        if (titleToIdMap.has(dep)) {
+          resolvedDependencies.push(titleToIdMap.get(dep));
+          console.log(`[TaskDecomposer] 依赖解析: "${dep}" → ${titleToIdMap.get(dep)}`);
+          continue;
+        }
+
+        // 2. 规范化后匹配（去除空格、标点）
+        const normalizedDep = dep.replace(/[\s\-_、，。！？]/g, '').toLowerCase();
+        if (titleToIdMap.has(normalizedDep)) {
+          resolvedDependencies.push(titleToIdMap.get(normalizedDep));
+          console.log(`[TaskDecomposer] 依赖解析(规范化): "${dep}" → ${titleToIdMap.get(normalizedDep)}`);
+          continue;
+        }
+
+        // 3. 模糊匹配（查找包含关系）
+        let found = false;
+        for (const [title, id] of titleToIdMap.entries()) {
+          if (title.includes(dep) || dep.includes(title)) {
+            resolvedDependencies.push(id);
+            console.log(`[TaskDecomposer] 依赖解析(模糊匹配): "${dep}" → ${id} (匹配标题: "${title}")`);
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          console.warn(`[TaskDecomposer] 警告: 无法解析依赖 "${dep}"，将被忽略`);
+        }
+      }
+
+      // 更新为解析后的依赖列表
+      subtask.dependencies = resolvedDependencies;
+    }
+
+    console.log(`[TaskDecomposer] 创建了 ${subtasks.length} 个子任务，依赖解析完成`);
     return subtasks;
   }
 
@@ -244,10 +316,13 @@ class TaskDecomposer {
    * 对生成的子任务进行依赖校验及排序
    */
   postProcessSubtasks(subtasks) {
-    const { valid, errors } = this.validateDependencies(subtasks);
+    const { valid, errors, cleanedSubtasks } = this.validateDependencies(subtasks);
 
     if (!valid) {
-      throw new Error(`子任务依赖校验失败: ${errors.join('; ')}`);
+      console.warn(`[TaskDecomposer] 子任务依赖校验发现问题: ${errors.join('; ')}`);
+      console.warn(`[TaskDecomposer] 已自动清理无效依赖，继续执行`);
+      // 使用清理后的子任务而不是抛出错误
+      return this.optimizeExecutionOrder(cleanedSubtasks);
     }
 
     return this.optimizeExecutionOrder(subtasks);
@@ -268,15 +343,29 @@ class TaskDecomposer {
   validateDependencies(subtasks) {
     const subtaskMap = new Map(subtasks.map(st => [st.id, st]));
     const errors = [];
+    const cleanedSubtasks = [];
 
+    // 第一步：清理无效依赖
     for (const subtask of subtasks) {
+      const validDependencies = [];
       for (const depId of subtask.dependencies) {
         if (!subtaskMap.has(depId)) {
           errors.push(`子任务 ${subtask.title} 依赖不存在的子任务 ${depId}`);
+          console.warn(`[TaskDecomposer] 移除无效依赖: ${subtask.title} -> ${depId}`);
+        } else {
+          validDependencies.push(depId);
         }
       }
+
+      // 创建清理后的子任务副本
+      const cleanedSubtask = {
+        ...subtask,
+        dependencies: validDependencies
+      };
+      cleanedSubtasks.push(cleanedSubtask);
     }
 
+    // 第二步：检测循环依赖
     const visited = new Set();
     const visiting = new Set();
 
@@ -298,7 +387,7 @@ class TaskDecomposer {
       return false;
     };
 
-    for (const subtask of subtasks) {
+    for (const subtask of cleanedSubtasks) {
       if (hasCycle(subtask.id)) {
         errors.push(`检测到循环依赖：${subtask.title}`);
       }
@@ -306,7 +395,8 @@ class TaskDecomposer {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
+      cleanedSubtasks
     };
   }
 
@@ -504,12 +594,23 @@ class TaskDecomposer {
       task.decompositionOptions = taskOptions;
     }
 
+    // 🔥 详细调试日志
+    console.log('[TaskDecomposer] resolveOptions:');
+    console.log('  - agent.name:', agent?.name);
+    console.log('  - taskOptions.model:', taskOptions.model);
+    console.log('  - runtimeDecomposer.model:', runtimeDecomposer.model);
+    console.log('  - agentDecomposerConfig.model:', agentDecomposerConfig.model);
+    console.log('  - agentConfig.decomposerModel:', agentConfig.decomposerModel);
+    console.log('  - agentConfig.model:', agentConfig.model);
+    console.log('  - this.defaults.model:', this.defaults.model);
+
+    // 🔥 关键修复：agent配置的模型优先级应该高于runtime默认值
     const merged = {
       model: taskOptions.model
-        || runtimeDecomposer.model
         || agentDecomposerConfig.model
         || agentConfig.decomposerModel
-        || agentConfig.model
+        || agentConfig.model           // ← Agent模型优先
+        || runtimeDecomposer.model     // ← Runtime默认值次之
         || this.defaults.model,
       temperature: this.#clampNumber(
         taskOptions.temperature
@@ -558,6 +659,9 @@ class TaskDecomposer {
       merged.instructions = [merged.instructions];
     }
 
+    console.log('  - merged.model:', merged.model);
+    console.log('  - merged.temperature:', merged.temperature);
+
     return merged;
   }
 
@@ -593,13 +697,17 @@ class TaskDecomposer {
       '请基于上述上下文，将任务拆解为合理的子任务列表。',
       `- 子任务数量不应超过 ${options.maxSubtasks} 个。`,
       '- 输出一个 JSON 数组，每个元素都应包含以下字段：',
-      '  - title: 子任务标题',
+      '  - title: 子任务标题（简短清晰的描述）',
       '  - description: 具体说明',
       '  - type: tool_call / ai_analysis / data_processing / web_search / file_operation 之一',
       '  - inputData: 执行子任务所需的输入（对象或数组）',
       '  - config: 子任务的额外配置（例如工具参数、提示词等）',
-      '  - dependencies: 依赖的子任务 ID 列表（使用数组）',
+      '  - dependencies: 依赖的子任务标题列表（使用字符串数组，填写依赖子任务的 title）',
       '  - priority: 数字越大代表越重要/越晚执行',
+      '- dependencies 说明：',
+      '  - 如果子任务B依赖于子任务A的结果，则在B的dependencies中写入A的title',
+      '  - 例如：子任务A的title为"获取ETH实时价格"，子任务B依赖它，则B的dependencies为["获取ETH实时价格"]',
+      '  - 如果没有依赖，使用空数组 []',
       '- 如果无法明确输入数据，可使用空对象 {} 作为占位。',
       '- 如果需要调用工具，请优先使用 agent.tools 中已配置的 MCP 工具。',
       '- 对于 type: tool_call 的子任务，请在 config 中指定：',
