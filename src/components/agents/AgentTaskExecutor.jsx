@@ -21,12 +21,20 @@ import {
   Clock,
   Zap,
   ChevronRight,
+  ChevronDown,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Maximize2,
+  Minimize2,
+  Download,
+  FileJson,
+  FileType
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { agentAPI } from '@/lib/apiClient'
 import { useTranslation } from '@/hooks/useTranslation'
+import ReactMarkdown from 'react-markdown'
 
 const TaskStatus = {
   IDLE: 'idle',
@@ -114,26 +122,26 @@ const SubTask = ({ task, index }) => {
   }
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+    <div className="flex items-start gap-3 p-3 rounded-lg border bg-card overflow-hidden">
       <div className="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
         {index + 1}
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="flex items-center gap-2 mb-1">
           <StatusIcon status={task.status} className={statusColors[task.status]} />
-          <span className="font-medium text-sm">{task.name}</span>
+          <span className="font-medium text-sm truncate">{task.name}</span>
         </div>
         {task.description && (
-          <p className="text-xs text-muted-foreground">{task.description}</p>
+          <p className="text-xs text-muted-foreground break-all overflow-wrap-anywhere">{task.description}</p>
         )}
         {task.result && task.status === TaskStatus.COMPLETED && (
-          <div className="mt-2 p-2 bg-green-50 dark:bg-green-950/20 rounded text-xs">
-            {task.result}
+          <div className="mt-2 p-2 bg-green-50 dark:bg-green-950/20 rounded text-xs max-h-32 overflow-x-auto overflow-y-auto break-all" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+            <pre className="whitespace-pre-wrap font-mono text-xs m-0">{task.result}</pre>
           </div>
         )}
         {task.error && task.status === TaskStatus.FAILED && (
-          <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive">
-            {task.error}
+          <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive max-h-32 overflow-x-auto overflow-y-auto break-all" style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+            <pre className="whitespace-pre-wrap font-mono text-xs m-0">{task.error}</pre>
           </div>
         )}
       </div>
@@ -186,6 +194,10 @@ export function AgentTaskExecutor({
   const [taskId, setTaskId] = useState(null)
   const [sseReady, setSseReady] = useState(false)
   const [showRawResult, setShowRawResult] = useState(false)
+  const [showReportDialog, setShowReportDialog] = useState(false)
+  const [showSubtasks, setShowSubtasks] = useState(false) // 默认折叠子任务
+  const [showReportPreview, setShowReportPreview] = useState(false) // 默认折叠报告预览
+  const [isFullscreen, setIsFullscreen] = useState(false) // 全屏模式
 
   const [retrying, setRetrying] = useState(false)
 
@@ -593,7 +605,51 @@ export function AgentTaskExecutor({
     }
   }, [result])
 
+  // 下载报告函数
+  const downloadReport = useCallback((format) => {
+    const reportContent = result?.summary || displayResult
+    if (!reportContent) return
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const filename = `agent-report-${timestamp}`
+
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(result || { summary: reportContent }, null, 2)], {
+        type: 'application/json'
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${filename}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } else if (format === 'txt') {
+      const blob = new Blob([reportContent], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${filename}.txt`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } else if (format === 'md') {
+      const blob = new Blob([reportContent], { type: 'text/markdown' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${filename}.md`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  }, [result, displayResult])
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
@@ -715,22 +771,63 @@ export function AgentTaskExecutor({
                   {translate('agents.executor.result.successTitle', 'Task Completed Successfully')}
                 </h4>
                 <div className="flex flex-col gap-2">
-                  <p className="text-sm text-green-700 dark:text-green-300 whitespace-pre-wrap break-words">{displayResult}</p>
+                  {/* 操作按钮 */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => setShowReportDialog(true)}
+                      className="w-fit"
+                    >
+                      <FileText className="size-3 mr-1" />
+                      {translate('agents.executor.buttons.viewReport', '查看报告')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => setShowReportPreview(prev => !prev)}
+                      className="w-fit"
+                    >
+                      {showReportPreview ? (
+                        <>
+                          <ChevronDown className="size-3 mr-1" />
+                          {translate('agents.executor.buttons.hidePreview', '隐藏预览')}
+                        </>
+                      ) : (
+                        <>
+                          <ChevronRight className="size-3 mr-1" />
+                          {translate('agents.executor.buttons.showPreview', '显示预览')}
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => setShowRawResult(prev => !prev)}
+                      className="w-fit"
+                    >
+                      <FileJson className="size-3 mr-1" />
+                      {showRawResult
+                        ? translate('agents.executor.buttons.hideRaw', '隐藏 JSON')
+                        : translate('agents.executor.buttons.showRaw', '查看原始 JSON')}
+                    </Button>
+                  </div>
+
+                  {/* 报告预览（默认折叠） */}
+                  {showReportPreview && (
+                    <div className="text-sm text-green-700 dark:text-green-300 prose prose-sm dark:prose-invert max-w-none max-h-48 overflow-auto border rounded p-3 bg-white/50 dark:bg-black/20">
+                      <ReactMarkdown>{displayResult}</ReactMarkdown>
+                    </div>
+                  )}
+
+                  {/* 使用情况 */}
                   {usageSummary && (
                     <p className="text-xs text-green-700/80 dark:text-green-200/70">
                       {translate('agents.executor.result.tokens', { usage: usageSummary })}
                     </p>
                   )}
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    onClick={() => setShowRawResult(prev => !prev)}
-                    className="w-fit"
-                  >
-                    {showRawResult
-                      ? translate('agents.executor.buttons.hideRaw', 'Hide Raw JSON')
-                      : translate('agents.executor.buttons.showRaw', 'View Raw JSON')}
-                  </Button>
+
+                  {/* Raw JSON（可选） */}
                   {showRawResult && result && (
                     <pre className="max-h-48 overflow-auto rounded border bg-background p-2 text-xs">
                       {JSON.stringify(result, null, 2)}
@@ -796,19 +893,38 @@ export function AgentTaskExecutor({
               </TabsList>
 
               <TabsContent value="subtasks">
-                <ScrollArea className="h-[300px] pr-4">
-                  <div className="space-y-2">
-                    {subTasks.length === 0 ? (
-                      <div className="flex items-center justify-center py-8 text-muted-foreground">
-                        {translate('agents.executor.empty.subtasks', 'No subtasks yet')}
-                      </div>
+                <div className="flex items-center justify-between mb-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSubtasks(prev => !prev)}
+                    className="w-full justify-between"
+                  >
+                    <span className="text-sm font-medium">
+                      {translate('agents.executor.subtasks.toggle', '子任务详情')} ({subTasks.length})
+                    </span>
+                    {showSubtasks ? (
+                      <ChevronDown className="size-4" />
                     ) : (
-                      subTasks.map((task, idx) => (
-                        <SubTask key={idx} task={task} index={idx} />
-                      ))
+                      <ChevronRight className="size-4" />
                     )}
-                  </div>
-                </ScrollArea>
+                  </Button>
+                </div>
+                {showSubtasks && (
+                  <ScrollArea className="h-[300px] pr-4">
+                    <div className="space-y-2">
+                      {subTasks.length === 0 ? (
+                        <div className="flex items-center justify-center py-8 text-muted-foreground">
+                          {translate('agents.executor.empty.subtasks', 'No subtasks yet')}
+                        </div>
+                      ) : (
+                        subTasks.map((task, idx) => (
+                          <SubTask key={idx} task={task} index={idx} />
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                )}
               </TabsContent>
 
               <TabsContent value="logs">
@@ -834,5 +950,89 @@ export function AgentTaskExecutor({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Report Dialog */}
+    <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+      <DialogContent className={cn(
+        "transition-all duration-300",
+        isFullscreen ? "max-w-[95vw] max-h-[95vh] w-[95vw] h-[95vh]" : "max-w-3xl max-h-[80vh]"
+      )}>
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="size-5" />
+                {translate('agents.executor.report.title', '任务报告')}
+              </DialogTitle>
+              <DialogDescription>
+                {translate('agents.executor.report.description', '查看完整的任务执行报告')}
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* 下载菜单 */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => downloadReport('md')}
+                  title={translate('agents.executor.buttons.downloadMd', '下载 Markdown')}
+                >
+                  <Download className="size-4 mr-1" />
+                  MD
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => downloadReport('json')}
+                  title={translate('agents.executor.buttons.downloadJson', '下载 JSON')}
+                >
+                  <FileJson className="size-4 mr-1" />
+                  JSON
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => downloadReport('txt')}
+                  title={translate('agents.executor.buttons.downloadTxt', '下载文本')}
+                >
+                  <FileType className="size-4 mr-1" />
+                  TXT
+                </Button>
+              </div>
+              {/* 全屏切换 */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsFullscreen(prev => !prev)}
+                title={isFullscreen ? translate('agents.executor.buttons.exitFullscreen', '退出全屏') : translate('agents.executor.buttons.fullscreen', '全屏')}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="size-4" />
+                ) : (
+                  <Maximize2 className="size-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
+        <ScrollArea className={cn(
+          "pr-4",
+          isFullscreen ? "h-[calc(95vh-120px)]" : "max-h-[calc(80vh-120px)]"
+        )}>
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            {result?.summary ? (
+              <ReactMarkdown>{result.summary}</ReactMarkdown>
+            ) : displayResult ? (
+              <ReactMarkdown>{displayResult}</ReactMarkdown>
+            ) : (
+              <p className="text-muted-foreground">
+                {translate('agents.executor.report.empty', '暂无报告内容')}
+              </p>
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  </>
   )
 }

@@ -110,6 +110,150 @@ function initializeRouter(services) {
   logger.info('Chat 路由已初始化');
 }
 
+// ========= 实时时间依赖工具辅助逻辑 =========
+const TIME_TOOL_NAMES = new Set([
+  'get_current_time',
+  'time_get_current_time'
+]);
+
+const REALTIME_SERVICE_IDS = new Set([
+  'weather',
+  'coincap',
+  'dexscreener',
+  'brave_search',
+  'search',
+  'news',
+  'calendar'
+]);
+
+const REALTIME_NAME_PATTERNS = [
+  /weather/i,
+  /forecast/i,
+  /temperature/i,
+  /humidity/i,
+  /wind/i,
+  /price/i,
+  /market/i,
+  /stock/i,
+  /news/i,
+  /schedule/i,
+  /event/i
+];
+
+const DEFAULT_TIMEZONE = process.env.DEFAULT_TIMEZONE || 'Asia/Shanghai';
+
+function resolveToolInfo(toolName) {
+  let actualToolName = toolName;
+  let serviceId = null;
+  let isMcp = false;
+
+  if (toolName.includes('_') && mcpManager && typeof mcpManager.parseToolName === 'function') {
+    try {
+      const parsed = mcpManager.parseToolName(toolName);
+      if (parsed?.toolName) {
+        actualToolName = parsed.toolName;
+        serviceId = parsed.serviceId || null;
+        isMcp = true;
+      }
+    } catch (error) {
+      logger.warn(`解析工具名称失败: ${toolName}`, error.message);
+    }
+  }
+
+  return {
+    fullName: toolName,
+    actualName: actualToolName,
+    serviceId,
+    isMcp
+  };
+}
+
+function isCurrentTimeTool(toolInfo) {
+  const name = (toolInfo.actualName || '').toLowerCase();
+  return TIME_TOOL_NAMES.has(name);
+}
+
+function requiresTimeContext(toolInfo) {
+  if (!toolInfo) return false;
+
+  if (isCurrentTimeTool(toolInfo)) {
+    return false;
+  }
+
+  if (toolInfo.serviceId && REALTIME_SERVICE_IDS.has(toolInfo.serviceId)) {
+    return true;
+  }
+
+  const name = (toolInfo.actualName || '').toLowerCase();
+  return REALTIME_NAME_PATTERNS.some(pattern => pattern.test(name));
+}
+
+function safeParseJson(text, fallback = {}) {
+  if (!text || typeof text !== 'string') {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function determinePreferredTimezone(toolCall, fallback = DEFAULT_TIMEZONE) {
+  if (!toolCall || !toolCall.function) {
+    return fallback;
+  }
+
+  const args = safeParseJson(toolCall.function.arguments);
+  const tz = args.timezone || args.timeZone || args.tz;
+
+  if (typeof tz === 'string' && tz.trim()) {
+    return tz.trim();
+  }
+
+  return fallback;
+}
+
+function ensureTimeToolOrder(toolCalls, { timezone = DEFAULT_TIMEZONE, skip = false } = {}) {
+  if (skip || !Array.isArray(toolCalls) || toolCalls.length === 0) {
+    return { injected: false, timezone };
+  }
+
+  let hasTimeCall = false;
+  let firstRealtimeIndex = -1;
+  let chosenTimezone = timezone;
+
+  toolCalls.forEach((call, index) => {
+    const info = resolveToolInfo(call?.function?.name || '');
+
+    if (!hasTimeCall && isCurrentTimeTool(info)) {
+      hasTimeCall = true;
+    }
+
+    if (firstRealtimeIndex === -1 && requiresTimeContext(info)) {
+      firstRealtimeIndex = index;
+      chosenTimezone = determinePreferredTimezone(call, chosenTimezone);
+    }
+  });
+
+  if (hasTimeCall || firstRealtimeIndex === -1) {
+    return { injected: false, timezone: chosenTimezone };
+  }
+
+  const injectedCall = {
+    id: `${toolCalls[firstRealtimeIndex]?.id || 'auto'}__time_context`,
+    type: 'function',
+    function: {
+      name: 'get_current_time',
+      arguments: JSON.stringify({ timezone: chosenTimezone })
+    }
+  };
+
+  toolCalls.splice(firstRealtimeIndex, 0, injectedCall);
+  return { injected: true, timezone: chosenTimezone };
+}
+
 /**
  * POST /api/chat
  * 处理对话请求
@@ -120,6 +264,8 @@ router.post('/', authMiddleware, async (req, res) => {
 
   try {
     let { messages, model = 'deepseek-chat', stream = false } = req.body;
+
+    let hasFetchedRealtimeTime = false;
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({
@@ -358,6 +504,14 @@ router.post('/', authMiddleware, async (req, res) => {
           iterationCount++;
           logger.info(`工具调用迭代 ${iterationCount}/${maxIterations}，共 ${toolCalls.length} 个工具`);
 
+          const streamInjection = ensureTimeToolOrder(toolCalls, {
+            timezone: DEFAULT_TIMEZONE,
+            skip: hasFetchedRealtimeTime
+          });
+          if (streamInjection.injected) {
+            logger.info(`[Chat] 自动注入 get_current_time 工具 (stream): timezone=${streamInjection.timezone}`);
+          }
+
           // 发送工具调用通知
           res.write(`data: ${JSON.stringify({
             type: 'tool_calls',
@@ -375,6 +529,7 @@ router.post('/', authMiddleware, async (req, res) => {
           for (const toolCall of toolCalls) {
             const toolName = toolCall.function.name;
             const toolArgs = JSON.parse(toolCall.function.arguments);
+            const toolInfo = resolveToolInfo(toolName);
             const startTime = Date.now(); // 🔥 记录开始时间
 
             try {
@@ -407,6 +562,10 @@ router.post('/', authMiddleware, async (req, res) => {
                   // 原有服务调用失败，抛出错误
                   throw firstError;
                 }
+              }
+
+              if (isCurrentTimeTool(toolInfo)) {
+                hasFetchedRealtimeTime = true;
               }
 
               // 🔥 记录成功的工具调用
@@ -570,10 +729,19 @@ router.post('/', authMiddleware, async (req, res) => {
       apiParams.messages.push(assistantMessage);
 
       // 执行所有工具调用
+      const nonStreamInjection = ensureTimeToolOrder(toolCalls, {
+        timezone: DEFAULT_TIMEZONE,
+        skip: hasFetchedRealtimeTime
+      });
+      if (nonStreamInjection.injected) {
+        logger.info(`[Chat] 自动注入 get_current_time 工具 (non-stream): timezone=${nonStreamInjection.timezone}`);
+      }
+
       const toolResults = [];
       for (const toolCall of toolCalls) {
         const toolName = toolCall.function.name;
         const toolArgs = JSON.parse(toolCall.function.arguments);
+        const toolInfo = resolveToolInfo(toolName);
         const startTime = Date.now(); // 🔥 记录开始时间
 
         try {
@@ -596,6 +764,10 @@ router.post('/', authMiddleware, async (req, res) => {
           } else {
             // 直接作为原有服务工具调用
             result = await callLegacyServiceTool(toolName, toolArgs);
+          }
+
+          if (isCurrentTimeTool(toolInfo)) {
+            hasFetchedRealtimeTime = true;
           }
 
           // 🔥 记录成功的工具调用

@@ -79,3 +79,9 @@ test-*.cjs
 test-*.html
 test-*.js
 verify-*.html
+verify-*.cjs
+diagnose-*.cjs
+
+# 临时文件
+nohup.out
+original_*.cjs

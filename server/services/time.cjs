@@ -84,7 +84,7 @@ class TimeService extends BaseService {
 
     try {
       const now = new Date();
-      
+
       let timeString, offsetString;
       if (timezone && timezone !== 'local') {
         const options = {
@@ -97,10 +97,10 @@ class TimeService extends BaseService {
           second: '2-digit',
           hour12: false
         };
-        
+
         const formatter = new Intl.DateTimeFormat('zh-CN', options);
         timeString = formatter.format(now);
-        
+
         const offsetMinutes = now.getTimezoneOffset();
         const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
         const offsetMins = Math.abs(offsetMinutes) % 60;
@@ -110,16 +110,46 @@ class TimeService extends BaseService {
         offsetString = 'local';
       }
 
-      const content = `**当前时间信息**
+      // 格式化为更易读的日期时间
+      const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      });
+      const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
 
-🕐 时间: ${timeString}
-🌍 时区: ${timezone}
-📅 ISO格式: ${now.toISOString()}
-⏰ 时间戳: ${now.getTime()}`;
+      const dateStr = dateFormatter.format(now);
+      const timeStr = timeFormatter.format(now);
+
+      const content = `现在是 ${dateStr} ${timeStr}（${timezone}）
+
+详细信息：
+- 完整时间：${timeString}
+- ISO格式：${now.toISOString()}
+- Unix时间戳：${now.getTime()}
+
+请直接使用上述时间信息回答用户，这是真实的当前时间！`;
 
       return {
         success: true,
-        content
+        content,
+        // 同时返回结构化数据，方便程序使用
+        data: {
+          date: dateStr,
+          time: timeStr,
+          timezone: timezone,
+          iso: now.toISOString(),
+          timestamp: now.getTime(),
+          formatted: `${dateStr} ${timeStr}`
+        }
       };
     } catch (error) {
       throw new Error(`时间查询失败: ${error.message}`);

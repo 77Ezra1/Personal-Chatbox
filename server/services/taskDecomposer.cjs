@@ -518,14 +518,23 @@ class TaskDecomposer {
       updateFields.push('input_data = ?');
       params.push(JSON.stringify(updateData.inputData));
     }
-    if (updateData.outputData !== undefined) {
+
+    // 🔥 修复：处理 outputData 和 errorMessage
+    if (updateData.outputData !== undefined || updateData.errorMessage !== undefined) {
       updateFields.push('output_data = ?');
-      params.push(JSON.stringify(updateData.outputData));
+
+      // 如果同时有 outputData 和 errorMessage，合并它们
+      let outputData = updateData.outputData || {};
+      if (updateData.errorMessage !== undefined) {
+        outputData = {
+          ...outputData,
+          error: updateData.errorMessage
+        };
+      }
+
+      params.push(JSON.stringify(outputData));
     }
-    if (updateData.errorMessage !== undefined) {
-      updateFields.push('error_message = ?');
-      params.push(updateData.errorMessage);
-    }
+
     if (updateData.startedAt !== undefined) {
       updateFields.push('started_at = ?');
       params.push(updateData.startedAt);
@@ -559,6 +568,10 @@ class TaskDecomposer {
    * 格式化子任务数据
    */
   formatSubtask(row) {
+    // 🔥 修复：从 output_data 中提取 error 字段
+    const outputData = JSON.parse(row.output_data || '{}');
+    const errorMessage = outputData.error || null;
+
     return {
       id: row.id,
       taskId: row.task_id,
@@ -567,11 +580,11 @@ class TaskDecomposer {
       description: row.description,
       type: row.type,
       inputData: JSON.parse(row.input_data || '{}'),
-      outputData: JSON.parse(row.output_data || '{}'),
+      outputData,
       status: row.status,
       priority: row.priority,
       dependencies: JSON.parse(row.dependencies || '[]'),
-      errorMessage: row.error_message,
+      errorMessage, // 从 output_data.error 读取
       createdAt: row.created_at,
       startedAt: row.started_at,
       completedAt: row.completed_at,
@@ -671,13 +684,18 @@ class TaskDecomposer {
   #buildPrompt(task, agent, options) {
     const sanitizedInput = this.#stripInternalKeys(task.inputData);
     const agentConfig = this.#pickAgentConfig(agent.config || {});
+
+    // 🔥 修复：获取详细的工具信息
+    const availableTools = this.#getDetailedToolInfo(agent);
+
     const metadata = {
       agent: {
         id: agent.id,
         name: agent.name,
         description: agent.description,
         capabilities: agent.capabilities,
-        tools: agent.tools,
+        tools: agent.tools, // 保留原始服务列表用于兼容性
+        availableTools, // 🔥 新增：详细的工具列表
         persona: options.persona || agentConfig.persona || null,
         config: agentConfig
       },
@@ -709,11 +727,69 @@ class TaskDecomposer {
       '  - 例如：子任务A的title为"获取ETH实时价格"，子任务B依赖它，则B的dependencies为["获取ETH实时价格"]',
       '  - 如果没有依赖，使用空数组 []',
       '- 如果无法明确输入数据，可使用空对象 {} 作为占位。',
-      '- 如果需要调用工具，请优先使用 agent.tools 中已配置的 MCP 工具。',
-      '- 对于 type: tool_call 的子任务，请在 config 中指定：',
-      '  - toolName: 工具名称（从 agent.tools 列表中选择）',
-      '  - parameters: 工具参数对象',
-      '- MCP 工具格式为 serviceId_toolName，例如 wikipedia_findPage、filesystem_read_file。',
+      '',
+      '## 子任务类型详细说明',
+      '',
+      '- 🔥 type: tool_call（调用工具）',
+      '  - 用于：调用外部工具、API、服务等',
+      '  - 必需的 config 字段：',
+      '    - toolName: 工具名称（必须使用 agent.availableTools 列表中的确切工具名称）',
+      '    - parameters: 工具参数对象',
+      '  - 可用工具列表在 agent.availableTools 中，每个工具包含 name 和 description',
+      '  - 必须使用 availableTools 中的 name 字段作为 toolName，不要使用服务名称或其他名称',
+      '  - 例如：如果 availableTools 包含 {name: "get_current_weather", description: "获取天气"}',
+      '    则使用 "get_current_weather" 而不是 "weather" 或 "天气"',
+      '',
+      '- 🔥 type: ai_analysis（AI分析）',
+      '  - 用于：需要AI理解、分析、总结、生成内容的任务',
+      '  - 适用场景：分析数据、生成报告、撰写内容、解释结果、提供建议等',
+      '  - 必需的 config 字段：',
+      '    - prompt: AI分析的提示词（描述需要AI完成什么）',
+      '  - 例如：生成天气报告、分析数据趋势、总结结果等都应使用此类型',
+      '',
+      '- 🔥 type: data_processing（数据处理）',
+      '  - 用于：对数据进行机械化的过滤、转换、聚合、验证等操作',
+      '  - 必需的 config 字段：',
+      '    - operation: filter / transform / aggregate / validate 之一',
+      '  - 注意：如果任务需要AI的理解和创造性，应使用 ai_analysis 而不是 data_processing',
+      '',
+      '- type: web_search（网页搜索）',
+      '  - 用于：搜索网络信息',
+      '  - 必需的 config 字段：',
+      '    - query: 搜索查询字符串',
+      '',
+      '- type: file_operation（文件操作）',
+      '  - 用于：读写文件',
+      '  - 必需的 config 字段：',
+      '    - operation: read / write / delete 等',
+      '    - filePath: 文件路径',
+      '',
+      '## 任务执行顺序优化',
+      '',
+      '- 🔥 时间相关任务的智能处理：',
+      '  - 当任务涉及"今天"、"当前"、"现在"、"最新"等时间相关词汇时',
+      '  - 首先检查 agent.availableTools 中是否有获取时间/日期的工具',
+      '  - 判断方法：查看工具的 description 字段，包含"时间"、"日期"、"当前"、"now"、"time"、"date"、"datetime"等关键词',
+      '  - 如果找到了时间工具，必须先创建子任务调用该工具获取当前时间，然后让其他子任务依赖它',
+      '  - 如果 availableTools 中没有时间工具，则不需要添加获取时间的子任务',
+      '  - 例如："查一下广州今天的天气"',
+      '    - 假设 availableTools 包含 {name: "get_current_time", description: "获取当前时间和日期"}',
+      '    - 应该拆分为：',
+      '      1. 获取当前日期时间（type: tool_call, toolName: "get_current_time"）',
+      '      2. 获取广州天气（type: tool_call, dependencies: ["获取当前日期时间"]）',
+      '      3. 生成天气报告（type: ai_analysis, dependencies: ["获取当前日期时间", "获取广州天气"]）',
+      '',
+      '- 🔥 如何选择正确的工具：',
+      '  - 不要假设工具名称，必须从 agent.availableTools 中查找',
+      '  - 根据工具的 description 判断工具的功能',
+      '  - 使用工具的 name 字段作为 toolName',
+      '  - 不同的用户可能配置了不同名称的工具来实现相同功能',
+      '',
+      '- 🔥 依赖关系的重要性：',
+      '  - 合理设置依赖关系可以确保数据的准确性和时效性',
+      '  - 子任务可以通过 dependencies 数组访问依赖任务的输出结果',
+      '  - 系统会自动将依赖任务的结果合并到当前任务的 inputData.__dependencyResults 中',
+      '',
       '- 所有返回内容必须是有效的 JSON，禁止包含额外文本。'
     ];
 
@@ -819,6 +895,80 @@ class TaskDecomposer {
     if (rounded < min) return min;
     if (rounded > max) return max;
     return rounded;
+  }
+
+  /**
+   * 🔥 修复：获取详细的工具信息
+   * 从本地服务和MCP服务中获取所有可用工具的详细列表
+   * @param {Object} agent - Agent 对象
+   * @returns {Array} 工具信息数组
+   */
+  #getDetailedToolInfo(agent) {
+    const toolsInfo = [];
+
+    if (!agent.tools || agent.tools.length === 0) {
+      console.log(`[TaskDecomposer] Agent "${agent.name}" 没有配置工具`);
+      return toolsInfo;
+    }
+
+    // 1. 🔥 从全局导出的 services 获取本地服务的工具
+    try {
+      // 使用全局 services 变量（由 index.cjs 导出）
+      const { services } = require('../index.cjs');
+
+      if (services) {
+        for (const toolId of agent.tools) {
+          const service = services[toolId];
+
+          if (service && service.tools && Array.isArray(service.tools)) {
+            // 从服务的 tools 数组中提取工具信息
+            for (const toolDef of service.tools) {
+              if (toolDef.type === 'function' && toolDef.function) {
+                toolsInfo.push({
+                  name: toolDef.function.name,
+                  description: toolDef.function.description || '',
+                  parameters: toolDef.function.parameters || {},
+                  source: service.name || toolId
+                });
+              }
+            }
+            console.log(`[TaskDecomposer] 从服务 "${toolId}" 获取了 ${service.tools.length} 个工具`);
+          } else {
+            console.warn(`[TaskDecomposer] 服务 "${toolId}" 不存在或没有工具定义`);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[TaskDecomposer] 无法从 index.cjs 获取 services:', error.message);
+    }
+
+    // 2. 从 MCP 服务获取工具
+    try {
+      const mcpManager = require('./mcp-manager.cjs');
+      if (mcpManager && typeof mcpManager.getAllTools === 'function') {
+        const mcpTools = mcpManager.getAllTools(agent.userId);
+        for (const mcpTool of mcpTools) {
+          if (mcpTool.type === 'function' && mcpTool.function) {
+            toolsInfo.push({
+              name: mcpTool.function.name,
+              description: mcpTool.function.description || '',
+              parameters: mcpTool.function.parameters || {},
+              source: 'mcp'
+            });
+          }
+        }
+        console.log(`[TaskDecomposer] 从 MCP 获取了 ${mcpTools.length} 个工具`);
+      }
+    } catch (error) {
+      console.warn('[TaskDecomposer] 获取 MCP 工具信息失败:', error.message);
+    }
+
+    console.log(`[TaskDecomposer] Agent "${agent.name}" 最终可用工具数量: ${toolsInfo.length}`);
+    if (toolsInfo.length > 0) {
+      console.log(`[TaskDecomposer] 工具列表: ${toolsInfo.map(t => t.name).join(', ')}`);
+    }
+
+    return toolsInfo;
   }
 }
 

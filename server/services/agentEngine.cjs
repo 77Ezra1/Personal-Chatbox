@@ -10,6 +10,73 @@ const AgentExecutionQueue = require('./agentExecutionQueue.cjs');
 const executionEvents = require('./executionEvents.cjs');
 const sseManager = require('./sseManager.cjs');
 
+// ========= 实时时间依赖工具辅助逻辑 =========
+const TIME_TOOL_NAMES = new Set([
+  'get_current_time',
+  'time_get_current_time'
+]);
+
+const REALTIME_NAME_PATTERNS = [
+  /weather/i,
+  /forecast/i,
+  /temperature/i,
+  /humidity/i,
+  /wind/i,
+  /price/i,
+  /market/i,
+  /stock/i,
+  /news/i,
+  /schedule/i,
+  /event/i
+];
+
+const DEFAULT_TIMEZONE = process.env.DEFAULT_TIMEZONE || 'Asia/Shanghai';
+
+function isCurrentTimeToolName(name = '') {
+  return TIME_TOOL_NAMES.has((name || '').toLowerCase());
+}
+
+function requiresTimeContextByName(name = '') {
+  const lower = (name || '').toLowerCase();
+  if (isCurrentTimeToolName(lower)) return false;
+  return REALTIME_NAME_PATTERNS.some(pattern => pattern.test(lower));
+}
+
+function resolveToolInfo(toolName = '') {
+  const info = {
+    fullName: toolName,
+    actualName: toolName,
+    serviceId: null,
+    isMcp: false
+  };
+
+  if (toolName && toolName.includes('_')) {
+    const parts = toolName.split('_');
+    info.serviceId = parts[0];
+    info.actualName = parts.slice(1).join('_');
+    info.isMcp = true;
+  }
+
+  return info;
+}
+
+function isCurrentTimeTool(toolInfo) {
+  return isCurrentTimeToolName(toolInfo.actualName);
+}
+
+function requiresTimeContext(toolInfo) {
+  if (!toolInfo) return false;
+  if (isCurrentTimeTool(toolInfo)) return false;
+  if (toolInfo.serviceId && requiresTimeContextByName(toolInfo.serviceId)) return true;
+  return requiresTimeContextByName(toolInfo.actualName);
+}
+
+function extractTimezoneHint(params = {}) {
+  if (!params || typeof params !== 'object') return DEFAULT_TIMEZONE;
+  const tz = params.timezone || params.timeZone || params.tz;
+  return typeof tz === 'string' && tz.trim() ? tz.trim() : DEFAULT_TIMEZONE;
+}
+
 class AgentEngine {
   constructor() {
     this.toolRegistry = new Map();
@@ -31,6 +98,7 @@ class AgentEngine {
       auto: (process.env.AGENT_TOOL_REFRESH_AUTO || '').toLowerCase() === 'true',
       intervalMs: this.#parseInt(process.env.AGENT_TOOL_REFRESH_INTERVAL_MS, 600000)
     };
+    this.agentRealtimeState = new Map();
     console.log(`[AgentEngine] 任务缓存已启用: 最大${this.cacheMaxSize}项, TTL ${this.cacheTTL/1000}秒`);
 
     this.registerDefaultTools();
@@ -1207,6 +1275,22 @@ class AgentEngine {
   async executeToolCall(subtask, agent) {
     const { toolName, parameters } = subtask.config;
     await this.ensureToolsLoaded();
+
+    const toolInfo = resolveToolInfo(toolName);
+    const agentState = this.agentRealtimeState.get(agent.id) || { hasTime: false };
+
+    if (requiresTimeContext(toolInfo) && !agentState.hasTime) {
+      const ensured = await this.ensureAgentTimeContext(agent, parameters);
+      if (ensured) {
+        agentState.hasTime = true;
+      }
+    }
+
+    if (isCurrentTimeTool(toolInfo)) {
+      agentState.hasTime = true;
+    }
+
+    this.agentRealtimeState.set(agent.id, agentState);
 
     // ✅ 工具过滤检查
     if (!this.isToolAllowed(toolName, agent)) {
