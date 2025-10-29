@@ -3,6 +3,7 @@ import { Copy, Edit, Trash2, RefreshCw, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { ThinkingProcess } from './ThinkingProcess'
+import { TypingIndicator } from './TypingIndicator'
 import { formatFileSize } from '@/lib/utils'
 
 import { createLogger } from '../../lib/logger'
@@ -102,10 +103,19 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
           {/* 消息内容 - 正常显示 */}
           {!isEditing && (
             <>
-              <MarkdownRenderer
-                content={content || (status === 'loading' ? '...' : '')}
-                isStreaming={status === 'loading'}
-              />
+              {/* 如果正在加载且没有内容，显示动态思考指示器 */}
+              {status === 'loading' && !content && !isUser && (
+                <TypingIndicator type="simple" message={translate('status.thinking', '正在思考')} />
+              )}
+
+              {/* 正常内容渲染 */}
+              {(content || status !== 'loading') && (
+                <MarkdownRenderer
+                  content={content || ''}
+                  isStreaming={status === 'loading'}
+                />
+              )}
+
               {edited && (
                 <span className="message-edited">
                   {translate('labels.edited', '(edited)')}

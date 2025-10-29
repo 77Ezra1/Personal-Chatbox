@@ -181,11 +181,16 @@ function requiresTimeContext(toolInfo) {
   }
 
   if (toolInfo.serviceId && REALTIME_SERVICE_IDS.has(toolInfo.serviceId)) {
+    logger.info(`[TimeContext] 工具 ${toolInfo.fullName} 需要时间上下文（服务ID匹配）: ${toolInfo.serviceId}`);
     return true;
   }
 
   const name = (toolInfo.actualName || '').toLowerCase();
-  return REALTIME_NAME_PATTERNS.some(pattern => pattern.test(name));
+  const matches = REALTIME_NAME_PATTERNS.some(pattern => pattern.test(name));
+  if (matches) {
+    logger.info(`[TimeContext] 工具 ${toolInfo.fullName} 需要时间上下文（名称模式匹配）: ${name}`);
+  }
+  return matches;
 }
 
 function safeParseJson(text, fallback = {}) {
@@ -216,7 +221,10 @@ function determinePreferredTimezone(toolCall, fallback = DEFAULT_TIMEZONE) {
 }
 
 function ensureTimeToolOrder(toolCalls, { timezone = DEFAULT_TIMEZONE, skip = false } = {}) {
+  logger.info(`[TimeContext] ensureTimeToolOrder 被调用: skip=${skip}, toolCalls数量=${toolCalls?.length || 0}`);
+
   if (skip || !Array.isArray(toolCalls) || toolCalls.length === 0) {
+    logger.info(`[TimeContext] 跳过时间注入: skip=${skip}, isArray=${Array.isArray(toolCalls)}, length=${toolCalls?.length || 0}`);
     return { injected: false, timezone };
   }
 
@@ -225,19 +233,24 @@ function ensureTimeToolOrder(toolCalls, { timezone = DEFAULT_TIMEZONE, skip = fa
   let chosenTimezone = timezone;
 
   toolCalls.forEach((call, index) => {
-    const info = resolveToolInfo(call?.function?.name || '');
+    const toolName = call?.function?.name || '';
+    const info = resolveToolInfo(toolName);
+    logger.info(`[TimeContext] 检查工具 [${index}]: ${toolName}, actualName=${info.actualName}, serviceId=${info.serviceId}`);
 
     if (!hasTimeCall && isCurrentTimeTool(info)) {
       hasTimeCall = true;
+      logger.info(`[TimeContext] 发现时间工具，无需注入`);
     }
 
     if (firstRealtimeIndex === -1 && requiresTimeContext(info)) {
       firstRealtimeIndex = index;
       chosenTimezone = determinePreferredTimezone(call, chosenTimezone);
+      logger.info(`[TimeContext] 发现需要时间上下文的工具，索引=${index}, 时区=${chosenTimezone}`);
     }
   });
 
   if (hasTimeCall || firstRealtimeIndex === -1) {
+    logger.info(`[TimeContext] 不注入时间工具: hasTimeCall=${hasTimeCall}, firstRealtimeIndex=${firstRealtimeIndex}`);
     return { injected: false, timezone: chosenTimezone };
   }
 
@@ -251,6 +264,7 @@ function ensureTimeToolOrder(toolCalls, { timezone = DEFAULT_TIMEZONE, skip = fa
   };
 
   toolCalls.splice(firstRealtimeIndex, 0, injectedCall);
+  logger.info(`[TimeContext] ✅ 成功注入 get_current_time 工具，位置=${firstRealtimeIndex}, 时区=${chosenTimezone}`);
   return { injected: true, timezone: chosenTimezone };
 }
 

@@ -6,10 +6,14 @@ const express = require('express');
 const { authMiddleware } = require('../middleware/auth.cjs');
 const WorkflowService = require('../services/workflowService.cjs');
 const WorkflowEngine = require('../services/workflowEngine.cjs');
+const debugRouter = require('./workflow-debug.cjs');
 
 const router = express.Router();
 const workflowService = new WorkflowService();
 const workflowEngine = new WorkflowEngine();
+
+// ✅ 注册调试路由
+router.use('/', debugRouter);
 
 /**
  * 获取工作流列表
@@ -162,13 +166,18 @@ router.post('/:id/run', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const { inputData = {} } = req.body;
+    const { inputData = {}, debugOptions = {} } = req.body;
 
-    const result = await workflowEngine.executeWorkflow(id, inputData, userId);
+    // ✅ 支持调试选项
+    const result = await workflowEngine.executeWorkflow(id, inputData, userId, debugOptions);
 
+    // ✅ 将 executionId 提升到顶层，方便前端访问
     res.json({
       message: '工作流执行成功',
-      result
+      executionId: result.executionId,
+      status: result.status,
+      result: result.result,
+      debugMode: debugOptions.mode || 'normal'
     });
   } catch (error) {
     console.error('执行工作流失败:', error);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { WorkflowList } from '@/components/workflows/WorkflowList'
 import { WorkflowEditorDialog } from '@/components/workflows/WorkflowEditorDialog'
+import { WorkflowExecutionMonitor } from '@/components/workflows/WorkflowExecutionMonitor'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
@@ -38,6 +39,10 @@ export default function WorkflowsPage() {
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingWorkflow, setEditingWorkflow] = useState(null)
 
+  // ✅ 执行监控状态
+  const [monitorOpen, setMonitorOpen] = useState(false)
+  const [currentExecutionId, setCurrentExecutionId] = useState(null)
+
   // ✅ 文件上传引用
   const fileInputRef = useRef(null)
 
@@ -69,18 +74,29 @@ export default function WorkflowsPage() {
     setEditorOpen(true)
   }
 
-  // Execute workflow
+  // ✅ Execute workflow - 显示执行监控
   const handleExecute = async (workflow) => {
     try {
       toast.loading(translate('workflows.toasts.executing'), { id: 'workflow-execute' })
 
-      await axios.post(
+      const response = await axios.post(
         `/api/workflows/${workflow.id}/run`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
-      toast.success(translate('workflows.toasts.executionStarted'), { id: 'workflow-execute' })
+      // 获取执行ID（假设后端返回executionId）
+      const executionId = response.data?.executionId || response.data?.id
+
+      if (executionId) {
+        // 打开执行监控
+        setCurrentExecutionId(executionId)
+        setMonitorOpen(true)
+        toast.success('工作流开始执行', { id: 'workflow-execute' })
+      } else {
+        toast.success(translate('workflows.toasts.executionStarted'), { id: 'workflow-execute' })
+      }
+
       fetchWorkflows() // Refresh to get updated status
     } catch (error) {
       console.error('Failed to execute workflow:', error)
@@ -339,6 +355,26 @@ export default function WorkflowsPage() {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
+
+      {/* ✅ Execution Monitor Dialog */}
+      <Dialog open={monitorOpen} onOpenChange={setMonitorOpen}>
+        <DialogContent className="max-w-4xl h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>工作流执行监控</DialogTitle>
+            <DialogDescription>
+              实时查看工作流执行状态和详细日志
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {currentExecutionId && (
+              <WorkflowExecutionMonitor
+                executionId={currentExecutionId}
+                onClose={() => setMonitorOpen(false)}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

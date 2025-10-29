@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import {
   Play,
   Plus,
@@ -95,6 +95,18 @@ const NODE_TYPES = {
     color: 'bg-cyan-100 border-cyan-300 text-cyan-800 dark:bg-cyan-900/30 dark:border-cyan-700 dark:text-cyan-300',
     description: '调用外部 API'
   },
+  parallel: {
+    label: '并行执行',
+    icon: GitBranch,
+    color: 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-300',
+    description: '同时执行多个任务'
+  },
+  merge: {
+    label: '合并结果',
+    icon: Filter,
+    color: 'bg-violet-100 border-violet-300 text-violet-800 dark:bg-violet-900/30 dark:border-violet-700 dark:text-violet-300',
+    description: '汇总并行任务结果'
+  },
   end: {
     label: '结束',
     icon: Circle,
@@ -103,63 +115,126 @@ const NODE_TYPES = {
   }
 }
 
-// ✅ 节点组件 - 支持拖拽
+// ✅ 节点组件 - 优化拖拽性能，连接线实时跟随
 function WorkflowNode({ node, isSelected, isSource, onClick, onDelete, onEdit, onDragEnd }) {
   const nodeType = NODE_TYPES[node.type] || NODE_TYPES.start
   const Icon = nodeType.icon
   const [isDragging, setIsDragging] = useState(false)
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [dragStart, setDragStart] = useState(null)
+  const [currentPosition, setCurrentPosition] = useState(node.position || { x: 0, y: 0 })
+  const rafRef = useRef(null)
+  const updateThrottle = useRef(0)
 
-  const handleDragStart = (e) => {
+  // 使用 useEffect 同步外部位置变化
+  useEffect(() => {
+    if (!isDragging && node.position) {
+      setCurrentPosition(node.position)
+    }
+  }, [node.position, isDragging])
+
+  const handleMouseDown = (e) => {
+    // 只响应左键
+    if (e.button !== 0) return
+
+    // 如果点击的是按钮，不启动拖拽
+    if (e.target.closest('button')) return
+
+    e.preventDefault()
     setIsDragging(true)
-    const rect = e.currentTarget.getBoundingClientRect()
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+
+    const canvas = e.currentTarget.parentElement
+    const canvasRect = canvas.getBoundingClientRect()
+
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      initialX: currentPosition.x,
+      initialY: currentPosition.y,
+      canvasLeft: canvasRect.left,
+      canvasTop: canvasRect.top
     })
   }
 
-  const handleDrag = (e) => {
-    if (e.clientX === 0 && e.clientY === 0) return // 拖拽结束时会触发
-    // 拖拽过程中更新位置
-  }
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging || !dragStart) return
 
-  const handleDragEndEvent = (e) => {
+    // 使用 requestAnimationFrame 优化性能
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+    }
+
+    rafRef.current = requestAnimationFrame(() => {
+      const deltaX = e.clientX - dragStart.x
+      const deltaY = e.clientY - dragStart.y
+
+      const newX = Math.max(0, dragStart.initialX + deltaX)
+      const newY = Math.max(0, dragStart.initialY + deltaY)
+
+      const newPosition = { x: newX, y: newY }
+      setCurrentPosition(newPosition)
+
+      // ✅ 节流更新父组件（每 16ms 最多更新一次，约 60fps）
+      const now = Date.now()
+      if (now - updateThrottle.current > 16) {
+        updateThrottle.current = now
+        onDragEnd?.(node.id, newPosition)
+      }
+    })
+  }, [isDragging, dragStart, node.id, onDragEnd])
+
+  const handleMouseUp = useCallback((e) => {
+    if (!isDragging) return
+
     setIsDragging(false)
-    if (e.clientX === 0 && e.clientY === 0) return
+    setDragStart(null)
 
-    // 计算新位置（相对于画布）
-    const canvas = e.currentTarget.parentElement
-    const canvasRect = canvas.getBoundingClientRect()
-    const newX = Math.max(0, e.clientX - canvasRect.left - dragOffset.x)
-    const newY = Math.max(0, e.clientY - canvasRect.top - dragOffset.y)
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
 
-    onDragEnd?.(node.id, { x: newX, y: newY })
-  }
+    // ✅ 确保最终位置被更新（防止节流导致遗漏）
+    if (onDragEnd && currentPosition) {
+      onDragEnd(node.id, currentPosition)
+    }
+  }, [isDragging, node.id, currentPosition, onDragEnd])
+
+  // 添加全局事件监听
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
   return (
     <div
       className={cn(
-        'relative p-4 rounded-lg border-2 cursor-move transition-all hover:shadow-md',
+        'relative p-4 rounded-lg border-2 cursor-move transition-shadow hover:shadow-md select-none',
         nodeType.color,
         isSelected && 'ring-2 ring-primary ring-offset-2',
         isSource && 'ring-4 ring-blue-500 ring-offset-2',
-        isDragging && 'opacity-50 shadow-2xl'
+        isDragging && 'shadow-2xl ring-2 ring-primary/50 cursor-grabbing'
       )}
-      onClick={() => onClick(node)}
+      onClick={() => !isDragging && onClick(node)}
       onDoubleClick={(e) => {
         e.stopPropagation()
         onEdit(node)
       }}
-      draggable
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEndEvent}
+      onMouseDown={handleMouseDown}
       style={{
         position: 'absolute',
-        left: node.position?.x || 0,
-        top: node.position?.y || 0,
-        minWidth: '200px'
+        left: `${currentPosition.x}px`,
+        top: `${currentPosition.y}px`,
+        minWidth: '200px',
+        transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+        transition: isDragging ? 'none' : 'transform 0.2s ease, box-shadow 0.2s ease',
+        zIndex: isDragging ? 1000 : 1
       }}
     >
       <div className="flex items-center justify-between mb-2">
@@ -220,7 +295,7 @@ function WorkflowNode({ node, isSelected, isSource, onClick, onDelete, onEdit, o
   )
 }
 
-// 连接线组件
+// ✅ 连接线组件 - 使用平滑的贝塞尔曲线
 function Connection({ from, to, nodes, onDelete }) {
   const fromNode = nodes.find(n => n.id === from)
   const toNode = nodes.find(n => n.id === to)
@@ -228,14 +303,53 @@ function Connection({ from, to, nodes, onDelete }) {
 
   if (!fromNode || !toNode) return null
 
-  const fromX = (fromNode.position?.x || 0) + 90
-  const fromY = (fromNode.position?.y || 0) + 50
-  const toX = (toNode.position?.x || 0) + 90
+  // 节点尺寸（最小宽度 200px，实际可能更大）
+  const nodeWidth = 200
+  const nodeHeight = 100 // 估算高度
+
+  // 连接点：从源节点底部中心连到目标节点顶部中心
+  const fromX = (fromNode.position?.x || 0) + nodeWidth / 2
+  const fromY = (fromNode.position?.y || 0) + nodeHeight
+  const toX = (toNode.position?.x || 0) + nodeWidth / 2
   const toY = (toNode.position?.y || 0)
 
-  // 计算中点位置用于放置删除按钮
-  const midX = (fromX + toX) / 2
-  const midY = (fromY + toY) / 2
+  // 计算贝塞尔曲线控制点
+  const deltaX = toX - fromX
+  const deltaY = toY - fromY
+
+  // 智能计算控制点偏移
+  // 如果是向下连接（正常情况）
+  if (deltaY > 0) {
+    const offset = Math.min(deltaY * 0.5, 100)
+    var cp1X = fromX
+    var cp1Y = fromY + offset
+    var cp2X = toX
+    var cp2Y = toY - offset
+  }
+  // 如果是向上或平行连接
+  else {
+    const offset = Math.max(Math.abs(deltaY) * 0.3, 50)
+    const horizontalOffset = Math.abs(deltaX) * 0.2
+    var cp1X = fromX
+    var cp1Y = fromY + offset
+    var cp2X = toX
+    var cp2Y = toY - offset
+  }
+
+  // 三次贝塞尔曲线路径
+  const path = `M ${fromX} ${fromY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${toX} ${toY}`
+
+  // 计算路径上的中点位置（用于放置删除按钮）
+  // 使用贝塞尔曲线上 t=0.5 的点
+  const t = 0.5
+  const midX = Math.pow(1 - t, 3) * fromX +
+               3 * Math.pow(1 - t, 2) * t * cp1X +
+               3 * (1 - t) * Math.pow(t, 2) * cp2X +
+               Math.pow(t, 3) * toX
+  const midY = Math.pow(1 - t, 3) * fromY +
+               3 * Math.pow(1 - t, 2) * t * cp1Y +
+               3 * (1 - t) * Math.pow(t, 2) * cp2Y +
+               Math.pow(t, 3) * toY
 
   return (
     <>
@@ -244,43 +358,76 @@ function Connection({ from, to, nodes, onDelete }) {
         style={{ zIndex: 0 }}
       >
         <defs>
+          {/* 箭头标记 - 悬停时变红色 */}
           <marker
-            id="arrowhead"
+            id={`arrowhead-${from}-${to}`}
             markerWidth="10"
             markerHeight="10"
             refX="9"
             refY="3"
             orient="auto"
+            markerUnits="strokeWidth"
           >
-            <polygon points="0 0, 10 3, 0 6" fill="currentColor" />
+            <polygon
+              points="0 0, 10 3, 0 6"
+              fill={isHovered ? '#ef4444' : '#374151'}
+            />
           </marker>
         </defs>
+
+        {/* 背景辅助线（更宽，用于更好的点击区域） */}
         <path
-          d={`M ${fromX} ${fromY} L ${toX} ${toY}`}
-          stroke="currentColor"
-          strokeWidth="2"
+          d={path}
+          stroke="transparent"
+          strokeWidth="20"
           fill="none"
-          markerEnd="url(#arrowhead)"
-          className={cn(
-            "transition-all pointer-events-auto cursor-pointer",
-            isHovered ? "text-destructive" : "text-muted-foreground"
-          )}
+          className="pointer-events-auto cursor-pointer"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={() => onDelete?.(from, to)}
-          style={{ pointerEvents: 'stroke' }}
+        />
+
+        {/* 主连接线 */}
+        <path
+          d={path}
+          stroke={isHovered ? '#ef4444' : '#374151'}
+          strokeWidth={isHovered ? '3' : '2'}
+          fill="none"
+          markerEnd={`url(#arrowhead-${from}-${to})`}
+          className="transition-all pointer-events-none"
+          style={{
+            filter: isHovered ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none'
+          }}
+        />
+
+        {/* 连接点圆圈 */}
+        <circle
+          cx={fromX}
+          cy={fromY}
+          r="4"
+          fill="#3b82f6"
+          className="transition-all"
+          opacity={isHovered ? 1 : 0.8}
+        />
+        <circle
+          cx={toX}
+          cy={toY}
+          r="4"
+          fill="#3b82f6"
+          className="transition-all"
+          opacity={isHovered ? 1 : 0.8}
         />
       </svg>
 
       {/* 删除按钮 */}
       {isHovered && (
         <button
-          className="absolute z-10 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-all"
+          className="absolute z-10 bg-destructive text-destructive-foreground rounded-full p-1.5 hover:bg-destructive/90 transition-all shadow-lg hover:scale-110"
           style={{
-            left: midX - 10,
-            top: midY - 10,
-            width: '20px',
-            height: '20px'
+            left: midX - 12,
+            top: midY - 12,
+            width: '24px',
+            height: '24px'
           }}
           onClick={() => onDelete?.(from, to)}
         >
@@ -324,9 +471,14 @@ function NodeEditDialog({ node, open, onOpenChange, onSave }) {
         const response = await axios.get('/api/mcp/user-configs?enabled=true', {
           headers: { Authorization: `Bearer ${token}` }
         })
-        setMcpServices(response.data?.configs || [])
+        console.log('[WorkflowEditor] MCP Services Response:', response.data)
+        const services = response.data?.configs || []
+        console.log('[WorkflowEditor] Loaded MCP Services:', services.length, services)
+        setMcpServices(services)
       } catch (error) {
-        console.error('Failed to load MCP services:', error)
+        console.error('[WorkflowEditor] Failed to load MCP services:', error)
+        console.error('[WorkflowEditor] Error details:', error.response?.data)
+        setMcpServices([])
       }
     }
     if (open) loadMCPServices()
@@ -524,19 +676,26 @@ function NodeEditDialog({ node, open, onOpenChange, onSave }) {
                     <SelectValue placeholder="选择一个 MCP 服务" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mcpServices.map((service) => (
-                      <SelectItem key={service.id} value={service.mcp_id}>
-                        <div className="flex items-center gap-2">
-                          <Zap className="h-4 w-4" />
-                          <span>{service.name}</span>
-                          {service.enabled && (
-                            <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
-                              已启用
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {mcpServices.length === 0 ? (
+                      <div className="p-2 text-xs text-muted-foreground text-center">
+                        暂无可用的 MCP 服务<br/>
+                        请先在 MCP 服务管理中启用服务
+                      </div>
+                    ) : (
+                      mcpServices.map((service) => (
+                        <SelectItem key={service.id} value={service.mcp_id}>
+                          <div className="flex items-center gap-2">
+                            <Zap className="h-4 w-4" />
+                            <span>{service.name}</span>
+                            {service.enabled && (
+                              <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                                已启用
+                              </Badge>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -594,6 +753,174 @@ function NodeEditDialog({ node, open, onOpenChange, onSave }) {
                 </Select>
               </div>
             </>
+          )}
+
+          {node.type === 'parallel' && (
+            <>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  并行节点会同时执行所有连接到它的后续节点。配置选项：
+                </p>
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="failOnError"
+                      checked={config.failOnError !== false}
+                      onChange={(e) => setConfig({ ...config, failOnError: e.target.checked })}
+                      className="rounded"
+                    />
+                    <Label htmlFor="failOnError" className="cursor-pointer text-sm">
+                      任一任务失败时停止工作流
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {node.type === 'merge' && (
+            <>
+              <div>
+                <Label>合并策略</Label>
+                <Select
+                  value={config.mergeStrategy || 'array'}
+                  onValueChange={(value) => setConfig({ ...config, mergeStrategy: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="array">返回数组（保留所有结果）</SelectItem>
+                    <SelectItem value="object">合并为对象</SelectItem>
+                    <SelectItem value="first">仅返回第一个结果</SelectItem>
+                    <SelectItem value="last">仅返回最后一个结果</SelectItem>
+                    <SelectItem value="concat">连接所有数组结果</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  选择如何合并并行执行的结果
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* ✅ 通用：重试配置 */}
+          {!['start', 'end', 'condition', 'parallel', 'merge'].includes(node.type) && (
+            <div className="border-t pt-4 mt-4">
+              <h4 className="font-semibold mb-3 text-sm">重试配置（可选）</h4>
+              <div className="space-y-3">
+                <div>
+                  <Label>最大重试次数</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={config.retry?.maxRetries || 0}
+                    onChange={(e) => setConfig({
+                      ...config,
+                      retry: {
+                        ...config.retry,
+                        maxRetries: parseInt(e.target.value)
+                      }
+                    })}
+                    placeholder="0"
+                  />
+                </div>
+                {config.retry?.maxRetries > 0 && (
+                  <>
+                    <div>
+                      <Label>重试延迟 (毫秒)</Label>
+                      <Input
+                        type="number"
+                        min="100"
+                        value={config.retry?.retryDelay || 1000}
+                        onChange={(e) => setConfig({
+                          ...config,
+                          retry: {
+                            ...config.retry,
+                            retryDelay: parseInt(e.target.value)
+                          }
+                        })}
+                        placeholder="1000"
+                      />
+                    </div>
+                    <div>
+                      <Label>退避策略</Label>
+                      <Select
+                        value={config.retry?.backoff || 'fixed'}
+                        onValueChange={(value) => setConfig({
+                          ...config,
+                          retry: {
+                            ...config.retry,
+                            backoff: value
+                          }
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fixed">固定延迟</SelectItem>
+                          <SelectItem value="linear">线性增长</SelectItem>
+                          <SelectItem value="exponential">指数退避</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ✅ 通用：错误处理配置 */}
+          {!['start', 'end', 'parallel', 'merge'].includes(node.type) && (
+            <div className="border-t pt-4 mt-4">
+              <h4 className="font-semibold mb-3 text-sm">错误处理（可选）</h4>
+              <div className="space-y-3">
+                <div>
+                  <Label>失败时的行为</Label>
+                  <Select
+                    value={config.onError?.action || 'stop'}
+                    onValueChange={(value) => setConfig({
+                      ...config,
+                      onError: {
+                        ...config.onError,
+                        action: value
+                      }
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="stop">停止工作流</SelectItem>
+                      <SelectItem value="continue">继续执行（返回错误信息）</SelectItem>
+                      <SelectItem value="branch">跳转到错误处理分支</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {config.onError?.action === 'branch' && (
+                  <div>
+                    <Label>错误处理节点 ID</Label>
+                    <Input
+                      value={config.onError?.errorBranch || ''}
+                      onChange={(e) => setConfig({
+                        ...config,
+                        onError: {
+                          ...config.onError,
+                          errorBranch: e.target.value
+                        }
+                      })}
+                      placeholder="error_handler_node_id"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      输入要跳转的错误处理节点的 ID
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
           </div>
         </ScrollArea>

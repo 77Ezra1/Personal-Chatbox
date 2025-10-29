@@ -11,32 +11,42 @@ const INTERNAL_KEY_PREFIX = '__';
 class TaskDecomposer {
   constructor(options = {}) {
     this.defaults = {
-      model: options.defaultModel || process.env.AGENT_DECOMPOSER_MODEL || 'gpt-4o-mini',
+      // 🔥 优化：使用更强大的模型进行任务拆解
+      model: options.defaultModel || process.env.AGENT_DECOMPOSER_MODEL || 'deepseek-chat',
+
+      // 🔥 优化：降低temperature以提高稳定性
       temperature: this.#clampNumber(
-        options.defaultTemperature ?? parseFloat(process.env.AGENT_DECOMPOSER_TEMPERATURE ?? '0.3'),
+        options.defaultTemperature ?? parseFloat(process.env.AGENT_DECOMPOSER_TEMPERATURE ?? '0.2'),
         0,
         2
       ),
-      maxTokens: this.#normalizeInt(
-        options.defaultMaxTokens ?? process.env.AGENT_DECOMPOSER_MAX_TOKENS,
-        256,
-        4000,
-        1200
+
+      // 🔥 留空 = 无限制的设计
+      // 如果用户设置了值，就使用用户的值
+      // 如果用户留空（undefined/null），则表示无限制
+      maxTokens: this.#parseOptionalInt(
+        options.defaultMaxTokens ?? process.env.AGENT_DECOMPOSER_MAX_TOKENS
       ),
-      maxSubtasks: this.#normalizeInt(
-        options.defaultMaxSubtasks ?? process.env.AGENT_DECOMPOSER_MAX_SUBTASKS,
-        3,
-        25,
-        8
+      maxSubtasks: this.#parseOptionalInt(
+        options.defaultMaxSubtasks ?? process.env.AGENT_DECOMPOSER_MAX_SUBTASKS
       ),
-      instructions: options.defaultInstructions || null,
-      contextLimit: this.#normalizeInt(
-        options.contextLimit ?? process.env.AGENT_DECOMPOSER_CONTEXT_LIMIT,
-        500,
-        20000,
-        4000
-      )
+      minSubtasks: this.#parseOptionalInt(
+        options.defaultMinSubtasks ?? process.env.AGENT_DECOMPOSER_MIN_SUBTASKS
+      ),
+      contextLimit: this.#parseOptionalInt(
+        options.contextLimit ?? process.env.AGENT_DECOMPOSER_CONTEXT_LIMIT
+      ),
+
+      instructions: options.defaultInstructions || null
     };
+
+    // 🔥 日志：清晰显示配置状态
+    console.log('[TaskDecomposer] 初始化配置:');
+    console.log(`  - 模型: ${this.defaults.model}`);
+    console.log(`  - 温度: ${this.defaults.temperature}`);
+    console.log(`  - 最大Token: ${this.defaults.maxTokens ?? '无限制'}`);
+    console.log(`  - 子任务数量: ${this.defaults.minSubtasks ?? '不限'} - ${this.defaults.maxSubtasks ?? '不限'}`);
+    console.log(`  - 上下文限制: ${this.defaults.contextLimit ?? '无限制'}`);
   }
 
   /**
@@ -72,8 +82,12 @@ class TaskDecomposer {
 
     let processedSubtasks = this.postProcessSubtasks(subtasks);
 
-    if (processedSubtasks.length > options.maxSubtasks) {
-      processedSubtasks = processedSubtasks.slice(0, options.maxSubtasks);
+    // 🔥 只在设置了maxSubtasks时才限制数量
+    if (options.maxSubtasks !== null && options.maxSubtasks !== undefined) {
+      if (processedSubtasks.length > options.maxSubtasks) {
+        console.log(`[TaskDecomposer] 子任务数量 ${processedSubtasks.length} 超过限制 ${options.maxSubtasks}，截断处理`);
+        processedSubtasks = processedSubtasks.slice(0, options.maxSubtasks);
+      }
     }
 
     await this.persistSubtasks(processedSubtasks);
@@ -635,25 +649,28 @@ class TaskDecomposer {
         0,
         2
       ),
-      maxTokens: this.#normalizeInt(
+      // 🔥 使用新的可选整数解析方法，支持留空=无限制
+      maxTokens: this.#parseOptionalInt(
         taskOptions.maxTokens
           ?? runtimeDecomposer.maxTokens
           ?? agentDecomposerConfig.maxTokens
           ?? agentConfig.decomposerMaxTokens
-          ?? agentConfig.maxTokens,
-        256,
-        4000,
-        this.defaults.maxTokens
-      ),
-      maxSubtasks: this.#normalizeInt(
+          ?? agentConfig.maxTokens
+      ) ?? this.defaults.maxTokens,
+
+      maxSubtasks: this.#parseOptionalInt(
         taskOptions.maxSubtasks
           ?? runtimeDecomposer.maxSubtasks
           ?? agentDecomposerConfig.maxSubtasks
-          ?? agentConfig.decomposerMaxSubtasks,
-        3,
-        25,
-        this.defaults.maxSubtasks
-      ),
+          ?? agentConfig.decomposerMaxSubtasks
+      ) ?? this.defaults.maxSubtasks,
+
+      minSubtasks: this.#parseOptionalInt(
+        taskOptions.minSubtasks
+          ?? runtimeDecomposer.minSubtasks
+          ?? agentDecomposerConfig.minSubtasks
+          ?? agentConfig.decomposerMinSubtasks
+      ) ?? this.defaults.minSubtasks,
       instructions: taskOptions.instructions
         || runtimeDecomposer.instructions
         || agentDecomposerConfig.instructions
@@ -711,9 +728,22 @@ class TaskDecomposer {
 
     const contextBlock = this.#stringifyWithLimit(metadata, options.contextLimit);
 
+    // 🔥 动态构建子任务数量约束说明
+    const minSubtasksText = options.minSubtasks ?? '无最小要求';
+    const maxSubtasksText = options.maxSubtasks ?? '无上限';
+    const rangeText = minSubtasksText === '无最小要求' && maxSubtasksText === '无上限'
+      ? '不限制子任务数量，请根据任务复杂度合理拆分'
+      : `子任务数量范围：${minSubtasksText} 至 ${maxSubtasksText} 个`;
+
     const instructions = [
       '请基于上述上下文，将任务拆解为合理的子任务列表。',
-      `- 子任务数量不应超过 ${options.maxSubtasks} 个。`,
+      '',
+      '## 子任务数量约束',
+      `- ${rangeText}`,
+      '- 原则：每个子任务应该是一个独立的、可验证的操作单元',
+      '- 避免过度拆分（太多琐碎任务）或拆分不足（单个任务过于复杂）',
+      '',
+      '## 输出格式',
       '- 输出一个 JSON 数组，每个元素都应包含以下字段：',
       '  - title: 子任务标题（简短清晰的描述）',
       '  - description: 具体说明',
@@ -797,18 +827,43 @@ class TaskDecomposer {
       instructions.push(...options.instructions);
     }
 
+    // 🔥 优化：添加思维链和示例学习
+    const examplesSection = this.#buildExamples(agent, availableTools);
+
     return [
       '你是一名智能任务规划专家，负责根据上下文生成高质量的执行计划。',
+      '',
+      '## 思维过程',
+      '在拆解任务前，请遵循以下思维链：',
+      '1. **理解目标**：任务的最终目标是什么？需要什么样的输出？',
+      '2. **分析依赖**：完成任务需要哪些信息？这些信息从哪里获取？',
+      '3. **识别工具**：查看 availableTools，哪些工具可以帮助获取信息？',
+      '4. **时间感知**：任务是否涉及"今天"、"当前"、"最新"等时间词汇？',
+      '   - 如果是，检查是否有时间/日期工具（描述包含time/date/datetime/now等）',
+      '   - 如果有，必须先调用获取准确的时间基准',
+      '5. **确定粒度**：任务应该拆分成几个步骤？每个步骤的粒度是否合适？',
+      '   - 太粗：一个子任务做太多事情，难以调试和重试',
+      '   - 太细：子任务过多，增加协调成本',
+      '   - 原则：每个子任务应该是一个独立的、可验证的操作单元',
+      '6. **建立依赖**：子任务之间的执行顺序是什么？哪些可以并行？',
+      '7. **选择类型**：每个子任务应该用什么类型？',
+      '   - 需要调用外部API/工具 → tool_call',
+      '   - 需要AI理解、生成、总结 → ai_analysis',
+      '   - 简单的数据转换 → data_processing',
       '',
       '## 上下文',
       '```json',
       contextBlock,
       '```',
       '',
+      examplesSection,
+      '',
       '## 要求',
       ...instructions,
       '',
-      '请直接输出 JSON 数组，不要添加额外说明。'
+      '## 输出格式',
+      '请直接输出 JSON 数组，不要添加额外说明、不要使用markdown代码块。',
+      '输出示例: [{"title":"...","description":"...","type":"..."}]'
     ].join('\n');
   }
 
@@ -888,13 +943,201 @@ class TaskDecomposer {
     return Math.min(max, Math.max(min, num));
   }
 
+  /**
+   * 🔥 新增：解析可选整数（留空表示无限制）
+   * @param {*} value - 输入值
+   * @returns {number|null} 返回整数或null（表示无限制）
+   */
+  #parseOptionalInt(value) {
+    // 如果是undefined、null、空字符串，返回null表示无限制
+    if (value === undefined || value === null || value === '') {
+      return null;
+    }
+
+    const num = Number(value);
+    // 如果不是有效数字，返回null表示无限制
+    if (!Number.isFinite(num)) {
+      return null;
+    }
+
+    // 返回整数值
+    return Math.round(num);
+  }
+
   #normalizeInt(value, min, max, fallback) {
     const num = Number(value);
     if (!Number.isFinite(num)) return fallback;
     const rounded = Math.round(num);
     if (rounded < min) return min;
-    if (rounded > max) return max;
+    if (max !== null && rounded > max) return max;
     return rounded;
+  }
+
+  /**
+   * 🔥 优化：构建示例部分，提供few-shot学习
+   * @param {Object} agent - Agent 对象
+   * @param {Array} availableTools - 可用工具列表
+   * @returns {string} 示例文本
+   */
+  #buildExamples(agent, availableTools) {
+    // 检查是否有时间工具
+    const hasTimeTools = availableTools.some(tool =>
+      /time|date|datetime|now|当前|时间|日期/i.test(tool.description || tool.name)
+    );
+
+    // 检查是否有天气工具
+    const hasWeatherTools = availableTools.some(tool =>
+      /weather|天气|气温|温度/i.test(tool.description || tool.name)
+    );
+
+    const examples = [];
+
+    // 示例1：时间敏感的天气查询
+    if (hasTimeTools && hasWeatherTools) {
+      const timeToolName = availableTools.find(t =>
+        /time|date|datetime|now|当前|时间|日期/i.test(t.description || t.name)
+      )?.name || 'get_current_time';
+
+      const weatherToolName = availableTools.find(t =>
+        /weather|天气/i.test(t.description || t.name)
+      )?.name || 'get_current_weather';
+
+      examples.push({
+        task: '总结一下今天广东各市的天气情况',
+        thinking: [
+          '1. 任务目标：生成广东各市今天的天气总结报告',
+          '2. 关键词"今天"表示需要时间上下文',
+          '3. 需要的信息：当前日期、各城市天气数据',
+          '4. 可用工具：发现时间工具和天气工具',
+          '5. 拆解策略：',
+          '   - 先获取当前时间（确保"今天"的准确性）',
+          '   - 然后获取各城市天气（依赖时间）',
+          '   - 最后用AI总结数据（依赖天气数据）'
+        ],
+        subtasks: [
+          {
+            title: '获取当前日期时间',
+            description: '获取准确的当前时间，为后续数据分析提供时间基准',
+            type: 'tool_call',
+            config: {
+              toolName: timeToolName,
+              parameters: { timezone: 'Asia/Shanghai' }
+            },
+            dependencies: [],
+            priority: 1
+          },
+          {
+            title: '获取广州天气',
+            description: '获取广州的实时天气信息',
+            type: 'tool_call',
+            config: {
+              toolName: weatherToolName,
+              parameters: { location: '广州' }
+            },
+            dependencies: ['获取当前日期时间'],
+            priority: 2
+          },
+          {
+            title: '获取深圳天气',
+            description: '获取深圳的实时天气信息',
+            type: 'tool_call',
+            config: {
+              toolName: weatherToolName,
+              parameters: { location: '深圳' }
+            },
+            dependencies: ['获取当前日期时间'],
+            priority: 2
+          },
+          {
+            title: '生成天气总结报告',
+            description: '基于获取的天气数据，生成易读的总结报告',
+            type: 'ai_analysis',
+            config: {
+              prompt: '请根据广东各市的天气数据，生成一份简洁的天气总结报告，包括温度范围、天气状况、是否适合外出等建议。'
+            },
+            dependencies: ['获取广州天气', '获取深圳天气'],
+            priority: 3
+          }
+        ]
+      });
+    }
+
+    // 示例2：数据分析任务
+    examples.push({
+      task: '分析用户反馈数据并生成报告',
+      thinking: [
+        '1. 任务目标：分析数据并生成报告',
+        '2. 不涉及实时性，无需时间工具',
+        '3. 需要的信息：用户反馈数据（假设已在输入中）',
+        '4. 拆解策略：',
+        '   - 数据清洗和验证',
+        '   - AI分析趋势和问题',
+        '   - 生成结构化报告'
+      ],
+      subtasks: [
+        {
+          title: '数据清洗',
+          description: '验证和清洗用户反馈数据',
+          type: 'data_processing',
+          config: {
+            operation: 'validate',
+            rules: ['非空检查', '格式验证']
+          },
+          dependencies: [],
+          priority: 1
+        },
+        {
+          title: '分析用户反馈趋势',
+          description: '使用AI分析反馈中的主要问题和趋势',
+          type: 'ai_analysis',
+          config: {
+            prompt: '请分析用户反馈数据，总结主要问题、常见建议和整体情感倾向。'
+          },
+          dependencies: ['数据清洗'],
+          priority: 2
+        },
+        {
+          title: '生成分析报告',
+          description: '将分析结果整理成结构化报告',
+          type: 'ai_analysis',
+          config: {
+            prompt: '请将分析结果整理成Markdown格式的报告，包含：1.概述 2.主要发现 3.建议'
+          },
+          dependencies: ['分析用户反馈趋势'],
+          priority: 3
+        }
+      ]
+    });
+
+    if (examples.length === 0) {
+      return '';
+    }
+
+    // 构建示例文本
+    const exampleTexts = examples.map((ex, idx) => {
+      const thinkingText = ex.thinking.map(t => `   ${t}`).join('\n');
+      const subtasksJson = JSON.stringify(ex.subtasks, null, 2);
+
+      return [
+        `### 示例 ${idx + 1}：${ex.task}`,
+        '',
+        '**思维过程：**',
+        thinkingText,
+        '',
+        '**输出：**',
+        '```json',
+        subtasksJson,
+        '```'
+      ].join('\n');
+    });
+
+    return [
+      '## 任务拆解示例',
+      '',
+      '以下示例展示了如何根据不同的任务类型进行拆解：',
+      '',
+      ...exampleTexts
+    ].join('\n');
   }
 
   /**

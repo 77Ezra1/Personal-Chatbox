@@ -1326,6 +1326,45 @@ class AgentEngine {
   }
 
   /**
+   * 确保 Agent 有时间上下文（用于需要实时数据的工具）
+   * @param {Object} agent - Agent 对象
+   * @param {Object} parameters - 工具参数
+   * @returns {Promise<boolean>} 是否成功获取时间上下文
+   */
+  async ensureAgentTimeContext(agent, parameters) {
+    try {
+      // 提取时区信息
+      const timezone = extractTimezoneHint(parameters);
+
+      // 调用时间工具获取当前时间
+      const timeTool = this.toolRegistry.get('get_current_time');
+      if (!timeTool) {
+        console.warn('[AgentEngine] 时间工具未注册，无法提供时间上下文');
+        return false;
+      }
+
+      const timeResult = await timeTool.execute({ timezone }, {}, { agent });
+
+      if (timeResult && timeResult.success) {
+        console.log('[AgentEngine] 成功获取时间上下文:', timeResult.data?.formatted || '未知');
+
+        // 可以将时间信息存储到 agent 的上下文中供后续使用
+        if (!agent.context) {
+          agent.context = {};
+        }
+        agent.context.currentTime = timeResult.data;
+
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('[AgentEngine] 获取时间上下文失败:', error);
+      return false;
+    }
+  }
+
+  /**
    * 检查工具是否被 Agent 允许使用
    * @param {string} toolName - 工具名称
    * @param {Object} agent - Agent 对象

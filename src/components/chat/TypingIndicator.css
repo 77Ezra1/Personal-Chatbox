@@ -1,0 +1,265 @@
+/* ==================== 最简约模式 ==================== */
+.typing-indicator-minimal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary, #6366f1);
+  animation: typing-bounce 1.4s infinite ease-in-out;
+  opacity: 0.7;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+/* ==================== 简单模式 ==================== */
+.typing-indicator-simple {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  color: var(--color-text-secondary, #6b7280);
+  font-size: 14px;
+}
+
+.typing-dots-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-dot-bounce {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary, #6366f1);
+  animation: dot-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dot-bounce:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.typing-dot-bounce:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.typing-dot-bounce:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+@keyframes dot-bounce {
+  0%, 60%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.typing-text {
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* ==================== 完整增强模式 ==================== */
+.typing-indicator-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  margin: 8px 0;
+  transition: all 0.3s ease;
+}
+
+.typing-indicator-enhanced:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border-color: rgba(99, 102, 241, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.typing-icon-wrapper {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.typing-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary, #6366f1);
+  z-index: 2;
+  position: relative;
+  animation: typing-icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes typing-icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.typing-icon-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+  animation: typing-pulse-wave 2s ease-out infinite;
+}
+
+@keyframes typing-pulse-wave {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.typing-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.typing-phrase-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.typing-phrase {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #1f2937);
+  animation: typing-phrase-fade 0.5s ease-in-out;
+  white-space: nowrap;
+}
+
+@keyframes typing-phrase-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.typing-dots {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary, #6366f1);
+  min-width: 24px;
+  display: inline-block;
+}
+
+.typing-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.typing-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--color-primary, #6366f1) 0%,
+    rgba(168, 85, 247, 1) 50%,
+    var(--color-primary, #6366f1) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 999px;
+  animation: typing-progress-slide 2s ease-in-out infinite;
+}
+
+@keyframes typing-progress-slide {
+  0% {
+    transform: translateX(-100%);
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    transform: translateX(100%);
+    background-position: 0% 50%;
+  }
+}
+
+/* ==================== 暗色主题支持 ==================== */
+@media (prefers-color-scheme: dark) {
+  .typing-indicator-enhanced {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+    border-color: rgba(99, 102, 241, 0.15);
+  }
+
+  .typing-indicator-enhanced:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%);
+    border-color: rgba(99, 102, 241, 0.25);
+  }
+
+  .typing-phrase {
+    color: var(--color-text-primary, #f3f4f6);
+  }
+
+  .typing-indicator-simple {
+    color: var(--color-text-secondary, #9ca3af);
+  }
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 640px) {
+  .typing-indicator-enhanced {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .typing-icon-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+
+  .typing-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .typing-phrase {
+    font-size: 13px;
+  }
+}

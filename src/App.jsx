@@ -181,7 +181,17 @@ function App() {
   // ==================== 消息处理 ====================
 
   const regenerateAssistantReply = useCallback(async ({ messages, placeholderMessage }) => {
-    if (!currentConversationId) return
+    // 🔍 调试日志
+    logger.log('[regenerateAssistantReply] Called with:', {
+      messagesCount: messages?.length,
+      currentConversationId,
+      hasPlaceholder: !!placeholderMessage
+    })
+
+    if (!currentConversationId) {
+      logger.error('[regenerateAssistantReply] No current conversation ID!')
+      return
+    }
 
     setIsGenerating(true)
     abortControllerRef.current = new AbortController()
@@ -500,10 +510,32 @@ function App() {
   ])
 
   const handleSendMessage = useCallback(async (content, attachments = []) => {
-    if (!content.trim() && attachments.length === 0) return
-    if (isGenerating) return
+    // 🔍 调试日志
+    logger.log('[handleSendMessage] Called with:', {
+      content: content?.substring(0, 50),
+      attachmentsCount: attachments.length,
+      currentConversationId,
+      isGenerating,
+      hasCurrentConversation: !!currentConversation
+    })
+
+    if (!content.trim() && attachments.length === 0) {
+      logger.warn('[handleSendMessage] Empty content and no attachments')
+      return
+    }
+
+    if (isGenerating) {
+      logger.warn('[handleSendMessage] Already generating, skipping')
+      return
+    }
+
+    if (!currentConversationId) {
+      logger.error('[handleSendMessage] No current conversation ID!')
+      return
+    }
 
     const existingMessages = currentConversation?.messages || []
+    logger.log('[handleSendMessage] Existing messages count:', existingMessages.length)
 
     const userMessage = conversationUtils.createMessage({
       role: 'user',

@@ -90,6 +90,7 @@
     "dotenv": "^16.6.1",
     "duck-duck-scrape": "^2.2.7",
     "embla-carousel-react": "^8.6.0",
+    "expr-eval": "^2.0.2",
     "express": "^5.1.0",
     "framer-motion": "^12.15.0",
     "get-proxy-settings": "^0.1.13",
@@ -134,6 +135,7 @@
     "use-mcp": "^0.0.21",
     "uuid": "^13.0.0",
     "vaul": "^1.1.2",
+    "ws": "^8.18.3",
     "xlsx": "^0.18.5",
     "youtube-captions-scraper": "^2.0.3",
     "zod": "^3.24.4"

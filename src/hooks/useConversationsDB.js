@@ -234,8 +234,27 @@ export function useConversationsDB() {
 
   // 选择对话
   const selectConversation = useCallback((id) => {
+    // 🔥 修复：验证对话是否存在，避免切换到不存在的对话导致无法发送消息
+    if (!conversations[id]) {
+      logger.warn('[selectConversation] Conversation not found:', id, 'Available:', Object.keys(conversations));
+      // 尝试查找对应的对话（处理类型转换问题）
+      const stringId = String(id);
+      const numberId = Number(id);
+      if (conversations[stringId]) {
+        logger.log('[selectConversation] Found conversation with string ID');
+        setCurrentConversationId(stringId);
+        return;
+      }
+      if (conversations[numberId]) {
+        logger.log('[selectConversation] Found conversation with number ID');
+        setCurrentConversationId(numberId);
+        return;
+      }
+      logger.error('[selectConversation] Cannot find conversation, staying on current');
+      return;
+    }
     setCurrentConversationId(id);
-  }, []);
+  }, [conversations]);
 
   // 添加新对话
   const addConversation = useCallback((title = DEFAULT_TITLE) => {

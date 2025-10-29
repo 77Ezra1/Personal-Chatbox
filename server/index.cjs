@@ -5,6 +5,7 @@
 // 加载环境变量（必须在最前面）
 require('dotenv').config();
 
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -16,6 +17,9 @@ const { router: mcpRouter, initializeRouter } = require('./routes/mcp.cjs');
 const { router: chatRouter, initializeRouter: initializeChatRouter } = require('./routes/chat.cjs');
 const proxyRouter = require('./routes/proxy.cjs');
 const authRouter = require('./routes/auth.cjs');
+
+// ✅ 导入 WebSocket 管理器
+const { getInstance: getWorkflowWSManager } = require('./services/workflowWebSocket.cjs');
 
 // 导入 MCP Manager
 const MCPManager = require('./services/mcp-manager.cjs');
@@ -388,12 +392,20 @@ async function start() {
     // 错误处理 - 必须在最后
     app.use(errorHandler);
 
-    // 启动HTTP服务器
+    // ✅ 创建HTTP服务器（以支持WebSocket）
     const port = config.server.port;
     const host = config.server.host;
 
-    app.listen(port, host, () => {
+    const server = http.createServer(app);
+
+    // ✅ 初始化 WebSocket 服务器
+    const wsManager = getWorkflowWSManager();
+    wsManager.initialize(server);
+    logger.info('✅ WebSocket 服务器已初始化');
+
+    server.listen(port, host, () => {
       logger.info(`✅ 服务器已启动: http://${host}:${port}`);
+      logger.info(`✅ WebSocket 服务: ws://${host}:${port}/ws/workflow`);
       logger.info(`✅ 已加载 ${Object.keys(services).length} 个MCP服务`);
 
       // 打印启用的服务
@@ -413,6 +425,10 @@ async function start() {
 process.on('SIGINT', async () => {
   logger.info('收到SIGINT信号,正在关闭服务器...');
 
+  // ✅ 关闭 WebSocket 服务器
+  const wsManager = getWorkflowWSManager();
+  wsManager.close();
+
   // 停止所有原有服务
   for (const service of Object.values(services)) {
     if (service !== mcpManager && service.enabled && service.disable) {
@@ -430,6 +446,10 @@ process.on('SIGINT', async () => {
 
 process.on('SIGTERM', async () => {
   logger.info('收到SIGTERM信号,正在关闭服务器...');
+
+  // ✅ 关闭 WebSocket 服务器
+  const wsManager = getWorkflowWSManager();
+  wsManager.close();
 
   // 停止所有原有服务
   for (const service of Object.values(services)) {

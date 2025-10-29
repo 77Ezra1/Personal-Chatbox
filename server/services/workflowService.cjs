@@ -450,6 +450,35 @@ class WorkflowService {
           body: ''
         }
       },
+      parallel: {
+        name: '并行执行',
+        icon: '🔀',
+        inputs: ['data'],
+        outputs: ['results'],
+        config: {
+          failOnError: true
+        }
+      },
+      merge: {
+        name: '合并结果',
+        icon: '🔗',
+        inputs: ['data'],
+        outputs: ['merged'],
+        config: {
+          mergeStrategy: 'array'
+        }
+      },
+      mcp_tool: {
+        name: 'MCP 工具',
+        icon: '⚡',
+        inputs: ['data'],
+        outputs: ['result'],
+        config: {
+          mcpServiceId: '',
+          toolName: '',
+          parameters: {}
+        }
+      },
       end: {
         name: '结束',
         icon: '🏁',
