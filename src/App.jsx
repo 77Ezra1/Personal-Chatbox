@@ -234,6 +234,11 @@ function App() {
             }
           }
 
+          // 调试日志：每次更新时输出状态
+          if (token && accumulatedContent.length % 100 < token.length) {
+            logger.log(`[onToken] 更新消息: content长度=${displayContent.length}, reasoning=${!!accumulatedReasoning}, status=loading`)
+          }
+
           updateMessage(currentConversationId, placeholderMessage.id, () => ({
             content: displayContent,
             status: 'loading',

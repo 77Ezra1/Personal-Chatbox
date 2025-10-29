@@ -8,6 +8,13 @@ import { initSentry, SentryErrorBoundary } from './lib/sentry.jsx'
 import { initPerformanceMonitoring } from './lib/performance'
 import { ThemeProvider } from './contexts/ThemeContext'
 
+// ========== 2025年10月29日 新代码版本标记 ==========
+console.log('%c██████████████████████████████████████████████████', 'color: red; font-size: 20px; font-weight: bold;');
+console.log('%c█ 新代码已加载 - 2025-10-29 23:35 版本 █', 'color: red; font-size: 20px; font-weight: bold;');
+console.log('%c██████████████████████████████████████████████████', 'color: red; font-size: 20px; font-weight: bold;');
+window.CODE_VERSION = '2025-10-29-23:35';
+// ==================================================
+
 // 初始化 Sentry 错误追踪
 initSentry()
 

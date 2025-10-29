@@ -353,13 +353,13 @@ async function callDeepSeekMCP({
                   chunkCount++
                   fullContent += parsed.content
 
-                  if (chunkCount <= 5) {
-                    console.log(`[CONTENT #${chunkCount}] 接收:`, parsed.content.substring(0, 20))
-                    logger.log(`[callDeepSeekMCP] Content #${chunkCount}: ${parsed.content.substring(0, 20)}...`)
+                  // 详细日志：前5个chunk和每10个chunk
+                  if (chunkCount <= 5 || chunkCount % 10 === 0) {
+                    console.log(`[STREAM CONTENT #${chunkCount}] 接收 ${parsed.content.length} 字符:`, parsed.content.substring(0, 50))
+                    console.log(`[STREAM STATUS] fullContent总长度: ${fullContent.length}, reasoning长度: ${fullReasoning.length}`)
                   }
 
                   // 调用onToken更新UI
-                  console.log(`[CONTENT #${chunkCount}] 调用 onToken, fullContent长度:`, fullContent.length)
                   onToken(parsed.content, fullContent, fullReasoning)
                 }
 
@@ -442,7 +442,10 @@ async function callDeepSeekMCP({
  * @returns {Promise<{role: string, content: string}>}
  */
 export async function generateAIResponse({ messages = [], modelConfig = {}, onToken, signal, systemPrompt, tools = [] }) {
-  logger.log('[aiClient] generateAIResponse called with modelConfig:', modelConfig)
+  console.log('🔥 [aiClient] generateAIResponse 被调用')
+  console.log('🔥 [aiClient] modelConfig:', modelConfig)
+  console.log('🔥 [aiClient] onToken:', typeof onToken, !!onToken)
+  logger.log('>>>>>> 新代码2025 >>>>>> [aiClient] generateAIResponse called with modelConfig:', modelConfig)
   const {
     provider = 'deepseek',  // 修改默认为deepseek以使用MCP后端
     model,
@@ -452,7 +455,10 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
     deepThinking = false,
     thinkingMode = null  // 新增：思考模式
   } = modelConfig
-  logger.log('[aiClient] Extracted values:', { provider, model, apiKey: apiKey ? 'present' : 'missing', temperature, maxTokens })
+  console.log('🔥 [aiClient] provider:', provider)
+  console.log('🔥 [aiClient] model:', model)
+  console.log('🔥 [aiClient] apiKey存在:', !!apiKey)
+  logger.log('>>>>>> 新代码2025 >>>>>> [aiClient] Extracted values:', { provider, model, apiKey: apiKey ? 'present' : 'missing', temperature, maxTokens })
 
   // 所有服务商都需要在前端配置 API key
   if (!apiKey) {
@@ -484,8 +490,10 @@ export async function generateAIResponse({ messages = [], modelConfig = {}, onTo
   let result
 
   // ========== DeepSeek MCP 路由 ==========
+  console.log('🔥 [aiClient] 检查 provider:', provider, provider === 'deepseek')
   if (provider === 'deepseek') {
-    logger.log('[aiClient] DeepSeek detected, using MCP backend')
+    console.log('🔥 [aiClient] ✅ 使用 DeepSeek MCP 后端')
+    logger.log('>>>>>> 新代码2025 >>>>>> [aiClient] DeepSeek detected, using MCP backend')
 
     // 确定目标模型
     let targetModel = model || openAICompatibleConfig.defaultModel

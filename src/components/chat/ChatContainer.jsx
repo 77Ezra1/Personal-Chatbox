@@ -23,7 +23,7 @@ export const ChatContainer = memo(function ChatContainer({
   isDeepThinkingAvailable,
   isButtonDisabled,      // 新增
   thinkingMode,          // 新增
-  modelConfig,           // 新增：用于显示模型警告
+  modelConfig,           // Model warning indicator
   onSendMessage,
   onStopGeneration,
   onAddAttachment,
@@ -64,7 +64,7 @@ export const ChatContainer = memo(function ChatContainer({
         // 对话操作
         conversation,
         createNewConversation: () => {
-          // TODO: 需要从父组件传入
+          // TODO: wire up from parent component
           console.log('[Command] Create new conversation')
         },
 

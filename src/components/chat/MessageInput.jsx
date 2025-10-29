@@ -31,6 +31,10 @@ export function MessageInput({
   const handleSend = () => {
     if (!input.trim() && pendingAttachments.length === 0) return
     if (isGenerating) return
+    if (typeof onSend !== 'function') {
+      console.warn('[MessageInput] onSend handler is not available')
+      return
+    }
 
     onSend(input, pendingAttachments)
     setInput('')

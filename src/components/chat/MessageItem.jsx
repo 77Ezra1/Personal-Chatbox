@@ -105,13 +105,13 @@ export function MessageItem({ message, translate, onCopy, onEdit, onDelete, onRe
             <>
               {/* 如果正在加载且没有内容，显示动态思考指示器 */}
               {status === 'loading' && !content && !isUser && (
-                <TypingIndicator type="simple" message={translate('status.thinking', '正在思考')} />
+                <TypingIndicator type="simple" message={translate('status.thinking', 'Thinking...')} />
               )}
 
-              {/* 正常内容渲染 */}
-              {(content || status !== 'loading') && (
+              {/* 正常内容渲染 - 始终渲染 MarkdownRenderer 以支持流式输出 */}
+              {content && (
                 <MarkdownRenderer
-                  content={content || ''}
+                  content={content}
                   isStreaming={status === 'loading'}
                 />
               )}

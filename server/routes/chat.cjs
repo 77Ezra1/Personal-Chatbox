@@ -549,6 +549,14 @@ router.post('/', authMiddleware, async (req, res) => {
             try {
               logger.info(`调用工具: ${toolName}, 参数: ${JSON.stringify(toolArgs)}`);
 
+              // 发送工具执行开始通知
+              res.write(`data: ${JSON.stringify({
+                type: 'tool_start',
+                tool_call_id: toolCall.id,
+                tool_name: toolName,
+                arguments: toolArgs
+              })}\n\n`);
+
               let toolResult = null;
 
               // 智能判断工具类型：优先尝试MCP工具，失败则尝试原有服务工具
@@ -601,6 +609,16 @@ router.post('/', authMiddleware, async (req, res) => {
                 content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult)
               });
 
+              // 发送工具执行结果通知
+              res.write(`data: ${JSON.stringify({
+                type: 'tool_result',
+                tool_call_id: toolCall.id,
+                tool_name: toolName,
+                success: true,
+                result: toolResult,
+                execution_time: executionTime
+              })}\n\n`);
+
               logger.info(`✅ 工具 ${toolName} 执行成功，结果长度: ${JSON.stringify(toolResult).length}，耗时: ${executionTime}ms`);
             } catch (toolError) {
               // 🔥 记录失败的工具调用
@@ -616,6 +634,17 @@ router.post('/', authMiddleware, async (req, res) => {
               });
 
               logger.error(`❌ 工具调用失败: ${toolCall.function.name}`, toolError);
+
+              // 发送工具执行失败通知
+              res.write(`data: ${JSON.stringify({
+                type: 'tool_result',
+                tool_call_id: toolCall.id,
+                tool_name: toolName,
+                success: false,
+                error: toolError.message || '工具调用失败',
+                execution_time: executionTime
+              })}\n\n`);
+
               apiParams.messages.push({
                 role: 'tool',
                 tool_call_id: toolCall.id,

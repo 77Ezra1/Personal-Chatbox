@@ -20,6 +20,16 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        // ✅ 禁用代理缓冲以支持 SSE 流式响应
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // 设置 no-cache 避免缓冲
+            if (req.url.includes('/api/chat')) {
+              proxyReq.setHeader('Cache-Control', 'no-cache');
+              proxyReq.setHeader('Connection', 'keep-alive');
+            }
+          });
+        },
       },
     },
     watch: {

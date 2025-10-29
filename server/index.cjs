@@ -47,6 +47,7 @@ const CodeEditorService = require('./services/code-editor.cjs');
 const CommandRunnerService = require('./services/command-runner.cjs');
 const LinterFormatterService = require('./services/linter-formatter.cjs');
 const TestRunnerService = require('./services/test-runner.cjs');
+const SandboxService = require('./services/sandbox.cjs');
 
 // 创建Express应用
 const app = express();
@@ -160,6 +161,13 @@ async function initializeServices() {
     services.command_runner = new CommandRunnerService({});
     services.linter_formatter = new LinterFormatterService({});
     services.test_runner = new TestRunnerService({});
+    services.sandbox = new SandboxService({
+      id: 'sandbox',
+      name: '代码沙箱',
+      description: '安全的代码执行环境',
+      enabled: true,
+      autoLoad: true
+    });
 
     // 初始化自动加载的原有服务
     for (const [id, service] of Object.entries(services)) {

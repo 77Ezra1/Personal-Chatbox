@@ -315,7 +315,11 @@ export function useConversationsDB() {
           messages: conv.messages.map(msg => {
             if (msg.id !== messageId) return msg;
             const updates = typeof updater === 'function' ? updater(msg) : updater;
-            return { ...msg, ...updates };
+            return {
+              ...msg,
+              ...updates,
+              _renderKey: Date.now() // 强制 React 重新渲染
+            };
           }),
           updatedAt: new Date().toISOString()
         }

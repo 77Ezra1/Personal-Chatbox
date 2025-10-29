@@ -46,7 +46,7 @@ export function MessageList({ messages, translate, onEdit, onDelete, onRegenerat
       ) : (
         messages.map((message) => (
           <MessageItem
-            key={message.id}
+            key={`${message.id}-${message._renderKey || 0}`}
             message={message}
             translate={translate}
             onCopy={handleCopy}
