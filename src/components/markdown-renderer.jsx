@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, memo } from 'react'
+import { useEffect, useMemo, useState, memo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
@@ -234,20 +234,28 @@ function parseMCPContent(text) {
   return parts
 }
 
-export const MarkdownRenderer = memo(function MarkdownRenderer({ content, className, isStreaming = false }) {
+// ✅ 完全移除 memo，确保流式输出时每次都重新渲染
+export function MarkdownRenderer({ content, className, isStreaming = false }) {
   const text = typeof content === 'string' ? content : String(content ?? '')
-  
-  // 缓存解析结果
+  const renderCountRef = useRef(0)
+
+  // 流式输出时，每次渲染都输出调试信息
+  if (isStreaming) {
+    renderCountRef.current++
+    console.log(`🎨🎨🎨 [MarkdownRenderer] 第${renderCountRef.current}次渲染, 内容长度: ${text.length}`)
+  }
+
+  // 解析MCP内容 - 流式时不缓存
   const parts = useMemo(() => {
     if (!text.trim()) return []
     return parseMCPContent(text)
-  }, [text])
-  
-  // 缓存渲染内容
+  }, [text])  // 始终依赖 text
+
+  // 渲染内容 - 流式时不缓存
   const renderedContent = useMemo(() => {
     if (parts.length === 0 || (parts.length === 1 && parts[0].type === 'content')) {
       return (
-        <ReactMarkdown 
+        <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
           rehypePlugins={[rehypeKatex]}
           components={MARKDOWN_COMPONENTS}
@@ -256,14 +264,14 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
         </ReactMarkdown>
       )
     }
-    
+
     return parts.map((part, index) => {
       if (part.type === 'thinking') {
         return <ThinkingProcess key={index} content={part.text} />
       }
       return (
         <div key={index}>
-          <ReactMarkdown 
+          <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
             rehypePlugins={[rehypeKatex]}
             components={MARKDOWN_COMPONENTS}
@@ -273,7 +281,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
         </div>
       )
     })
-  }, [parts, text])
+  }, [parts, text])  // 始终依赖 parts 和 text
   
   if (!text.trim()) {
     return null
@@ -284,5 +292,5 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
       {renderedContent}
     </div>
   )
-})
+}
 

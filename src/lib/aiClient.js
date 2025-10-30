@@ -222,6 +222,8 @@ async function callDeepSeekMCP({
   tools = []  // ✅ 新增 tools 参数
 }) {
   try {
+    console.log('🔥🔥🔥 [callDeepSeekMCP] ===== 开始调用 =====')
+    console.log('🔥🔥🔥 [callDeepSeekMCP] onToken 存在:', !!onToken, typeof onToken)
     logger.log('[callDeepSeekMCP] Calling backend MCP API')
     logger.log('[callDeepSeekMCP] Model:', model)
     logger.log('[callDeepSeekMCP] Messages:', messages.length)
@@ -250,25 +252,32 @@ async function callDeepSeekMCP({
 
     // 判断是否使用流式输出
     const useStream = !!onToken
+    console.log('🔥🔥🔥 [callDeepSeekMCP] useStream 值:', useStream)
 
     // 调用后端 API（后端从数据库读取 API key）
+    const requestBody = {
+      messages: formattedMessages,
+      model,
+      temperature,
+      max_tokens: maxTokens,
+      stream: useStream  // 启用流式输出
+      // ✅ 不需要传递 tools，后端会自动获取所有可用工具
+      // 后端的 /api/chat 路由会自动调用 mcpManager.getAllTools() 和其他服务工具
+    }
+    console.log('🔥🔥🔥 [callDeepSeekMCP] 请求体:', JSON.stringify(requestBody, null, 2))
+
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`  // 需要认证
       },
-      body: JSON.stringify({
-        messages: formattedMessages,
-        model,
-        temperature,
-        max_tokens: maxTokens,
-        stream: useStream  // 启用流式输出
-        // ✅ 不需要传递 tools，后端会自动获取所有可用工具
-        // 后端的 /api/chat 路由会自动调用 mcpManager.getAllTools() 和其他服务工具
-      }),
+      body: JSON.stringify(requestBody),
       signal
     })
+
+    console.log('🔥🔥🔥 [callDeepSeekMCP] 响应状态:', response.status)
+    console.log('🔥🔥🔥 [callDeepSeekMCP] 响应 Content-Type:', response.headers.get('content-type'))
 
     if (!response.ok) {
       const errorText = await response.text()

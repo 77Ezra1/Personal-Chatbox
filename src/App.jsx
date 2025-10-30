@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useMemo, memo, lazy, Suspense } from 'react'
+import { useState, useRef, useCallback, useMemo, memo, lazy, Suspense, startTransition } from 'react'
+import { flushSync } from 'react-dom'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster, toast } from 'sonner'
 
@@ -211,6 +212,8 @@ function App() {
         systemPrompt,
         tools: mcpTools,
         onToken: (token, fullText, reasoning) => {
+          console.log('🎯🎯🎯 [onToken] 被调用了!', { token: token?.substring(0, 20), fullTextLength: fullText?.length, reasoning: reasoning?.substring(0, 20) })
+
           // 更新内容
           if (typeof fullText === 'string') {
             accumulatedContent = fullText
@@ -234,20 +237,27 @@ function App() {
             }
           }
 
+          console.log('🎯🎯🎯 [onToken] 准备更新UI:', { displayContentLength: displayContent.length, conversationId: currentConversationId, messageId: placeholderMessage.id })
+
           // 调试日志：每次更新时输出状态
           if (token && accumulatedContent.length % 100 < token.length) {
             logger.log(`[onToken] 更新消息: content长度=${displayContent.length}, reasoning=${!!accumulatedReasoning}, status=loading`)
           }
 
-          updateMessage(currentConversationId, placeholderMessage.id, () => ({
-            content: displayContent,
-            status: 'loading',
-            metadata: {
-              ...(isDeepThinking ? { deepThinking: true } : {}),
-              ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {}),
-              ...(usageData ? { usage: usageData } : {})
-            }
-          }))
+          // ✅ 使用 flushSync 强制立即同步更新DOM，避免React 18的自动批处理
+          flushSync(() => {
+            updateMessage(currentConversationId, placeholderMessage.id, () => ({
+              content: displayContent,
+              status: 'loading',
+              metadata: {
+                ...(isDeepThinking ? { deepThinking: true } : {}),
+                ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {}),
+                ...(usageData ? { usage: usageData } : {})
+              }
+            }))
+          })
+
+          console.log('🎯🎯🎯 [onToken] updateMessage 已调用 (flushSync)')
         }
       })
 

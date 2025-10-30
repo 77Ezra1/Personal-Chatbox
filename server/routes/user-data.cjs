@@ -167,16 +167,14 @@ router.post('/conversations', authMiddleware, async (req, res) => {
 
             //    ?messages          ?
             await db.prepare(
-              `INSERT INTO messages (conversation_id, role, content, timestamp, metadata, model, source)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`
+              `INSERT INTO messages (conversation_id, role, content, timestamp, metadata)
+               VALUES (?, ?, ?, ?, ?)`
             ).run(
               dbId,
               msg.role || 'user',
               content,
               msg.timestamp || new Date().toISOString(),
-              msg.metadata ? JSON.stringify(msg.metadata) : null,
-              msg.model || null,
-              msg.source || 'chat' //        ?
+              msg.metadata ? JSON.stringify(msg.metadata) : null
             );
             totalMessages++;
 

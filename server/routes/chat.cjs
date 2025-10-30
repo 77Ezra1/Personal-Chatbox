@@ -279,6 +279,11 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     let { messages, model = 'deepseek-chat', stream = false } = req.body;
 
+    console.log('🔥🔥🔥 [Backend /api/chat] ===== 收到请求 =====');
+    console.log('🔥🔥🔥 [Backend /api/chat] stream 参数:', stream, typeof stream);
+    console.log('🔥🔥🔥 [Backend /api/chat] model:', model);
+    console.log('🔥🔥🔥 [Backend /api/chat] messages数量:', messages?.length);
+
     let hasFetchedRealtimeTime = false;
 
     if (!messages || !Array.isArray(messages)) {
@@ -287,7 +292,7 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
 
-    logger.info(`[User ${userId}] 收到对话请求: model=${model}, messages=${messages.length}条`);
+    logger.info(`[User ${userId}] 收到对话请求: model=${model}, stream=${stream}, messages=${messages.length}条`);
 
     // ✅ 按需加载：首次对话时自动加载用户的MCP服务
     if (mcpManager && !mcpManager.userServicesLoaded.has(userId)) {
@@ -489,11 +494,13 @@ router.post('/', authMiddleware, async (req, res) => {
           // 处理回答内容（content）
           if (delta?.content) {
             fullContent += delta.content;
-            res.write(`data: ${JSON.stringify({
+            const sseData = JSON.stringify({
               type: 'content',
               content: delta.content,
               fullContent: fullContent
-            })}\n\n`);
+            });
+            console.log(`🔥🔥🔥 [Backend] 发送SSE chunk #${chunkCount}:`, delta.content.substring(0, 30));
+            res.write(`data: ${sseData}\n\n`);
             if (chunkCount <= 3) {
               logger.info(`发送content chunk #${chunkCount}: ${delta.content.substring(0, 20)}...`);
             }
